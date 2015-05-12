@@ -1,0 +1,17 @@
+---
+- name: postgres
+  path: "/postgres"
+  args: "-p 5432:5432"
+- name: flask-app
+  host: flask.local
+  path: "/flask-app"
+  cmd: "python hello.py"
+  args: "--link postgres:postgres -v /vagrant/flask-app/src:/opt/flask-app"
+- name: django-app
+  host: django.local
+  path: "/django-app"
+  cmd: "python manage.py runserver 0.0.0.0:80"
+  args: "--link postgres:postgres -v /vagrant/django-app/src:/opt/django-app"
+- name: proxy
+  path: "/proxy"
+  args: "-p 80:80 -v /vagrant/proxy/sites-enabled:/etc/nginx/sites-enabled --link flask-app:flask-app --link django-app:django-app"
