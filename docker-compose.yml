@@ -16,7 +16,7 @@ djangoapp:
   command: "python manage.py runserver 0.0.0.0:80"
   links:
     - postgres
-    - postgres
+    - flaskapp
   volumes:
     - /vagrant/django-app/src:/opt/django-app
 
