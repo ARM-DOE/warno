@@ -1,0 +1,31 @@
+postgres:
+  build: ./postgres
+  ports:
+    - "5432:5432"
+
+flaskapp:
+  build: ./flask-app
+  command: "python hello.py"
+  links:
+    - postgres
+  volumes:
+    - /vagrant/flask-app/src:/opt/flask-app
+
+djangoapp:
+  build: ./django-app
+  command: "python manage.py runserver 0.0.0.0:80"
+  links:
+    - postgres
+    - postgres
+  volumes:
+    - /vagrant/django-app/src:/opt/django-app
+
+proxy:
+  build: ./proxy
+  ports:
+    - "80:80"
+  volumes:
+    - /vagrant/proxy/sites-enabled:/etc/nginx/sites-enabled
+  links:
+    - flaskapp
+    - djangoapp
