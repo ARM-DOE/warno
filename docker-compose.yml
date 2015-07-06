@@ -1,5 +1,7 @@
+
 postgres:
   build: ./postgres
+  env_file: .env
   ports:
     - "5432:5432"
 
@@ -10,6 +12,9 @@ flaskapp:
     - postgres
   volumes:
     - /vagrant/flask-app/src:/opt/flask-app
+  env_file: .env
+  ports:
+    - "22:10022"
 
 djangoapp:
   build: ./django-app
@@ -19,6 +24,7 @@ djangoapp:
     - flaskapp
   volumes:
     - /vagrant/django-app/src:/opt/django-app
+  env_file: .env
 
 proxy:
   build: ./proxy
@@ -29,3 +35,4 @@ proxy:
   links:
     - flaskapp
     - djangoapp
+  env_file: .env
