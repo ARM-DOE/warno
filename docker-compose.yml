@@ -6,12 +6,12 @@ postgres:
     - "5432:5432"
 
 eventmanager:
-  build: ./event-manager
+  build: ./warno-event-manager
   command: bash -c "/usr/sbin/sshd && python warno_event_manager.py "
   links:
     - postgres
   volumes:
-    - /vagrant/event-manager/src:/opt/event-manager
+    - /vagrant/warno-event-manager/src:/opt/warno-event-manager
   env_file: .env
 
 djangoapp:
