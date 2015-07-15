@@ -14,14 +14,14 @@ eventmanager:
     - /vagrant/warno-event-manager/src:/opt/warno-event-manager
   env_file: .env
 
-djangoapp:
-  build: ./django-app
+userportal:
+  build: ./warno-user-portal
   command: "python manage.py runserver 0.0.0.0:80"
   links:
     - postgres
     - eventmanager
   volumes:
-    - /vagrant/django-app/src:/opt/django-app
+    - /vagrant/warno-user-portal/src:/opt/warno-user-portal
   env_file: .env
 
 proxy:
