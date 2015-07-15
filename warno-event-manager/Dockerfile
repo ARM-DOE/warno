@@ -1,12 +1,12 @@
 FROM ubuntu:14.04
 MAINTAINER Joseph C. Hardin <joseph.hardin@pnnl.gov> 
 
-COPY /src /opt/flask-app/
+COPY /src /opt/event-manager/
 
 RUN apt-get update
 RUN apt-get install -y build-essential python-dev python-pip python-psycopg2
 
-run pip install -r /opt/flask-app/requirements.txt
+run pip install -r /opt/event-manager/requirements.txt
 
 RUN apt-get install -y openssh-server
 RUN mkdir /var/run/sshd
@@ -24,4 +24,4 @@ RUN /usr/sbin/sshd
 EXPOSE 80
 EXPOSE 22
 
-WORKDIR /opt/flask-app
+WORKDIR /opt/event-manager
