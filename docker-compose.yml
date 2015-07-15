@@ -16,7 +16,7 @@ eventmanager:
 
 userportal:
   build: ./warno-user-portal
-  command: "python manage.py runserver 0.0.0.0:80"
+  command: bash -c "/usr/sbin/sshd && python manage.py runserver 0.0.0.0:80"
   links:
     - postgres
     - eventmanager
@@ -32,7 +32,7 @@ proxy:
     - /vagrant/proxy/sites-enabled:/etc/nginx/sites-enabled
   links:
     - eventmanager
-    - djangoapp
+    - userportal
   env_file: .env
 
 sshd:
@@ -41,7 +41,7 @@ sshd:
     - "10002:22"
   links:
     - eventmanager
-    - djangoapp
+    - userportal
     - proxy
     - postgres
   env_file: .env
