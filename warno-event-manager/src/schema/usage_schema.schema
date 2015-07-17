@@ -1,0 +1,13 @@
+
+CREATE TABLE "public"."usage" (
+    "time" timestamp NOT NULL,
+    "server" VARCHAR(64),
+		"site" VARCHAR(64),
+    "cpu_usage_user" NUMERIC,
+    "cpu_usage_system" NUMERIC,
+    "virtual_usage_percent" NUMERIC,
+    "swap_usage_percent" NUMERIC,
+    "storage_used" NUMERIC,
+    PRIMARY KEY ("time")
+);
+
