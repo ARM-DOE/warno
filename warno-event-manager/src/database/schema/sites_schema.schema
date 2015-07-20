@@ -1,0 +1,7 @@
+CREATE TABLE "public"."sites" (
+    "site_id" serial,
+    "name_short" VARCHAR(8) NOT NULL,
+    "name_long" VARCHAR(128),
+    "location" point,
+    PRIMARY KEY ("site_id")
+);

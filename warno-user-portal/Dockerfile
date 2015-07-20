@@ -5,7 +5,7 @@ COPY /src /opt/warno-user-portal/
 
 RUN apt-get update
 RUN apt-get install -y build-essential python-dev python-pip python-psycopg2 curl
-RUN pip install -r /opt/warno-event-manager/requirements.txt
+RUN pip install -r /opt/warno-user-portal/requirements.txt
 
 RUN apt-get install -y openssh-server
 RUN mkdir /var/run/sshd

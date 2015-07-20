@@ -1,0 +1,8 @@
+CREATE TABLE "public"."instruments" (
+    "instrument_id" integer NOT NULL,
+    "site" VARCHAR(64),
+    "short_name" VARCHAR(8),
+    "long_name" VARCHAR(64),
+    "type" varchar(12),
+    PRIMARY KEY ("instrument_id")
+);

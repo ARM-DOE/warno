@@ -1,0 +1,9 @@
+CREATE TABLE "public"."instrument_logs" (
+    "time" timestamp NOT NULL,
+    "site" VARCHAR(64),
+    "instrument_id" INTEGER REFERENCES instruments (instrument_id),
+    "contents" TEXT,
+    "author_id" INTEGER,
+    "status" INTEGER,
+    PRIMARY KEY ("time")
+);
