@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ARM Site List</title>
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='master.css') }}">
+<script src="{{ url_for('static', filename='sorttable.js')}}"></script>
+
+</head>
+<body>
+
+<div><h1>ARM Radar Sites</h1></div>
+
+<div>
+<table class="listing-table sortable" id="site-table">
+    <tr>
+        <th> Site Abbv</th>
+        <th> Site Name</th>
+        <th> Site Latitude</th>
+        <th> Site Longitude</th>
+        <th> Site ID </th>
+    </tr>
+    {%  for site in sites %}
+    <tr>
+        <td>{{ site.abbv }}</td>
+        <td>{{ site.name }}</td>
+        <td>{{ site.latitude }}</td>
+        <td>{{ site.longitude }}</td>
+        <td>{{ site.id }}</td>
+    </tr>
+    {% endfor %}
+</table>
+</div>
+{##}
+{#<dialog id="addSiteDialog">#}
+{#  <form method="dialog">#}
+{#    <section>#}
+{#        Add a Site:#}
+{#      <p><label for="name">Name:</label>#}
+{#        <input type="text" id="userNameBox" name="name"></input>#}
+{#      </p>#}
+{#      <p><label for="site">Site:</label>#}
+{#        <input type="text" id="userSiteBox" name="site"></input>#}
+{#      </p>#}
+{#      <p><label for="email">E-mail:</label>#}
+{#        <input type="text" id="userEmailBox" name="email"></input>#}
+{#      </p>#}
+{#    </section>#}
+{#    <menu>#}
+{#      <button id="cancel" type="reset">Cancel</button>#}
+{#      <button type="submit" id="submit">Confirm</button>#}
+{#    </menu>#}
+{#  </form>#}
+{#</dialog>#}
+{##}
+{#<menu>#}
+{#  <button id="addUser">Add a User</button>#}
+{#</menu>#}
+
+<script>
+  (function() {
+    var updateButton = document.getElementById('addUser');
+    var cancelButton = document.getElementById('cancel');
+    var addUserDialog = document.getElementById('addUserDialog');
+
+    // Update button opens a modal dialog
+    updateButton.addEventListener('click', function() {
+      addUserDialog.showModal();
+    });
+
+    // Form cancel button closes the dialog box
+    cancelButton.addEventListener('click', function() {
+      addUserDialog.close();
+    });
+
+
+
+  })();
+</script>
+</body>
+</html>

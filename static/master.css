@@ -1,0 +1,15 @@
+table.listing-table{
+    width: 100%;
+    background-color: #f1f1c1;
+}
+
+table.listing-table tr:nth-child(even) {
+    background-color: #eee;
+}
+table.listing-table tr:nth-child(odd) {
+    background-color: #fff;
+}
+table.listing-table th {
+    color: white;
+    background-color: black;
+}

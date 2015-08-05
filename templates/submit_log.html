@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Submit Log</title>
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='master.css') }}">
+<script src="{{ url_for('static', filename='sorttable.js')}}"></script>
+
+</head>
+<body>
+<div>
+    <h1 class="title">Log Entry Submission</h1>
+</div>
+<form id="log-submit-form" action="/submit_new_log.html">
+    <p><label for="user-id">User Name</label>:
+        <select name="user-id">
+            {% for user in users %}
+            <option value="{{ user.id }}">{{ user.name }}</option>
+            {% endfor %}
+        </select>
+    </p>
+    <p><label for="instrument">Instrument:</label>
+        <select name="instrument">
+            {% for instrument in instruments %}
+            <option value="{{ instrument.id }}">{{ instrument.name }}</option>
+            {% endfor %}
+        </select>
+    </p>
+    <p><label for="time">Date/Time:</label>
+         <input type="datetime" name="time" placeholder="01/01/1970 12:27:31">
+            (MM-DD-YY HH:MM)
+    </p>
+
+    <p> <label for="contents">Log Title</label><input type="text" name="title"></p>
+    <p> Log Contents:<br>
+        <textarea style="width: 80%;height: 25em;"></textarea>
+    </p>
+    <p>
+        <input type="submit" value="Submit Log">
+    </p>
+</form>
+
+
+
+</body>
+</html>

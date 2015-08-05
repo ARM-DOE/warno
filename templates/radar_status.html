@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Radar Status</title>
+    <link rel=stylesheet type=text/css href="{{ url_for('static', filename='master.css') }}">
+<script src="{{ url_for('static', filename='sorttable.js')}}"></script>
+</head>
+</head>
+<body>
+<h1 class="header"> Current status of all ARM Radars</h1>
+
+<table class="listing-table sortable">
+    <tr>
+        <th> Site</th>
+        <th> Instrument Name</th>
+        <th> Log Contents</th>
+        <th> Log Author </th>
+        <th> Instrument Status</th>
+    </tr>
+
+
+{%  for instrument in logs %}
+    <tr>
+    <td>{{   instrument.site }}</td>
+    <td>{{   instrument.instrument_name }}</td>
+    <td>{{   instrument.contents }}</td>
+    <td>{{  instrument.author }}</td>
+    <td> {{  instrument.status }}</td>
+    </tr>
+
+{% endfor %}
+</body>
+</html>
