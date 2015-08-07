@@ -1,0 +1,4 @@
+user_id,name,e-mail,location,position,password,authorizations
+1,Joseph C. Hardin, joseph.hardin@pnnl.gov, PNNL, Engineer, #@#ADS,None
+2, Nitin Bharadwaj, nitin@pnnl.gov, PNNL, Engineer, #$!,None
+3, John J. Technician, john@arm.gov, SGP, Technician, #!SA,None

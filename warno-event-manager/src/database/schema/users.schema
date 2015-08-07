@@ -3,5 +3,8 @@ CREATE TABLE "public"."users" (
     "name" VARCHAR(128) NOT NULL,
     "e-mail" VARCHAR(128),
     "location" VARCHAR(128),
+    "position" VARCHAR(24),
+    "password" VARCHAR(128),
+    "authorizations" VARCHAR(256),
     PRIMARY KEY ("user_id")
 );

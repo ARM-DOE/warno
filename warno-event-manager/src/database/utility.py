@@ -1,5 +1,9 @@
 import psycopg2
 import numpy as np
+import pandas
+from sqlalchemy import create_engine
+
+
 
 def table_exists(table_name, curr):
     SQL = "SELECT relname FROM pg_class WHERE relname = %s;"
@@ -24,13 +28,40 @@ def create_table_from_file(filename, curr):
         curr.execute(f.read())
     except Exception as e:
         print("Table Already exists")
+        print(e)
 
 
-def insert_test_data(curr, month=1):
-    SQL =  "INSERT INTO usage(time,server,site,cpu_usage_user,cpu_usage_system,virtual_usage_percent,swap_usage_percent,storage_used) VALUES ('2015-%s-%s %s:%s:00',E'kazr2',E'ENA',%s,%s,%s,%s,%s);"
-    for day in np.arange(1,29):
-        for hour in np.arange(0,23):
-            for minute in np.arange(0,59):
-                curr.execute(SQL,(month,day,hour,minute,day+minute/10.0, day+hour/20.0,hour +2/day, day+minute, day*minute/7.2))
+def initialize_database(curr):
+    schema_list = [
+                   "users",
+                   "sites",
+                   "instruments",
+                   "log",
+                   "usage"
+                   ]
+
+    for schema in schema_list:
+        print("Initializing relation %s", schema)
+        create_table_from_file("schema/%s.schema"% schema, curr)
+
+
+def load_data_into_table(filename, table, conn):
+    df = pandas.read_csv(filename )
+    keys = df.keys()
+    engine = create_engine('postgresql://warno:warno@192.168.50.100:5432/warno')
+    df.to_sql(table, engine, if_exists='append', index=False)
+
+def dump_table_to_csv(filename, table, server=None):
+
+    if server is None:
+        server = create_engine('postgresql://warno:warno@192.168.50.100:5432/warno')
+    else:
+        server = create_engine(server)
+
+    df.read_sql_table(table, engine)
+    df.to_csv(filename)
+
 
     
+    
+

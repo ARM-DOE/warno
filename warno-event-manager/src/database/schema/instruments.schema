@@ -1,8 +1,11 @@
 CREATE TABLE "public"."instruments" (
-    "instrument_id" integer NOT NULL,
-    "site" VARCHAR(64),
-    "short_name" VARCHAR(8),
-    "long_name" VARCHAR(64),
-    "type" varchar(12),
+    "instrument_id" serial NOT NULL,
+    "site_id" INTEGER REFERENCES sites (site_id),
+    "name_short" VARCHAR(8),
+    "name_long" VARCHAR(128),
+    "type" varchar(64),
+    "vendor" varchar(64),
+    "description" text,
+    "frequency_band" VARCHAR(2),
     PRIMARY KEY ("instrument_id")
 );
