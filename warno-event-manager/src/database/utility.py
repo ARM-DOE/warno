@@ -58,8 +58,18 @@ def dump_table_to_csv(filename, table, server=None):
     else:
         server = create_engine(server)
 
-    df.read_sql_table(table, engine)
+    df = pandas.read_sql_table(table, server)
     df.to_csv(filename)
+
+DB_HOST = '192.168.50.100'
+DB_NAME = 'warno'
+DB_USER = 'warno'
+DB_PASS = 'warno'
+
+def connect_db():
+    return psycopg2.connect("host=%s dbname=%s user=%s password=%s" % (DB_HOST, DB_NAME, DB_USER, DB_PASS))
+
+
 
 
     
