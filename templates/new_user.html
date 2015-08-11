@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>New User on WARNO</title>
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='master.css') }}">
+
+</head>
+<body>
+
+<div><h1>Add New User to Warno</h1></div>
+
+
+<form method="post">
+   <section>
+       Add a user:
+     <p><label for="name">Name:</label>
+       <input type="text" id="userNameBox" name="name" maxlength="128"></input>
+     </p>
+     <p><label for="email">E-mail:</label>
+       <input type="text" id="userEmailBox" name="email" maxlength="128"></input>
+     </p>
+     <p><label for="location">Location:</label>
+       <input type="text" id="userLocationBox" name="location" maxlength="128"></input>
+     </p>
+     <p><label for="position">Position:</label>
+       <input type="text" id="userPositionBox" name="position" maxlength="24"></input>
+     </p>
+     <p><label for="password">Password:</label>
+       <input type="password" id="userPasswordBox" name="password" maxlength="128"></input>
+     </p>
+  </section>
+  <menu>
+    <button id="cancel" type="reset">Cancel</button>
+    <button type="submit" id="submit">Confirm</button>
+  </menu>
+</form>
+
+</body>
+</html>

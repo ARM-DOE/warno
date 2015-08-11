@@ -18,6 +18,9 @@
         <th> Site Name</th>
         <th> Site Latitude</th>
         <th> Site Longitude</th>
+        <th> Facility</th>
+        <th> Mobile</th>
+        <th> Location Name</th>
         <th> Site ID </th>
     </tr>
     {%  for site in sites %}
@@ -26,10 +29,28 @@
         <td>{{ site.name }}</td>
         <td>{{ site.latitude }}</td>
         <td>{{ site.longitude }}</td>
+        <td>{{ site.facility }}</td>
+        {% if site.mobile %}
+        <td>Yes</td>
+        {% else %}
+        <td>No</td>
+        {% endif %}
+        <td>{{ site.location_name }}</td>
         <td>{{ site.id }}</td>
     </tr>
     {% endfor %}
 </table>
+
+<br>
+<hr>
+<br>
+
+<form action="{{ url_for('new_site') }}" method="get">
+  <input type="submit" id="new-site-redirect-button"
+         value="Add New Site"/>
+</form>
+
+
 </div>
 {##}
 {#<dialog id="addSiteDialog">#}

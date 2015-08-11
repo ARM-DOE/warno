@@ -1,4 +1,5 @@
-from flask import Flask, g, render_template
+from flask import Flask, g, render_template, \
+                    request, redirect, url_for
 import psycopg2
 
 DB_HOST = '192.168.50.100'
@@ -26,11 +27,39 @@ def teardown_request(exception):
         db.close()
 
 
+
+
+@app.route('/users/new', methods=['GET', 'POST'])
+def new_user():
+    #Add a new user to Warno
+    cur = g.db.cursor()
+    if request.method == 'POST':
+        #? Values need validation
+        name = request.form.get('name')
+        email = request.form.get('email')
+        location = request.form.get('location')
+        position = request.form.get('position')
+        password = request.form.get('password')
+
+        cur.execute('''INSERT INTO users(name, "e-mail", location, position, password, authorizations) 
+                    VALUES (%s, %s, %s, %s, %s, %s)''', (name, email, location, position, password, "None"))
+        cur.execute('COMMIT')
+
+        return redirect(url_for("show_users"))
+
+    if request.method == 'GET':   
+        return render_template('new_user.html')
+
+
 @app.route('/users')
 def show_users():
     cur = g.db.cursor()
-    cur.execute('SELECT * FROM users')
-    users = [dict(name=row[1], email=row[2], location=row[3], id=row[0]) for row in cur.fetchall()]
+
+    #?Dangerous query?
+    # Create the list of users for the html table
+    cur.execute('SELECT user_id, name, "e-mail", location, position FROM users')
+    users = [dict(name=row[1], email=row[2], location=row[3], position=row[4], id=row[0]) for row in cur.fetchall()]
+
     return render_template('users_template.html', users=users)
 
 
@@ -44,15 +73,91 @@ status_text = {1: "OPERATIONAL",
                4: "IN-UPGRADE",
                5: "TRANSIT"}
 
+@app.route('/instruments/new', methods=['GET', 'POST'])
+def new_instrument():
+    #Add a new user to Warno
+    cur = g.db.cursor()
+    if request.method == 'POST':
+        #? Values need validation
+        abbv = request.form.get('abbv')
+        name = request.form.get('name')
+        itype = request.form.get('itype')
+        vendor = request.form.get('vendor')
+        description = request.form.get('description')
+        frequency_band = request.form.get('frequency_band')
+        site = request.form.get('site')
+
+        cur.execute('''INSERT INTO instruments(name_short, name_long, type, vendor, description, frequency_band, site_id) 
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)''', (abbv, name, itype, vendor, description, frequency_band, site))
+        cur.execute('COMMIT')
+
+        return redirect(url_for("show_instruments"))
+
+    if request.method == 'GET':   
+        # Create a set of sites and their ids for the dropdown in the add user form
+        cur.execute('''SELECT site_id, name_short FROM sites ''')
+        sites = [dict(id=row[0], name=row[1]) for row in cur.fetchall()]
+        return render_template('new_instrument.html', sites=sites)
+
+@app.route('/instruments')
+def show_instruments():
+    #List Instruments
+    cur = g.db.cursor()
+
+    #?Dangerous query?
+    # Create the list of users for the html table
+    cur.execute('''SELECT i.instrument_id, i.name_short, i.name_long, i.type, 
+                i.vendor, i.description, i.frequency_band, s.name_short FROM instruments i 
+                JOIN sites s ON (i.site_id = s.site_id)''')
+    instruments = [dict(abbv=row[1], name=row[2], type=row[3], vendor=row[4], description=row[5], 
+                    frequency_band=row[6], location=row[7], id=row[0]) for row in cur.fetchall()]
+
+    return render_template('instrument_list.html', instruments=instruments)
+
+@app.route('/sites/new', methods=['GET', 'POST'])
+def new_site():
+    #Add a new site to Warno
+
+    if request.method == 'POST':
+        #? Values need validation
+        abbv = request.form.get('abbv')
+        name = request.form.get('name')
+        lat = request.form.get('lat')
+        lon = request.form.get('lon')
+        facility = request.form.get('facility')
+        mobile = request.form.get('mobile')
+        location_name = request.form.get('location_name')
+
+        #If the "mobile" box was checked in new_site, mobile is True. Else, false
+        if mobile == "on":
+            mobile = True;
+        else:
+            mobile = False;
+
+        #? Needs expansion for decimals/negatives
+        if lat.isdigit() and lon.isdigit():
+            cur = g.db.cursor()
+            cur.execute('''INSERT INTO sites(name_short, name_long, latitude, longitude, facility, mobile, location_name) 
+                        VALUES (%s, %s, %s, %s, %s, %s, %s)''', (abbv, name, lat, lon, facility, mobile, location_name))
+            cur.execute('COMMIT')
+
+            return redirect(url_for("show_sites"))
+        else:
+            return redirect(url_for("new_site", error="Fields formatted incorrectly"))
+
+    if request.method == 'GET':
+        error = request.args.get('error')   
+        return render_template('new_site.html', error= error)
 
 @app.route('/sites')
 def show_sites():
     cur = g.db.cursor()
-    sql_query = 'SELECT s.name_short, s.name_long, s.latitude, s.longitude, s.site_id FROM sites s'
+    sql_query = '''SELECT s.name_short, s.name_long, s.latitude, s.longitude, 
+                    s.facility, s.mobile, s.location_name, s.site_id FROM sites s'''
     cur.execute(sql_query)
-    sites = [dict(abbv=row[0], name=row[1], latitude=row[2], longitude = row[3], id=row[4]) for row in cur.fetchall()]
+    sites = [dict(abbv=row[0], name=row[1], latitude=row[2], longitude = row[3], facility=row[4], 
+             mobile=row[5], location_name=row[6],id=row[7]) for row in cur.fetchall()]
     return render_template('site_list.html', sites=sites)
-
 
 @app.route('/radar_status')
 def show_radar_status():
@@ -95,4 +200,4 @@ def hello_world():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0')
+    app.run(debug=True, host='0.0.0.0', port=5555)
