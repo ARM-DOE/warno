@@ -27,6 +27,40 @@ def teardown_request(exception):
         db.close()
 
 
+#! Flot testing only, remove 
+@app.route('/flot')
+def show_flot():
+    cur = g.db.cursor()
+    cur.execute('SELECT site_id FROM sites')
+    data = []
+    for row in cur.fetchall():
+        data.append([row[0], 0])
+
+    cur.execute('SELECT site_id FROM instruments')
+    for row in cur.fetchall():
+        data[row[0]-1][1] += 1
+
+    return render_template('flot.html', data=data)
+
+@app.route('/dygraph')
+def show_dygraph():
+    return render_template('dygraph.html')
+
+@app.route('/generate_xml')
+def generate_xml():
+    data = [[7,65],[8,61],[9,70]]
+    print data
+    data_xml = "<document>\n"
+    for item in data:
+        data_xml += "<item>\n  <value>%s</value>\n  <value>%s</value>\n</item>\n" \
+                        % (item[0],item[1])
+    data_xml += "</document>"
+    print data_xml
+
+    if request.is_xhr:
+        return data_xml
+    else:
+        return ""
 
 
 @app.route('/users/new', methods=['GET', 'POST'])
@@ -34,7 +68,8 @@ def new_user():
     #Add a new user to Warno
     cur = g.db.cursor()
     if request.method == 'POST':
-        #? Values need validation
+        #Lengths validated in views
+        #?email may need validation
         name = request.form.get('name')
         email = request.form.get('email')
         location = request.form.get('location')
@@ -78,7 +113,7 @@ def new_instrument():
     #Add a new user to Warno
     cur = g.db.cursor()
     if request.method == 'POST':
-        #? Values need validation
+        #Field lengths limited in the views
         abbv = request.form.get('abbv')
         name = request.form.get('name')
         itype = request.form.get('itype')
@@ -114,12 +149,21 @@ def show_instruments():
 
     return render_template('instrument_list.html', instruments=instruments)
 
+#? May need to move this helper function, pulled from Stack Overflow
+#Checks if the string is a valid decimal/floating point number
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
 @app.route('/sites/new', methods=['GET', 'POST'])
 def new_site():
     #Add a new site to Warno
 
     if request.method == 'POST':
-        #? Values need validation
+        #Field lengths limited in the views
         abbv = request.form.get('abbv')
         name = request.form.get('name')
         lat = request.form.get('lat')
@@ -134,8 +178,8 @@ def new_site():
         else:
             mobile = False;
 
-        #? Needs expansion for decimals/negatives
-        if lat.isdigit() and lon.isdigit():
+        #Uses helper function to check if it is a valid number
+        if is_number(lat) and is_number(lon):
             cur = g.db.cursor()
             cur.execute('''INSERT INTO sites(name_short, name_long, latitude, longitude, facility, mobile, location_name) 
                         VALUES (%s, %s, %s, %s, %s, %s, %s)''', (abbv, name, lat, lon, facility, mobile, location_name))

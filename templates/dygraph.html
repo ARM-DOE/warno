@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<script type="text/javascript" src="{{ url_for('static', filename='dygraph-combined-dev.js')}}"></script>
+	</head>
+	<body>
+		<h2>
+		Hyllo Wyrld from Dygraph
+		</h2>
+		<hr>
+		<br>
+		<br>
+		<div id="graphdiv"></div>
+		<br>
+		<hr>
+		<br>
+		<div id="testdiv">Test Info</div>
+		<br>
+		<button type="button" onclick="loadXML()">Push Me</button>
+
+
+		<script>
+			graph_data = "value1,value2\n" +
+			"1,75\n" +
+			"2,70\n" +
+			"3,80\n";
+
+			g = new Dygraph(
+								document.getElementById("graphdiv"),
+								graph_data,
+								{
+									title: "Dygraph Update Test",
+									xlabel: "X Value",
+									ylabel: "Y Value"
+							});
+
+			function loadXML()
+				{
+					//XMLHTTPRequest to server xml generator
+					xmlhttp = new XMLHttpRequest();
+
+					xmlhttp.onreadystatechange = function() {
+						//After the asyncronous request successfully returns
+						if (xmlhttp.readyState == 4 && xmlhttp.status == 200)
+						{
+							//Pull out the response text from the request
+							response = xmlhttp.responseText;
+
+							//Parse response into XML DOM object
+							if (window.DOMParser) //For non IE browsers
+							{
+								parser=new DOMParser();
+								xmlDoc=parser.parseFromString(response,"text/xml");
+							}
+							else // Internet Explorer
+							{
+								xmlDoc=new ActiveXObject("Microsoft.XMLDOM");
+								xmlDoc.async=false;
+								xmlDoc.loadXML(response);
+							};
+
+
+
+							temp = "";
+							//For each "item" in the response xml
+							x = xmlDoc.getElementsByTagName("item");
+							for (i=0;i<x.length;i++)
+							{
+								//Comma separate each value and add a newline
+								v = x[i].getElementsByTagName("value");
+								for (j=0;j<v.length;j++)
+								{
+									temp += v[j].childNodes[0].nodeValue;
+									//If the value is not the last of the line,
+									//Add a comma before the next iteration
+									if (j+1 < v.length)
+										{ temp += ","}
+								}
+								temp += "\n";
+							}
+
+							//Append the new CSV items to the graph data
+							graph_data += temp;
+							g.updateOptions({'file': graph_data})
+							console.log(graph_data);
+						}
+					}
+
+					xmlhttp.open("GET","{{ url_for('generate_xml') }}", true)
+					xmlhttp.setRequestHeader('X-Requested-With', 'XMLHTTPRequest'); 
+					xmlhttp.send();
+				};
+		</script>
+	</body>
+
+
+
+</html>
