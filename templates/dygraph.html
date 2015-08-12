@@ -8,33 +8,73 @@
 		Hyllo Wyrld from Dygraph
 		</h2>
 		<hr>
+<!-- 		<br>
+		<br>
+		<div id="graphdiv0" style="width: 400px; height: 200px;"></div>
 		<br>
 		<br>
-		<div id="graphdiv"></div>
+		<div id="graphdiv1" style="width: 400px; height: 200px;"></div>
 		<br>
-		<hr>
-		<br>
-		<div id="testdiv">Test Info</div>
-		<br>
-		<button type="button" onclick="loadXML()">Push Me</button>
+		<hr> -->
+		<div id="master-graphdiv"></div>
+		
+		<button type="button" onclick="update_graph()">Push Me</button>
 
 
 		<script>
-			graph_data = "value1,value2\n" +
-			"1,75\n" +
-			"2,70\n" +
-			"3,80\n";
+			graphs = 12;
+			g = [];
+			gindex = [];
+			graph_data = [];
 
-			g = new Dygraph(
-								document.getElementById("graphdiv"),
-								graph_data,
-								{
-									title: "Dygraph Update Test",
-									xlabel: "X Value",
-									ylabel: "Y Value"
-							});
+			//Create N graphs
+			for (i = 0; i < graphs; i ++)
+			{
+				//Add labels to the CSV data
+				graph_data.push(["value1, value2\n"])
+				//Index for these items is 1
+				gindex.push(1);
+				id = "graphdiv" + i;
+				title = "Dygraph " + i;
 
-			function loadXML()
+				//Create a div for the graph matching the graphs id
+				div = document.createElement('div');
+				div.innerHTML = '<br><div id="' + id + '" style="width: 400px; height: 200px;"></div><br>'
+				document.getElementById('master-graphdiv').appendChild(div);
+
+				//Create a graph with the containing div id and the
+				//data labels
+				g.push(	new Dygraph(
+									document.getElementById(id),
+									graph_data[i],
+									{
+										title: title,
+										xlabel: "X Value",
+										ylabel: "Y Value"
+									}));
+
+			}
+
+			//#?Straight pull from stack overflow
+			function convert_to_csv(objArray) {
+		            var array = typeof objArray != 'object' ? JSON.parse(objArray) : objArray;
+		            var str = '';
+
+		            for (var i = 0; i < array.length; i++) {
+		                var line = '';
+		                for (var index in array[i]) {
+		                    if (line != '') line += ','
+
+		                    line += array[i][index];
+		                }
+
+		                str += line + '\r\n';
+		            }
+
+		            return str;
+       		 }
+
+			function update_graph()
 				{
 					//XMLHTTPRequest to server xml generator
 					xmlhttp = new XMLHttpRequest();
@@ -44,51 +84,40 @@
 						if (xmlhttp.readyState == 4 && xmlhttp.status == 200)
 						{
 							//Pull out the response text from the request
-							response = xmlhttp.responseText;
+							rec_message = JSON.parse(xmlhttp.responseText);
 
-							//Parse response into XML DOM object
-							if (window.DOMParser) //For non IE browsers
-							{
-								parser=new DOMParser();
-								xmlDoc=parser.parseFromString(response,"text/xml");
+							//First element is list of updated indices
+							gindex = rec_message[0];
+
+							//Second element is the convertible graph data
+							x = rec_message[1];
+							console.log(x);
+							console.log(JSON.stringify(x))
+							
+							//For each data item
+							for (i = 0; i < x.length; i ++) {
+								//Convert response to CSV
+								new_data = ""
+								new_data = convert_to_csv(x[i]);
+								
+								//append to graph data
+								graph_data[i] += new_data;
+								g[i].updateOptions({'file': graph_data[i]})
 							}
-							else // Internet Explorer
-							{
-								xmlDoc=new ActiveXObject("Microsoft.XMLDOM");
-								xmlDoc.async=false;
-								xmlDoc.loadXML(response);
-							};
-
-
-
-							temp = "";
-							//For each "item" in the response xml
-							x = xmlDoc.getElementsByTagName("item");
-							for (i=0;i<x.length;i++)
-							{
-								//Comma separate each value and add a newline
-								v = x[i].getElementsByTagName("value");
-								for (j=0;j<v.length;j++)
-								{
-									temp += v[j].childNodes[0].nodeValue;
-									//If the value is not the last of the line,
-									//Add a comma before the next iteration
-									if (j+1 < v.length)
-										{ temp += ","}
-								}
-								temp += "\n";
-							}
-
-							//Append the new CSV items to the graph data
-							graph_data += temp;
-							g.updateOptions({'file': graph_data})
 							console.log(graph_data);
 						}
 					}
 
-					xmlhttp.open("GET","{{ url_for('generate_xml') }}", true)
+					//Send JSON POST XMLHTTPRequest to generator controller
+					xmlhttp.open("POST","{{ url_for('generate_data') }}", true)
 					xmlhttp.setRequestHeader('X-Requested-With', 'XMLHTTPRequest'); 
-					xmlhttp.send();
+					xmlhttp.setRequestHeader('Content-Type', 'application/json');
+					console.log("JSON Sending: " + JSON.stringify(gindex));
+					//Sends the graph indexes. The Indices tell the controller
+					//the current x value of the graph, and the number of
+					//indices implies the number of graphs to send data to
+					//#?Data is currently faked by RNG
+					xmlhttp.send(JSON.stringify(gindex));
 				};
 		</script>
 	</body>

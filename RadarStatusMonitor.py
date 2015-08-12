@@ -1,6 +1,8 @@
 from flask import Flask, g, render_template, \
                     request, redirect, url_for
 import psycopg2
+import json
+import random #?Not necessary after debugging completes
 
 DB_HOST = '192.168.50.100'
 DB_NAME = 'warno'
@@ -27,38 +29,37 @@ def teardown_request(exception):
         db.close()
 
 
-#! Flot testing only, remove 
-@app.route('/flot')
-def show_flot():
-    cur = g.db.cursor()
-    cur.execute('SELECT site_id FROM sites')
-    data = []
-    for row in cur.fetchall():
-        data.append([row[0], 0])
-
-    cur.execute('SELECT site_id FROM instruments')
-    for row in cur.fetchall():
-        data[row[0]-1][1] += 1
-
-    return render_template('flot.html', data=data)
-
 @app.route('/dygraph')
 def show_dygraph():
     return render_template('dygraph.html')
 
-@app.route('/generate_xml')
-def generate_xml():
-    data = [[7,65],[8,61],[9,70]]
-    print data
-    data_xml = "<document>\n"
-    for item in data:
-        data_xml += "<item>\n  <value>%s</value>\n  <value>%s</value>\n</item>\n" \
-                        % (item[0],item[1])
-    data_xml += "</document>"
-    print data_xml
+@app.route('/generate_data', methods=['POST'])
+def generate_data():
+    req_json = request.json
+    print "RANDOM: " + str(random.randint(0,20))
+    message_data = []
+    new_index = []
+    for index in req_json:
+        message_element = []
+        for i in xrange(3):
+            index += 1
+            message_element.append([index, random.randint(0,100)])
+        message_data.append(message_element)
+        new_index.append(index)
+
+
+    #message = [[[4,65], [5,61], [6,70]], [[4,18], [5,22], [6,24]]]
+    print "\nIndex     " + str(req_json)
+    print "\nNew Index " + str(new_index)
+    print "\nCombining "
+
+    message = [new_index, message_data]
+    print "\nMessage before conversion: " + str(message)
+    message = json.dumps(message)
+    print "\nOutgoing message: " + str(message)
 
     if request.is_xhr:
-        return data_xml
+        return message
     else:
         return ""
 
