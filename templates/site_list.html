@@ -9,7 +9,9 @@
 </head>
 <body>
 
-<div><h1>ARM Radar Sites</h1></div>
+{% with title='Sites' %}
+{% include 'partials/header_template.html' %}
+{% endwith %}
 
 <div>
 <table class="listing-table sortable" id="site-table">

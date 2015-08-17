@@ -9,7 +9,10 @@
 </head>
 <body>
 
-<div><h1>Instruments on Warno Sites</h1></div>
+{% with title='Instruments' %}
+{% include 'partials/header_template.html' %}
+{% endwith %}
+
 
 <div>
 <table class="listing-table sortable" id='instrument-table'>

@@ -8,12 +8,13 @@
 </head>
 <body>
 
-<div><h1>Add New Instrument to ARM Site</h1></div>
+{% with title='New Instrument' %}
+{% include 'partials/header_template.html' %}
+{% endwith %}
 
 
 <form method="post">
    <section>
-       Add an instrument:
      <p><label for="abbv">Abbv:</label>
        <input type="text" id="instrumentAbbvBox" name="abbv" maxlength="8"></input>
      </p>

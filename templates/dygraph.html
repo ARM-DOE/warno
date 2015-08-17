@@ -4,10 +4,6 @@
 		<script type="text/javascript" src="{{ url_for('static', filename='dygraph-combined-dev.js')}}"></script>
 	</head>
 	<body>
-		<h2>
-		Hyllo Wyrld from Dygraph
-		</h2>
-		<hr>
 <!-- 		<br>
 		<br>
 		<div id="graphdiv0" style="width: 400px; height: 200px;"></div>
@@ -16,68 +12,107 @@
 		<div id="graphdiv1" style="width: 400px; height: 200px;"></div>
 		<br>
 		<hr> -->
+		<br>
 		<div id="master-graphdiv"></div>
-		
-		<button type="button" onclick="update_graph()">Push Me</button>
-
+		<div>
+			Add a Graph By Attribute
+			<br>
+			<select id="keySelect" name="Data">
+		        {% for column in columns %}
+		          <option value="{{column}}">{{column}}</option>
+		        {% endfor %}
+	        </select>
+			<button type="button" onclick="add_graph()">Add</button>
+		</div>
 
 		<script>
-			graphs = 12;
-			g = [];
-			gindex = [];
-			graph_data = [];
+			// graphs = 12;
+			// g = [];
+			// gindex = [];
+			// graph_data = [];
 
-			//Create N graphs
-			for (i = 0; i < graphs; i ++)
-			{
-				//Add labels to the CSV data
-				graph_data.push(["value1, value2\n"])
-				//Index for these items is 1
-				gindex.push(1);
-				id = "graphdiv" + i;
-				title = "Dygraph " + i;
+			// //Create N graphs
+			// for (i = 0; i < graphs; i ++)
+			// {
+			// 	//Add labels to the CSV data
+			// 	graph_data.push(["value1, value2\n"])
+			// 	//Index for these items is 1
+			// 	gindex.push(1);
+			// 	id = "graphdiv" + i;
+			// 	title = "Dygraph " + i;
 
-				//Create a div for the graph matching the graphs id
-				div = document.createElement('div');
-				div.innerHTML = '<br><div id="' + id + '" style="width: 400px; height: 200px;"></div><br>'
-				document.getElementById('master-graphdiv').appendChild(div);
+			// 	//Create a div for the graph matching the graphs id
+			// 	div = document.createElement('div');
+			// 	div.innerHTML = '<br><div id="' + id + '" style="width: 400px; height: 200px;"></div><br>'
+			// 	document.getElementById('master-graphdiv').appendChild(div);
 
-				//Create a graph with the containing div id and the
-				//data labels
-				g.push(	new Dygraph(
-									document.getElementById(id),
-									graph_data[i],
-									{
-										title: title,
-										xlabel: "X Value",
-										ylabel: "Y Value"
-									}));
+			// 	//Create a graph with the containing div id and the
+			// 	//data labels
+			// 	g.push(	new Dygraph(
+			// 						document.getElementById(id),
+			// 						graph_data[i],
+			// 						{
+			// 							title: title,
+			// 							xlabel: "X Value",
+			// 							ylabel: "Y Value"
+			// 						}));
 
-			}
+			// }
+
+			// graph_data = "x,y\n"
+			// g =	new Dygraph(
+			// 		document.getElementById("graphdiv"),
+			// 		graph_data,
+			// 		{
+			// 			rollPeriod: 14,
+   //          			showRoller: true,
+   //          			showRangeSelector: true,
+   //          			rangeSelectorHeight: 40,
+   //          			rangeSelectorPlotStrokeColor: 'green',
+   //          			rangeSelectorPlotFillColor: 'lightgreen',
+
+			// 			title: "Dygraph",
+			// 			xlabel: "Time",
+			// 			ylabel: "Antenna Temperature",
+			// 			axes: { 
+			// 				ticker: function (a, b, pixels, opts, dygraph, vals) {
+   //                                      return Dygraph.getDateAxis(a, b, Dygraph.ANNUAL, opts, dygraph);
+			// 				}
+			// 			}
+			// 		});
 
 			//#?Straight pull from stack overflow
-			function convert_to_csv(objArray) {
-		            var array = typeof objArray != 'object' ? JSON.parse(objArray) : objArray;
-		            var str = '';
+			// function convert_to_csv(objArray) {
+		 //            var array = typeof objArray != 'object' ? JSON.parse(objArray) : objArray;
+		 //            var str = '';
 
-		            for (var i = 0; i < array.length; i++) {
-		                var line = '';
-		                for (var index in array[i]) {
-		                    if (line != '') line += ','
+		 //            for (var i = 0; i < array.length; i++) {
+		 //                var line = '';
+		 //                for (var index in array[i]) {
+		 //                    if (line != '') line += ','
 
-		                    line += array[i][index];
-		                }
+		 //                    line += array[i][index];
+		 //                }
 
-		                str += line + '\r\n';
-		            }
+		 //                str += line + '\r\n';
+		 //            }
 
-		            return str;
-       		 }
+		 //            return str;
+   //     		 }
+   			g = [];
+   			id = 0;
 
-			function update_graph()
+			function add_graph()
 				{
 					//XMLHTTPRequest to server xml generator
 					xmlhttp = new XMLHttpRequest();
+					key = document.getElementById('keySelect').value;
+					console.log("Key: " + key);
+
+					div_id = "graphdiv" + id;
+					div = document.createElement('div');
+					div.innerHTML = '<div id="' + div_id + '" style="width: 400px; height: 250px;"></div>'
+					document.getElementById('master-graphdiv').appendChild(div);
 
 					xmlhttp.onreadystatechange = function() {
 						//After the asyncronous request successfully returns
@@ -86,38 +121,71 @@
 							//Pull out the response text from the request
 							rec_message = JSON.parse(xmlhttp.responseText);
 
+							//console.log(rec_message);
+							graph_data = "x,y\n"
+							for (i = 0; i < rec_message["x"].length; i ++)
+							{
+								graph_data += rec_message["x"][i] + "," + rec_message["y"][i] + "\n";
+							}
+
+
+							//Add a new graph to the list of tracked graphs, insert into
+							//div created above
+							g.push(new Dygraph(
+									document.getElementById(div_id),
+									graph_data,
+									{
+										rollPeriod: 14,
+				            			showRoller: true,
+				            			showRangeSelector: true,
+				            			rangeSelectorHeight: 20,
+				            			rangeSelectorPlotStrokeColor: 'green',
+				            			rangeSelectorPlotFillColor: 'lightgreen',
+
+										title: key,
+										xlabel: "Time",
+										ylabel: key,
+										axes: { 
+											ticker: function (a, b, pixels, opts, dygraph, vals) {
+				                                        return Dygraph.getDateAxis(a, b, Dygraph.ANNUAL, opts, dygraph);
+											}
+										}
+									}));
+
+							//new_data = convert_to_csv(rec_message);
+
 							//First element is list of updated indices
-							gindex = rec_message[0];
+							//gindex = rec_message[0];
 
 							//Second element is the convertible graph data
-							x = rec_message[1];
-							console.log(x);
-							console.log(JSON.stringify(x))
+							// x = rec_message[1];
+							// console.log(x);
+							// console.log(JSON.stringify(x))
 							
-							//For each data item
-							for (i = 0; i < x.length; i ++) {
-								//Convert response to CSV
-								new_data = ""
-								new_data = convert_to_csv(x[i]);
+							// //For each data item
+							// for (i = 0; i < x.length; i ++) {
+							// 	//Convert response to CSV
+							// 	new_data = ""
+							// 	new_data = convert_to_csv(x[i]);
 								
-								//append to graph data
-								graph_data[i] += new_data;
-								g[i].updateOptions({'file': graph_data[i]})
-							}
-							console.log(graph_data);
+							// 	//append to graph data
+							// 	graph_data[i] += new_data;
+							// 	g[i].updateOptions({'file': graph_data[i]})
+							// }
+							//console.log(graph_data);
 						}
 					}
 
-					//Send JSON POST XMLHTTPRequest to generator controller
-					xmlhttp.open("POST","{{ url_for('generate_data') }}", true)
-					xmlhttp.setRequestHeader('X-Requested-With', 'XMLHTTPRequest'); 
-					xmlhttp.setRequestHeader('Content-Type', 'application/json');
-					console.log("JSON Sending: " + JSON.stringify(gindex));
-					//Sends the graph indexes. The Indices tell the controller
-					//the current x value of the graph, and the number of
-					//indices implies the number of graphs to send data to
-					//#?Data is currently faked by RNG
-					xmlhttp.send(JSON.stringify(gindex));
+					//Send JSON POST XMLHTTPRequest to generator controller.
+					//Also include keys for the generated graph
+					url = "{{url_for('generate_graph')}}" + "?key=" + key;
+					xmlhttp.open("POST", url, true);
+
+					//Send out the request
+					xmlhttp.send();
+
+					//Increment the id for the next graph created
+					id += 1;
 				};
 		</script>
 	</body>

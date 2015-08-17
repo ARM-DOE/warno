@@ -8,12 +8,13 @@
 </head>
 <body>
 
-<div><h1>Add New ARM Site</h1></div>
+{% with title='New Site' %}
+{% include 'partials/header_template.html' %}
+{% endwith %}
 
 
 <form method="post">
    <section>
-       Add a site:
      <p><label for="abbv">Abbreviation:</label>
        <input type="text" id="siteAbbvBox" name="abbv" maxlength="8"></input>
      </p>

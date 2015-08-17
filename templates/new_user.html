@@ -8,12 +8,13 @@
 </head>
 <body>
 
-<div><h1>Add New User to Warno</h1></div>
+{% with title='New User' %}
+{% include 'partials/header_template.html' %}
+{% endwith %}
 
 
 <form method="post">
    <section>
-       Add a user:
      <p><label for="name">Name:</label>
        <input type="text" id="userNameBox" name="name" maxlength="128"></input>
      </p>

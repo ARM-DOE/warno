@@ -1,3 +1,18 @@
+div.head-title {
+	background-color: LightGray; 
+	width: 97%;
+	border:3px solid black; 
+	padding: 5px;
+}
+
+table.nav-table{
+	width: 60%;
+}
+
+table.nav-table td {
+	text-align: center;
+}
+
 table.listing-table{
     width: 100%;
     background-color: #f1f1c1;

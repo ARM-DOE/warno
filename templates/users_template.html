@@ -9,7 +9,9 @@
 </head>
 <body>
 
-<div><h1>User Accounts on Warno</h1></div>
+{% with title='Users' %}
+{% include 'partials/header_template.html' %}
+{% endwith %}
 
 <div>
 <table class="listing-table sortable" id='user-table'>

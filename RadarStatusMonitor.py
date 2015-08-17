@@ -31,37 +31,31 @@ def teardown_request(exception):
 
 @app.route('/dygraph')
 def show_dygraph():
-    return render_template('dygraph.html')
-
-@app.route('/generate_data', methods=['POST'])
-def generate_data():
-    req_json = request.json
-    print "RANDOM: " + str(random.randint(0,20))
-    message_data = []
-    new_index = []
-    for index in req_json:
-        message_element = []
-        for i in xrange(3):
-            index += 1
-            message_element.append([index, random.randint(0,100)])
-        message_data.append(message_element)
-        new_index.append(index)
+    cur = g.db.cursor()
+    cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'prosensing_paf'")
+    rows = cur.fetchall()
+    columns = [row[0] for row in rows]
+    return render_template('dygraph.html', columns= columns)
 
 
-    #message = [[[4,65], [5,61], [6,70]], [[4,18], [5,22], [6,24]]]
-    print "\nIndex     " + str(req_json)
-    print "\nNew Index " + str(new_index)
-    print "\nCombining "
+#Generate a graph using a given key
+@app.route('/generate_graph', methods=['GET', 'POST'])
+def generate_graph():
+    cur = g.db.cursor()
 
-    message = [new_index, message_data]
-    print "\nMessage before conversion: " + str(message)
+    key = request.args.get("key")
+    print key;
+
+    cur.execute('SELECT time, {k} FROM prosensing_paf'.format(k=key))
+    rows = cur.fetchall()
+    print rows[0]
+    #? is iso format timezone ambiguous?
+    x = [row[0].isoformat() for row in rows]
+    y = [row[1] for row in rows]
+    message = {"x": x,"y": y}
     message = json.dumps(message)
-    print "\nOutgoing message: " + str(message)
-
-    if request.is_xhr:
-        return message
-    else:
-        return ""
+    
+    return message
 
 
 @app.route('/users/new', methods=['GET', 'POST'])
@@ -81,14 +75,14 @@ def new_user():
                     VALUES (%s, %s, %s, %s, %s, %s)''', (name, email, location, position, password, "None"))
         cur.execute('COMMIT')
 
-        return redirect(url_for("show_users"))
+        return redirect(url_for("list_users"))
 
     if request.method == 'GET':   
         return render_template('new_user.html')
 
 
 @app.route('/users')
-def show_users():
+def list_users():
     cur = g.db.cursor()
 
     #?Dangerous query?
@@ -111,7 +105,7 @@ status_text = {1: "OPERATIONAL",
 
 @app.route('/instruments/new', methods=['GET', 'POST'])
 def new_instrument():
-    #Add a new user to Warno
+    #Add a new instrument to Warno
     cur = g.db.cursor()
     if request.method == 'POST':
         #Field lengths limited in the views
@@ -127,7 +121,7 @@ def new_instrument():
                     VALUES (%s, %s, %s, %s, %s, %s, %s)''', (abbv, name, itype, vendor, description, frequency_band, site))
         cur.execute('COMMIT')
 
-        return redirect(url_for("show_instruments"))
+        return redirect(url_for("list_instruments"))
 
     if request.method == 'GET':   
         # Create a set of sites and their ids for the dropdown in the add user form
@@ -136,7 +130,7 @@ def new_instrument():
         return render_template('new_instrument.html', sites=sites)
 
 @app.route('/instruments')
-def show_instruments():
+def list_instruments():
     #List Instruments
     cur = g.db.cursor()
 
@@ -149,6 +143,39 @@ def show_instruments():
                     frequency_band=row[6], location=row[7], id=row[0]) for row in cur.fetchall()]
 
     return render_template('instrument_list.html', instruments=instruments)
+
+@app.route('/instruments/<instrument_id>')
+def show_instrument(instrument_id):
+
+    cur = g.db.cursor()
+    cur.execute('''SELECT i.instrument_id, i.name_short, i.name_long, i.type, 
+            i.vendor, i.description, i.frequency_band, s.name_short, s.latitude, s.longitude 
+            FROM instruments i JOIN sites s ON (i.site_id = s.site_id)
+            WHERE i.instrument_id = %s''', (instrument_id,))
+    row = cur.fetchone()
+    instrument = dict(abbv=row[1], name=row[2], type=row[3], vendor=row[4], description=row[5], 
+                    frequency_band=row[6], location=row[7], latitude=row[8], longitude=row[9], id=row[0])
+
+    cur.execute('''SELECT l.time, l.contents, l.status, l.supporting_images, u.name
+                    FROM instrument_logs l JOIN users u
+                    ON l.author_id = u.user_id WHERE l.instrument_id = %s 
+                    ORDER BY time DESC LIMIT 5''', (instrument_id,))
+    recent_logs = [dict(time=row[0], contents=row[1], status=row[2], supporting_images=row[3],
+                        author=row[4]) for row in cur.fetchall()]
+    if recent_logs:
+        status = status_code_to_text(recent_logs[0]["status"])
+    else:
+        status = "OPERATIONAL"
+
+    cur = g.db.cursor()
+    cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'prosensing_paf'")
+    rows = cur.fetchall()
+    columns = [row[0] for row in rows]
+
+    return render_template('show_instrument.html', instrument=instrument, 
+                            recent_logs=recent_logs, status= status, columns= columns)
+
+
 
 #? May need to move this helper function, pulled from Stack Overflow
 #Checks if the string is a valid decimal/floating point number
@@ -186,7 +213,7 @@ def new_site():
                         VALUES (%s, %s, %s, %s, %s, %s, %s)''', (abbv, name, lat, lon, facility, mobile, location_name))
             cur.execute('COMMIT')
 
-            return redirect(url_for("show_sites"))
+            return redirect(url_for("list_sites"))
         else:
             return redirect(url_for("new_site", error="Fields formatted incorrectly"))
 
@@ -195,7 +222,7 @@ def new_site():
         return render_template('new_site.html', error= error)
 
 @app.route('/sites')
-def show_sites():
+def list_sites():
     cur = g.db.cursor()
     sql_query = '''SELECT s.name_short, s.name_long, s.latitude, s.longitude, 
                     s.facility, s.mobile, s.location_name, s.site_id FROM sites s'''
