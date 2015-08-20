@@ -2,9 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Instruments on ARM Sites</title>
+    <title>Instrument on ARM Site</title>
 <link rel=stylesheet type=text/css href="{{ url_for('static', filename='master.css') }}">
-<script src="{{ url_for('static', filename='sorttable.js')}}"></script>
 
 </head>
 <body>
@@ -14,33 +13,9 @@
 {% endwith %}
 
 
-<div>
-<table class="listing-table sortable" id='instrument-table'>
-    <tr>
-        <th> Abbv</th>
-        <th> Intrument Name</th>
-        <th> Type</th>
-        <th> Vendor</th>
-        <th> Description</th>
-        <th> Location</th>
-        <th> Frequency Band</th>
-    </tr>
-    <tr>
-        <td>{{ instrument.abbv }}</td>
-        <td>{{ instrument.name }}</td>
-        <td>{{ instrument.type }}</td>
-        <td>{{ instrument.vendor }}</td>
-        <td>{{ instrument.description }}</td>
-        <td>{{ instrument.location }}</td>
-        <td>{{ instrument.frequency_band }}</td>
-    </tr>
-</table>
-</div>
-
-
 <div style="width: 300px; float: left;">
     <div>
-        <img src='https://maps.googleapis.com/maps/api/staticmap?center={{instrument.latitude}}, {{instrument.longitude}}&zoom=1&size=300x300&maptype=roadmap&markers=color:blue%7Clabel:S%7C{{instrument.latitude}}, {{instrument.longitude}}'/>
+        <img src='https://maps.googleapis.com/maps/api/staticmap?center={{instrument.latitude}}, {{instrument.longitude}}&zoom=1&size=300x300&maptype=roadmap&markers=color:blue%7Clabel:S%7C{{instrument.latitude}}, {{instrument.longitude}}&sensor=false'/>
     </div>
     <div style="background-color: LightYellow; border: 1px solid black">
 
@@ -57,17 +32,30 @@
         <h3>STATUS: {{status}}</h3>
     </div>
     <div>
-        {% with columns=columns %}
+        {% with columns=columns, instrument_id=instrument.id %}
         {% include 'dygraph.html' %}
         {% endwith %}
     </div>
 </div>
 <div style="position: absolute; left: 760px; width: 400px;">
     <div style="background-color: LightYellow; border: 1px solid black;">
-        <h3>  Information:</h3>
+        <h3 style="margin-left: 10px;">  Information:</h3>
     </div>
-    <div>
-        
+    <div style = "border: 1px solid black; padding: 5px;">
+        Abbreviation:   {{instrument.abbv}}
+        <br>
+        Name:           {{instrument.name}}
+        <br>
+        Vendor:         {{instrument.vendor}}
+        <br>
+        Type:           {{instrument.type}}
+        <br>
+        Frequency Band: {{instrument.frequency_band}}
+        <br>
+        Location:       
+        <a href="{{url_for('show_site', site_id= instrument.site_id)}}">{{instrument.location}}</a>
+        <br>
+        Description:    {{instrument.description}}        
     </div>
 </div>
 

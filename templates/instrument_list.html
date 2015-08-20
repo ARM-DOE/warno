@@ -28,12 +28,12 @@
     </tr>
     {%  for instrument in instruments %}
     <tr>
-        <td>{{ instrument.abbv }}</td>
+        <td><a href = "{{url_for('show_instrument', instrument_id=instrument.id)}}">{{ instrument.abbv }}</td>
         <td>{{ instrument.name }}</td>
         <td>{{ instrument.type }}</td>
         <td>{{ instrument.vendor }}</td>
         <td>{{ instrument.description }}</td>
-        <td>{{ instrument.location }}</td>
+        <td><a href= "{{url_for('show_site', site_id=instrument.site_id)}}">{{ instrument.location }}</a></td>
         <td>{{ instrument.frequency_band }}</td>
         <td>{{ instrument.id }}</td>
     </tr>

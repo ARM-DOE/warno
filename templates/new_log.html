@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>Submit Log</title>
 <link rel=stylesheet type=text/css href="{{ url_for('static', filename='master.css') }}">
-<script src="{{ url_for('static', filename='sorttable.js')}}"></script>
 
 </head>
 <body>
@@ -16,7 +15,7 @@
 <div>
     <h1 class="title">Log Entry Submission</h1>
 </div>
-<form id="log-submit-form" action="/submit_new_log.html">
+<form id="log-submit-form" action="{{url_for('new_log')}}">
     <p><label for="user-id">User Name</label>:
         <select name="user-id">
             {% for user in users %}
@@ -34,11 +33,20 @@
     <p><label for="time">Date/Time:</label>
          <input type="datetime" name="time" placeholder="01/01/1970 12:27:31">
             (MM-DD-YY HH:MM)
+         {% if error %}
+         <div id="new-log-error" style="color: red">{{error}}</div>
+         {% endif %}
     </p>
 
-    <p> <label for="contents">Log Title</label><input type="text" name="title"></p>
-    <p> Log Contents:<br>
-        <textarea style="width: 80%;height: 25em;"></textarea>
+    <p> <label for="status">Log Status</label>
+        <select name="status">
+            {% for key, value in status.iteritems() %}
+            <option value="{{key}}">{{value}}</option>
+            {% endfor %}
+        </select>
+    </p>
+    <p> <label for="contents">Log Contents:</label><br>
+        <textarea style="width: 80%;height: 25em;" name="contents"></textarea>
     </p>
     <p>
         <input type="submit" value="Submit Log">
