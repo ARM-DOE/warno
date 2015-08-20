@@ -35,6 +35,18 @@ proxy:
     - userportal
   env_file: .env
 
+agent:
+    build: ./warno-agent
+    command: python warno-agent.py
+    ports:
+      - "6310:6310"
+    volumes:
+        - /vagrant/warno-agent/src:/opt/agent
+    links:
+      - eventmanager
+      - proxy
+    env_file: .env
+
 sshd:
   build: ./sshd
   ports:
