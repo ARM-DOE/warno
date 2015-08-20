@@ -19,10 +19,18 @@
     </div>
     <div style="background-color: LightYellow; border: 1px solid black">
 
-        <h3>Recent Logs:</h3>
+        <h3 style="text-align: center;">Recent Logs:</h3>
         {% for log in recent_logs %}
             <hr>
-            {{log.author}} {{log.time}} {{log.status}} {{log.contents}} {{log.supporting_images}}
+            <b>Logged By</b>: {{log.author}}
+            <br>
+            <b>Time</b>: {{log.time}}
+            <br>
+            <b>Status</b>: {{log.status}}
+            <br>
+            <b>Comments</b>: {{log.contents}}
+            <br>
+            <b>Supporting Images</b>: {{log.supporting_images}}
         {% endfor %}
 
     </div>
