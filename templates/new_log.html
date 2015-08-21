@@ -16,7 +16,7 @@
     <h1 class="title">Log Entry Submission</h1>
 </div>
 <form id="log-submit-form" action="{{url_for('new_log')}}">
-    <p><label for="user-id">User Name</label>:
+    <p><label for="user-id">User Name:</label>
         <select name="user-id">
             {% for user in users %}
             <option value="{{ user.id }}">{{ user.name }}</option>
@@ -52,7 +52,6 @@
         <input type="submit" value="Submit Log">
     </p>
 </form>
-
 
 
 </body>
