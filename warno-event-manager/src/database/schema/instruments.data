@@ -1,0 +1,3 @@
+site_id,name_short,name_long,type,vendor,description,frequency_band
+2,KAZR-2,K Band Radar 2,KAZR,Prosensing,KAZR Cloud Profiler,Ka
+3,SDAR2, S Band Radar Brutus, C-SAPR,DAR Distributors,C-SAPR Version 1.2,C
