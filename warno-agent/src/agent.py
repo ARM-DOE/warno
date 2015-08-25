@@ -8,6 +8,7 @@ import os
 import multiprocessing
 import signal
 import sys
+import base64
 
 from Queue import Empty
 from time import sleep
@@ -69,7 +70,9 @@ def load_config():
     config: dict
         Configuration Dictionary of Key Value Pairs
     """
-    pass
+    with open("config.yml", 'r') as ymlfile:
+        config = yaml.load(ymlfile)
+    return config
 
 if __name__ == "__main__":
     signal.signal(signal.SIGINT, signal_handler)
@@ -77,6 +80,16 @@ if __name__ == "__main__":
 
     msg_queue = Queue()
 
+    cfg = load_config()
+
+    print(cfg)
+    #  Loop through each plugin and register it
+    for plugin in plugin_module_list:
+        print(plugin.register())
+        print(json.dumps(plugin.register()))
+
+
+    #  Loop through plugins and start each up
     for plugin in plugin_module_list:
         p = Process(target = plugin.run, args=(msg_queue,))
         p.start()
@@ -85,7 +98,7 @@ if __name__ == "__main__":
     while 1:
         if not msg_queue.empty():
             msg = msg_queue.get_nowait()
-            print(msg)
+            print(json.dumps(msg))
         else:
             sleep(0.1)
 
