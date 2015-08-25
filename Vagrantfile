@@ -29,6 +29,7 @@ Vagrant.configure(2) do |config|
   end
 
   config.vm.provision :shell, inline: "sudo apt-get update"
+  config.vm.provision :shell, path: "bootstrap.sh"
   config.vm.provision :docker
   config.vm.provision :docker_compose, yml: "/vagrant/docker-compose.yml", rebuild: true, run: "always"
 
