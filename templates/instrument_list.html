@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Instruments on ARM Sites</title>
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='master.css') }}">
+<script src="{{ url_for('static', filename='sorttable.js')}}"></script>
+
+</head>
+<body>
+
+{% with title='Instruments' %}
+{% include 'partials/header_template.html' %}
+{% endwith %}
+
+
+<div>
+<table class="listing-table sortable" id='instrument-table'>
+    <tr>
+        <th> Abbv</th>
+        <th> Intrument Name</th>
+        <th> Type</th>
+        <th> Vendor</th>
+        <th> Description</th>
+        <th> Location</th>
+        <th> Frequency Band</th>
+        <th> Instrument ID </th>
+    </tr>
+    {%  for instrument in instruments %}
+    <tr>
+        <td><a href = "{{url_for('show_instrument', instrument_id=instrument.id)}}">{{ instrument.abbv }}</td>
+        <td>{{ instrument.name }}</td>
+        <td>{{ instrument.type }}</td>
+        <td>{{ instrument.vendor }}</td>
+        <td>{{ instrument.description }}</td>
+        <td><a href= "{{url_for('show_site', site_id=instrument.site_id)}}">{{ instrument.location }}</a></td>
+        <td>{{ instrument.frequency_band }}</td>
+        <td>{{ instrument.id }}</td>
+    </tr>
+    {% endfor %}
+</table>
+</div>
+
+<br>
+<hr>
+<br>
+
+<form action="{{ url_for('new_instrument') }}" method="get">
+  <input type="submit" id="new-instrument-redirect-button"
+         value="Add New Instrument"/>
+</form>
+
+</body>
+</html>

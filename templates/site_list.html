@@ -9,7 +9,9 @@
 </head>
 <body>
 
-<div><h1>ARM Radar Sites</h1></div>
+{% with title='Sites' %}
+{% include 'partials/header_template.html' %}
+{% endwith %}
 
 <div>
 <table class="listing-table sortable" id="site-table">
@@ -18,64 +20,36 @@
         <th> Site Name</th>
         <th> Site Latitude</th>
         <th> Site Longitude</th>
+        <th> Facility</th>
+        <th> Mobile</th>
+        <th> Location Name</th>
         <th> Site ID </th>
     </tr>
     {%  for site in sites %}
     <tr>
-        <td>{{ site.abbv }}</td>
+        <td><a href="{{url_for('show_site', site_id= site.id)}}">{{ site.abbv }}</a></td>
         <td>{{ site.name }}</td>
         <td>{{ site.latitude }}</td>
         <td>{{ site.longitude }}</td>
+        <td>{{ site.facility }}</td>
+        {% if site.mobile %}
+        <td>Yes</td>
+        {% else %}
+        <td>No</td>
+        {% endif %}
+        <td>{{ site.location_name }}</td>
         <td>{{ site.id }}</td>
     </tr>
     {% endfor %}
 </table>
-</div>
-{##}
-{#<dialog id="addSiteDialog">#}
-{#  <form method="dialog">#}
-{#    <section>#}
-{#        Add a Site:#}
-{#      <p><label for="name">Name:</label>#}
-{#        <input type="text" id="userNameBox" name="name"></input>#}
-{#      </p>#}
-{#      <p><label for="site">Site:</label>#}
-{#        <input type="text" id="userSiteBox" name="site"></input>#}
-{#      </p>#}
-{#      <p><label for="email">E-mail:</label>#}
-{#        <input type="text" id="userEmailBox" name="email"></input>#}
-{#      </p>#}
-{#    </section>#}
-{#    <menu>#}
-{#      <button id="cancel" type="reset">Cancel</button>#}
-{#      <button type="submit" id="submit">Confirm</button>#}
-{#    </menu>#}
-{#  </form>#}
-{#</dialog>#}
-{##}
-{#<menu>#}
-{#  <button id="addUser">Add a User</button>#}
-{#</menu>#}
 
-<script>
-  (function() {
-    var updateButton = document.getElementById('addUser');
-    var cancelButton = document.getElementById('cancel');
-    var addUserDialog = document.getElementById('addUserDialog');
+<br>
+<hr>
+<br>
 
-    // Update button opens a modal dialog
-    updateButton.addEventListener('click', function() {
-      addUserDialog.showModal();
-    });
-
-    // Form cancel button closes the dialog box
-    cancelButton.addEventListener('click', function() {
-      addUserDialog.close();
-    });
-
-
-
-  })();
-</script>
+<form action="{{ url_for('new_site') }}" method="get">
+  <input type="submit" id="new-site-redirect-button"
+         value="Add New Site"/>
+</form>
 </body>
 </html>

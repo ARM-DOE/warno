@@ -8,7 +8,9 @@
 </head>
 </head>
 <body>
-<h1 class="header"> Current status of all ARM Radars</h1>
+{% with title='Status' %}
+{% include 'partials/header_template.html' %}
+{% endwith %}
 
 <table class="listing-table sortable">
     <tr>

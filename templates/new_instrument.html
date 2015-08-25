@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>New Instrument on ARM Site</title>
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='master.css') }}">
+
+</head>
+<body>
+
+{% with title='New Instrument' %}
+{% include 'partials/header_template.html' %}
+{% endwith %}
+
+
+<form method="post">
+   <section>
+     <p><label for="abbv">Abbv:</label>
+       <input type="text" id="instrumentAbbvBox" name="abbv" maxlength="8"></input>
+     </p>
+     <p><label for="name">Name:</label>
+       <input type="text" id="instrumentNameBox" name="name" maxlength="128"></input>
+     </p>
+     <p><label for="type">Type:</label>
+       <input type="text" id="instrumentTypeBox" name="type" maxlength="64"></input>
+     </p>
+     <p><label for="vendor">Vendor:</label>
+       <input type="text" id="instrumentVendorBox" name="vendor" maxlength="64"></input>
+     </p>
+     <p><label for="description">Description:</label>
+       <input type="text" id="instrumentDescriptionBox" name="description"></input>
+     </p>
+     <p><label for="frequency_band">Frequency Band:</label>
+       <input type="text" id="instrumentFrequencyBandBox" name="frequency_band" maxlength="2"></input>
+     </p>
+     <p><label for="site">Site:</label>
+       <select id="instrumentSiteSelect" name="site">
+         {% for site in sites %}
+           <option value="{{site.id}}">{{site.name}}</option>
+         {% endfor %}
+       </select>
+     </p>
+  </section>
+  <menu>
+    <button id="cancel" type="reset">Cancel</button>
+    <button type="submit" id="submit">Confirm</button>
+  </menu>
+</form>
+
+</body>
+</html>
