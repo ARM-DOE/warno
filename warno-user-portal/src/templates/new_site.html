@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>New ARM Site</title>
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='master.css') }}">
+
+</head>
+<body>
+
+{% with title='New Site' %}
+{% include 'partials/header_template.html' %}
+{% endwith %}
+
+
+<form method="post">
+   <section>
+     <p><label for="abbv">Abbreviation:</label>
+       <input type="text" id="siteAbbvBox" name="abbv" maxlength="8"></input>
+     </p>
+     <p><label for="name">Name:</label>
+       <input type="text" id="siteNameBox" name="name" maxlength="128"></input>
+     </p>
+     <p><label for="lat">Latitude:</label>
+       <input type="text" id="siteLatBox" name="lat"></input>
+     </p>
+     <p><label for="lon">Longitude:</label>
+       <input type="text" id="siteLonBox" name="lon"></input>
+     </p>
+     <p><label for="facility">Facility:</label>
+       <input type="text" id="siteFacilityBox" name="facility" maxlength="8"></input>
+     </p>
+     <p><label for="mobile">Mobile:</label>
+        <input type="checkbox" name="mobile">
+     </p>
+     <p><label for="location_name">Location Name:</label>
+       <input type="text" id="siteLocationNameBox" name="location_name" maxlength="64"></input>
+     </p>
+  </section>
+  <menu>
+    {% if error %}
+      <div id="new-site-error" style="color: red">{{error}}</div>
+    {% endif %}
+    <button id="cancel" type="reset">Cancel</button>
+    <button type="submit" id="submit">Confirm</button>
+  </menu>
+</form>
+
+
+</body>
+</html>
