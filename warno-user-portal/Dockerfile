@@ -1,5 +1,5 @@
 FROM ubuntu:14.04
-MAINTAINER Joseph C. Hardin <joseph.hardin@pnnl.gov> 
+MAINTAINER Joseph C. Hardin <joseph.hardin@pnnl.gov>
 
 COPY /src /opt/warno-user-portal/
 
@@ -18,7 +18,7 @@ RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so
 ENV NOTVISIBLE "in users profile"
 RUN echo "export VISIBLE=now" >> /etc/profile
 
-RUN /usr/sbin/sshd 
+RUN /usr/sbin/sshd
 
 
 
@@ -27,4 +27,4 @@ RUN pip install -r /opt/warno-user-portal/requirements.txt
 EXPOSE 80
 EXPOSE 22
 
-WORKDIR /opt/warno-user-portal/mysite
+WORKDIR /opt/warno-user-portal

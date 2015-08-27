@@ -1,5 +1,5 @@
 FROM ubuntu:14.04
-MAINTAINER Joseph C. Hardin <joseph.hardin@pnnl.gov> 
+MAINTAINER Joseph C. Hardin <joseph.hardin@pnnl.gov>
 
 COPY /src /opt/warno-event-manager/
 
@@ -19,7 +19,7 @@ RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so
 ENV NOTVISIBLE "in users profile"
 RUN echo "export VISIBLE=now" >> /etc/profile
 
-RUN /usr/sbin/sshd 
+RUN /usr/sbin/sshd
 
 EXPOSE 80
 EXPOSE 22

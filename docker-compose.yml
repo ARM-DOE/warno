@@ -16,7 +16,7 @@ eventmanager:
 
 userportal:
   build: ./warno-user-portal
-  command: bash -c "/usr/sbin/sshd && python manage.py runserver 0.0.0.0:80"
+  command: bash -c "/usr/sbin/sshd && python RadarStatusMonitor.py"
   links:
     - postgres
     - eventmanager
