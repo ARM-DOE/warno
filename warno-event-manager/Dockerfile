@@ -1,19 +1,24 @@
-FROM warno-docker-image
+# Local image
+# FROM warno-docker-image
+# Repository image
+FROM ubuntu:14.04
 MAINTAINER Joseph C. Hardin <joseph.hardin@pnnl.gov>
 
 COPY /src /opt/warno-event-manager/
 
-#RUN apt-get install -y build-essential python-dev python-pip python-psycopg2
+# Automatic install from remote
+RUN apt-get update
+RUN apt-get install -y build-essential python-dev python-pip python-psycopg2
+RUN pip install -r /opt/warno-event-manager/requirements.txt
+RUN apt-get install -y openssh-server
 
-RUN echo "Installing Event Manager .deb files."
-WORKDIR /opt/warno-event-manager
-RUN dpkg --install --recursive warno-event-manager-deb
+# Manual local install
+# RUN echo "Installing Event Manager .deb files."
+# WORKDIR /opt/warno-event-manager
+# RUN dpkg --install --recursive warno-event-manager-deb
+# RUN echo "Installing Event Manager pip requirements."
+# RUN bash wempip_install.sh
 
-RUN echo "Installing Event Manager pip requirements."
-# run pip install -r /opt/warno-event-manager/requirements.txt
-RUN bash wempip_install.sh
-
-#RUN apt-get install -y openssh-server
 
 RUN mkdir /var/run/sshd
 RUN echo 'root:screencast' | chpasswd

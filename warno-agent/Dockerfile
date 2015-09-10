@@ -1,13 +1,20 @@
-FROM warno-docker-image
+# Local image
+# FROM warno-docker-image
+# Repository image
+FROM ubuntu:14.04
 MAINTAINER Joseph C. Hardin <joseph.hardin@pnnl.gov>
 
 COPY /src /opt/warno-agent/
 
-#RUN apt-get install -y build-essential python-dev python-pip
+# Automatic install from remote
+RUN apt-get update
+RUN apt-get install -y build-essential python-dev python-pip
+RUN pip install -r /opt/warno-agent/requirements.txt
 
-RUN echo "Installing Agent .deb files."
-WORKDIR /opt/warno-agent
-RUN dpkg --install --recursive warno-agent-deb
+# Manual local install
+# RUN echo "Installing Agent .deb files."
+# WORKDIR /opt/warno-agent
+# RUN dpkg --install --recursive warno-agent-deb
 
 #run pip install -r /opt/warno-agent/requirements.txt
 
