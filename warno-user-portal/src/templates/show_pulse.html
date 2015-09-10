@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pulse from Instrument</title>
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='master.css') }}">
+
+</head>
+<body>
+
+{% with title="Pulses" %}
+{% include 'partials/header_template.html' %}
+{% endwith %}
+
+<div style="background-color: #EEE; padding: 5px; border: solid #F1F1C1 3px;">
+    {% with pulse_ids=pulse_ids %}
+    {% include 'pulse_dygraph.html' %}
+    {% endwith %}
+</div>
+
+</body>
+</html>

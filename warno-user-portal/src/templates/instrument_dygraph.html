@@ -76,7 +76,7 @@
 			// 			title: "Dygraph",
 			// 			xlabel: "Time",
 			// 			ylabel: "Antenna Temperature",
-			// 			axes: { 
+			// 			axes: {
 			// 				ticker: function (a, b, pixels, opts, dygraph, vals) {
    //                                      return Dygraph.getDateAxis(a, b, Dygraph.ANNUAL, opts, dygraph);
 			// 				}
@@ -148,7 +148,7 @@
 											title: key,
 											xlabel: "Time",
 											ylabel: key,
-											axes: { 
+											axes: {
 												ticker: function (a, b, pixels, opts, dygraph, vals) {
 					                                        return Dygraph.getDateAxis(a, b, Dygraph.ANNUAL, opts, dygraph);
 												}
@@ -169,13 +169,13 @@
 							// x = rec_message[1];
 							// console.log(x);
 							// console.log(JSON.stringify(x))
-							
+
 							// //For each data item
 							// for (i = 0; i < x.length; i ++) {
 							// 	//Convert response to CSV
 							// 	new_data = ""
 							// 	new_data = convert_to_csv(x[i]);
-								
+
 							// 	//append to graph data
 							// 	graph_data[i] += new_data;
 							// 	g[i].updateOptions({'file': graph_data[i]})
@@ -186,7 +186,7 @@
 
 					//Send JSON POST XMLHTTPRequest to generator controller.
 					//Also include keys for the generated graph
-					url = "{{url_for('generate_graph')}}" + "?key=" + key + "&instrument_id=" + {{instrument_id}};
+					url = "{{url_for('generate_instrument_graph')}}" + "?key=" + key + "&instrument_id=" + {{instrument_id}};
 					xmlhttp.open("POST", url, true);
 
 					//Send out the request

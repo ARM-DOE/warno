@@ -42,7 +42,12 @@ def initialize_database(curr):
                    "instruments",
                    "log",
                    "usage",
-                   "prosensing_paf"
+                   "prosensing_paf",
+                   "event_codes",
+                   "events_with_text",
+                   "events_with_value",
+                   "pulse_captures",
+                   "table_references"
                    ]
 
     for schema in schema_list:

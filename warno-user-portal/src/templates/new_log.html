@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Submit Log</title>
-<link rel=stylesheet type=text/css href="{{ url_for('static', filename='master.css') }}">
+    <link rel=stylesheet type=text/css href="{{ url_for('static', filename='master.css') }}">
+    <script type="text/javascript" src="{{ url_for('static', filename='jquery-2.1.4.js')}}"></script>
 
 </head>
 <body>
@@ -31,8 +32,8 @@
         </select>
     </p>
     <p><label for="time">Date/Time:</label>
-         <input type="datetime" name="time" placeholder="01/01/1970 12:27:31">
-            (MM-DD-YY HH:MM)
+         <input type="datetime-local" id="datetime-input" name="time" placeholder="01/01/1970 12:27:31">
+            (MM-DD-YYYY HH:MM)
          {% if error %}
          <div id="new-log-error" style="color: red">{{error}}</div>
          {% endif %}
@@ -53,6 +54,16 @@
     </p>
 </form>
 
+<script>
+  //Catch the date as it's submitted and convert to UTC for the database.
+  $(function() {$('#log-submit-form').submit(function()
+  {
+    str = document.getElementById("datetime-input").value;
+    date = new Date(str)
+    document.getElementById("datetime-input").value = date.toUTCString();
+    });
+    });
+</script>
 
 </body>
 </html>

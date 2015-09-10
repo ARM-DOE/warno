@@ -41,7 +41,7 @@
     </div>
     <div>
         {% with columns=columns, instrument_id=instrument.id %}
-        {% include 'dygraph.html' %}
+        {% include 'instrument_dygraph.html' %}
         {% endwith %}
     </div>
 </div>
@@ -60,10 +60,10 @@
         <br>
         Frequency Band: {{instrument.frequency_band}}
         <br>
-        Location:       
+        Location:
         <a href="{{url_for('show_site', site_id= instrument.site_id)}}">{{instrument.location}}</a>
         <br>
-        Description:    {{instrument.description}}        
+        Description:    {{instrument.description}}
     </div>
 </div>
 

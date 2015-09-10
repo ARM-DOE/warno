@@ -54,8 +54,9 @@ def show_dygraph():
 
     Returns
     -------
-    dygraph.html: HTML document
-        Returns an HTML document with a list of columns to select from, the columns being available table columns to plot against time.
+    instrument_dygraph.html: HTML document
+        Returns an HTML document with a list of columns to select from, the columns
+        being available table columns to plot against time.
     """
 
     # Initialize the database cursor
@@ -68,22 +69,26 @@ def show_dygraph():
     columns = [row[0] for row in rows]
 
     # Render the template and pass the list of columns
-    return render_template('dygraph.html', columns=columns)
+    return render_template('instrument_dygraph.html', columns=columns)
 
 
-@app.route('/generate_graph', methods=['GET', 'POST'])
-def generate_graph():
-    """Generate graph data for a Dygraph.
+@app.route('/generate_instrument_graph', methods=['GET', 'POST'])
+def generate_instrument_graph():
+    """Generate graph data for a Dygraph for an instrument.
 
-    Uses the supplied key and instrument_id to get all data from the 'time' and specified 'key' column for the instrument with 'instrument_id', passing them as 'x' and 'y' values to be graphed together.
+    Uses the supplied key and instrument_id to get all data from the 'time' and
+        specified 'key' column for the instrument with 'instrument_id', passing them
+        as 'x' and 'y' values to be graphed together.
 
     Parameters
     ----------
     key: string
-        Passed as an HTML query parameter, the name of the database column to plot against time.
+        Passed as an HTML query parameter, the name of the database column
+            to plot against time.
 
     instrument_id: integer
-        Passed as an HTML query parameter, the id of the instrument in the database, indicates which instrument's data to use.
+        Passed as an HTML query parameter, the id of the instrument in the
+            database, indicates which instrument's data to use.
 
     Returns
     -------
@@ -115,7 +120,6 @@ def generate_graph():
     # Selects the time and the "key" column from the data table for the supplied instrument_id
     cur.execute(sql_query, (instrument_id))
     rows = cur.fetchall()
-    print rows[0]
 
     # Prepares a JSON message, an array of x values and an array of y values, for the graph to plot
     # ? Is iso format timezone ambiguous?
@@ -138,7 +142,8 @@ def new_user():
         If the request method is 'GET', returns a form to create a new user.
 
     list_instruments: Flask redirect location
-        If the request method is 'POST', returns a Flask redirect location to the list_users function, redirecting the user to the list of users.
+        If the request method is 'POST', returns a Flask redirect location to the
+            list_users function, redirecting the user to the list of users.
     """
 
     cur = g.db.cursor()
@@ -221,7 +226,8 @@ def new_instrument():
         If the request method is 'GET', returns a form to create a new instrument.
 
     list_instruments: Flask redirect location
-        If the request method is 'POST', returns a Flask redirect location to the list_instruments function, redirecting the user to the list of instruments.
+        If the request method is 'POST', returns a Flask redirect location to the
+            list_instruments function, redirecting the user to the list of instruments.
     """
 
     cur = g.db.cursor()
@@ -293,7 +299,9 @@ def show_instrument(instrument_id):
     Returns
     -------
     show_instrument.html: HTML document
-        Returns an HTML document with arguments including instrument information, the 5 most recent log entries, the status of the instrument, and the list of columns for available data to plot on graphs.
+        Returns an HTML document with arguments including instrument information,
+            the 5 most recent log entries, the status of the instrument, and the list of
+            columns for available data to plot on graphs.
     """
 
     cur = g.db.cursor()
@@ -339,6 +347,64 @@ def show_instrument(instrument_id):
                            recent_logs=recent_logs, status=status, columns=columns)
 
 
+@app.route('/pulse')
+def show_pulse():
+    """Show a pulse from an instrument.
+
+    Returns
+    -------
+    show_instrument.html: HTML document
+        Returns an HTML document with an argument for a list of pulse_id's to choose from
+            for deciding which pulse's series to plot.
+    """
+
+    cur = g.db.cursor()
+    sql_query = """SELECT pulse_id FROM pulse_captures"""
+    cur.execute(sql_query)
+    pulse_ids = [row[0] for row in cur.fetchall()]
+
+    return render_template('show_pulse.html', pulse_ids=pulse_ids)
+
+
+@app.route('/generate_pulse_graph', methods=['GET', 'POST'])
+def generate_pulse_graph():
+    """Generate graph data for a Dygraph.
+
+    Uses the given pulse_id to get the data series to be graphed.
+
+    Parameters
+    ----------
+    pulse_id: integer
+        Passed as an HTML query parameter, the id of the pulse in the database,
+            indicates which pulse's data to use.
+
+    Returns
+    -------
+    message: JSON object
+        Returns a JSON object with a list of 'x' values corresponding to a list of 'y' values.
+    """
+
+    cur = g.db.cursor()
+
+    pulse_id = request.args.get("pulse_id")
+
+    sql_query = """SELECT data FROM pulse_captures WHERE pulse_id = %s"""
+    # Selects the time and the "key" column from the data table for the supplied instrument_id
+    cur.execute(sql_query, (pulse_id))
+    row = cur.fetchone()
+
+    # Prepares a JSON message, an array of x values and an array of y values, for the graph to plot
+    # X is just a placeholder for now, since the x type is not known (time, distance, etc.)
+    x = [i for i in range(len(row[0]))]
+    y = row[0]
+
+    message = {"x": x, "y": y}
+    message = json.dumps(message)
+
+    # Send out the JSON message
+    return message
+
+
 def is_number(s):
     """Checks if a string is a valid floating point number.
 
@@ -371,19 +437,26 @@ def is_number(s):
 def new_site():
     """Add a new ARM Site to WARNO.
 
-    If the request method is 'GET', it will just render the form for a new site. However, if the method is 'POST', it checks if the values are valid for insertion. If they are not valid, it will render the from for a new site, but with an error message.  If the values are valid, the new site is created and the user is redirected to a list of sites.
+    If the request method is 'GET', it will just render the form for a new site. However, if
+        the method is 'POST', it checks if the values are valid for insertion. If they are not
+        valid, it will render the from for a new site, but with an error message.  If the values
+        are valid, the new site is created and the user is redirected to a list of sites.
 
     Parameters
     ----------
     error: optional, integer
-        Passed as an HTML parameter, an error message set if the latitude or longitude are not floating point numbers
+        Passed as an HTML parameter, an error message set if the latitude or longitude are
+            not floating point numbers
 
     Returns
     -------
     new_site.html: HTML document
-        If the request method is 'GET' or the method is 'POST' but the new site was invalid, returns an HTML form to create a new site, with an optional argument 'error' if it was a failed 'POST' request.
+        If the request method is 'GET' or the method is 'POST' but the new site was invalid,
+            returns an HTML form to create a new site, with an optional argument 'error' if it
+            was a failed 'POST' request.
     list_sites: Flask redirect location
-        If the request method is 'POST' and the new site is valid, returns a Flask redirect location to the list_sites function, redirecting the user to the list of ARM sites.
+        If the request method is 'POST' and the new site is valid, returns a Flask redirect
+            location to the list_sites function, redirecting the user to the list of ARM sites.
     """
 
     # If the method is post, the user has submitted the information in the form.
@@ -459,7 +532,9 @@ def show_site(site_id):
     Returns
     -------
     show_instrument.html: HTML document
-        Returns an HTML document with arguments including site information, the 5 most recent logs of all instruments at the site, and a list of the instruments at the site along with their information.
+        Returns an HTML document with arguments including site information, the 5 most
+            recent logs of all instruments at the site, and a list of the instruments at the site
+            along with their information.
     """
 
     cur = g.db.cursor()
@@ -520,7 +595,8 @@ def show_radar_status():
     Returns
     -------
     radar_status.html: HTML document
-        Returns an HTML document with arguments including a list of instruments, their status and their most recent log entries.
+        Returns an HTML document with arguments including a list of instruments,
+            their status and their most recent log entries.
     """
     cur = g.db.cursor()
     sql_query = '''SELECT i.name_short, sites.name_short, l1.contents, users.name, l1.status
@@ -545,12 +621,19 @@ def show_radar_status():
 def new_log():
     """Submit a new log entry to WARNO.
 
-    Rather than having the normal 'Get' 'Post' format, this is designed to be available to more than just web users.  If there are no optional arguments user_id, instrument_id, time, or status (or if one of those options is missing), the normal form to create a new log will render. If all of those options exist, the function will attempt a database insertion with the data.  If the insertion fails, the form to create a new log will render with an error message.  If the insertion is successful, the user will be redirected instead to the page of the instrument the log was submitted for.
+    Rather than having the normal 'Get' 'Post' format, this is designed to be available to
+        more than just web users.  If there are no optional arguments user_id, instrument_id,
+        time, or status (or if one of those options is missing), the normal form to create a new
+        log will render. If all of those options exist, the function will attempt a database insertion
+        with the data.  If the insertion fails, the form to create a new log will render with an error
+        message.  If the insertion is successful, the user will be redirected instead to the page of
+        the instrument the log was submitted for.
 
     Parameters
     ----------
     error: optional, integer
-        Passed as an HTML parameter, an error message set if the latitude or longitude are not floating point numbers
+        Passed as an HTML parameter, an error message set if the latitude or longitude are not
+            floating point numbers
 
     user_id: optional, integer
         Passed as an HTML parameter, the database id of the author of the new log
@@ -570,9 +653,13 @@ def new_log():
     Returns
     -------
     new_log.html: HTML document
-        If the new log insertion was attempted but failed, or if no insertion was attempted, returns an HTML form to create a new site, with an optional argument 'error' if it was a failed database insertion.
+        If the new log insertion was attempted but failed, or if no insertion was attempted,
+            returns an HTML form to create a new site, with an optional argument 'error' if it
+            was a failed database insertion.
     show_instrument: Flask redirect location
-        If a new log insertion was attempted and succeded,  returns a Flask redirect location to the show_instrument function, redirecting the user to the page showing the instrument with the instrument_id matching the insertion.
+        If a new log insertion was attempted and succeded,  returns a Flask redirect location
+            to the show_instrument function, redirecting the user to the page showing the
+            instrument with the instrument_id matching the insertion.
     """
 
     cur = g.db.cursor()
@@ -587,26 +674,32 @@ def new_log():
 
     # If there is valid data entered with the get request, insert and redirect to the instrument
     # that the log was placed for
-    # (If a user visits the page for the first time with no arguments, skips this section and renders form.)
+    # (If a user visits the page for the first time with no arguments,
+    # skips this section and renders form.)
     if user_id and instrument_id and status and time:
-        # Attempt to insert an item into the database. Try/Except is necessary because the timedate
-        # datatype the database expects has to be formatted correctly.
+        # Attempt to insert an item into the database. Try/Except is necessary because
+        # the timedate datatype the database expects has to be formatted correctly.
         try:
             cur.execute('''INSERT INTO instrument_logs(time, instrument_id, author_id, contents, status)
                            VALUES (%s, %s, %s, %s, %s)''', (time, instrument_id, user_id, contents, status))
             cur.execute('COMMIT')
-            # Redirect to the instrument page that the log was submitted for.  Log will likely appear on page.
+            # Redirect to the instrument page that the log was submitted for.
+            # Log will likely appear on page.
             # May not appear if the date was set to older than the 5 most recent logs
             return redirect(url_for('show_instrument', instrument_id=instrument_id))
         except psycopg2.DataError:
             # If the timedate object expected by the database was incorrectly formatted, error is set
             # for when the page is rendered again
             error = "Invalid Date/Time Format"
-        # Commit required, especially if there is an exception, otherwise the cursor breaks on the next execute
+        # Commit required, especially if there is an exception,
+        # otherwise the cursor breaks on the next execute
         cur.execute('COMMIT')
 
     # If there was no valid insert, render form normally
-    instrument_sql = "select i.instrument_id, i.name_short, s.name_short from instruments i, sites s WHERE i.site_id = s.site_id"
+    instrument_sql = (
+                                "SELECT i.instrument_id, i.name_short, s.name_short FROM instruments i, sites s "
+                                "WHERE i.site_id = s.site_id"
+                                )
     user_sql = "select u.user_id, u.name from users u"
 
     # Get a list of instruments to select from in the form

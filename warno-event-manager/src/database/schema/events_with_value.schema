@@ -1,0 +1,8 @@
+CREATE TABLE "public"."events_with_value" (
+    "event_id" serial NOT NULL,
+    "instrument_id" INTEGER REFERENCES instruments (instrument_id) NOT NULL,
+    "event_code" INTEGER REFERENCES event_codes (event_code) NOT NULL,
+    "time" timestamp NOT NULL,
+    "value" FLOAT,
+    PRIMARY KEY ("event_id")
+);

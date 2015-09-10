@@ -1,0 +1,7 @@
+CREATE TABLE "public"."pulse_captures" (
+    "pulse_id" serial NOT NULL,
+    "instrument_id" INTEGER REFERENCES instruments (instrument_id) NOT NULL,
+    "time" timestamp NOT NULL,
+    "data" FLOAT[],
+    PRIMARY KEY ("pulse_id")
+);

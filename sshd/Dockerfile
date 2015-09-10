@@ -2,10 +2,15 @@
 #
 # VERSION               0.0.2
 
-FROM ubuntu:14.04
+FROM warno-docker-image
 MAINTAINER Joseph C. Hardin <joseph.hardin@pnnl.gov>
 
-RUN apt-get update && apt-get install -y openssh-server
+COPY /sshd-deb /opt/sshd-deb/
+
+RUN echo "Installing SSHD .deb files."
+# RUN apt-get install -y openssh-server
+RUN dpkg --install --recursive /opt/sshd-deb
+
 RUN mkdir /var/run/sshd
 RUN echo 'root:screencast' | chpasswd
 RUN sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config
