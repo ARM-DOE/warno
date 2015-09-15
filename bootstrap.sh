@@ -12,7 +12,7 @@ cat >> /home/vagrant/.bashrc << END
 PATH=/vagrant/anaconda/bin:\$PATH
 END
 
-PATH=/vagrant/anaconda/bin:\$PATH
+export PATH=/vagrant/anaconda/bin:\$PATH
 
 # Current latest versions
 # Prevents download of newer versions than are included in included $miniconda

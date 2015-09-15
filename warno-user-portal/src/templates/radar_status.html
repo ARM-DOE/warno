@@ -24,8 +24,8 @@
 
 {%  for instrument in logs %}
     <tr>
-    <td>{{   instrument.site }}</td>
-    <td>{{   instrument.instrument_name }}</td>
+    <td><a href="{{url_for('show_site', site_id= instrument.site_id)}}">{{   instrument.site }}</a></td>
+    <td><a href="{{url_for('show_instrument', instrument_id= instrument.instrument_id)}}">{{  instrument.instrument_name }}</a></td>
     <td>{{   instrument.contents }}</td>
     <td>{{  instrument.author }}</td>
     <td> {{  instrument.status }}</td>

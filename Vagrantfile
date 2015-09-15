@@ -28,15 +28,17 @@ Vagrant.configure(2) do |config|
   end
 
    config.trigger.after :up do
-    run "bash ./db_up.sh"
+    run "vagrant ssh -c 'bash /vagrant/db_up.sh'"
   end
 
   config.trigger.before :halt do
-    run "bash ./db_save.sh"
+    run "vagrant ssh -c 'bash /vagrant/db_save.sh'"
   end
+# libpq5 postgresql-client-9.3 postgresql-client-common
 
   #Automatic update/install
   config.vm.provision :shell, inline: "sudo apt-get update"
+  config.vm.provision :shell, inline: "sudo apt-get install -y postgresql-client-9.3"
   config.vm.provision :docker
   #Local install
   # config.vm.provision :shell, inline: "docker load -i /vagrant/warno-docker-image"

@@ -599,7 +599,7 @@ def show_radar_status():
             their status and their most recent log entries.
     """
     cur = g.db.cursor()
-    sql_query = '''SELECT i.name_short, sites.name_short, l1.contents, users.name, l1.status
+    sql_query = '''SELECT i.name_short, i.instrument_id, sites.site_id, sites.name_short, l1.contents, users.name, l1.status
                 FROM instruments i
                 JOIN instrument_logs l1 ON (i.instrument_id = l1.instrument_id)
                 LEFT OUTER JOIN instrument_logs l2 ON (i.instrument_id = l2.instrument_id AND
@@ -612,8 +612,8 @@ def show_radar_status():
             '''
 
     cur.execute(sql_query)
-    logs = [dict(instrument_name=row[0], site=row[1],
-                 contents=row[2], author=row[3], status=status_code_to_text(row[4])) for row in cur.fetchall()]
+    logs = [dict(instrument_name=row[0], instrument_id=row[1], site_id=row[2], site=row[3],
+                 contents=row[4], author=row[5], status=status_code_to_text(row[6])) for row in cur.fetchall()]
     return render_template('radar_status.html', logs=logs)
 
 
