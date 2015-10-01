@@ -1,0 +1,5 @@
+setup:
+    site: ena
+
+test:
+    test_value: 1
