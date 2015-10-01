@@ -1,4 +1,5 @@
 .vagrant
+<<<<<<< master
 Miniconda-latest-Linux-x86_64.sh
 anaconda
 warno-event-manager/src/database/db_dump.data
@@ -12,3 +13,6 @@ warno-event-manager/src/warno-event-manager-deb/*.deb
 warno-user-portal/src/warno-user-portal-deb/*.deb
 warno-event-manager/src/wempbundle.tar.bz2
 warno-user-portal/src/wuppbundle.tar.bz2
+=======
+*.pyc
+>>>>>>> HEAD~2
