@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Accounts on WARNO</title>
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='master.css') }}">
+<script src="{{ url_for('static', filename='sorttable.js')}}"></script>
+
+</head>
+<body>
+
+{% with title='Users' %}
+{% include 'partials/header_template.html' %}
+{% endwith %}
+
+<div>
+<table class="listing-table sortable" id='user-table'>
+    <tr>
+        <th> User Name</th>
+        <th> User E-mail</th>
+        <th> User Location</th>
+        <th> User Position</th>
+        <th> User ID </th>
+    </tr>
+    {%  for user in users %}
+    <tr>
+        <td>{{ user.name }}</td>
+        <td>{{ user.email }}</td>
+        <td>{{ user.location }}</td>
+        <td>{{ user.position }}</td>
+        <td>{{ user.id }}</td>
+    </tr>
+    {% endfor %}
+</table>
+</div>
+
+<br>
+<hr>
+<br>
+
+<form action="{{ url_for('new_user') }}" method="get">
+  <input type="submit" id="new-user-redirect-button"
+         value="Add New User"/>
+</form>
+
+</body>
+</html>

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Radar Status</title>
+    <link rel=stylesheet type=text/css href="{{ url_for('static', filename='master.css') }}">
+<script src="{{ url_for('static', filename='sorttable.js')}}"></script>
+</head>
+</head>
+<body>
+{% with title='Status' %}
+{% include 'partials/header_template.html' %}
+{% endwith %}
+
+<table class="listing-table sortable">
+    <tr>
+        <th> Site</th>
+        <th> Instrument Name</th>
+        <th> Log Contents</th>
+        <th> Log Author </th>
+        <th> Instrument Status</th>
+    </tr>
+
+
+{%  for instrument in logs %}
+    <tr>
+    <td><a href="{{url_for('show_site', site_id= instrument.site_id)}}">{{   instrument.site }}</a></td>
+    <td><a href="{{url_for('show_instrument', instrument_id= instrument.instrument_id)}}">{{  instrument.instrument_name }}</a></td>
+    <td>{{   instrument.contents }}</td>
+    <td>{{  instrument.author }}</td>
+    <td> {{  instrument.status }}</td>
+    </tr>
+
+{% endfor %}
+</body>
+</html>

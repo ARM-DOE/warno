@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="text/javascript" src="{{ url_for('static', filename='dygraph-combined-dev.js')}}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='jquery-2.1.4.js')}}"></script>
+  </head>
+  <body>
+      <div>
+      <br>
+      Add a Graph By Pulse Number
+      <br>
+      <select id="PulseIDSelect" name="Pulse">
+            {% for pulse_id in pulse_ids %}
+              <option value="{{pulse_id}}">{{pulse_id}}</option>
+            {% endfor %}
+          </select>
+      <button type="button" onclick="add_graph()">Add</button>
+    </div>
+    <div id="master-graphdiv"></div>
+
+    <script>
+        g = [];
+        id = 0;
+
+      function add_graph()
+        {
+          //XMLHTTPRequest to server xml generator
+          xmlhttp = new XMLHttpRequest();
+          pulse_id = document.getElementById('PulseIDSelect').value;
+
+          div_id = "graphdiv" + id;
+          div = document.createElement('div');
+          div.innerHTML = '<div id = "' + div_id + '-parent"><div id="' + div_id + '" style="width: 400px; height: 250px;"></div><button type="button" onclick="remove_graph(this)">Remove Graph</button></div>'
+          master_div = document.getElementById('master-graphdiv');
+          master_div.insertBefore(div, master_div.firstChild);
+
+          xmlhttp.onreadystatechange = function() {
+            //After the asyncronous request successfully returns
+            if (xmlhttp.readyState == 4 && xmlhttp.status == 200)
+            {
+              //Pull out the response text from the request
+              rec_message = JSON.parse(xmlhttp.responseText);
+
+              //console.log(rec_message);
+              if (rec_message["x"].length > 0)
+              {
+                graph_data = "x,y\n"
+                for (i = 0; i < rec_message["x"].length; i ++)
+                {
+                  graph_data += rec_message["x"][i] + "," + rec_message["y"][i] + "\n";
+                }
+
+
+                //Add a new graph to the list of tracked graphs, insert into
+                //div created above
+                g.push(new Dygraph(
+                    document.getElementById(div_id),
+                    graph_data,
+                    {
+                      rollPeriod: 14,
+                            showRoller: true,
+                            showRangeSelector: true,
+                            rangeSelectorHeight: 20,
+                            rangeSelectorPlotStrokeColor: 'green',
+                            rangeSelectorPlotFillColor: 'lightgreen',
+
+                      title: pulse_id,
+                      xlabel: "Time",
+                      ylabel: pulse_id,
+                      axes: {
+                        ticker: function (a, b, pixels, opts, dygraph, vals) {
+                                                  return Dygraph.getDateAxis(a, b, Dygraph.ANNUAL, opts, dygraph);
+                        }
+                      }
+                    }));
+              }
+              else
+              {
+                document.getElementById(div_id).innerHTML = "<p>No Data Available</p>";
+              }
+
+            }
+          }
+
+          //Send JSON POST XMLHTTPRequest to generator controller.
+          //Also include keys for the generated graph
+          url = "{{url_for('generate_pulse_graph')}}?pulse_id=" + pulse_id;
+          xmlhttp.open("POST", url, true);
+
+          //Send out the request
+          xmlhttp.send();
+
+          //Increment the id for the next graph created
+          id += 1;
+        };
+      function remove_graph(e)
+        {
+          id = e.closest("div").id;
+          elem = document.getElementById(id);
+          elem.parentNode.removeChild(elem);
+        }
+    </script>
+  </body>
+
+
+
+</html>

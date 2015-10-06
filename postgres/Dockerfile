@@ -1,9 +1,20 @@
+# Local image
+# FROM warno-docker-image
+# Repository image
 FROM ubuntu:14.04
 MAINTAINER Chris Brantley
 
+COPY /postgres-deb /opt/postgres-deb/
+
 # Install PostgreSQL
+
+# Automatic install from remote
 RUN apt-get update
 RUN apt-get install -y postgresql-9.3 postgresql-contrib-9.3
+
+# Manual local install
+# RUN echo "Installing Postgres .deb files."
+# RUN dpkg --install --recursive /opt/postgres-deb
 
 # Update config to allow remote connections
 RUN echo "host all all 0.0.0.0/0 trust" >> /etc/postgresql/9.3/main/pg_hba.conf

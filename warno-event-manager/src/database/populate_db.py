@@ -12,7 +12,12 @@ table_data = [
                    ["sites", "sites.data"],
                    ["instruments", "instruments.data"],
                    ["instrument_logs", "logs.data"],
-                   ["prosensing_paf", "prosensing_paf.data"]
+                   ["prosensing_paf", "prosensing_paf.data"],
+                   ["event_codes", "event_codes.data"],
+                   ["events_with_text", "events_with_text.data"],
+                   ["events_with_value", "events_with_value.data"],
+                   ["pulse_captures", "pulse_captures.data"],
+                   ["table_references", "table_references.data"]
                ]
 
 for table in table_data:
