@@ -13,20 +13,20 @@ def register():
             "event_name": event_name}
 
 
-def run(msg_queue):
-    pafc = PAFClient('brw-kazr', 3000)
-    pafc.connect()
-    pafc.get_server_info()
+#def run(msg_queue):
+    #pafc = PAFClient('brw-kazr', 3000)
+    #pafc.connect()
+    #pafc.get_server_info()
 
-    for i in range(0, 10):
-        try:
-            msg = pafc.get_server_info()
-            msg_queue.put(msg)
-        except Exception, e:
-            msg_queue.put(e)
-        else:
-            pass
-        finally:
-            pass
+    #for i in range(0, 10):
+    #    try:
+    #        msg = pafc.get_server_info()
+    #        msg_queue.put(msg)
+    #    except Exception, e:
+    #        msg_queue.put(e)
+    #    else:
+    #        pass
+    #    finally:
+    #        pass
 
-        time.sleep(2)
+    #    time.sleep(2)

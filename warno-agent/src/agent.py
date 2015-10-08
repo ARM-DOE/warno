@@ -9,6 +9,7 @@ import multiprocessing
 import signal
 import sys
 import base64
+import requests
 
 from Queue import Empty
 from time import sleep
@@ -79,14 +80,36 @@ if __name__ == "__main__":
     plugin_module_list = list_plugins()
 
     msg_queue = Queue()
-
+    event_code_dict = {}
     cfg = load_config()
 
-    print(cfg)
+    # Get site_id
+    msg = '{"Event_Code": 2, "Data": "%s"}' % cfg['setup']['site']
+    payload = json.loads(msg)
+    response = requests.post("http://localhost:5000/event", json=payload, headers={'Content-Type': 'application/json'})
+    data = dict(json.loads(response.content))
+    site_id = data['Site_Id']
+
+    instrument_ids = []
+
     #  Loop through each plugin and register it
     for plugin in plugin_module_list:
-        print(plugin.register())
-        print(json.dumps(plugin.register()))
+        response_dict = plugin.register(msg_queue)
+        # Get the instrument Id for each
+        instrument_name = response_dict['instrument_name']
+        msg = '{"Event_Code": 3, "Data": "%s"}' % instrument_name
+        payload = json.loads(msg)
+        response = requests.post("http://localhost:5000/event", json=payload, headers={'Content-Type': 'application/json'})
+        data = dict(json.loads(response.content))
+        instrument_ids.append(data['Instrument_Id'])
+        for event in response_dict['event_code_names']:
+            msg = '{"Event_Code": 1, "Data": "%s"}' % event
+            payload = json.loads(msg)
+            response = requests.post("http://localhost:5000/event", json=payload, headers={'Content-Type': 'application/json'})
+            response_dict = dict(json.loads(response.content))
+            event_code_dict[response_dict['Data']] = response_dict['Event_Code']
+
+        print instrument_ids
 
 
     #  Loop through plugins and start each up
@@ -94,13 +117,19 @@ if __name__ == "__main__":
         p = Process(target = plugin.run, args=(msg_queue,))
         p.start()
 
+    #print requests.get("http://localhost:5000/event").content
 
+    i = 0
     while 1:
         if not msg_queue.empty():
-            msg = msg_queue.get_nowait()
-            print(json.dumps(msg))
+            i = i + 1
+            rec_msg = msg_queue.get_nowait()
+            event = json.loads(rec_msg)
+            event_code = event_code_dict[event['event']]
+            event_msg = '{"Event_Code": %s, "Data": %s}' % (event_code, json.dumps(event['data']))
+            payload = json.loads(event_msg)
+            requests.post("http://localhost:5000/event", json=payload, headers={'Content-Type': 'application/json'})
+
         else:
             sleep(0.1)
-
-
 
