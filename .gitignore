@@ -1,4 +1,5 @@
 .vagrant
+<<<<<<< HEAD
 <<<<<<< master
 Miniconda-latest-Linux-x86_64.sh
 anaconda
@@ -16,3 +17,6 @@ warno-user-portal/src/wuppbundle.tar.bz2
 =======
 *.pyc
 >>>>>>> HEAD~2
+=======
+*.pyc
+>>>>>>> c27aa51ab75db4b570f2ac96b7b0ead81e23a113
