@@ -87,12 +87,12 @@ if __name__ == "__main__":
     msg = '{"Event_Code": 2, "Data": "%s"}' % cfg['setup']['site']
     payload = json.loads(msg)
     response = requests.post("http://localhost:5000/event", json=payload, headers={'Content-Type': 'application/json'})
-    data = dict(json.loads(response.content))
-    site_id = data['Site_Id']
+    response_dict = dict(json.loads(response.content))
+    site_id = response_dict['Site_Id']
 
     instrument_ids = []
 
-    #  Loop through each plugin and register it
+    #  Loop through each plugin and register it, registering the plugin's event codes as well
     for plugin in plugin_module_list:
         response_dict = plugin.register(msg_queue)
         # Get the instrument Id for each
@@ -101,7 +101,7 @@ if __name__ == "__main__":
         payload = json.loads(msg)
         response = requests.post("http://localhost:5000/event", json=payload, headers={'Content-Type': 'application/json'})
         data = dict(json.loads(response.content))
-        instrument_ids.append(data['Instrument_Id'])
+        instrument_ids.append((plugin, data['Instrument_Id']))
         for event in response_dict['event_code_names']:
             msg = '{"Event_Code": 1, "Data": "%s"}' % event
             payload = json.loads(msg)
@@ -114,7 +114,8 @@ if __name__ == "__main__":
 
     #  Loop through plugins and start each up
     for plugin in plugin_module_list:
-        p = Process(target = plugin.run, args=(msg_queue,))
+        plugin_instrument_id = [instrument_id for plugin_name, instrument_id in instrument_ids if plugin_name == plugin][0]
+        p = Process(target = plugin.run, args=(msg_queue, plugin_instrument_id))
         p.start()
 
     #print requests.get("http://localhost:5000/event").content
@@ -125,6 +126,7 @@ if __name__ == "__main__":
             i = i + 1
             rec_msg = msg_queue.get_nowait()
             event = json.loads(rec_msg)
+            event['data']['Site_Id'] = site_id
             event_code = event_code_dict[event['event']]
             event_msg = '{"Event_Code": %s, "Data": %s}' % (event_code, json.dumps(event['data']))
             payload = json.loads(event_msg)

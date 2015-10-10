@@ -73,6 +73,9 @@ def event():
     # Request an instrument id from instrument name
     elif msg_event_code == 3:
         return get_instrument_id(msg, msg_struct)
+    # Event is special case: 'prosensing_paf' structure
+    elif msg_event_code == 4:
+        return save_special_prosensing_paf(msg, msg_struct)
 
     # Any other event
     else:
@@ -95,6 +98,26 @@ def event():
             payload = json.loads(msg)
             requests.post(cf_url, json=payload, headers={'Content-Type': 'application/json'})
         return msg
+
+
+def save_special_prosensing_paf(msg, msg_struct):
+    cur = g.db.cursor()
+    timestamp = time.asctime(time.gmtime(msg_struct['Data']['Time']))
+    sql_query_a = "INSERT INTO prosensing_paf(time, site_id, instrument_id"
+    sql_query_b = ") VALUES ('%s', %s, %s" % (timestamp, msg_struct['Data']['Site_Id'], msg_struct['Data']['Instrument_Id'])
+    for key, value in msg_struct['Data']['Value'].iteritems():
+        sql_query_a = ', '.join([sql_query_a, key])
+        sql_query_b = ', '.join([sql_query_b, value])
+    sql_query = ''.join([sql_query_a, sql_query_b, ")"])
+
+    cur.execute(sql_query)
+    cur.execute("COMMIT")
+    "Saved Special Type: Prosensing PAF"
+
+    if not cfg['type']['central_facility']:
+        payload = json.loads(msg)
+        requests.post(cf_url, json=payload, headers={'Content-Type': 'application/json'})
+    return msg
 
 
 def get_instrument_id(msg, msg_struct):
