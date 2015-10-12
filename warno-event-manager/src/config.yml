@@ -1,0 +1,5 @@
+setup:
+    site: ENA
+
+type:
+    central_facility: 0

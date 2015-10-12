@@ -37,7 +37,7 @@ Vagrant.configure(2) do |config|
 # libpq5 postgresql-client-9.3 postgresql-client-common
 
   #Automatic update/install
-  config.vm.provision :shell, inline: "sudo apt-get update"
+  # config.vm.provision :shell, inline: "sudo apt-get update"
   config.vm.provision :shell, inline: "sudo apt-get install -y postgresql-client-9.3"
   config.vm.provision :docker
   #Local install

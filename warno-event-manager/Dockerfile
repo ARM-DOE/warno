@@ -20,6 +20,8 @@ RUN apt-get install -y openssh-server
 # RUN bash wempip_install.sh
 
 
+WORKDIR /opt/warno-event-manager
+
 RUN mkdir /var/run/sshd
 RUN echo 'root:screencast' | chpasswd
 RUN sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config
@@ -34,5 +36,3 @@ RUN /usr/sbin/sshd
 
 EXPOSE 80
 EXPOSE 22
-
-WORKDIR /opt/warno-event-manager

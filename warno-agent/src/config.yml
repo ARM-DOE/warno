@@ -1,0 +1,6 @@
+setup:
+    site: ENA
+    instrument: KAZR-2
+
+test:
+    test_value: 1
