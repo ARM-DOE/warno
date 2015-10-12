@@ -244,4 +244,4 @@ if __name__ == '__main__':
     if cfg['type']['central_facility']:
         DB_NAME = 'warno2'
 
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='192.168.50.100', port=80, debug=True)

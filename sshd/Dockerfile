@@ -11,7 +11,7 @@ MAINTAINER Joseph C. Hardin <joseph.hardin@pnnl.gov>
 COPY /sshd-deb /opt/sshd-deb/
 
 # Automatic install from remote
-#RUN apt-get update
+RUN apt-get update
 RUN apt-get install -y openssh-server
 
 # Manual local install
