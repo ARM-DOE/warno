@@ -9,7 +9,6 @@ COPY /postgres-deb /opt/postgres-deb/
 # Install PostgreSQL
 
 # Automatic install from remote
-#RUN apt-get update
 RUN apt-get install -y postgresql-9.3 postgresql-contrib-9.3
 
 # Manual local install
