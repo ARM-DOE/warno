@@ -12,10 +12,11 @@ cfg = None
 ticks = 0
 tocks = 0
 
-DB_HOST = '0.0.0.0'
+DB_HOST = '192.168.50.100'
 DB_NAME = 'warno1'
 DB_USER = 'warno'
 DB_PASS = 'warno'
+# Eventually should be set by a check to config.yml
 cf_url = "http://localhost:5001/event"
 
 
