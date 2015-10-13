@@ -38,7 +38,7 @@ Vagrant.configure(2) do |config|
 
   #Automatic update/install
   # config.vm.provision :shell, inline: "sudo apt-get update"
-  config.vm.provision :shell, inline: "sudo apt-get install -y postgresql-client-9.3"
+  config.vm.provision :shell, inline: "sudo apt-get install -y postgresql-client-9.3 --fix-missing"
   config.vm.provision :docker
   #Local install
   # config.vm.provision :shell, inline: "docker load -i /vagrant/warno-docker-image"
