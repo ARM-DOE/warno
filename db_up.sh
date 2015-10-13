@@ -7,7 +7,7 @@ ready=0
 
 # Loops until the database is ready, then loads the postgresql database dump file and exits.
 
-PATH=/vagrant/anaconda/bin:\$PATH
+PATH=/vagrant/anaconda/bin:$PATH
 echo "Waiting for database to be ready to load data."
 while [ $ready -lt 1 ]; do
   psql -h $DB_ADDRESS --username=$USERNAME -t -c "select now()" postgres &> /dev/null
