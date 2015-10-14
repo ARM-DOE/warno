@@ -1,30 +1,29 @@
 import time
 from datetime import datetime
 import numpy as np
-import pyarmret
+import json
 from pyarmret.io.PAFClient import PAFClient
 
 
 def register(msg_queue):
-
-    pafc = PAFClient('ena-kazr', 3000)
-    pafc.connect()
-    event_code_names = pafc.get_text_status().keys()
+    event_names = ["prosensing_paf"]
     instrument_name = "KAZR-2"
 
-    return {"instrument_name": instrument_name, "event_code_names": event_code_names}
+    print "REGISTERING KAZR-2"
 
-i = 0
-def run(msg_queue):
-    print "Start Running"
+    return {"instrument_name": instrument_name, "event_code_names": event_names}
+
+
+def run(msg_queue, instrument_id):
     while True:
-        pafc = PAFClient('ena-kazr', 3000)
+        pafc = PAFClient("192.148.95.5", 3000)
         pafc.connect()
         events = pafc.get_text_status()
+        events_payload = json.dumps(events)
         timestamp = time.mktime(time.localtime())
-        for key, value in events.iteritems():
-            msg_queue.put('{"event": "%s", "data": {"Instrument_Id": 1, "Time": %s, "Value": %s}}' % (key, timestamp, value))
-        time.sleep(10)
+        # for key, value in events.iteritems():
+        msg_queue.put('{"event": "%s", "data": {"Instrument_Id": %s, "Time": %s, "Value": %s}}' % ("prosensing_paf", instrument_id, timestamp, events_payload))
+        time.sleep(5)
         # print "Enter Register"
         # pafc = PAFClient('ena-kazr', 3000)
         # pafc.connect()

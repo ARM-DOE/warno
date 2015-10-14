@@ -1,4 +1,2 @@
 description
-"event type 1: CSV"
-"event type 2: measurement"
-"event type 3: number"
+"event_code_request"

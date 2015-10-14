@@ -1,23 +1,20 @@
+import os
 import numpy as np
 import flask
 import yaml
 import json
 import importlib
 import glob
-import os
 import multiprocessing
 import signal
 import sys
 import base64
 import requests
+from pyarmret.io.PAFClient import PAFClient
 
 from Queue import Empty
 from time import sleep
-from os.path import splitext
 from multiprocessing import Queue, Process
-
-# Eventually should be set by a check to config.yml
-em_url = "http://localhost:5000/event"
 
 
 def list_plugins():
@@ -81,17 +78,20 @@ def load_config():
     return config
 
 if __name__ == "__main__":
+    sleep(20)
     signal.signal(signal.SIGINT, signal_handler)
     plugin_module_list = list_plugins()
 
     msg_queue = Queue()
     event_code_dict = {}
     cfg = load_config()
+    em_url = cfg['setup']['em_url']
+    em_url = "http://eventmanager/event"
 
     # Get site_id
     msg = '{"Event_Code": 2, "Data": "%s"}' % cfg['setup']['site']
     payload = json.loads(msg)
-    response = requests.post(em_url, json=payload, headers={'Content-Type': 'application/json'})
+    response = requests.post(em_url, json=payload, headers={'Content-Type': 'application/json', 'Host': "warno-event-manager.local"})
     response_dict = dict(json.loads(response.content))
     site_id = response_dict['Site_Id']
 
@@ -104,13 +104,13 @@ if __name__ == "__main__":
         instrument_name = response_dict['instrument_name']
         msg = '{"Event_Code": 3, "Data": "%s"}' % instrument_name
         payload = json.loads(msg)
-        response = requests.post(em_url, json=payload, headers={'Content-Type': 'application/json'})
+        response = requests.post(em_url, json=payload, headers={'Content-Type': 'application/json', 'Host': "warno-event-manager.local"})
         data = dict(json.loads(response.content))
         instrument_ids.append((plugin, data['Instrument_Id']))
         for event in response_dict['event_code_names']:
             msg = '{"Event_Code": 1, "Data": "%s"}' % event
             payload = json.loads(msg)
-            response = requests.post(em_url, json=payload, headers={'Content-Type': 'application/json'})
+            response = requests.post(em_url, json=payload, headers={'Content-Type': 'application/json', 'Host': "warno-event-manager.local"})
             response_dict = dict(json.loads(response.content))
             event_code_dict[response_dict['Data']] = response_dict['Event_Code']
 
@@ -129,7 +129,7 @@ if __name__ == "__main__":
             event_code = event_code_dict[event['event']]
             event_msg = '{"Event_Code": %s, "Data": %s}' % (event_code, json.dumps(event['data']))
             payload = json.loads(event_msg)
-            requests.post(em_url, json=payload, headers={'Content-Type': 'application/json'})
+            requests.post(em_url, json=payload, headers={'Content-Type': 'application/json', 'Host': "warno-event-manager.local"})
 
         else:
             sleep(0.1)

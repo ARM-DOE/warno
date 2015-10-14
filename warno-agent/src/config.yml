@@ -1,6 +1,7 @@
 setup:
     site: ENA
     instrument: KAZR-2
+    em_url: "http://warno-event-manager.local/event"
 
 test:
     test_value: 1

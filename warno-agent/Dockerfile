@@ -13,8 +13,9 @@ RUN sed -i '4,90d' /etc/apt/sources.list
 
 # Automatic install from remote
 RUN apt-get update
-RUN apt-get install -y build-essential python-dev python-pip
+RUN apt-get install -y build-essential python-dev python-pip python-numpy
 RUN pip install -r /opt/warno-agent/requirements.txt
+RUN pip install requests --upgrade
 
 # Manual local install
 # RUN echo "Installing Agent .deb files."

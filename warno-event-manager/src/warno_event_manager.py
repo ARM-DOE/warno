@@ -13,11 +13,11 @@ ticks = 0
 tocks = 0
 
 DB_HOST = '192.168.50.100'
-DB_NAME = 'warno1'
+DB_NAME = 'warno'
 DB_USER = 'warno'
 DB_PASS = 'warno'
 # Eventually should be set by a check to config.yml
-cf_url = "http://localhost:5001/event"
+# cf_url = "http://localhost:5001/event"
 
 
 def connect_db():
@@ -130,7 +130,7 @@ def get_instrument_id(msg, msg_struct):
     if row:
         if cfg['type']['central_facility']:
             print("Found Existing Instrument")
-            return '{"Event_code": 2, "Data": {"Instrument_Id": %s, "Site_Id": %s, "Name_Short": "%s", "Name_Long": "%s", "Type": "%s", "Vendor": "%s", "Description": "%s", "Frequency_Band": "%s"}}' % (row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
+            return '{"Event_code": 3, "Data": {"Instrument_Id": %s, "Site_Id": %s, "Name_Short": "%s", "Name_Long": "%s", "Type": "%s", "Vendor": "%s", "Description": "%s", "Frequency_Band": "%s"}}' % (row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
         else:
             print("Found Existing Instrument")
             return '{"Instrument_Id": %i, "Data": "%s"}' % (row[0], msg_struct['Data'])
@@ -241,8 +241,11 @@ def hello_world():
 
 
 if __name__ == '__main__':
+    global cf_url
     cfg = load_config()
     if cfg['type']['central_facility']:
         DB_NAME = 'warno2'
+    else:
+        cf_url = cfg['setup']['cf_url']
 
-    app.run(host='192.168.50.100', port=80, debug=True)
+    app.run(host='0.0.0.0', port=80, debug=True)
