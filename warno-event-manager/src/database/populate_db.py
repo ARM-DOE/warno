@@ -3,9 +3,6 @@ import utility
 db = utility.connect_db()
 cur = db.cursor()
 
-utility.initialize_database(cur)
-db.commit()
-
 # For each entry, first entry is table name, second entry is demo data for the table
 table_data = [
                    ["users", "users.data"],

@@ -1,6 +1,6 @@
 setup:
     site: ENA
-    cf_url: "http://192.168.50.1:5001/event"
+    cf_url: "http://192.168.50.100/event"
 
 type:
     central_facility: 0

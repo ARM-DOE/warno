@@ -12,12 +12,14 @@ cfg = None
 ticks = 0
 tocks = 0
 
-DB_HOST = '192.168.50.100'
+DB_HOST = '192.168.50.99'
 DB_NAME = 'warno'
 DB_USER = 'warno'
 DB_PASS = 'warno'
-# Eventually should be set by a check to config.yml
-# cf_url = "http://localhost:5001/event"
+
+is_central = 0
+cf_url = ""
+headers = {'Content-Type': 'application/json', 'Host': "warno-event-manager.local"}
 
 
 def connect_db():
@@ -95,9 +97,9 @@ def event():
             cur.execute("COMMIT")
             print("Saved Text Event")
         # If application is at a site instead of the central facility, passes data on to be saved at central facility
-        if not cfg['type']['central_facility']:
+        if not is_central:
             payload = json.loads(msg)
-            requests.post(cf_url, json=payload, headers={'Content-Type': 'application/json'})
+            requests.post(cf_url, json=payload, headers=headers)
         return msg
 
 
@@ -115,9 +117,9 @@ def save_special_prosensing_paf(msg, msg_struct):
     cur.execute("COMMIT")
     "Saved Special Type: Prosensing PAF"
 
-    if not cfg['type']['central_facility']:
+    if not is_central:
         payload = json.loads(msg)
-        requests.post(cf_url, json=payload, headers={'Content-Type': 'application/json'})
+        requests.post(cf_url, json=payload, headers=headers)
     return msg
 
 
@@ -128,7 +130,7 @@ def get_instrument_id(msg, msg_struct):
 
     # If there is an instrument with a matching name, returns all info to a site or just the id to an agent.
     if row:
-        if cfg['type']['central_facility']:
+        if is_central:
             print("Found Existing Instrument")
             return '{"Event_code": 3, "Data": {"Instrument_Id": %s, "Site_Id": %s, "Name_Short": "%s", "Name_Long": "%s", "Type": "%s", "Vendor": "%s", "Description": "%s", "Frequency_Band": "%s"}}' % (row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
         else:
@@ -136,12 +138,12 @@ def get_instrument_id(msg, msg_struct):
             return '{"Instrument_Id": %i, "Data": "%s"}' % (row[0], msg_struct['Data'])
     else:
         # If it does not exist at the central facility, returns an error indicator
-        if cfg['type']['central_facility']:
+        if is_central:
             return '{"Instrument_Id": -1}'
         # If it does not exist at a site, requests the site information from the central facility
         else:
             payload = json.loads(msg)
-            response = requests.post(cf_url, json=payload, headers={'Content-Type': 'application/json'})
+            response = requests.post(cf_url, json=payload, headers=headers)
             cf_msg = dict(json.loads(response.content))
             cf_data = cf_msg['Data']
             # Need to add handler for if there is a bad return from CF (if clause above)
@@ -161,7 +163,7 @@ def get_site_id(msg, msg_struct):
 
     # If there is a site with a matching name, returns all info to a site or just the id to an agent.
     if row:
-        if cfg['type']['central_facility']:
+        if is_central:
             print("Found Existing Site")
             return '{"Event_code": 2, "Data": {"Site_Id": %s, "Name_Short": "%s", "Name_Long": "%s", "Latitude": "%s", "Longitude": "%s", "Facility": "%s", "Mobile": "%s", "Location_Name": "%s"}}' % (row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
         else:
@@ -169,12 +171,12 @@ def get_site_id(msg, msg_struct):
             return '{"Site_Id": %i, "Data": "%s"}' % (row[0], msg_struct['Data'])
     else:
         # If it does not exist at the central facility, returns an error indicator
-        if cfg['type']['central_facility']:
+        if is_central:
             return '{"Site_Id": -1}'
         # If it does not exist at a site, requests the site information from the central facility
         else:
             payload = json.loads(msg)
-            response = requests.post(cf_url, json=payload, headers={'Content-Type': 'application/json'})
+            response = requests.post(cf_url, json=payload, headers=headers)
             cf_msg = dict(json.loads(response.content))
             cf_data = cf_msg['Data']
             # Need to add handler for if there is a bad return from CF (if clause above)
@@ -197,7 +199,7 @@ def get_event_code(msg, msg_struct):
         print("Found Existing Event Code")
         return '{"Event_Code": %i, "Data": "%s"}' % (row[0], msg_struct['Data'])
     # If it is not defined at the central facility, inserts a new entry into the table and returns the new code
-    elif cfg['type']['central_facility']:
+    elif is_central:
         cur.execute('''INSERT INTO event_codes(description) VALUES (%s)''', (msg_struct['Data'],))
         cur.execute("COMMIT")
         cur.execute("SELECT event_code FROM event_codes WHERE description = %s", (msg_struct['Data'],))
@@ -209,7 +211,7 @@ def get_event_code(msg, msg_struct):
     # If it is not defined at a site, requests the event code from the central facility
     else:
         payload = json.loads(msg)
-        response = requests.post(cf_url, json=payload, headers={'Content-Type': 'application/json'})
+        response = requests.post(cf_url, json=payload, headers=headers)
         cf_msg = dict(json.loads(response.content))
         cur.execute('''INSERT INTO event_codes(event_code, description) VALUES (%s, %s)''',
                     (cf_msg['Event_Code'], cf_msg['Data']))
@@ -241,11 +243,26 @@ def hello_world():
 
 
 if __name__ == '__main__':
-    global cf_url
     cfg = load_config()
+
     if cfg['type']['central_facility']:
-        DB_NAME = 'warno2'
+        is_central = 1
+        DB_HOST="192.168.50.100"
     else:
+        # If the central facility is not responding, act like a central facility (Create missing entries)
         cf_url = cfg['setup']['cf_url']
+    #     try:
+    #         response = os.system("nc -zvv " + "192.168.50.1 5001")
+    #     except Exception:
+    #         print "Why did you hit this?"
+    #     print "Response"
+    #     print response
+    #     if response != 0:
+    #         is_central = 1
+    # print "CENTRALITY %s" % is_central
+    # while True:
+    #     print "Centrality %s" % is_central
+    #     time.sleep(5)
+
 
     app.run(host='0.0.0.0', port=80, debug=True)

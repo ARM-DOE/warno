@@ -16,6 +16,8 @@ from Queue import Empty
 from time import sleep
 from multiprocessing import Queue, Process
 
+headers = {'Content-Type': 'application/json', 'Host': "warno-event-manager.local"}
+
 
 def list_plugins():
     """List the plugins in the plugins directory as modules.
@@ -86,12 +88,11 @@ if __name__ == "__main__":
     event_code_dict = {}
     cfg = load_config()
     em_url = cfg['setup']['em_url']
-    em_url = "http://eventmanager/event"
 
     # Get site_id
     msg = '{"Event_Code": 2, "Data": "%s"}' % cfg['setup']['site']
     payload = json.loads(msg)
-    response = requests.post(em_url, json=payload, headers={'Content-Type': 'application/json', 'Host': "warno-event-manager.local"})
+    response = requests.post(em_url, json=payload, headers=headers)
     response_dict = dict(json.loads(response.content))
     site_id = response_dict['Site_Id']
 
@@ -104,13 +105,13 @@ if __name__ == "__main__":
         instrument_name = response_dict['instrument_name']
         msg = '{"Event_Code": 3, "Data": "%s"}' % instrument_name
         payload = json.loads(msg)
-        response = requests.post(em_url, json=payload, headers={'Content-Type': 'application/json', 'Host': "warno-event-manager.local"})
+        response = requests.post(em_url, json=payload, headers=headers)
         data = dict(json.loads(response.content))
         instrument_ids.append((plugin, data['Instrument_Id']))
         for event in response_dict['event_code_names']:
             msg = '{"Event_Code": 1, "Data": "%s"}' % event
             payload = json.loads(msg)
-            response = requests.post(em_url, json=payload, headers={'Content-Type': 'application/json', 'Host': "warno-event-manager.local"})
+            response = requests.post(em_url, json=payload, headers=headers)
             response_dict = dict(json.loads(response.content))
             event_code_dict[response_dict['Data']] = response_dict['Event_Code']
 
@@ -129,7 +130,7 @@ if __name__ == "__main__":
             event_code = event_code_dict[event['event']]
             event_msg = '{"Event_Code": %s, "Data": %s}' % (event_code, json.dumps(event['data']))
             payload = json.loads(event_msg)
-            requests.post(em_url, json=payload, headers={'Content-Type': 'application/json', 'Host': "warno-event-manager.local"})
+            requests.post(em_url, json=payload, headers=headers)
 
         else:
             sleep(0.1)

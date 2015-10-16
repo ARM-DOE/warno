@@ -15,24 +15,15 @@ def register(msg_queue):
 
 
 def run(msg_queue, instrument_id):
+    pafc = PAFClient("192.148.95.5", 3000)
+    pafc.connect()
+    pafc.get_server_info()
     while True:
-        pafc = PAFClient("192.148.95.5", 3000)
-        pafc.connect()
+        i = 1
+        i = i + 1
         events = pafc.get_text_status()
         events_payload = json.dumps(events)
         timestamp = time.mktime(time.localtime())
         # for key, value in events.iteritems():
         msg_queue.put('{"event": "%s", "data": {"Instrument_Id": %s, "Time": %s, "Value": %s}}' % ("prosensing_paf", instrument_id, timestamp, events_payload))
         time.sleep(5)
-        # print "Enter Register"
-        # pafc = PAFClient('ena-kazr', 3000)
-        # pafc.connect()
-        # timestamp = time.mktime(time.localtime())
-        # if i < 4:
-        #     print("Sending Value")
-        #     msg_queue.put('{"Event_Code": 4, "Data": {"Instrument_Id": 1, "Time": %s, "Value": %s}}' % (timestamp, i))
-        # if i >= 4:
-        #     print("Sending Text")
-        #     msg_queue.put('{"Event_Code": 5, "Data": {"Instrument_Id": 1, "Time": %s, "Value": "Alpha Operational"}}' % timestamp)
-        #     time.sleep(1)
-
