@@ -5,8 +5,6 @@ cur = db.cursor()
 
 # For each entry, first entry is table name, second entry is demo data for the table
 table_data = [
-                   ["users", "users.data"],
-                   ["sites", "sites.data"],
                    ["instruments", "instruments.data"],
                    ["instrument_logs", "logs.data"],
                    ["prosensing_paf", "prosensing_paf.data"],

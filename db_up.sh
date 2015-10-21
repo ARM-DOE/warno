@@ -20,6 +20,7 @@ while [ $ready -lt 1 ]; do
       echo "No database file found.  Initializing new database"
       cd $DB_FOLDER
       python initialize_db.py
+      python populate_base_db.py
     fi
 
   fi
