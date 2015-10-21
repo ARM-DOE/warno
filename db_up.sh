@@ -11,7 +11,6 @@ PATH=/vagrant/anaconda/bin:$PATH
 echo "Waiting for database to be ready to load data."
 while [ $ready -lt 1 ]; do
   psql -h $DB_ADDRESS --username=$USERNAME -t -c "select now()" postgres &> /dev/null
-  echo $?
 
   if [ $? == 0 ]; then
     echo "Loading data for database from " $DUMPFILE

@@ -247,7 +247,7 @@ if __name__ == '__main__':
 
     if cfg['type']['central_facility']:
         is_central = 1
-        DB_HOST="192.168.50.100"
+        DB_HOST = "192.168.50.100"
     else:
         # If the central facility is not responding, act like a central facility (Create missing entries)
         cf_url = cfg['setup']['cf_url']
@@ -263,6 +263,5 @@ if __name__ == '__main__':
     # while True:
     #     print "Centrality %s" % is_central
     #     time.sleep(5)
-
 
     app.run(host='0.0.0.0', port=80, debug=True)

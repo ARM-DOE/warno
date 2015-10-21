@@ -24,6 +24,7 @@ Vagrant.configure(2) do |config|
   config.vm.define "site" do |site|
     site.vm.network "private_network", ip: "192.168.50.99"
     site.vm.hostname = "site"
+    site.vm.network "forwarded_port", guest: 80, host: 8080
     site.vm.provider "virtualbox" do |v|
       v.name = "site"
     end
@@ -38,7 +39,7 @@ Vagrant.configure(2) do |config|
     # libpq5 postgresql-client-9.3 postgresql-client-common
 
     #Automatic update/install
-    # config.vm.provision :shell, inline: "sudo apt-get update"
+    site.vm.provision :shell, inline: "sudo apt-get update"
     site.vm.provision :shell, inline: "sudo apt-get install -y postgresql-client-9.3 --fix-missing"
     site.vm.provision :docker
     #Local install
@@ -51,6 +52,7 @@ Vagrant.configure(2) do |config|
   config.vm.define "central" do |central|
     central.vm.network "private_network", ip: "192.168.50.100"
     central.vm.hostname = "central"
+    central.vm.network "forwarded_port", guest: 80, host: 8080
     central.vm.provider "virtualbox" do |v|
       v.name = "central"
     end
@@ -65,7 +67,7 @@ Vagrant.configure(2) do |config|
     # libpq5 postgresql-client-9.3 postgresql-client-common
 
     #Automatic update/install
-    # config.vm.provision :shell, inline: "sudo apt-get update"
+    central.vm.provision :shell, inline: "sudo apt-get update"
     central.vm.provision :shell, inline: "sudo apt-get install -y postgresql-client-9.3 --fix-missing"
     central.vm.provision :docker
     #Local install
