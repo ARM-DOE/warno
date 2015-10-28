@@ -1,11 +1,15 @@
 from flask import Flask, g, render_template, request, redirect, url_for
 import psycopg2
 import json
+import yaml
+import datetime
 
-DB_HOST = '192.168.50.100'
+DB_HOST = '192.168.50.99'
 DB_NAME = 'warno'
 DB_USER = 'warno'
 DB_PASS = 'warno'
+
+is_central = 0
 
 app = Flask(__name__)
 app.config.from_object(__name__)
@@ -63,10 +67,10 @@ def show_dygraph():
     cur = g.db.cursor()
     # Select the columns from the data table.
     # Allows the template to create a dropdown list with fixed values.
-    cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'prosensing_paf'")
+    cur.execute("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'prosensing_paf'")
     rows = cur.fetchall()
     # Put all of  the names in one list
-    columns = [row[0] for row in rows]
+    columns = [row[0] for row in rows if row[1] in ["integer", "boolean", "double precision"]]
 
     # Render the template and pass the list of columns
     return render_template('instrument_dygraph.html', columns=columns)
@@ -104,21 +108,44 @@ def generate_instrument_graph():
     # The instrument_id indicates which instrument's data to use for the graph.
     key = request.args.get("key")
     instrument_id = request.args.get("instrument_id")
+    start = request.args.get("start")
+    end = request.args.get("end")
+    print("Start %s" % start)
+    print("End %s" % end)
 
     # Get a list of valid column names for the table in the database
-    cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'prosensing_paf'")
+    cur.execute("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'prosensing_paf'")
     rows = cur.fetchall()
     # Add each name to the list of columns
-    columns = [row[0] for row in rows]
+    columns = [row[0] for row in rows if row[1] in ["integer", "boolean", "double precision"]]
     # If the key is not in the columns, return an empty message
     # Prevents a user from SQL injection when we combine key into the FROM clause of the next query
     # Standard parameterization does not work for the FROM clause, so we have to protect our own way
     if key not in columns:
         return json.dumps({"x": [], "y": []})
 
-    sql_query = 'SELECT time, %s FROM prosensing_paf WHERE instrument_id = %%s' % key
+#     try:
+#         cur.execute('''INSERT INTO instrument_logs(time, instrument_id, author_id, contents, status)
+#                        VALUES (%s, %s, %s, %s, %s)''', (time, instrument_id, user_id, contents, status))
+#         cur.execute('COMMIT')
+#         # Redirect to the instrument page that the log was submitted for.
+#         # Log will likely appear on page.
+#         # May not appear if the date was set to older than the 5 most recent logs
+#         return redirect(url_for('show_instrument', instrument_id=instrument_id))
+#     except psycopg2.DataError:
+#         # If the timedate object expected by the database was incorrectly formatted, error is set
+#         # for when the page is rendered again
+#         error = "Invalid Date/Time Format"
+#     # Commit required, especially if there is an exception,
+#     # otherwise the cursor breaks on the next execute
+#     cur.execute('COMMIT')
+    sql_query = 'SELECT time, %s FROM prosensing_paf WHERE instrument_id = %%s AND time >= %%s AND time <= %%s' % key
     # Selects the time and the "key" column from the data table for the supplied instrument_id
-    cur.execute(sql_query, (instrument_id))
+    try:
+        cur.execute(sql_query, (instrument_id, start, end))
+    except Exception, e:
+        print(e)
+        return json.dumps({"x": [], "y": []})
     rows = cur.fetchall()
 
     # Prepares a JSON message, an array of x values and an array of y values, for the graph to plot
@@ -338,10 +365,10 @@ def show_instrument(instrument_id):
     # This is used in the template to select the key to plot against time in the
     # graph generation function
     cur = g.db.cursor()
-    cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'prosensing_paf'")
+    cur.execute("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'prosensing_paf'")
     rows = cur.fetchall()
     # Add each name to the list of columns
-    columns = [row[0] for row in rows]
+    columns = [row[0] for row in rows if row[1] in ["integer", "boolean", "double precision"]]
 
     return render_template('show_instrument.html', instrument=instrument,
                            recent_logs=recent_logs, status=status, columns=columns)
@@ -716,6 +743,21 @@ def new_log():
     return render_template('new_log.html', users=users, instruments=instruments, status=status_text, error=error)
 
 
+def load_config():
+    """Load the configuration Object from the config file
+
+    Loads a configuration Object from the config file.
+
+    Returns
+    -------
+    config: dict
+        Configuration Dictionary of Key Value Pairs
+    """
+    with open("config.yml", 'r') as ymlfile:
+        config = yaml.load(ymlfile)
+    return config
+
+
 @app.route('/')
 def hello_world():
     # Temporary home page
@@ -723,4 +765,10 @@ def hello_world():
 
 
 if __name__ == '__main__':
+    cfg = load_config()
+
+    if cfg['type']['central_facility']:
+        is_central = 1
+        DB_HOST = "192.168.50.100"
+
     app.run(debug=True, host='0.0.0.0', port=80)

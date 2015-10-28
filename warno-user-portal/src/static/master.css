@@ -1,8 +1,30 @@
+body {
+  background-image: url("brushed_alu.png");
+  background-image: repeat;
+  font-family: Arial;
+}
+
 div.head-title {
-	background-color: LightGray; 
+      background: linear-gradient(darkBlue, blue);
+      color: white;
 	width: 97%;
-	border:3px solid black; 
+	border: 3px solid black;
 	padding: 5px;
+      border-radius: 10px;
+}
+
+div.head-title a{
+  color: white;
+}
+
+div.head-title h1{
+  margin-before: 0.2em;
+  margin-after: 0.2em;
+}
+
+div.info {
+  background:  linear-gradient(to right, lightBlue, white);
+  border: 1px solid black;
 }
 
 table.nav-table{
@@ -14,8 +36,9 @@ table.nav-table td {
 }
 
 table.listing-table{
-    width: 100%;
-    background-color: #f1f1c1;
+    width: 97%;
+    background-color: black;
+    margin: 5px;
 }
 
 table.listing-table tr:nth-child(even) {
@@ -25,6 +48,6 @@ table.listing-table tr:nth-child(odd) {
     background-color: #fff;
 }
 table.listing-table th {
-    color: white;
-    background-color: black;
+    color: black;
+    background: linear-gradient(lightBlue, white);
 }

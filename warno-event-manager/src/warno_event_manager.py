@@ -110,7 +110,11 @@ def save_special_prosensing_paf(msg, msg_struct):
     sql_query_b = ") VALUES ('%s', %s, %s" % (timestamp, msg_struct['Data']['Site_Id'], msg_struct['Data']['Instrument_Id'])
     for key, value in msg_struct['Data']['Value'].iteritems():
         sql_query_a = ', '.join([sql_query_a, key])
-        sql_query_b = ', '.join([sql_query_b, value])
+        try:
+            float(value)
+            sql_query_b = ', '.join([sql_query_b, "%s" % value])
+        except ValueError:
+            sql_query_b = ', '.join([sql_query_b, "'%s'" % value])
     sql_query = ''.join([sql_query_a, sql_query_b, ")"])
 
     cur.execute(sql_query)

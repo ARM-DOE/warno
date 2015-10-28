@@ -32,8 +32,8 @@
         </select>
     </p>
     <p><label for="time">Date/Time:</label>
-         <input type="datetime-local" id="datetime-input" name="time" placeholder="01/01/1970 12:27:31">
-            (MM-DD-YYYY HH:MM)
+         <input type="datetime" id="datetime-input" name="time" placeholder="01/01/1970 12:27:31">
+            Local Time (MM/DD/YYYY HH:MM:SS)
          {% if error %}
          <div id="new-log-error" style="color: red">{{error}}</div>
          {% endif %}

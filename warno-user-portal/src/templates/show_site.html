@@ -50,34 +50,16 @@
     <br>
 </div>
 
-<div style="width: 300px; float: left;">
+<div style="width: 300px; float: left; border: 2px solid black; margin: 5px">
     <div>
         <img src='https://maps.googleapis.com/maps/api/staticmap?center={{site.latitude}}, {{site.longitude}}&zoom=1&size=300x300&maptype=roadmap&markers=color:blue%7Clabel:S%7C{{site.latitude}}, {{site.longitude}}&sensor=false'/>
     </div>
 </div>
-<div style="position:absolute; left: 320px; width: 420px;">
-    <div style="background-color: LightYellow; border: 1px solid black;">
-        <h3 style="text-align: center;">Recent Logs:</h3>
-        {% for log in recent_logs %}
-            <hr>
-            <b>Logged By</b>: {{log.author}}
-            <br>
-            <b>Time</b>: {{log.time}}
-            <br>
-            <b>Status</b>: {{log.status}}
-            <br>
-            <b>Comments</b>: {{log.contents}}
-            <br>
-            <b>Supporting Images</b>: {{log.supporting_images}}
-        {% endfor %}
-    </div>
-    
-</div>
-<div style="position: absolute; left: 760px; width: 400px;">
-    <div style="background-color: LightYellow; border: 1px solid black;">
+<div style="float: left; width: 400px; padding: 5px;">
+    <div class="info">
         <h3 style="margin-left: 10px;">  Information:</h3>
     </div>
-    <div style = "border: 1px solid black; padding: 5px;">
+    <div style = "background-color: white; border: 1px solid black; padding: 5px;">
         Abbreviation:   {{site.abbv}}
         <br>
         Name:           {{site.name}}
@@ -93,6 +75,25 @@
         Longitude:      {{site.longitude}}
         <br>
 
+    </div>
+</div>
+<div style="float: left; width: 420px; padding: 5px;">
+    <div class="info">
+        <h3 style="text-align: center;">Recent Logs:</h3>
+    </div>
+    <div style="background-color: white; border: 1px solid black;">
+        {% for log in recent_logs %}
+            <b>Logged By</b>: {{log.author}}
+            <br>
+            <b>Time</b>: {{log.time}}
+            <br>
+            <b>Status</b>: {{log.status}}
+            <br>
+            <b>Comments</b>: {{log.contents}}
+            <br>
+            <b>Supporting Images</b>: {{log.supporting_images}}
+            <hr>
+        {% endfor %}
     </div>
 </div>
 
