@@ -12,7 +12,8 @@ table_data = [
                    ["events_with_text", "events_with_text.data"],
                    ["events_with_value", "events_with_value.data"],
                    ["pulse_captures", "pulse_captures.data"],
-                   ["table_references", "table_references.data"]
+                   ["table_references", "table_references.data"],
+                   ["instrument_data_references", "instrument_data_references.data"]
                ]
 
 for table in table_data:

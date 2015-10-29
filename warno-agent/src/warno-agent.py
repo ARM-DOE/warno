@@ -80,7 +80,8 @@ def load_config():
     return config
 
 if __name__ == "__main__":
-    sleep(30)
+    while True:
+        sleep(30)
     signal.signal(signal.SIGINT, signal_handler)
     plugin_module_list = list_plugins()
 
@@ -109,11 +110,11 @@ if __name__ == "__main__":
         data = dict(json.loads(response.content))
         instrument_ids.append((plugin, data['Instrument_Id']))
         for event in response_dict['event_code_names']:
-            msg = '{"Event_Code": 1, "Data": "%s"}' % event
+            msg = '{"Event_Code": 1, "Data": {"description": "%s", "instrument_id": %s}}' % (event, data['Instrument_Id'])
             payload = json.loads(msg)
             response = requests.post(em_url, json=payload, headers=headers)
             response_dict = dict(json.loads(response.content))
-            event_code_dict[response_dict['Data']] = response_dict['Event_Code']
+            event_code_dict[response_dict['Data']['description']] = response_dict['Event_Code']
 
     # Loop through plugins and start each up
     for plugin in plugin_module_list:

@@ -13,7 +13,7 @@
 {% endwith %}
 
 
-<div style="width: 300px; float: left; border: 2px solid black; margin: 5px">
+<div style="width: 300px; display: inline-block; vertical-align: top; border: 2px solid black; margin: 5px">
     <div>
         <img src='https://maps.googleapis.com/maps/api/staticmap?center={{instrument.latitude}}, {{instrument.longitude}}&zoom=1&size=300x300&maptype=roadmap&markers=color:blue%7Clabel:S%7C{{instrument.latitude}}, {{instrument.longitude}}&sensor=false'/>
     </div>
@@ -40,12 +40,12 @@
     </div>
 </div>
 
-<div style="padding: 5px; display: inline-block">
+<div style="padding: 5px; display: inline-block; vertical-align: top;">
         {% with columns=columns, instrument_id=instrument.id %}
         {% include 'instrument_dygraph.html' %}
         {% endwith %}
     </div>
-<div style="float: right; width: 420px; padding: 5px; margin-right: 2%; overflow: auto;">
+<div style="display: inline-block; float: right; vertical-align: top; align: right; width: 420px; padding: 5px; margin-right: 2%;">
     <div class="info" style="text-align: center;">
         <h3>STATUS: {{status}}</h3>
     </div>

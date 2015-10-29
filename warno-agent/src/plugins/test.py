@@ -6,7 +6,7 @@ from pyarmret.io.PAFClient import PAFClient
 
 
 def register(msg_queue):
-    event_names = ["prosensing_paf"]
+    event_names = ["prosensing_paf", "non_paf_event"]
     instrument_name = "KAZR-2"
 
     print "REGISTERING KAZR-2"
@@ -17,13 +17,15 @@ def register(msg_queue):
 def run(msg_queue, instrument_id):
     pafc = PAFClient("192.148.95.5", 3000)
     pafc.connect()
-    pafc.get_server_info()
+    si = pafc.get_server_info()
+    i = 0
     while True:
-        i = 1
         i = i + 1
-        events = pafc.get_text_status()
+        events = pafc.get_all_text_dict()
         events_payload = json.dumps(events)
+        print "Length: %s" % len(events_payload)
         timestamp = time.mktime(time.localtime())
+        msg_queue.put('{"event": "non_paf_event", "data": {"Instrument_Id": %s, "Time": %s, "Value": "%s"}}' % (instrument_id, timestamp, i))
         # for key, value in events.iteritems():
         msg_queue.put('{"event": "%s", "data": {"Instrument_Id": %s, "Time": %s, "Value": %s}}' % ("prosensing_paf", instrument_id, timestamp, events_payload))
         time.sleep(5)

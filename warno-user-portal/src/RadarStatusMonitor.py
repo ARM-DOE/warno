@@ -114,32 +114,40 @@ def generate_instrument_graph():
     print("End %s" % end)
 
     # Get a list of valid column names for the table in the database
-    cur.execute("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'prosensing_paf'")
-    rows = cur.fetchall()
-    # Add each name to the list of columns
-    columns = [row[0] for row in rows if row[1] in ["integer", "boolean", "double precision"]]
+    cur.execute("SELECT special, description FROM instrument_data_references WHERE instrument_id = %s", (instrument_id,))
+    references = cur.fetchall()
+    print("Reference selection: %s" % references)
+    column_list = []
+    for reference in references:
+        print("Current reference:")
+        print reference
+        if reference[0] == True:
+            cur.execute("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = %s", (reference[1],))
+            rows = cur.fetchall()
+            columns = [row[0] for row in rows if row[1] in ["integer", "boolean", "double precision"]]
+        else:
+            columns = [reference[1]]
+        column_list.extend(columns)
     # If the key is not in the columns, return an empty message
     # Prevents a user from SQL injection when we combine key into the FROM clause of the next query
     # Standard parameterization does not work for the FROM clause, so we have to protect our own way
-    if key not in columns:
+    if key not in column_list:
         return json.dumps({"x": [], "y": []})
 
-#     try:
-#         cur.execute('''INSERT INTO instrument_logs(time, instrument_id, author_id, contents, status)
-#                        VALUES (%s, %s, %s, %s, %s)''', (time, instrument_id, user_id, contents, status))
-#         cur.execute('COMMIT')
-#         # Redirect to the instrument page that the log was submitted for.
-#         # Log will likely appear on page.
-#         # May not appear if the date was set to older than the 5 most recent logs
-#         return redirect(url_for('show_instrument', instrument_id=instrument_id))
-#     except psycopg2.DataError:
-#         # If the timedate object expected by the database was incorrectly formatted, error is set
-#         # for when the page is rendered again
-#         error = "Invalid Date/Time Format"
-#     # Commit required, especially if there is an exception,
-#     # otherwise the cursor breaks on the next execute
-#     cur.execute('COMMIT')
-    sql_query = 'SELECT time, %s FROM prosensing_paf WHERE instrument_id = %%s AND time >= %%s AND time <= %%s' % key
+    # Build the SQL query for the given key.  If the key is a part of a special table, build a query based on the key and containing table
+    for reference in references:
+        if reference[1] == key:
+            cur.execute('SELECT event_code FROM event_codes WHERE description = %s', (key,))
+            event_code = cur.fetchone()
+            sql_query = ('SELECT time, value FROM events_with_value WHERE instrument_id = %%s '
+                         'AND time >= %%s AND time <= %%s AND event_code = %s') % event_code[0]
+            break
+        elif reference[0] == True:
+            cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name = %s", (reference[1],))
+            rows = cur.fetchall()
+            columns = [row[0] for row in rows]
+            if key in columns:
+                sql_query = 'SELECT time, %s FROM %s WHERE instrument_id = %%s AND time >= %%s AND time <= %%s' % (key, reference[1])
     # Selects the time and the "key" column from the data table for the supplied instrument_id
     try:
         cur.execute(sql_query, (instrument_id, start, end))
@@ -361,17 +369,26 @@ def show_instrument(instrument_id):
     else:
         status = "OPERATIONAL"
 
-    # Select the list of available columns in the prosensing_paf data table.
-    # This is used in the template to select the key to plot against time in the
-    # graph generation function
     cur = g.db.cursor()
-    cur.execute("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'prosensing_paf'")
-    rows = cur.fetchall()
-    # Add each name to the list of columns
-    columns = [row[0] for row in rows if row[1] in ["integer", "boolean", "double precision"]]
+    # Grabs all columns available to plot. Uses the table data references table to determine which columns to use
+    # and which references are to full tables, in which case, it pulls all value columns from the table.
+    cur.execute("SELECT special, description FROM instrument_data_references WHERE instrument_id = %s", (instrument_id,))
+    references = cur.fetchall()
+    print("Reference selection: %s" % references)
+    column_list = []
+    for reference in references:
+        print("Current reference:")
+        print reference
+        if reference[0] == True:
+            cur.execute("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = %s", (reference[1],))
+            rows = cur.fetchall()
+            columns = [row[0] for row in rows if row[1] in ["integer", "boolean", "double precision"]]
+        else:
+            columns = [reference[1]]
+        column_list.extend(columns)
 
     return render_template('show_instrument.html', instrument=instrument,
-                           recent_logs=recent_logs, status=status, columns=columns)
+                           recent_logs=recent_logs, status=status, columns=sorted(column_list))
 
 
 @app.route('/pulse')
@@ -380,7 +397,7 @@ def show_pulse():
 
     Returns
     -------
-    show_instrument.html: HTML document
+    show_pulse.html: HTML document
         Returns an HTML document with an argument for a list of pulse_id's to choose from
             for deciding which pulse's series to plot.
     """
@@ -741,6 +758,25 @@ def new_log():
     users = [dict(id=row[0], name=row[1]) for row in cur.fetchall()]
 
     return render_template('new_log.html', users=users, instruments=instruments, status=status_text, error=error)
+
+
+@app.route("/query", methods=['GET', 'POST'])
+def query():
+    data = ""
+    if request.method == 'POST':
+        query = request.form.get("query")
+        cur = g.db.cursor()
+        try:
+            cur.execute(query)
+            data = cur.fetchall()
+            cur.execute('COMMIT')
+        except psycopg2.ProgrammingError, e:
+            data = "Invalid Query.  Error: %s" % e
+
+    if request.method == 'GET':
+        pass
+
+    return render_template("query.html", data=data)
 
 
 def load_config():

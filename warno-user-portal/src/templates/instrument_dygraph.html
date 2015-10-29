@@ -15,25 +15,29 @@
 		<hr> -->
 		<br>
 		<div>
+		    <div style="display: inline-block; vertical-align: top;">
 			Add a Graph By Attribute
 			<br>
 			<select id="keySelect" name="Data">
 		        {% for column in columns %}
 		          <option value="{{column}}">{{column}}</option>
-		        {% endfor %}
-	         </select>
-		   <button type="button" onclick="add_graph()">Add</button>
-		    <p><label for="time">Start Date/Time in UTC:</label>
-		       <input type="datetime" id="datetime-input-start" name="start" placeholder="01/01/1970 12:27:31">
-		    </p>
-		    <p><label for="time">End Date/Time in UTC:</label>
-		       <input type="datetime" id="datetime-input-end" name="end" placeholder="01/01/1970 12:27:31">
-		       <br>
-		        (MM/DD/YYYY HH:MM:SS)
-		        {% if error %}
-		         <div id="new-log-error" style="color: red">{{error}}</div>
-		        {% endif %}
-		    </p>
+		       {% endfor %}
+	             </select>
+		      <button type="button" onclick="add_graph()">Add</button>
+		   </div>
+		   <div style="display: inline-block; vertical-align: top;">
+                  <p><label for="time">Start Date/Time in UTC:</label>
+                     <input type="datetime" id="datetime-input-start" name="start" value="01/01/1970 12:27:31">
+                  </p>
+                  <p><label for="time">End Date/Time in UTC:</label>
+                     <input type="datetime" id="datetime-input-end" name="end" value="01/01/2170 12:27:31">
+                     <br>
+                      (MM/DD/YYYY HH:MM:SS)
+                      {% if error %}
+                       <div id="new-log-error" style="color: red">{{error}}</div>
+                      {% endif %}
+                  </p>
+		    </div>
 		</div>
 		<div id="master-graphdiv"></div>
 

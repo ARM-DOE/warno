@@ -9,10 +9,11 @@ def register(msg_queue):
     #     msg_queue.put('{"Event_Code": 1, "Data": "%s"}' % e_type)
     return {"instrument_name": instrument_name, "event_code_names": event_code_names}
 
-i = 0
+
 def run(msg_queue, instrument_id):
+    i = 0
     while True:
-        i + 1
+        i = i + 1
         timestamp = time.mktime(time.localtime())
         msg_queue.put('{"event": "temperature", "data": {"Instrument_Id": %s, "Time": %s, "Value": "%s"}}' % (instrument_id, timestamp, i))
         msg_queue.put('{"event": "zenith", "data": {"Instrument_Id": %s, "Time": %s, "Value": "%s"}}' % (instrument_id, timestamp, i))

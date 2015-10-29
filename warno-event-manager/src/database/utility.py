@@ -47,7 +47,8 @@ def initialize_database(curr):
                    "events_with_text",
                    "events_with_value",
                    "pulse_captures",
-                   "table_references"
+                   "table_references",
+                   "instrument_data_references"
                    ]
 
     for schema in schema_list:
