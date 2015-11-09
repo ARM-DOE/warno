@@ -31,7 +31,7 @@ def test_convert_count_array_to_dBm():
 
 
 def test_convert_count_to_dBm():
-    np.testing.assert_almost_equal(client._convert_count_to_dBm(1), -79.29843367)
+    np.testing.assert_almost_equal(client._convert_count_to_dBm(np.array([1])), [-79.29843367])
 
 
 def test_safe_convert_value_valid():
