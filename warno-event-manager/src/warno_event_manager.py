@@ -65,7 +65,7 @@ def event():
     msg_struct = dict(json.loads(msg))
 
     msg_event_code = msg_struct['Event_Code']
-    # Request for the event code for a give description
+    # Request for the event code for a given description
     if msg_event_code == 1:
         save_instrument_data_reference(msg, msg_struct)
         return get_event_code(msg, msg_struct)
@@ -77,8 +77,10 @@ def event():
     # Request an instrument id from instrument name
     elif msg_event_code == 3:
         return get_instrument_id(msg, msg_struct)
-    # Event is special case: 'prosensing_paf' structure
     elif msg_event_code == 4:
+        return save_pulse_capture(msg, msg_struct)
+    # Event is special case: 'prosensing_paf' structure
+    elif msg_event_code == 5:
         return save_special_prosensing_paf(msg, msg_struct)
 
     # Any other event
@@ -127,6 +129,21 @@ def save_special_prosensing_paf(msg, msg_struct):
         requests.post(cf_url, json=payload, headers=headers)
     return msg
 
+
+def save_pulse_capture(msg, msg_struct):
+    cur = g.db.cursor()
+    timestamp = time.asctime(time.gmtime(msg_struct['Data']['Time']))
+    sql_query = ("INSERT INTO pulse_captures(time, instrument_id, data)"
+                 " VALUES ('%s', %s, ARRAY%s)") % (timestamp, msg_struct['Data']['Instrument_Id'], msg_struct['Data']['Value'])
+
+    cur.execute(sql_query)
+    cur.execute("COMMIT")
+    "Saved Pulse Capture"
+
+    if not is_central:
+        payload = json.loads(msg)
+        requests.post(cf_url, json=payload, headers=headers)
+    return msg
 
 def get_instrument_id(msg, msg_struct):
     cur = g.db.cursor()

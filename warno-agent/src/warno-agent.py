@@ -80,8 +80,8 @@ def load_config():
     return config
 
 if __name__ == "__main__":
-    while True:
-        sleep(30)
+    # while True:
+    sleep(30)
     signal.signal(signal.SIGINT, signal_handler)
     plugin_module_list = list_plugins()
 

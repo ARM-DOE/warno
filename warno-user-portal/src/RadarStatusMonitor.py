@@ -374,11 +374,8 @@ def show_instrument(instrument_id):
     # and which references are to full tables, in which case, it pulls all value columns from the table.
     cur.execute("SELECT special, description FROM instrument_data_references WHERE instrument_id = %s", (instrument_id,))
     references = cur.fetchall()
-    print("Reference selection: %s" % references)
     column_list = []
     for reference in references:
-        print("Current reference:")
-        print reference
         if reference[0] == True:
             cur.execute("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = %s", (reference[1],))
             rows = cur.fetchall()
@@ -403,11 +400,11 @@ def show_pulse():
     """
 
     cur = g.db.cursor()
-    sql_query = """SELECT pulse_id FROM pulse_captures"""
+    sql_query = """SELECT p.pulse_id, i.name_short, p.time FROM pulse_captures p JOIN instruments i ON (p.instrument_id = i.instrument_id)"""
     cur.execute(sql_query)
-    pulse_ids = [row[0] for row in cur.fetchall()]
+    pulses = [(row[0], row[1], row[2]) for row in cur.fetchall()]
 
-    return render_template('show_pulse.html', pulse_ids=pulse_ids)
+    return render_template('show_pulse.html', pulses=pulses)
 
 
 @app.route('/generate_pulse_graph', methods=['GET', 'POST'])
@@ -434,7 +431,7 @@ def generate_pulse_graph():
 
     sql_query = """SELECT data FROM pulse_captures WHERE pulse_id = %s"""
     # Selects the time and the "key" column from the data table for the supplied instrument_id
-    cur.execute(sql_query, (pulse_id))
+    cur.execute(sql_query, (pulse_id,))
     row = cur.fetchone()
 
     # Prepares a JSON message, an array of x values and an array of y values, for the graph to plot
