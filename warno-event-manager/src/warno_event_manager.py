@@ -164,8 +164,11 @@ def get_instrument_id(msg, msg_struct):
             return '{"Instrument_Id": -1}'
         # If it does not exist at a site, requests the site information from the central facility
         else:
+            print "\n\nmessage ************* %s ************\n\n" % msg
             payload = json.loads(msg)
+            print "\n\npayload *********** %s ************\n\n" % msg
             response = requests.post(cf_url, json=payload, headers=headers)
+            print "\n\nresponst ************** %s ***********\n\n" % response
             cf_msg = dict(json.loads(response.content))
             cf_data = cf_msg['Data']
             # Need to add handler for if there is a bad return from CF (if clause above)

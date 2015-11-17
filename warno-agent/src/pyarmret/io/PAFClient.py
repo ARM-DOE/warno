@@ -127,9 +127,12 @@ class PAFClient(object):
         """ Request and parse the text configuration status. Currently this is the
         only way to get data out of the system.
         """
-
-        self.s.send(struct.pack(
-            "<i", server_request_type_fw2['CmdGetConfigText']))
+        if self.hostname in fw2_hosts:
+            self.s.send(struct.pack(
+                "<ib", server_request_type_fw2['CmdGetConfigText'], 0))
+        else:
+            self.s.send(struct.pack(
+                "<i", server_request_type_fw2['CmdGetConfigText']))
         return self._parse_text_header()
 
     def get_text_status(self):
@@ -137,8 +140,12 @@ class PAFClient(object):
         only way to get data out of the system.
         """
 
-        self.s.send(struct.pack(
-            "<i", server_request_type_fw2['CmdGetStatusText']))
+        if self.hostname in fw2_hosts:
+            self.s.send(struct.pack(
+                "<ib", server_request_type_fw2['CmdGetStatusText'], 0))
+        else:
+            self.s.send(struct.pack(
+                "<i", server_request_type_fw2['CmdGetStatusText']))
         return self._parse_text_header()
 
     def get_text_calibration(self):
@@ -146,8 +153,12 @@ class PAFClient(object):
         only way to get data out of the system.
         """
 
-        self.s.send(struct.pack(
-            "<i", server_request_type_fw2['CmdGetCalibrationText']))
+        if self.hostname in fw2_hosts:
+            self.s.send(struct.pack(
+                "<ib", server_request_type_fw2['CmdGetCalibrationText'], 0))
+        else:
+            self.s.send(struct.pack(
+                "<i", server_request_type_fw2['CmdGetCalibrationText']))
         return self._parse_text_header()
 
     def get_text_device_status(self):
@@ -155,8 +166,12 @@ class PAFClient(object):
         only way to get data out of the system.
         """
 
-        self.s.send(struct.pack("<i", server_request_type_fw2[
-                    'CmdGetDeviceStatusText']))
+        if self.hostname in fw2_hosts:
+            self.s.send(struct.pack(
+                "<ib", server_request_type_fw2['CmdGetDeviceStatusText'], 0))
+        else:
+            self.s.send(struct.pack(
+                "<i", server_request_type_fw2['CmdGetDeviceStatusText']))
         return self._parse_text_header()
 
     def get_text_mod_status(self):
@@ -164,8 +179,12 @@ class PAFClient(object):
         only way to get data out of the system.
         """
 
-        self.s.send(struct.pack(
-            "<i", server_request_type_fw2['CmdGetModStatusText']))
+        if self.hostname in fw2_hosts:
+            self.s.send(struct.pack(
+                "<ib", server_request_type_fw2['CmdGetModStatusText'], 0))
+        else:
+            self.s.send(struct.pack(
+                "<i", server_request_type_fw2['CmdGetModStatusText']))
         return self._parse_text_header()
 
     def get_text_proc_header(self):
@@ -173,8 +192,12 @@ class PAFClient(object):
         only way to get data out of the system.
         """
 
-        self.s.send(struct.pack(
-            "<i", server_request_type_fw2['CmdGetProcHeaderText']))
+        if self.hostname in fw2_hosts:
+            self.s.send(struct.pack(
+                "<ib", server_request_type_fw2['CmdGetProcHeaderText'], 0))
+        else:
+            self.s.send(struct.pack(
+                "<i", server_request_type_fw2['CmdGetProcHeaderText']))
         return self._parse_text_header()
 
     def _parse_text_header(self):
@@ -688,6 +711,11 @@ server_request_type_fw2 = {
     # I'm quite aware of how ugly this is. Fix Later
     "CmdKazr2GetProcHeader": 3000
 }
+
+fw2_hosts = [
+    "ena-sacr",
+    "sgp-sacr"
+]
 
 
 if __name__ == "__main__":

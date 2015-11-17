@@ -1,7 +1,7 @@
 setup:
     site: ENA
     instrument: KAZR-2
-    em_url: "http://130.20.121.166:8080/event"
+    em_url: "http://eventmanager/event"
 
 test:
     test_value: 1

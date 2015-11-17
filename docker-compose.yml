@@ -45,5 +45,8 @@ agent:
     links:
       - eventmanager
       - proxy
+    extra_hosts:
+      - "ena-kazr:192.148.95.5"
+      - "ena-sacr:192.148.95.7"
     env_file: .env
 

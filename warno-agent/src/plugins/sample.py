@@ -15,7 +15,7 @@ def register(msg_queue):
 
 
 def run(msg_queue, instrument_id):
-    pafc = PAFClient("192.148.95.5", 3000)
+    pafc = PAFClient("ena-kazr", 3000)
     pafc.connect()
     si = pafc.get_server_info()
     i = 1
