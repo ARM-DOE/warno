@@ -1,12 +1,88 @@
+﻿html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td,article,aside,canvas,details,embed,figure,figcaption,footer,header,hgroup,menu,nav,output,ruby,section,summary,time,mark,audio,video {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  vertical-align: baseline
+}
+
+body {
+  background-image: url("brushed_alu.png");
+  background-image: repeat;
+  font-family: Helvetica;
+}
+
+#arm-logo {
+  padding: 5px;
+  padding-top: 20px;
+  float: left;
+  position: absolute;
+}
+
+div.content, div.head-title, div.head-title-wrapper, div.sub-title {
+  max-width: 1200px;
+  min-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+div.content {
+  background-color: white;
+  min-height: 800px;
+  padding: 5px;
+  border-bottom: solid 2px black;
+  border-left: solid 2px black;
+  border-right: solid 2px black;
+}
+
+div.head-title-wrapper {
+  background-color: #e5f2ff;
+  padding: 5px;
+  border-left: solid 2px black;
+  border-right: solid 2px black;
+  border-bottom: solid 2px black;
+}
+
 div.head-title {
-	background-color: LightGray; 
-	width: 97%;
-	border:3px solid black; 
-	padding: 5px;
+      color: black;
+	width: 100%;
+  padding-top: 10px;
+  padding-left: 10px;
+  padding-right: 10px;
+  margin-left: auto;
+  margin-right: auto;
+  background-image: url("tmp.png");
+  background-repeat: no-repeat;
+  background-position: right 15px top;
+}
+
+div.head-title a{
+  color: darkBlue;
+  vertical-align: none;
+}
+
+div.head-title h1{
+  padding: 10px;
+}
+
+div.sub-title {
+  color: black;
+  background-color: #e5f2ff;
+  padding: 5px;
+  font-size: 18px;
+  margin-left: auto;
+  margin-right: auto;
+  border-left: solid 2px black;
+  border-right: solid 2px black;
+  border-bottom: solid 2px black;
+}
+
+div.info {
+  background:  lightBlue;
+  border: 1px solid black;
 }
 
 table.nav-table{
-	width: 60%;
+	width: 50%;
 }
 
 table.nav-table td {
@@ -14,17 +90,65 @@ table.nav-table td {
 }
 
 table.listing-table{
-    width: 100%;
-    background-color: #f1f1c1;
+    width: 99%;
+    margin: 5px;
+    border-collapse: collapse;
 }
 
 table.listing-table tr:nth-child(even) {
     background-color: #eee;
 }
 table.listing-table tr:nth-child(odd) {
-    background-color: #fff;
+    background-color: lightGray;
 }
 table.listing-table th {
-    color: white;
-    background-color: black;
+    color: black;
+    background: #b8e6ff;}
+
+table.listing-table td, th {
+  padding-left: 5px;
+  padding-right: 5px;
+  padding-bottom: 1px;
+  border: 1px solid black;
+}
+
+table.listing-table a {
+  color: darkBlue;
+}
+
+ul.nav-buttons {
+  display: block;
+  list-style: none;
+  overflow: hidden;
+  margin: 5px;
+  vertical-align: baseline;
+  font-size: 0px;
+}
+
+ul.nav-buttons li{
+  color: black;
+  display: inline-block;
+  background: lightGray;
+  width: 100px;
+  padding: 1px;
+  border: 1px solid black;
+  border-right: none;
+  font-size: 16px;
+}
+
+ul.nav-buttons a:first-child li{
+  border-radius: 8px 0 0 8px;
+}
+
+ul.nav-buttons a:last-child li {
+  border-radius: 0 8px 8px 0;
+  border-right: 1px solid black;
+}
+
+ul.nav-buttons a li:hover {
+  background: lightBlue;
+}
+
+ul.nav-buttons a li:active{
+  background: #3399ff;
 }

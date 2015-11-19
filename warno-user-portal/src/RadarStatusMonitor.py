@@ -1,11 +1,15 @@
 from flask import Flask, g, render_template, request, redirect, url_for
 import psycopg2
 import json
+import yaml
+import datetime
 
-DB_HOST = '192.168.50.100'
+DB_HOST = '192.168.50.99'
 DB_NAME = 'warno'
 DB_USER = 'warno'
 DB_PASS = 'warno'
+
+is_central = 0
 
 app = Flask(__name__)
 app.config.from_object(__name__)
@@ -63,10 +67,10 @@ def show_dygraph():
     cur = g.db.cursor()
     # Select the columns from the data table.
     # Allows the template to create a dropdown list with fixed values.
-    cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'prosensing_paf'")
+    cur.execute("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'prosensing_paf'")
     rows = cur.fetchall()
     # Put all of  the names in one list
-    columns = [row[0] for row in rows]
+    columns = [row[0] for row in rows if row[1] in ["integer", "boolean", "double precision"]]
 
     # Render the template and pass the list of columns
     return render_template('instrument_dygraph.html', columns=columns)
@@ -104,21 +108,52 @@ def generate_instrument_graph():
     # The instrument_id indicates which instrument's data to use for the graph.
     key = request.args.get("key")
     instrument_id = request.args.get("instrument_id")
+    start = request.args.get("start")
+    end = request.args.get("end")
+    print("Start %s" % start)
+    print("End %s" % end)
 
     # Get a list of valid column names for the table in the database
-    cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'prosensing_paf'")
-    rows = cur.fetchall()
-    # Add each name to the list of columns
-    columns = [row[0] for row in rows]
+    cur.execute("SELECT special, description FROM instrument_data_references WHERE instrument_id = %s", (instrument_id,))
+    references = cur.fetchall()
+    print("Reference selection: %s" % references)
+    column_list = []
+    for reference in references:
+        print("Current reference:")
+        print reference
+        if reference[0] == True:
+            cur.execute("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = %s", (reference[1],))
+            rows = cur.fetchall()
+            columns = [row[0] for row in rows if row[1] in ["integer", "boolean", "double precision"]]
+        else:
+            columns = [reference[1]]
+        column_list.extend(columns)
     # If the key is not in the columns, return an empty message
     # Prevents a user from SQL injection when we combine key into the FROM clause of the next query
     # Standard parameterization does not work for the FROM clause, so we have to protect our own way
-    if key not in columns:
+    if key not in column_list:
         return json.dumps({"x": [], "y": []})
 
-    sql_query = 'SELECT time, %s FROM prosensing_paf WHERE instrument_id = %%s' % key
+    # Build the SQL query for the given key.  If the key is a part of a special table, build a query based on the key and containing table
+    for reference in references:
+        if reference[1] == key:
+            cur.execute('SELECT event_code FROM event_codes WHERE description = %s', (key,))
+            event_code = cur.fetchone()
+            sql_query = ('SELECT time, value FROM events_with_value WHERE instrument_id = %%s '
+                         'AND time >= %%s AND time <= %%s AND event_code = %s') % event_code[0]
+            break
+        elif reference[0] == True:
+            cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name = %s", (reference[1],))
+            rows = cur.fetchall()
+            columns = [row[0] for row in rows]
+            if key in columns:
+                sql_query = 'SELECT time, %s FROM %s WHERE instrument_id = %%s AND time >= %%s AND time <= %%s' % (key, reference[1])
     # Selects the time and the "key" column from the data table for the supplied instrument_id
-    cur.execute(sql_query, (instrument_id))
+    try:
+        cur.execute(sql_query, (instrument_id, start, end))
+    except Exception, e:
+        print(e)
+        return json.dumps({"x": [], "y": []})
     rows = cur.fetchall()
 
     # Prepares a JSON message, an array of x values and an array of y values, for the graph to plot
@@ -334,17 +369,23 @@ def show_instrument(instrument_id):
     else:
         status = "OPERATIONAL"
 
-    # Select the list of available columns in the prosensing_paf data table.
-    # This is used in the template to select the key to plot against time in the
-    # graph generation function
     cur = g.db.cursor()
-    cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'prosensing_paf'")
-    rows = cur.fetchall()
-    # Add each name to the list of columns
-    columns = [row[0] for row in rows]
+    # Grabs all columns available to plot. Uses the table data references table to determine which columns to use
+    # and which references are to full tables, in which case, it pulls all value columns from the table.
+    cur.execute("SELECT special, description FROM instrument_data_references WHERE instrument_id = %s", (instrument_id,))
+    references = cur.fetchall()
+    column_list = []
+    for reference in references:
+        if reference[0] == True:
+            cur.execute("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = %s", (reference[1],))
+            rows = cur.fetchall()
+            columns = [row[0] for row in rows if row[1] in ["integer", "boolean", "double precision"]]
+        else:
+            columns = [reference[1]]
+        column_list.extend(columns)
 
     return render_template('show_instrument.html', instrument=instrument,
-                           recent_logs=recent_logs, status=status, columns=columns)
+                           recent_logs=recent_logs, status=status, columns=sorted(column_list))
 
 
 @app.route('/pulse')
@@ -353,17 +394,17 @@ def show_pulse():
 
     Returns
     -------
-    show_instrument.html: HTML document
+    show_pulse.html: HTML document
         Returns an HTML document with an argument for a list of pulse_id's to choose from
             for deciding which pulse's series to plot.
     """
 
     cur = g.db.cursor()
-    sql_query = """SELECT pulse_id FROM pulse_captures"""
+    sql_query = """SELECT p.pulse_id, i.name_short, p.time FROM pulse_captures p JOIN instruments i ON (p.instrument_id = i.instrument_id)"""
     cur.execute(sql_query)
-    pulse_ids = [row[0] for row in cur.fetchall()]
+    pulses = [(row[0], row[1], row[2]) for row in cur.fetchall()]
 
-    return render_template('show_pulse.html', pulse_ids=pulse_ids)
+    return render_template('show_pulse.html', pulses=pulses)
 
 
 @app.route('/generate_pulse_graph', methods=['GET', 'POST'])
@@ -390,7 +431,7 @@ def generate_pulse_graph():
 
     sql_query = """SELECT data FROM pulse_captures WHERE pulse_id = %s"""
     # Selects the time and the "key" column from the data table for the supplied instrument_id
-    cur.execute(sql_query, (pulse_id))
+    cur.execute(sql_query, (pulse_id,))
     row = cur.fetchone()
 
     # Prepares a JSON message, an array of x values and an array of y values, for the graph to plot
@@ -716,6 +757,40 @@ def new_log():
     return render_template('new_log.html', users=users, instruments=instruments, status=status_text, error=error)
 
 
+@app.route("/query", methods=['GET', 'POST'])
+def query():
+    data = ""
+    if request.method == 'POST':
+        query = request.form.get("query")
+        cur = g.db.cursor()
+        try:
+            cur.execute(query)
+            data = cur.fetchall()
+            cur.execute('COMMIT')
+        except psycopg2.ProgrammingError, e:
+            data = "Invalid Query.  Error: %s" % e
+
+    if request.method == 'GET':
+        pass
+
+    return render_template("query.html", data=data)
+
+
+def load_config():
+    """Load the configuration Object from the config file
+
+    Loads a configuration Object from the config file.
+
+    Returns
+    -------
+    config: dict
+        Configuration Dictionary of Key Value Pairs
+    """
+    with open("config.yml", 'r') as ymlfile:
+        config = yaml.load(ymlfile)
+    return config
+
+
 @app.route('/')
 def hello_world():
     # Temporary home page
@@ -723,4 +798,10 @@ def hello_world():
 
 
 if __name__ == '__main__':
+    cfg = load_config()
+
+    if cfg['type']['central_facility']:
+        is_central = 1
+        DB_HOST = "192.168.50.100"
+
     app.run(debug=True, host='0.0.0.0', port=80)

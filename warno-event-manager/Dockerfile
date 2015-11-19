@@ -8,14 +8,15 @@ COPY /src /opt/warno-event-manager/
 
 # Automatic install from remote
 
-RUN sed -i '1s/^/deb http:\/\/mirror.pnl.gov\/ubuntu\/ trusty main universe restricted /' /etc/apt/sources.list
-RUN sed -i '2s/^/deb http:\/\/mirror.pnl.gov\/ubuntu\/ trusty-updates main universe restricted/' /etc/apt/sources.list
-RUN sed -i '3s/^/deb http:\/\/mirror.pnl.gov\/ubuntu\/ trusty-security main universe restricted /' /etc/apt/sources.list
-RUN sed -i '4,90d' /etc/apt/sources.list
+# RUN sed -i '1s/^/deb http:\/\/mirror.pnl.gov\/ubuntu\/ trusty main universe restricted /' /etc/apt/sources.list
+# RUN sed -i '2s/^/deb http:\/\/mirror.pnl.gov\/ubuntu\/ trusty-updates main universe restricted/' /etc/apt/sources.list
+# RUN sed -i '3s/^/deb http:\/\/mirror.pnl.gov\/ubuntu\/ trusty-security main universe restricted /' /etc/apt/sources.list
+# RUN sed -i '4,90d' /etc/apt/sources.list
 
 RUN apt-get update
-RUN apt-get install -y build-essential python-dev python-pip python-psycopg2
+RUN apt-get install -y build-essential python-dev python-pip python-psycopg2 python-requests
 RUN pip install -r /opt/warno-event-manager/requirements.txt
+RUN pip install requests --upgrade
 RUN apt-get install -y openssh-server
 
 # Manual local install

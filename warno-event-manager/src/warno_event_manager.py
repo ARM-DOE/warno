@@ -12,11 +12,14 @@ cfg = None
 ticks = 0
 tocks = 0
 
-DB_HOST = '0.0.0.0'
-DB_NAME = 'warno1'
+DB_HOST = '192.168.50.99'
+DB_NAME = 'warno'
 DB_USER = 'warno'
 DB_PASS = 'warno'
-cf_url = "http://localhost:5001/event"
+
+is_central = 0
+cf_url = ""
+headers = {'Content-Type': 'application/json', 'Host': "warno-event-manager.local"}
 
 
 def connect_db():
@@ -56,14 +59,15 @@ def teardown_request(exception):
         db.close()
 
 
-@app.route("/event", methods=['POST'])
+@app.route("/eventmanager/event", methods=['POST'])
 def event():
     msg = request.data
     msg_struct = dict(json.loads(msg))
 
     msg_event_code = msg_struct['Event_Code']
-    # Request for the event code for a give description
+    # Request for the event code for a given description
     if msg_event_code == 1:
+        save_instrument_data_reference(msg, msg_struct)
         return get_event_code(msg, msg_struct)
 
     # Request a site id from site name
@@ -73,8 +77,10 @@ def event():
     # Request an instrument id from instrument name
     elif msg_event_code == 3:
         return get_instrument_id(msg, msg_struct)
-    # Event is special case: 'prosensing_paf' structure
     elif msg_event_code == 4:
+        return save_pulse_capture(msg, msg_struct)
+    # Event is special case: 'prosensing_paf' structure
+    elif msg_event_code == 5:
         return save_special_prosensing_paf(msg, msg_struct)
 
     # Any other event
@@ -94,9 +100,9 @@ def event():
             cur.execute("COMMIT")
             print("Saved Text Event")
         # If application is at a site instead of the central facility, passes data on to be saved at central facility
-        if not cfg['type']['central_facility']:
+        if not is_central:
             payload = json.loads(msg)
-            requests.post(cf_url, json=payload, headers={'Content-Type': 'application/json'})
+            requests.post(cf_url, json=payload, headers=headers)
         return msg
 
 
@@ -107,18 +113,37 @@ def save_special_prosensing_paf(msg, msg_struct):
     sql_query_b = ") VALUES ('%s', %s, %s" % (timestamp, msg_struct['Data']['Site_Id'], msg_struct['Data']['Instrument_Id'])
     for key, value in msg_struct['Data']['Value'].iteritems():
         sql_query_a = ', '.join([sql_query_a, key])
-        sql_query_b = ', '.join([sql_query_b, value])
+        try:
+            float(value)
+            sql_query_b = ', '.join([sql_query_b, "%s" % value])
+        except ValueError:
+            sql_query_b = ', '.join([sql_query_b, "'%s'" % value])
     sql_query = ''.join([sql_query_a, sql_query_b, ")"])
 
     cur.execute(sql_query)
     cur.execute("COMMIT")
     "Saved Special Type: Prosensing PAF"
 
-    if not cfg['type']['central_facility']:
+    if not is_central:
         payload = json.loads(msg)
-        requests.post(cf_url, json=payload, headers={'Content-Type': 'application/json'})
+        requests.post(cf_url, json=payload, headers=headers)
     return msg
 
+
+def save_pulse_capture(msg, msg_struct):
+    cur = g.db.cursor()
+    timestamp = time.asctime(time.gmtime(msg_struct['Data']['Time']))
+    sql_query = ("INSERT INTO pulse_captures(time, instrument_id, data)"
+                 " VALUES ('%s', %s, ARRAY%s)") % (timestamp, msg_struct['Data']['Instrument_Id'], msg_struct['Data']['Value'])
+
+    cur.execute(sql_query)
+    cur.execute("COMMIT")
+    "Saved Pulse Capture"
+
+    if not is_central:
+        payload = json.loads(msg)
+        requests.post(cf_url, json=payload, headers=headers)
+    return msg
 
 def get_instrument_id(msg, msg_struct):
     cur = g.db.cursor()
@@ -127,20 +152,23 @@ def get_instrument_id(msg, msg_struct):
 
     # If there is an instrument with a matching name, returns all info to a site or just the id to an agent.
     if row:
-        if cfg['type']['central_facility']:
+        if is_central:
             print("Found Existing Instrument")
-            return '{"Event_code": 2, "Data": {"Instrument_Id": %s, "Site_Id": %s, "Name_Short": "%s", "Name_Long": "%s", "Type": "%s", "Vendor": "%s", "Description": "%s", "Frequency_Band": "%s"}}' % (row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
+            return '{"Event_code": 3, "Data": {"Instrument_Id": %s, "Site_Id": %s, "Name_Short": "%s", "Name_Long": "%s", "Type": "%s", "Vendor": "%s", "Description": "%s", "Frequency_Band": "%s"}}' % (row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
         else:
             print("Found Existing Instrument")
             return '{"Instrument_Id": %i, "Data": "%s"}' % (row[0], msg_struct['Data'])
     else:
         # If it does not exist at the central facility, returns an error indicator
-        if cfg['type']['central_facility']:
+        if is_central:
             return '{"Instrument_Id": -1}'
         # If it does not exist at a site, requests the site information from the central facility
         else:
+            print "\n\nmessage ************* %s ************\n\n" % msg
             payload = json.loads(msg)
-            response = requests.post(cf_url, json=payload, headers={'Content-Type': 'application/json'})
+            print "\n\npayload *********** %s ************\n\n" % msg
+            response = requests.post(cf_url, json=payload, headers=headers)
+            print "\n\nresponst ************** %s ***********\n\n" % response
             cf_msg = dict(json.loads(response.content))
             cf_data = cf_msg['Data']
             # Need to add handler for if there is a bad return from CF (if clause above)
@@ -160,7 +188,7 @@ def get_site_id(msg, msg_struct):
 
     # If there is a site with a matching name, returns all info to a site or just the id to an agent.
     if row:
-        if cfg['type']['central_facility']:
+        if is_central:
             print("Found Existing Site")
             return '{"Event_code": 2, "Data": {"Site_Id": %s, "Name_Short": "%s", "Name_Long": "%s", "Latitude": "%s", "Longitude": "%s", "Facility": "%s", "Mobile": "%s", "Location_Name": "%s"}}' % (row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
         else:
@@ -168,12 +196,12 @@ def get_site_id(msg, msg_struct):
             return '{"Site_Id": %i, "Data": "%s"}' % (row[0], msg_struct['Data'])
     else:
         # If it does not exist at the central facility, returns an error indicator
-        if cfg['type']['central_facility']:
+        if is_central:
             return '{"Site_Id": -1}'
         # If it does not exist at a site, requests the site information from the central facility
         else:
             payload = json.loads(msg)
-            response = requests.post(cf_url, json=payload, headers={'Content-Type': 'application/json'})
+            response = requests.post(cf_url, json=payload, headers=headers)
             cf_msg = dict(json.loads(response.content))
             cf_data = cf_msg['Data']
             # Need to add handler for if there is a bad return from CF (if clause above)
@@ -186,35 +214,52 @@ def get_site_id(msg, msg_struct):
             return '{"Site_Id": %i}' % cf_data['Site_Id']
 
 
+def save_instrument_data_reference(msg, msg_struct):
+    print("Message Struct for Data Reference: %s", msg_struct)
+    cur = g.db.cursor()
+    cur.execute('''SELECT * FROM instrument_data_references WHERE instrument_id = %s AND description = %s''', (msg_struct['Data']['instrument_id'], msg_struct['Data']['description']))
+    rows = cur.fetchall()
+    if not rows:
+        special = "false"
+        # "special" indicates whether this particual data description has its own table
+        cur.execute('''SELECT column_name FROM information_schema.columns WHERE table_name = %s''', (msg_struct['Data']['description'],))
+        rows = cur.fetchall()
+        if rows:
+            special = "true"
+        cur.execute('''INSERT INTO instrument_data_references(instrument_id, description, special) VALUES (%s, %s, %s)''', (msg_struct['Data']['instrument_id'], msg_struct['Data']['description'], special))
+        cur.execute("COMMIT")
+        print("Saved new instrument data reference")
+
+
 def get_event_code(msg, msg_struct):
     cur = g.db.cursor()
-    cur.execute('''SELECT event_code FROM event_codes WHERE description = %s''', (msg_struct['Data'],))
+    cur.execute('''SELECT event_code FROM event_codes WHERE description = %s''', (msg_struct['Data']['description'],))
     row = cur.fetchone()
 
     # If the event code defined here, return it downstream
     if row:
         print("Found Existing Event Code")
-        return '{"Event_Code": %i, "Data": "%s"}' % (row[0], msg_struct['Data'])
+        return '{"Event_Code": %i, "Data": {"description": "%s", "instrument_id": %s}}' % (row[0], msg_struct['Data']['description'], msg_struct['Data']['instrument_id'])
     # If it is not defined at the central facility, inserts a new entry into the table and returns the new code
-    elif cfg['type']['central_facility']:
-        cur.execute('''INSERT INTO event_codes(description) VALUES (%s)''', (msg_struct['Data'],))
+    elif is_central:
+        cur.execute('''INSERT INTO event_codes(description) VALUES (%s)''', (msg_struct['Data']['description'],))
         cur.execute("COMMIT")
-        cur.execute("SELECT event_code FROM event_codes WHERE description = %s", (msg_struct['Data'],))
+        cur.execute("SELECT event_code FROM event_codes WHERE description = %s", (msg_struct['Data']['description'],))
         row = cur.fetchone()
         new_event_code = row[0]
 
         print("Created New Event Code")
-        return '{"Event_Code": %i, "Data": "%s"}' % (new_event_code, msg_struct['Data'])
+        return '{"Event_Code": %i, "Data": {"description": "%s", "instrument_id": %s}}' % (new_event_code, msg_struct['Data']['description'], msg_struct['Data']['instrument_id'])
     # If it is not defined at a site, requests the event code from the central facility
     else:
         payload = json.loads(msg)
-        response = requests.post(cf_url, json=payload, headers={'Content-Type': 'application/json'})
+        response = requests.post(cf_url, json=payload, headers=headers)
         cf_msg = dict(json.loads(response.content))
         cur.execute('''INSERT INTO event_codes(event_code, description) VALUES (%s, %s)''',
-                    (cf_msg['Event_Code'], cf_msg['Data']))
+                    (cf_msg['Event_Code'], cf_msg['Data']['description']))
         cur.execute("COMMIT")
         print("Saved Event Code")
-        return '{"Event_Code": %i, "Data": "%s"}' % (cf_msg['Event_Code'], cf_msg['Data'])
+        return '{"Event_Code": %i, "Data": {"description": "%s", "instrument_id": %s}}' % (cf_msg['Event_Code'], cf_msg['Data']['description'], cf_msg['Data']['instrument_id'])
 
 
 def load_config():
@@ -232,7 +277,7 @@ def load_config():
     return config
 
 
-@app.route('/')
+@app.route('/eventmanager')
 def hello_world():
     ret_message = 'Hello World! Event Manager is operational. CPU Usage on Event Manager VM is: %g \n ' % psutil.cpu_percent()
     ret_message2 = '\n Site is: %s' % os.environ.get('SITE')
@@ -241,7 +286,24 @@ def hello_world():
 
 if __name__ == '__main__':
     cfg = load_config()
-    if cfg['type']['central_facility']:
-        DB_NAME = 'warno2'
 
-    app.run(host='192.168.50.100', port=80, debug=True)
+    if cfg['type']['central_facility']:
+        is_central = 1
+        DB_HOST = "192.168.50.100"
+    else:
+        # If the central facility is not responding, act like a central facility (Create missing entries)
+        cf_url = cfg['setup']['cf_url']
+    #     try:
+    #         response = os.system("nc -zvv " + "192.168.50.1 5001")
+    #     except Exception:
+    #         print "Why did you hit this?"
+    #     print "Response"
+    #     print response
+    #     if response != 0:
+    #         is_central = 1
+    # print "CENTRALITY %s" % is_central
+    # while True:
+    #     print "Centrality %s" % is_central
+    #     time.sleep(5)
+
+    app.run(host='0.0.0.0', port=80, debug=True)

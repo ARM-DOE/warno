@@ -13,7 +13,7 @@
 {% include 'partials/header_template.html' %}
 {% endwith %}
 
-
+<div class="content">
 <div>
 <table class="listing-table sortable" id='instrument-table'>
     <tr>
@@ -28,7 +28,7 @@
     </tr>
     {%  for instrument in instruments %}
     <tr>
-        <td><a href = "{{url_for('show_instrument', instrument_id=instrument.id)}}">{{ instrument.abbv }}</td>
+        <td><a href = "{{url_for('show_instrument', instrument_id=instrument.id)}}">{{ instrument.abbv }}</a></td>
         <td>{{ instrument.name }}</td>
         <td>{{ instrument.type }}</td>
         <td>{{ instrument.vendor }}</td>
@@ -49,6 +49,6 @@
   <input type="submit" id="new-instrument-redirect-button"
          value="Add New Instrument"/>
 </form>
-
+</div>
 </body>
 </html>

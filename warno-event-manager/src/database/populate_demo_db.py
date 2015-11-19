@@ -3,13 +3,8 @@ import utility
 db = utility.connect_db()
 cur = db.cursor()
 
-utility.initialize_database(cur)
-db.commit()
-
 # For each entry, first entry is table name, second entry is demo data for the table
 table_data = [
-                   ["users", "users.data"],
-                   ["sites", "sites.data"],
                    ["instruments", "instruments.data"],
                    ["instrument_logs", "logs.data"],
                    ["prosensing_paf", "prosensing_paf.data"],
@@ -17,7 +12,8 @@ table_data = [
                    ["events_with_text", "events_with_text.data"],
                    ["events_with_value", "events_with_value.data"],
                    ["pulse_captures", "pulse_captures.data"],
-                   ["table_references", "table_references.data"]
+                   ["table_references", "table_references.data"],
+                   ["instrument_data_references", "instrument_data_references.data"]
                ]
 
 for table in table_data:

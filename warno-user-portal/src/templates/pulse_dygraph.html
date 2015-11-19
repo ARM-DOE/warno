@@ -7,11 +7,11 @@
   <body>
       <div>
       <br>
-      Add a Graph By Pulse Number
+      Add Graph of Selected Pulse
       <br>
       <select id="PulseIDSelect" name="Pulse">
-            {% for pulse_id in pulse_ids %}
-              <option value="{{pulse_id}}">{{pulse_id}}</option>
+            {% for pulse in pulses %}
+              <option value="{{pulse[0]}}">{{pulse[1]}} &nbsp {{pulse[2]}}</option>
             {% endfor %}
           </select>
       <button type="button" onclick="add_graph()">Add</button>

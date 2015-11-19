@@ -13,6 +13,7 @@
 {% include 'partials/header_template.html' %}
 {% endwith %}
 
+<div class="content">
 <div>
     <h1 class="title">Log Entry Submission</h1>
 </div>
@@ -32,8 +33,8 @@
         </select>
     </p>
     <p><label for="time">Date/Time:</label>
-         <input type="datetime-local" id="datetime-input" name="time" placeholder="01/01/1970 12:27:31">
-            (MM-DD-YYYY HH:MM)
+         <input type="datetime" id="datetime-input" name="time" placeholder="01/01/1970 12:27:31">
+            Local Time (MM/DD/YYYY HH:MM:SS)
          {% if error %}
          <div id="new-log-error" style="color: red">{{error}}</div>
          {% endif %}
@@ -53,6 +54,7 @@
         <input type="submit" value="Submit Log">
     </p>
 </form>
+</div>
 
 <script>
   //Catch the date as it's submitted and convert to UTC for the database.

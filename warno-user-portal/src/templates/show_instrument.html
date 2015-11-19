@@ -12,16 +12,49 @@
 {% include 'partials/header_template.html' %}
 {% endwith %}
 
-
-<div style="width: 300px; float: left;">
+<div class="content">
+<div style="width: 300px; display: inline-block; vertical-align: top; border: 2px solid black; margin: 5px">
     <div>
         <img src='https://maps.googleapis.com/maps/api/staticmap?center={{instrument.latitude}}, {{instrument.longitude}}&zoom=1&size=300x300&maptype=roadmap&markers=color:blue%7Clabel:S%7C{{instrument.latitude}}, {{instrument.longitude}}&sensor=false'/>
     </div>
-    <div style="background-color: LightYellow; border: 1px solid black">
+    <div>
+        <div class="info">
+            <h3 style="margin-left: 10px;">  Information:</h3>
+        </div>
+        <div style = "background-color: white; border: 1px solid black; padding: 5px;">
+            Abbreviation:   {{instrument.abbv}}
+            <br>
+            Name:           {{instrument.name}}
+            <br>
+            Vendor:         {{instrument.vendor}}
+            <br>
+            Type:           {{instrument.type}}
+            <br>
+            Frequency Band: {{instrument.frequency_band}}
+            <br>
+            Location:
+            <a href="{{url_for('show_site', site_id= instrument.site_id)}}">{{instrument.location}}</a>
+            <br>
+            Description:    {{instrument.description}}
+        </div>
+    </div>
+</div>
+
+<div style="padding: 5px; display: inline-block; vertical-align: top;">
+        {% with columns=columns, instrument_id=instrument.id %}
+        {% include 'instrument_dygraph.html' %}
+        {% endwith %}
+</div>
+<div style="display: inline-block; float: right; vertical-align: top; align: right; width: 420px; padding: 5px;">
+    <div class="info" style="text-align: center;">
+        <h3>STATUS: {{status}}</h3>
+    </div>
+    <div class="info">
 
         <h3 style="text-align: center;">Recent Logs:</h3>
+    </div>
+    <div style="background-color: white; border:1px solid black; padding: 5px">
         {% for log in recent_logs %}
-            <hr>
             <b>Logged By</b>: {{log.author}}
             <br>
             <b>Time</b>: {{log.time}}
@@ -31,40 +64,11 @@
             <b>Comments</b>: {{log.contents}}
             <br>
             <b>Supporting Images</b>: {{log.supporting_images}}
+            <hr>
         {% endfor %}
 
     </div>
 </div>
-<div style="position:absolute; left: 320px; width: 420px;">
-    <div style="background-color: LightYellow; border: 1px solid black; text-align: center;">
-        <h3>STATUS: {{status}}</h3>
-    </div>
-    <div>
-        {% with columns=columns, instrument_id=instrument.id %}
-        {% include 'instrument_dygraph.html' %}
-        {% endwith %}
-    </div>
-</div>
-<div style="position: absolute; left: 760px; width: 400px;">
-    <div style="background-color: LightYellow; border: 1px solid black;">
-        <h3 style="margin-left: 10px;">  Information:</h3>
-    </div>
-    <div style = "border: 1px solid black; padding: 5px;">
-        Abbreviation:   {{instrument.abbv}}
-        <br>
-        Name:           {{instrument.name}}
-        <br>
-        Vendor:         {{instrument.vendor}}
-        <br>
-        Type:           {{instrument.type}}
-        <br>
-        Frequency Band: {{instrument.frequency_band}}
-        <br>
-        Location:
-        <a href="{{url_for('show_site', site_id= instrument.site_id)}}">{{instrument.location}}</a>
-        <br>
-        Description:    {{instrument.description}}
-    </div>
 </div>
 
 </body>

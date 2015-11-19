@@ -6,18 +6,23 @@
 </head>
 
 <body>
+<div class="head-title-wrapper">
+	<a href="http://www.arm.gov"><img src="{{url_for('static', filename='arm_logo.png')}}" id="arm-logo" alt="Atmospheric Radiation Measurement Climate Research Facility"></img></a>
+
 	<div class="head-title" align="center" >
-		<h2>
-			ARM WARNO ({{title}})
-		</h2>
-		<table class="nav-table">
-			<td><a href="{{url_for('show_radar_status')}}">Status</a></td>
-			<td><a href="{{url_for('list_sites')}}">Sites</a></td>
-			<td><a href="{{url_for('list_instruments')}}">Instruments</a></td>
-			<td><a href="{{url_for('show_pulse')}}">Pulses</a></td>
-			<td><a href="{{url_for('list_users')}}">Users</a></td>
-			<td><a href="{{url_for('new_log')}}">Submit Log</a></td>
-		</table>
+		<h1>WARNO</h1>
+		<ul class="nav-buttons">
+			<a href="{{url_for('show_radar_status')}}"><li>Status</li></a>
+			<a href="{{url_for('list_sites')}}"><li>Sites</li></a>
+			<a href="{{url_for('list_instruments')}}"><li>Instruments</li></a>
+			<a href="{{url_for('show_pulse')}}"><li>Pulses</li></a>
+			<a href="{{url_for('list_users')}}"><li>Users</li></a>
+			<a href="{{url_for('new_log')}}"><li>Submit Log</li></a>
+		</ul>
 	</div>
+</div>
+<div class="sub-title" align="center">
+{{title}}
+</div>
 </body>
 </html>

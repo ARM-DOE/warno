@@ -13,94 +13,34 @@
 		<div id="graphdiv1" style="width: 400px; height: 200px;"></div>
 		<br>
 		<hr> -->
-		<br>
 		<div>
-			<br>
+		    <div style=" vertical-align: top;">
 			Add a Graph By Attribute
 			<br>
 			<select id="keySelect" name="Data">
 		        {% for column in columns %}
 		          <option value="{{column}}">{{column}}</option>
-		        {% endfor %}
-	        </select>
-			<button type="button" onclick="add_graph()">Add</button>
+		       {% endfor %}
+	             </select>
+		      <button type="button" onclick="add_graph()">Add</button>
+		   </div>
+		   <div style=" vertical-align: top;">
+                  <p><label for="time">Start Date/Time in UTC:</label>
+                     <input type="datetime" id="datetime-input-start" name="start" value="01/01/1970 12:27:31">
+                  </p>
+                  <p><label for="time">End Date/Time in UTC:</label>
+                     <input type="datetime" id="datetime-input-end" name="end" value="01/01/2170 12:27:31">
+                     <br>
+                      (MM/DD/YYYY HH:MM:SS)
+                      {% if error %}
+                       <div id="new-log-error" style="color: red">{{error}}</div>
+                      {% endif %}
+                  </p>
+		    </div>
 		</div>
 		<div id="master-graphdiv"></div>
 
 		<script>
-			// graphs = 12;
-			// g = [];
-			// gindex = [];
-			// graph_data = [];
-
-			// //Create N graphs
-			// for (i = 0; i < graphs; i ++)
-			// {
-			// 	//Add labels to the CSV data
-			// 	graph_data.push(["value1, value2\n"])
-			// 	//Index for these items is 1
-			// 	gindex.push(1);
-			// 	id = "graphdiv" + i;
-			// 	title = "Dygraph " + i;
-
-			// 	//Create a div for the graph matching the graphs id
-			// 	div = document.createElement('div');
-			// 	div.innerHTML = '<br><div id="' + id + '" style="width: 400px; height: 200px;"></div><br>'
-			// 	document.getElementById('master-graphdiv').appendChild(div);
-
-			// 	//Create a graph with the containing div id and the
-			// 	//data labels
-			// 	g.push(	new Dygraph(
-			// 						document.getElementById(id),
-			// 						graph_data[i],
-			// 						{
-			// 							title: title,
-			// 							xlabel: "X Value",
-			// 							ylabel: "Y Value"
-			// 						}));
-
-			// }
-
-			// graph_data = "x,y\n"
-			// g =	new Dygraph(
-			// 		document.getElementById("graphdiv"),
-			// 		graph_data,
-			// 		{
-			// 			rollPeriod: 14,
-   //          			showRoller: true,
-   //          			showRangeSelector: true,
-   //          			rangeSelectorHeight: 40,
-   //          			rangeSelectorPlotStrokeColor: 'green',
-   //          			rangeSelectorPlotFillColor: 'lightgreen',
-
-			// 			title: "Dygraph",
-			// 			xlabel: "Time",
-			// 			ylabel: "Antenna Temperature",
-			// 			axes: {
-			// 				ticker: function (a, b, pixels, opts, dygraph, vals) {
-   //                                      return Dygraph.getDateAxis(a, b, Dygraph.ANNUAL, opts, dygraph);
-			// 				}
-			// 			}
-			// 		});
-
-			//#?Straight pull from stack overflow
-			// function convert_to_csv(objArray) {
-		 //            var array = typeof objArray != 'object' ? JSON.parse(objArray) : objArray;
-		 //            var str = '';
-
-		 //            for (var i = 0; i < array.length; i++) {
-		 //                var line = '';
-		 //                for (var index in array[i]) {
-		 //                    if (line != '') line += ','
-
-		 //                    line += array[i][index];
-		 //                }
-
-		 //                str += line + '\r\n';
-		 //            }
-
-		 //            return str;
-   //     		 }
    			g = [];
    			id = 0;
 
@@ -112,7 +52,7 @@
 
 					div_id = "graphdiv" + id;
 					div = document.createElement('div');
-					div.innerHTML = '<div id = "' + div_id + '-parent"><div id="' + div_id + '" style="width: 400px; height: 250px;"></div><button type="button" onclick="remove_graph(this)">Remove Graph</button></div>'
+					div.innerHTML = '<div id = "' + div_id + '-parent"><div id="' + div_id + '" style="width: 400px; height: 250px; display: inline-block;"></div><br><button type="button" onclick="remove_graph(this)">Remove Graph</button></div>'
 			           master_div = document.getElementById('master-graphdiv');
 			           master_div.insertBefore(div, master_div.firstChild);
 
@@ -158,7 +98,7 @@
 							}
 							else
 							{
-								document.getElementById(div_id).innerHTML = "<p>No Data Available</p>";
+								document.getElementById(div_id).innerHTML = "<p>No Data Available<br>Verify that the start and end times are valid and formatted correctly.</p>";
 							}
 
 							//new_data = convert_to_csv(rec_message);
@@ -186,8 +126,18 @@
 					}
 
 					//Send JSON POST XMLHTTPRequest to generator controller.
-					//Also include keys for the generated graph
-					url = "{{url_for('generate_instrument_graph')}}" + "?key=" + key + "&instrument_id=" + {{instrument_id}};
+					//Include keys for the generated graph, and convert start and end datetimes to a valid argument format
+					//Assume input is in UTC
+					start_str = document.getElementById("datetime-input-start").value;
+					start = new Date(start_str);
+					start_utc = start.toLocaleString()
+					end_str = document.getElementById("datetime-input-end").value;
+					end = new Date(end_str)
+					end_utc = end.toLocaleString()
+					console.log(start_utc)
+					console.log(end_utc)
+					url = "{{url_for('generate_instrument_graph')}}" + "?key=" + key + "&instrument_id=" + {{instrument_id}} + "&start=" + start_utc + "&end=" + end_utc;
+					console.log(url)
 					xmlhttp.open("POST", url, true);
 
 					//Send out the request
