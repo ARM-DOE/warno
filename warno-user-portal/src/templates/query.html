@@ -13,6 +13,7 @@
 {% include 'partials/header_template.html' %}
 {% endwith %}
 
+<div class="content">
 <div style="background-color: #EEE; padding: 5px; border: solid darkGray 3px;">
   <form method="post" action="{{url_for('query')}}">
     <label for="query_input">SQL Query:</label>
@@ -23,6 +24,6 @@
 <div>
   {{data}}
 </div>
-
+</div>
 </body>
 </html>

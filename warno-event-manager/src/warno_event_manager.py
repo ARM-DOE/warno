@@ -59,7 +59,7 @@ def teardown_request(exception):
         db.close()
 
 
-@app.route("/event", methods=['POST'])
+@app.route("/eventmanager/event", methods=['POST'])
 def event():
     msg = request.data
     msg_struct = dict(json.loads(msg))
@@ -277,7 +277,7 @@ def load_config():
     return config
 
 
-@app.route('/')
+@app.route('/eventmanager')
 def hello_world():
     ret_message = 'Hello World! Event Manager is operational. CPU Usage on Event Manager VM is: %g \n ' % psutil.cpu_percent()
     ret_message2 = '\n Site is: %s' % os.environ.get('SITE')
