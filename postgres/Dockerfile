@@ -19,6 +19,8 @@ RUN apt-get install -y postgresql-9.3 postgresql-contrib-9.3
 RUN echo "host all all 0.0.0.0/0 trust" >> /etc/postgresql/9.3/main/pg_hba.conf
 RUN echo "listen_addresses='*'" >> /etc/postgresql/9.3/main/postgresql.conf
 
+#RUN echo;echo;ls -la /var/lib/postgresl;echo;echo
+
 # restart
 RUN service postgresql restart
 
@@ -38,7 +40,10 @@ RUN    /etc/init.d/postgresql start &&\
 RUN    /etc/init.d/postgresql start &&\
     psql --command "CREATE DATABASE warno;"
 
-
+#RUN echo
+#RUN echo;echo;ls -la /var/lib/postgresql;echo;echo
+#RUN echo;echo;ls -la /var/lib/postgresql/9.3;echo;echo
 
 # Set the default command to run when starting the container
+#CMD ["ls", "-la", "/var/lib/postgresql]
 CMD ["/usr/lib/postgresql/9.3/bin/postgres", "-D", "/var/lib/postgresql/9.3/main", "-c", "config_file=/etc/postgresql/9.3/main/postgresql.conf"]
