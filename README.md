@@ -46,7 +46,7 @@ If you want to receive data from the agent running in the virtual machine, set "
 ## Multiple VM's one one machine
 If you wish to start up a second Vagrant VM on the same machine, there are a few hoops to jump through:
 
-For the second machine:
+For the second machine, create a copy of the warno-vagrant directory somewhere else, and in that directory:
 
 Vagrantfile:
 - Change the ip to 192.168.50.99
@@ -74,9 +74,17 @@ vagrant up
 ## Demo Data
 If you start up the virtual machine, you may want to initialize the database with some basic information. (This is currently a requirement if your machine is supposed to act as the "central" machine, as some of the basic event types in the database will not load without this.)
 
+To initialise the database:
+```bash
+vagrant ssh
+ cd /vagrant/warno-event-manager/src/database/
+ python initialize_db.py
+ python populate_base_db.py
+```
+
 To load the data with basic information (basic sites, instruments, instrument data, logs, etc.):
 ```bash
-vagrant ssh central
+vagrant ssh
 cd /vagrant/warno-event-manager/src/database/
 python populate_demo_db.py
 ```
