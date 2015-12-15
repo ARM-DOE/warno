@@ -55,7 +55,6 @@ agent:
 
 data:
   restart: always
-  image: postgres:latest
+  build: ./data
   volumes:
     - /var/lib/postgresql
-  command: "true" #"ls -la /var/lib/postgresql"

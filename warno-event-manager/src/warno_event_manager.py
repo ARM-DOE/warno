@@ -12,7 +12,7 @@ cfg = None
 ticks = 0
 tocks = 0
 
-DB_HOST = '192.168.50.99'
+DB_HOST = '192.168.50.100'
 DB_NAME = 'warno'
 DB_USER = 'warno'
 DB_PASS = 'warno'

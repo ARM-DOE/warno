@@ -4,7 +4,7 @@ import pandas
 from sqlalchemy import create_engine
 
 
-DB_HOST = '192.168.50.99'
+DB_HOST = '192.168.50.100'
 DB_NAME = 'warno'
 DB_USER = 'warno'
 DB_PASS = 'warno'
@@ -59,14 +59,14 @@ def initialize_database(curr):
 def load_data_into_table(filename, table, conn):
     df = pandas.read_csv(filename)
     keys = df.keys()
-    engine = create_engine('postgresql://warno:warno@192.168.50.99:5432/warno')
+    engine = create_engine('postgresql://warno:warno@192.168.50.100:5432/warno')
     df.to_sql(table, engine, if_exists='append', index=False, chunksize=900)
 
 
 def dump_table_to_csv(filename, table, server=None):
 
     if server is None:
-        server = create_engine('postgresql://warno:warno@192.168.50.99:5432/warno')
+        server = create_engine('postgresql://warno:warno@192.168.50.100:5432/warno')
     else:
         server = create_engine(server)
 
