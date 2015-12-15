@@ -21,7 +21,7 @@ https://www.vagrantup.com/
 https://www.virtualbox.org/wiki/Downloads
 <br><br>
 Then, install the [vagrant-docker-compose](https://github.com/leighmcculloch/vagrant-docker-compose) and [vagrant-triggers](https://github.com/emyl/vagrant-triggers) plugins (as root).
-
+(Note: Vagrant Triggers will probably be phased out soon)
 ```bash
 vagrant plugin install vagrant-docker-compose
 vagrant plugin install vagrant-triggers
@@ -36,31 +36,43 @@ The default setting is as a "site" event manager.  In *warno-event-manager/src/c
 
 <br>
 If you want to run it as a "central" event manager instead, there are a few different configuration files to change with the current version:
-- In the main directory, change "DB_ADDRESS" in both "db_up.sh" and "db_save.sh" to "192.168.50.100"
 - In both *warno-event-manager/src/config.yml* and warno-user-portal/src/config.yml, change "central: 0" to "central: 1"
 - In *warno-event-manager/src/database/utility.py* change the db address at the top and in each of the engine calls to "192.168.50.100"
 
 <br>
 If you want to receive data from the agent running in the virtual machine, set "em_url" in *warno-agent/src/config.yml* to "http://**your_event_manager_ip**/eventmanager/event" or to "http://eventmanager/event" if it is in the same Vagrant virtual machine.
 
+<br>
+## Multiple VM's one one machine
+If you wish to start up a second Vagrant VM on the same machine, there are a few hoops to jump through:
+
+For the second machine:
+
+Vagrantfile:
+- Change the ip to 192.168.50.99
+- Change the vm hostname and virtualbox name away from "warno"
+      
+event_manager/src/database/utility.py:
+- Change 192.168.50.100 to 192.168.50.100 in three places
+      
+event_manager/src/warno_event_manager.py:
+- Change database address from 192.168.50.100 to 192.168.50.100
+      
+user_portal/src/RadarStatusMonitor.py:
+- Change database address from 192.168.50.100 to 192.168.50.99
+
+<br>
 ## Start Up
-Because each of the machines is either a "site" or "central" machine, Vagrant requires that all of its standard commands are followed by the name of the machine that it applies to (vagrant up, ssh, halt, destroy, etc.)
 
-To start up your Vagrant machine, enter either
+To start up your Vagrant machine, enter
 ```bash
-vagrant up central
+vagrant up
 ```
-or
-```bash
-vagrant up site
-```
-
-Depending on which type of event manager you would like to bring online.
 
 <br>
 
 ## Demo Data
-If you start up the "central" virtual machine, you may want to initialize the database with some basic information. (This is currently a requirement as some of the basic event types in the database will not load without this.
+If you start up the virtual machine, you may want to initialize the database with some basic information. (This is currently a requirement if your machine is supposed to act as the "central" machine, as some of the basic event types in the database will not load without this.)
 
 To load the data with basic information (basic sites, instruments, instrument data, logs, etc.):
 ```bash
