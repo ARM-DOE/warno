@@ -36,7 +36,7 @@ The default setting is as a "site" event manager.  In *warno-event-manager/src/c
 
 <br>
 If you want to run it as a "central" event manager instead, there are a few different configuration files to change with the current version:
-- In both *warno-event-manager/src/config.yml* and warno-user-portal/src/config.yml, change "central: 0" to "central: 1"
+- In both *warno-event-manager/src/config.yml* and *warno-user-portal/src/config.yml*, change "central: 0" to "central: 1"
 - In *warno-event-manager/src/database/utility.py* change the db address at the top and in each of the engine calls to "192.168.50.100"
 
 <br>
