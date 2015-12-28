@@ -4,7 +4,7 @@ import json
 import yaml
 import datetime
 
-DB_HOST = '192.168.50.99'
+DB_HOST = '192.168.50.100'
 DB_NAME = 'warno'
 DB_USER = 'warno'
 DB_PASS = 'warno'
@@ -273,7 +273,7 @@ def new_instrument():
         # Field lengths limited in the views
         abbv = request.form.get('abbv')
         name = request.form.get('name')
-        itype = request.form.get('itype')
+        itype = request.form.get('type')
         vendor = request.form.get('vendor')
         description = request.form.get('description')
         frequency_band = request.form.get('frequency_band')

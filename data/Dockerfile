@@ -4,7 +4,7 @@
 FROM ubuntu:14.04
 MAINTAINER Joseph C. Hardin
 
-COPY /postgres-deb /opt/postgres-deb/
+# COPY /postgres-deb /opt/postgres-deb/
 
 # Install PostgreSQL
 
@@ -30,10 +30,20 @@ USER postgres
 # Expose the PostgreSQL port
 EXPOSE 5432
 
+# Create root superuser
+RUN    /etc/init.d/postgresql start &&\
+    psql --command "CREATE USER root WITH SUPERUSER PASSWORD 'password';"
+
+RUN    /etc/init.d/postgresql start &&\
+    psql --command "CREATE USER warno WITH SUPERUSER PASSWORD 'warno';"
+
+RUN    /etc/init.d/postgresql start &&\
+    psql --command "CREATE DATABASE warno;"
+
 #RUN echo
 #RUN echo;echo;ls -la /var/lib/postgresql;echo;echo
 #RUN echo;echo;ls -la /var/lib/postgresql/9.3;echo;echo
 
 # Set the default command to run when starting the container
 #CMD ["ls", "-la", "/var/lib/postgresql]
-CMD ["/usr/lib/postgresql/9.3/bin/postgres", "-D", "/var/lib/postgresql/9.3/main", "-c", "config_file=/etc/postgresql/9.3/main/postgresql.conf"]
+CMD ["true"]

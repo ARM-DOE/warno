@@ -13,11 +13,9 @@ while [ $ready -lt 1 ]; do
   psql -h $DB_ADDRESS --username=$USERNAME -t -c "select now()" postgres &> /dev/null
 
   if [ $? == 0 ]; then
-    echo "Loading data for database from " $DUMPFILE
-    ready=1;
-    psql -h $DB_ADDRESS --username=$USERNAME < $DUMPFILE
-    if [ $? != 0 ]; then
-      echo "No database file found.  Initializing new database"
+    ready=1
+    if [ -e $DUMPFILE ]; then
+      echo "No trace of existing backup found. Initializing database."
       cd $DB_FOLDER
       python initialize_db.py
       python populate_base_db.py

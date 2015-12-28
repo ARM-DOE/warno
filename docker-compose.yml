@@ -1,5 +1,8 @@
 
 postgres:
+  restart: always
+  volumes_from:
+    - data
   build: ./postgres
   env_file: .env
   ports:
@@ -50,3 +53,8 @@ agent:
       - "ena-sacr:192.148.95.7"
     env_file: .env
 
+data:
+  restart: always
+  build: ./data
+  volumes:
+    - /var/lib/postgresql

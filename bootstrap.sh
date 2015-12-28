@@ -12,7 +12,14 @@ cat >> /home/vagrant/.bashrc << END
 PATH=/vagrant/anaconda/bin:\$PATH
 END
 
+# For remote ssh commands
+cat >> /home/vagrant/.profile << END
+# Add for anaconda install
+PATH=/vagrant/anaconda/bin:\$PATH
+END
+
 export PATH=/vagrant/anaconda/bin:\$PATH
+
 
 # Current latest versions
 # Prevents download of newer versions than are included in included $miniconda
