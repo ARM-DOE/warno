@@ -2,7 +2,7 @@ import yaml
 import os
 
 
-def load_config():
+def load_yaml_config(config_filename):
     """Load the configuration Object from the config file
 
     Loads a configuration Object from the config file.
@@ -13,9 +13,6 @@ def load_config():
         Configuration Dictionary of Key Value Pairs
     """
 
-    base_path = os.getenv("USER_PORTAL_PATH")
-
-    config_filename = base_path + "config.yml"
     with open(config_filename, 'r') as ymlfile:
         config = yaml.load(ymlfile)
     return config
@@ -23,11 +20,16 @@ def load_config():
 
 def get_config_context():
     """Load Configuration Context Object.
-    This loads the config.yml file to provide the configuration context.
+    This loads the config.yml file to provide the configuration context, then it appends custom values.
     """
-    cfg = {}
 
-    print(load_config())
+    # First we load the standard config yaml file.
+    base_path = os.getenv("USER_PORTAL_PATH")
+    config_filename = base_path + "config.yml"
+    cfg = load_yaml_config(config_filename)
+
+    # Next we add a few fields that are only here for testing.
+
     cfg['DB_HOST'] = '192.168.50.100'
     cfg['DB_NAME'] = 'warno'
     cfg['DB_USER'] = 'warno'
