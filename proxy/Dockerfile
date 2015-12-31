@@ -2,7 +2,7 @@
 # FROM warno-docker-image
 # Repository image
 FROM ubuntu:14.04
-MAINTAINER Chris Brantley
+MAINTAINER Joseph C. Hardin
 
 COPY /proxy-deb /opt/proxy-deb
 

@@ -1,8 +1,10 @@
+import json
+
 from flask import Flask, g, render_template, request, redirect, url_for
 import psycopg2
-import json
-import yaml
-import datetime
+
+from UserPortal import app
+from UserPortal import config
 
 DB_HOST = '192.168.50.100'
 DB_NAME = 'warno'
@@ -11,7 +13,6 @@ DB_PASS = 'warno'
 
 is_central = 0
 
-app = Flask(__name__)
 app.config.from_object(__name__)
 
 
@@ -776,19 +777,7 @@ def query():
     return render_template("query.html", data=data)
 
 
-def load_config():
-    """Load the configuration Object from the config file
 
-    Loads a configuration Object from the config file.
-
-    Returns
-    -------
-    config: dict
-        Configuration Dictionary of Key Value Pairs
-    """
-    with open("config.yml", 'r') as ymlfile:
-        config = yaml.load(ymlfile)
-    return config
 
 
 @app.route('/')
@@ -798,7 +787,7 @@ def hello_world():
 
 
 if __name__ == '__main__':
-    cfg = load_config()
+    cfg = config.load_config()
 
     if cfg['type']['central_facility']:
         is_central = 1
