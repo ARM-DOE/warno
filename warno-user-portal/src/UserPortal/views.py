@@ -336,8 +336,8 @@ def show_instrument(instrument_id):
     -------
     show_instrument.html: HTML document
         Returns an HTML document with arguments including instrument information,
-            the 5 most recent log entries, the status of the instrument, and the list of
-            columns for available data to plot on graphs.
+        the 5 most recent log entries, the status of the instrument, and the list of
+        columns for available data to plot on graphs.
     """
 
     cur = g.db.cursor()
@@ -397,7 +397,7 @@ def show_pulse():
     -------
     show_pulse.html: HTML document
         Returns an HTML document with an argument for a list of pulse_id's to choose from
-            for deciding which pulse's series to plot.
+        for deciding which pulse's series to plot.
     """
 
     cur = g.db.cursor()
@@ -418,7 +418,7 @@ def generate_pulse_graph():
     ----------
     pulse_id: integer
         Passed as an HTML query parameter, the id of the pulse in the database,
-            indicates which pulse's data to use.
+        indicates which pulse's data to use.
 
     Returns
     -------
@@ -675,8 +675,7 @@ def new_log():
     ----------
     error: optional, integer
         Passed as an HTML parameter, an error message set if the latitude or longitude are not
-            floating point numbers
-
+        floating point numbers
     user_id: optional, integer
         Passed as an HTML parameter, the database id of the author of the new log
 

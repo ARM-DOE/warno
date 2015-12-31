@@ -14,3 +14,14 @@ def load_config():
     with open("config.yml", 'r') as ymlfile:
         config = yaml.load(ymlfile)
     return config
+
+
+def get_config_context():
+    cfg = {}
+
+    cfg['DB_HOST'] = '192.168.50.100'
+    cfg['DB_NAME'] = 'warno'
+    cfg['DB_USER'] = 'warno'
+    cfg['DB_PASS'] = 'warno'
+
+    return cfg
