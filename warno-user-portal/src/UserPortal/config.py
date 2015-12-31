@@ -17,6 +17,9 @@ def load_config():
 
 
 def get_config_context():
+    """Load Configuration Context Object.
+    This loads the config.yml file to provide the configuration context.
+    """
     cfg = {}
 
     cfg['DB_HOST'] = '192.168.50.100'
