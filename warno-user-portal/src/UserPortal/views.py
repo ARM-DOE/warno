@@ -1,19 +1,20 @@
 import json
 
-from flask import Flask, g, render_template, request, redirect, url_for
+from flask import g, render_template, request, redirect, url_for
 import psycopg2
 
 from UserPortal import app
 from UserPortal import config
 
-DB_HOST = '192.168.50.100'
-DB_NAME = 'warno'
-DB_USER = 'warno'
-DB_PASS = 'warno'
-
 is_central = 0
 
 app.config.from_object(__name__)
+
+status_text = {1: "OPERATIONAL",
+               2: "NOT WORKING",
+               3: "TESTING",
+               4: "IN-UPGRADE",
+               5: "TRANSIT"}
 
 
 def connect_db():
@@ -23,8 +24,9 @@ def connect_db():
     -------
     A Psycopg2 connection object to the default database.
     """
-
-    return psycopg2.connect("host=%s dbname=%s user=%s password=%s" % (DB_HOST, DB_NAME, DB_USER, DB_PASS))
+    db_cfg = config.get_config_context()['database']
+    return psycopg2.connect("host=%s dbname=%s user=%s password=%s" %
+                            (db_cfg['DB_HOST'], db_cfg['DB_NAME'], db_cfg['DB_USER'], db_cfg['DB_PASS']))
 
 
 @app.before_request
@@ -51,6 +53,15 @@ def teardown_request(exception):
     db = getattr(g, 'db', None)
     if db is not None:
         db.close()
+
+
+@app.route('/')
+def hello_world():
+    # Temporary home page
+    return redirect(url_for('show_radar_status'))
+
+
+
 
 
 @app.route('/dygraph')
@@ -115,7 +126,8 @@ def generate_instrument_graph():
     print("End %s" % end)
 
     # Get a list of valid column names for the table in the database
-    cur.execute("SELECT special, description FROM instrument_data_references WHERE instrument_id = %s", (instrument_id,))
+    cur.execute("SELECT special, description FROM instrument_data_references WHERE instrument_id = %s",
+                (instrument_id,))
     references = cur.fetchall()
     print("Reference selection: %s" % references)
     column_list = []
@@ -123,7 +135,8 @@ def generate_instrument_graph():
         print("Current reference:")
         print reference
         if reference[0] == True:
-            cur.execute("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = %s", (reference[1],))
+            cur.execute("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = %s",
+                        (reference[1],))
             rows = cur.fetchall()
             columns = [row[0] for row in rows if row[1] in ["integer", "boolean", "double precision"]]
         else:
@@ -148,7 +161,8 @@ def generate_instrument_graph():
             rows = cur.fetchall()
             columns = [row[0] for row in rows]
             if key in columns:
-                sql_query = 'SELECT time, %s FROM %s WHERE instrument_id = %%s AND time >= %%s AND time <= %%s' % (key, reference[1])
+                sql_query = 'SELECT time, %s FROM %s WHERE instrument_id = %%s AND time >= %%s AND time <= %%s' % (
+                key, reference[1])
     # Selects the time and the "key" column from the data table for the supplied instrument_id
     try:
         cur.execute(sql_query, (instrument_id, start, end))
@@ -229,27 +243,10 @@ def list_users():
     return render_template('users_template.html', users=users)
 
 
-status_text = {1: "OPERATIONAL",
-               2: "NOT WORKING",
-               3: "TESTING",
-               4: "IN-UPGRADE",
-               5: "TRANSIT"}
 
 
-def status_code_to_text(status):
-    """Convert an instrument's status code to its text equivalent.
 
-    Parameters
-    ----------
-    status: integer
-        The status code to be converted.
 
-    Returns
-    -------
-    status_text: string
-        Returns a string representation of the status code from the status_text dictionary.
-    """
-    return status_text[int(status)]
 
 
 @app.route('/instruments/new', methods=['GET', 'POST'])
@@ -282,7 +279,8 @@ def new_instrument():
 
         # Insert a new instrument into the database
         cur.execute('''INSERT INTO instruments(name_short, name_long, type, vendor, description, frequency_band, site_id)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s)''', (abbv, name, itype, vendor, description, frequency_band, site))
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)''',
+                    (abbv, name, itype, vendor, description, frequency_band, site))
         cur.execute('COMMIT')
 
         # Redirect to the updated list of instruments
@@ -373,12 +371,14 @@ def show_instrument(instrument_id):
     cur = g.db.cursor()
     # Grabs all columns available to plot. Uses the table data references table to determine which columns to use
     # and which references are to full tables, in which case, it pulls all value columns from the table.
-    cur.execute("SELECT special, description FROM instrument_data_references WHERE instrument_id = %s", (instrument_id,))
+    cur.execute("SELECT special, description FROM instrument_data_references WHERE instrument_id = %s",
+                (instrument_id,))
     references = cur.fetchall()
     column_list = []
     for reference in references:
         if reference[0] == True:
-            cur.execute("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = %s", (reference[1],))
+            cur.execute("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = %s",
+                        (reference[1],))
             rows = cur.fetchall()
             columns = [row[0] for row in rows if row[1] in ["integer", "boolean", "double precision"]]
         else:
@@ -447,32 +447,6 @@ def generate_pulse_graph():
     return message
 
 
-def is_number(s):
-    """Checks if a string is a valid floating point number.
-
-    Attempts to convert a string to a floating point number.
-
-    Parameters
-    ----------
-    s: string
-        The string to be checked.
-
-    Returns
-    -------
-    True: Boolean
-        Returns True if the conversion works successfully.
-
-    False: Boolean
-        Returns False if the conversion throws a 'ValueError' Exception.
-    """
-
-    try:
-        # Attempts to convert the string into a float. Returns true if it works
-        float(s)
-        return True
-    except ValueError:
-        # If the conversion doesn't work, return false
-        return False
 
 
 @app.route('/sites/new', methods=['GET', 'POST'])
@@ -525,7 +499,8 @@ def new_site():
         if is_number(lat) and is_number(lon):
             cur = g.db.cursor()
             cur.execute('''INSERT INTO sites(name_short, name_long, latitude, longitude, facility, mobile, location_name)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s)''', (abbv, name, float(lat), float(lon), facility, mobile, location_name))
+                        VALUES (%s, %s, %s, %s, %s, %s, %s)''',
+                        (abbv, name, float(lat), float(lon), facility, mobile, location_name))
             cur.execute('COMMIT')
 
             # After insertion, redirect to the updated list of sites
@@ -557,7 +532,7 @@ def list_sites():
                     s.facility, s.mobile, s.location_name, s.site_id FROM sites s'''
     cur.execute(sql_query)
     sites = [dict(abbv=row[0], name=row[1], latitude=row[2], longitude=row[3], facility=row[4],
-             mobile=row[5], location_name=row[6], id=row[7]) for row in cur.fetchall()]
+                  mobile=row[5], location_name=row[6], id=row[7]) for row in cur.fetchall()]
 
     return render_template('site_list.html', sites=sites)
 
@@ -738,15 +713,15 @@ def new_log():
 
     # If there was no valid insert, render form normally
     instrument_sql = (
-                                "SELECT i.instrument_id, i.name_short, s.name_short FROM instruments i, sites s "
-                                "WHERE i.site_id = s.site_id"
-                                )
+        "SELECT i.instrument_id, i.name_short, s.name_short FROM instruments i, sites s "
+        "WHERE i.site_id = s.site_id"
+    )
     user_sql = "select u.user_id, u.name from users u"
 
     # Get a list of instruments to select from in the form
     cur.execute(instrument_sql)
     # Format the instrument names to be more descriptive
-    instruments = [dict(id=row[0], name=row[2]+":"+row[1]) for row in cur.fetchall()]
+    instruments = [dict(id=row[0], name=row[2] + ":" + row[1]) for row in cur.fetchall()]
 
     # Get a list of users to choose who submitted the log.
     # This list will be selected from in the form
@@ -775,14 +750,47 @@ def query():
 
     return render_template("query.html", data=data)
 
+def status_code_to_text(status):
+    """Convert an instrument's status code to its text equivalent.
 
+    Parameters
+    ----------
+    status: integer
+        The status code to be converted.
 
+    Returns
+    -------
+    status_text: string
+        Returns a string representation of the status code from the status_text dictionary.
+    """
+    return status_text[int(status)]
 
+def is_number(s):
+    """Checks if a string is a valid floating point number.
 
-@app.route('/')
-def hello_world():
-    # Temporary home page
-    return redirect(url_for('show_radar_status'))
+    Attempts to convert a string to a floating point number.
+
+    Parameters
+    ----------
+    s: string
+        The string to be checked.
+
+    Returns
+    -------
+    True: Boolean
+        Returns True if the conversion works successfully.
+
+    False: Boolean
+        Returns False if the conversion throws a 'ValueError' Exception.
+    """
+
+    try:
+        # Attempts to convert the string into a float. Returns true if it works
+        float(s)
+        return True
+    except ValueError:
+        # If the conversion doesn't work, return false
+        return False
 
 
 if __name__ == '__main__':
