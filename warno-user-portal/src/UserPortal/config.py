@@ -30,9 +30,6 @@ def get_config_context():
 
     # Next we add a few fields that are only here for testing.
 
-    cfg['DB_HOST'] = '192.168.50.100'
-    cfg['DB_NAME'] = 'warno'
-    cfg['DB_USER'] = 'warno'
-    cfg['DB_PASS'] = 'warno'
+    cfg['database']['DB_PASS'] = 'warno'
 
     return cfg

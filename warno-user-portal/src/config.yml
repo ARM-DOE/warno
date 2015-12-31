@@ -5,3 +5,7 @@ setup:
 type:
     central_facility: 0
 
+database:
+    DB_HOST : "192.168.50.100"
+    DB_NAME : "warno"
+    DB_USER : "warno"
