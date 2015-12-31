@@ -1,0 +1,15 @@
+Notes on reorganization of WARNO:
+=================================
+
+1)Database is incredibly hard to test right now. Need mocks
+2) TODO: Break utility.py up to be usable by all.
+3) TODO: Break RadarStatusMonitor.py up into multiple modules.
+4) TODO: Look into Flask-Fixtures.
+5) TODO: Need to move over to CentOS
+6) TODO: Start setting up integration tests with Selenium
+7) TODO: Set up a test database
+8) TODO: Set up Fixtures.
+9) TODO: Currently database blocks loading.
+
+
+9) COMPLETED: Fix loading of the yaml config file.

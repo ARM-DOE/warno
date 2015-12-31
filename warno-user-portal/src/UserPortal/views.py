@@ -786,10 +786,8 @@ def hello_world():
 
 
 if __name__ == '__main__':
-    cfg = config.load_config()
+    cfg = config.get_config_context()
 
     if cfg['type']['central_facility']:
         is_central = 1
         DB_HOST = "192.168.50.100"
-
-    app.run(debug=True, host='0.0.0.0', port=80)
