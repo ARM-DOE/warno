@@ -21,12 +21,14 @@ eventmanager:
 
 userportal:
   build: ./warno-user-portal
-  command: bash -c "python runserver.py"
+  command: bash -c "bash /entrypoint.sh"
   links:
     - postgres
     - eventmanager
   volumes:
     - /vagrant/warno-user-portal/src:/opt/warno-user-portal
+  volumes_from:
+    - data_store
   env_file: .env
 
 proxy:
@@ -42,11 +44,13 @@ proxy:
 
 agent:
     build: ./warno-agent
-    command: python warno-agent.py
+    command: bash -c "bash /entrypoint.sh"
     ports:
       - "6310:6310"
     volumes:
         - /vagrant/warno-agent/src:/opt/agent
+    volumes_from:
+      - data_store
     links:
       - eventmanager
       - proxy
