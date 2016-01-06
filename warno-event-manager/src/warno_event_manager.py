@@ -16,6 +16,7 @@ DB_HOST = '192.168.50.100'
 DB_NAME = 'warno'
 DB_USER = 'warno'
 DB_PASS = 'warno'
+config_path = "/opt/data/config.yml"
 
 is_central = 0
 cf_url = ""
@@ -272,7 +273,7 @@ def load_config():
     config: dict
         Configuration Dictionary of Key Value Pairs
     """
-    with open("config.yml", 'r') as ymlfile:
+    with open(config_path, 'r') as ymlfile:
         config = yaml.load(ymlfile)
     return config
 

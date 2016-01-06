@@ -37,7 +37,7 @@ Vagrant.configure(2) do |config|
   #Local install
   # config.vm.provision :shell, inline: "docker load -i /vagrant/warno-docker-image"
 
-  config.vm.provision :docker_compose, yml: "/vagrant/docker-compose.yml", rebuild: true, run: "always"
   config.vm.provision :shell, path: "bootstrap.sh"
+  config.vm.provision :docker_compose, yml: "/vagrant/docker-compose.yml", rebuild: true, run: "always"
 
 end

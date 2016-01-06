@@ -2,7 +2,7 @@
 postgres:
   restart: always
   volumes_from:
-    - data
+    - data_store
   build: ./postgres
   env_file: .env
   ports:
@@ -10,11 +10,13 @@ postgres:
 
 eventmanager:
   build: ./warno-event-manager
-  command: bash -c "python warno_event_manager.py "
+  command: bash -c "bash /entrypoint.sh" # "python warno_event_manager.py"
   links:
     - postgres
   volumes:
     - /vagrant/warno-event-manager/src:/opt/warno-event-manager
+  volumes_from:
+    - data_store
   env_file: .env
 
 userportal:
@@ -53,8 +55,11 @@ agent:
       - "ena-sacr:192.148.95.7"
     env_file: .env
 
-data:
+data_store:
   restart: always
-  build: ./data
+  build: ./data_store
+  command: bash -c "bash /entrypoint.sh"
   volumes:
     - /var/lib/postgresql
+    - /vagrant/data_store/data:/opt/data
+    - /vagrant/data_store/data/anaconda:/vagrant/data_store/data/anaconda
