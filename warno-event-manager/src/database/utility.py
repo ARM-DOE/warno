@@ -35,25 +35,28 @@ def create_table_from_file(filename, curr):
         print(e)
 
 
-def initialize_database(curr):
+def initialize_database(curr, path="schema/"):
+    # First element of each is the table name, second is file name.
+    # Only necessary because "instrument_logs" table is "logs.data", "logs.schema"
     schema_list = [
-                   "users",
-                   "sites",
-                   "instruments",
-                   "log",
-                   "usage",
-                   "prosensing_paf",
-                   "event_codes",
-                   "events_with_text",
-                   "events_with_value",
-                   "pulse_captures",
-                   "table_references",
-                   "instrument_data_references"
+                   ["users", "users"],
+                   ["sites", "sites"],
+                   ["instruments", "instruments"],
+                   ["instrument_logs", "log"],
+                   ["usage", "usage"],
+                   ["prosensing_paf", "prosensing_paf"],
+                   ["event_codes", "event_codes"],
+                   ["events_with_text", "events_with_text"],
+                   ["events_with_value", "events_with_value"],
+                   ["pulse_captures", "pulse_captures"],
+                   ["table_references", "table_references"],
+                   ["instrument_data_references", "instrument_data_references"]
                    ]
 
     for schema in schema_list:
-        print("Initializing relation %s", schema)
-        create_table_from_file("schema/%s.schema" % schema, curr)
+        if not table_exists(schema[0], curr):
+            print("Initializing relation %s", schema[0])
+            create_table_from_file("%s/%s.schema" % (path, schema[1]), curr)
 
 
 def load_data_into_table(filename, table, conn):

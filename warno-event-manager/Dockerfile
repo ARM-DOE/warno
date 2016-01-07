@@ -5,6 +5,7 @@ FROM ubuntu:14.04
 MAINTAINER Joseph C. Hardin <joseph.hardin@pnnl.gov>
 
 COPY /src /opt/warno-event-manager/
+COPY entrypoint.sh /
 
 # Automatic install from remote
 
@@ -14,9 +15,7 @@ COPY /src /opt/warno-event-manager/
 # RUN sed -i '4,90d' /etc/apt/sources.list
 
 RUN apt-get update
-RUN apt-get install -y build-essential python-dev python-pip python-psycopg2 python-requests
-RUN pip install -r /opt/warno-event-manager/requirements.txt
-RUN pip install requests --upgrade
+RUN apt-get install -y build-essential
 RUN apt-get install -y openssh-server
 
 # Manual local install
@@ -37,6 +36,7 @@ RUN sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/ss
 RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
 
 ENV NOTVISIBLE "in users profile"
+ENV PATH=/vagrant/data_store/data/anaconda/bin:$PATH
 RUN echo "export VISIBLE=now" >> /etc/profile
 
 RUN /usr/sbin/sshd

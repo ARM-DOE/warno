@@ -6,6 +6,9 @@ import json
 import yaml
 import psycopg2
 import time
+
+import database.utility
+
 app = Flask(__name__)
 
 cfg = None
@@ -16,6 +19,7 @@ DB_HOST = '192.168.50.100'
 DB_NAME = 'warno'
 DB_USER = 'warno'
 DB_PASS = 'warno'
+config_path = "/opt/data/config.yml"
 
 is_central = 0
 cf_url = ""
@@ -272,10 +276,32 @@ def load_config():
     config: dict
         Configuration Dictionary of Key Value Pairs
     """
-    with open("config.yml", 'r') as ymlfile:
+    with open(config_path, 'r') as ymlfile:
         config = yaml.load(ymlfile)
     return config
 
+
+def initialize_database():
+    print("Initialization Function")
+    db = database.utility.connect_db()
+    cur = db.cursor()
+
+    database.utility.initialize_database(cur, path="database/schema")
+    db.commit()
+
+    cur.execute("SELECT * FROM users LIMIT 1")
+    if cur.fetchone() == None:
+        print("Populating Users")
+        database.utility.load_data_into_table("database/schema/users.data", "users", db)
+    else:
+        print("Users in table.")
+
+    cur.execute("SELECT * FROM sites LIMIT 1")
+    if cur.fetchone() == None:
+        print("Populating Sites")
+        database.utility.load_data_into_table("database/schema/sites.data", "sites", db)
+    else:
+        print("Sites in table.")
 
 @app.route('/eventmanager')
 def hello_world():
@@ -291,19 +317,8 @@ if __name__ == '__main__':
         is_central = 1
         DB_HOST = "192.168.50.100"
     else:
-        # If the central facility is not responding, act like a central facility (Create missing entries)
         cf_url = cfg['setup']['cf_url']
-    #     try:
-    #         response = os.system("nc -zvv " + "192.168.50.1 5001")
-    #     except Exception:
-    #         print "Why did you hit this?"
-    #     print "Response"
-    #     print response
-    #     if response != 0:
-    #         is_central = 1
-    # print "CENTRALITY %s" % is_central
-    # while True:
-    #     print "Centrality %s" % is_central
-    #     time.sleep(5)
+
+    initialize_database()
 
     app.run(host='0.0.0.0', port=80, debug=True)

@@ -1,2 +1,4 @@
 pyyaml
 Flask
+numpy
+requests

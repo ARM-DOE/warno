@@ -5,6 +5,7 @@ FROM ubuntu:14.04
 MAINTAINER Joseph C. Hardin <joseph.hardin@pnnl.gov>
 
 COPY /src /opt/warno-agent/
+COPY entrypoint.sh /
 
 # RUN sed -i '1s/^/deb http:\/\/mirror.pnl.gov\/ubuntu\/ trusty main universe restricted /' /etc/apt/sources.list
 # RUN sed -i '2s/^/deb http:\/\/mirror.pnl.gov\/ubuntu\/ trusty-updates main universe restricted/' /etc/apt/sources.list
@@ -13,9 +14,7 @@ COPY /src /opt/warno-agent/
 
 # Automatic install from remote
 RUN apt-get update
-RUN apt-get install -y build-essential python-dev python-pip python-numpy
-RUN pip install -r /opt/warno-agent/requirements.txt
-RUN pip install requests --upgrade
+RUN apt-get install -y build-essential
 
 # Manual local install
 # RUN echo "Installing Agent .deb files."
@@ -25,6 +24,7 @@ RUN pip install requests --upgrade
 #run pip install -r /opt/warno-agent/requirements.txt
 
 ENV NOTVISIBLE "in users profile"
+ENV PATH=/vagrant/data_store/data/anaconda/bin:$PATH
 RUN echo "export VISIBLE=now" >> /etc/profile
 
 
