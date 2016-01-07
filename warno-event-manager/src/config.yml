@@ -1,7 +1,0 @@
-setup:
-    site: ENA
-    cf_url: "http://130.20.119.70/eventmanager/event"
-
-type:
-    central_facility: 0
-

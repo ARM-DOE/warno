@@ -17,15 +17,14 @@ def load_yaml_config(config_filename):
         config = yaml.load(ymlfile)
     return config
 
-
 def get_config_context():
     """Load Configuration Context Object.
     This loads the config.yml file to provide the configuration context, then it appends custom values.
     """
 
     # First we load the standard config yaml file.
-    base_path = os.getenv("USER_PORTAL_PATH")
-    config_filename = base_path + "config.yml"
+    base_path = os.getenv("DATA_STORE_PATH")
+    config_filename = base_path + "data/config.yml"
     cfg = load_yaml_config(config_filename)
 
     # Next we add a few fields that are only here for testing.

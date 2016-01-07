@@ -1,15 +1,10 @@
 from unittest import TestCase
-import os
 
-from .. import UserPortal
-from WarnoConfig import config
+from .. import config
 
 
 class TestGet_config_context(TestCase):
     list_required_keys = ['DB_HOST', 'DB_USER', 'DB_PASS']
-
-    def test_data_store_path_defined(self):
-        self.assertIsNotNone(os.getenv('DATA_STORE_PATH'), 'DATA_STORE_PATH not set')
 
     def test_get_config_context_database_entries(self):
         '''Test the configuration context'''
@@ -24,3 +19,6 @@ class TestGet_config_context(TestCase):
 
         self.assertIn('setup', cfg, 'Configuration should have "setup" entry' )
         self.assertIn('type', cfg, 'Configuration should have "type" entry')
+
+
+

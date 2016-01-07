@@ -4,7 +4,7 @@ from flask import g, render_template, request, redirect, url_for
 import psycopg2
 
 from UserPortal import app
-from UserPortal import config
+from WarnoConfig import config
 
 is_central = 0
 
