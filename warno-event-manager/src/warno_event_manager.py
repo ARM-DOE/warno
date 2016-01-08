@@ -9,6 +9,8 @@ import time
 
 import database.utility
 
+from WarnoConfig import config
+
 app = Flask(__name__)
 
 cfg = None
@@ -266,20 +268,6 @@ def get_event_code(msg, msg_struct):
         return '{"Event_Code": %i, "Data": {"description": "%s", "instrument_id": %s}}' % (cf_msg['Event_Code'], cf_msg['Data']['description'], cf_msg['Data']['instrument_id'])
 
 
-def load_config():
-    """Load the configuration Object from the config file
-
-    Loads a configuration Object from the config file.
-
-    Returns
-    -------
-    config: dict
-        Configuration Dictionary of Key Value Pairs
-    """
-    with open(config_path, 'r') as ymlfile:
-        config = yaml.load(ymlfile)
-    return config
-
 
 def initialize_database():
     print("Initialization Function")
@@ -311,7 +299,7 @@ def hello_world():
 
 
 if __name__ == '__main__':
-    cfg = load_config()
+    cfg = config.get_config_context()
 
     if cfg['type']['central_facility']:
         is_central = 1

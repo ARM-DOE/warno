@@ -1,7 +1,6 @@
 import os
 import numpy as np
 import flask
-import yaml
 import json
 import importlib
 import glob
@@ -10,6 +9,7 @@ import signal
 import sys
 import base64
 import requests
+from WarnoConfig import config
 from pyarmret.io.PAFClient import PAFClient
 
 from Queue import Empty
@@ -65,19 +65,6 @@ def signal_handler(signal, frame):
     sys.exit(0)
 
 
-def load_config():
-    """Load the configuration Object from the config file
-
-    Loads a configuration Object from the config file.
-
-    Returns
-    -------
-    config: dict
-        Configuration Dictionary of Key Value Pairs
-    """
-    with open("config.yml", 'r') as ymlfile:
-        config = yaml.load(ymlfile)
-    return config
 
 if __name__ == "__main__":
     # while True:
@@ -87,7 +74,7 @@ if __name__ == "__main__":
 
     msg_queue = Queue()
     event_code_dict = {}
-    cfg = load_config()
+    cfg = config.load_config()
     em_url = cfg['setup']['em_url']
 
     # Get site_id

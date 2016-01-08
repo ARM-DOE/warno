@@ -1,7 +1,15 @@
 setup:
     site: ENA
     cf_url: "http://130.20.119.70/eventmanager/event"
+    em_url: "http://eventmanager/event"
 
 type:
     central_facility: 0
 
+database:
+    DB_HOST : "192.168.50.100"
+    DB_NAME : "warno"
+    DB_USER : "warno"
+
+test:
+    test_value: 1
