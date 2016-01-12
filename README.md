@@ -95,6 +95,11 @@ To start up your Vagrant machine, enter
 vagrant up
 ```
 
+If you have just cloned this repository, it is required to do a 
+```bash
+git submodule update
+```
+to pull in the pyarmret submodule.
 <br>
 
 Note that currently, occasionally the machine will get stuck at "connection timeout. retrying..."
