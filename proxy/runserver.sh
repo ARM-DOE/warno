@@ -1,7 +1,8 @@
 #!/bin/bash
-service nginx restart
+sed -i '1s/.*/user nobody;/' /etc/nginx/nginx.conf
+nginx
 while :
-do 
-    inotifywait -r -e close_write /etc/hosts && service nginx restart
+do
+    inotifywait -r -e close_write /etc/hosts && nginx -s reload
     sleep 1
 done

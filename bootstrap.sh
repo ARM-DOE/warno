@@ -23,7 +23,7 @@ export PATH=/vagrant/data_store/data/anaconda/bin:\$PATH
 
 # Current latest versions
 # Prevents download of newer versions than are included in included $miniconda
-conda install psycopg2
-conda install pandas
-conda install numpy
+conda install -y psycopg2
+conda install -y pandas
+conda install -y numpy
 pip install sqlalchemy

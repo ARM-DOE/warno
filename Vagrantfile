@@ -17,7 +17,7 @@ SCRIPT
 Vagrant.configure(2) do |config|
 
   # Automatic remote box
-  config.vm.box = "ubuntu/trusty64"
+  config.vm.box = "centos/7"
   # Local box
   # config.vm.box = "warnobox"
 
@@ -28,17 +28,28 @@ Vagrant.configure(2) do |config|
     v.name = "warno"
   end
 
+  ## Set up NFS shared folders ##
+  config.vm.provision :shell, inline: "sudo yum -y update"
+  config.vm.provision :shell, inline: "sudo yum -y install nfs-utils nfs-utils-lib"
+  config.vm.synced_folder ".", "/home/vagrant/sync", disabled: true
+  config.vm.synced_folder "./", "/vagrant/", type: "nfs"
+
   # libpq5 postgresql-client-9.3 postgresql-client-common
 
-  #Automatic update/install
-  config.vm.provision :shell, inline: "sudo apt-get update"
-  config.vm.provision :shell, inline: "sudo apt-get install -y postgresql-client-9.3 --fix-missing"
-  config.vm.provision :docker
-  #Local install
+  ## Automatic update/install ##
+  config.vm.provision :shell, inline: "sudo yum -y localinstall http://yum.postgresql.org/9.3/redhat/rhel-7-x86_64/pgdg-centos93-9.3-2.noarch.rpm"
+  config.vm.provision :shell, inline: "sudo yum install -y postgresql93 wget bzip2"
+  # Without this,SELinux on CentOS blocks docker containers from accessing the NFS shared folders
+  config.vm.provision :shell, inline: "sudo setenforce 0", run: "always"
+
+  ## Local install ##
   # config.vm.provision :shell, inline: "docker load -i /vagrant/warno-docker-image"
 
   config.vm.provision :shell, path: "bootstrap.sh"
-  config.vm.provision :docker_compose, yml: "/vagrant/docker-compose.yml", rebuild: true, run: "always"
+  config.vm.provision :docker
+  config.vm.provision :shell, inline: "sudo groupadd docker"
+  config.vm.provision :shell, inline: "sudo gpasswd -a vagrant docker"
+  config.vm.provision :docker_compose, yml: "/vagrant/docker-compose.yml", rebuild: true, run: "always", executable: "/usr/bin/docker-compose"
 
 
 end
