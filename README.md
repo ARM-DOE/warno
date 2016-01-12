@@ -97,7 +97,7 @@ vagrant up
 
 If you have just cloned this repository, it is required to do a 
 ```bash
-git submodule update
+git submodule update --init --recursive
 ```
 to pull in the pyarmret submodule.
 <br>
