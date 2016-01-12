@@ -2,7 +2,7 @@
 postgres:
   restart: always
   volumes_from:
-    - data_store
+    - datastore
   build: ./postgres
   env_file: .env
   ports:
@@ -16,7 +16,7 @@ eventmanager:
   volumes:
     - /vagrant/warno-event-manager/src:/opt/warno-event-manager
   volumes_from:
-    - data_store
+    - datastore
   env_file: .env
 
 userportal:
@@ -28,7 +28,7 @@ userportal:
   volumes:
     - /vagrant/warno-user-portal/src:/opt/warno-user-portal
   volumes_from:
-    - data_store
+    - datastore
   env_file: .env
 
 proxy:
@@ -50,7 +50,7 @@ agent:
     volumes:
         - /vagrant/warno-agent/src:/opt/agent
     volumes_from:
-      - data_store
+      - datastore
     links:
       - eventmanager
       - proxy
@@ -59,11 +59,11 @@ agent:
       - "ena-sacr:192.148.95.7"
     env_file: .env
 
-data_store:
+datastore:
   restart: always
   build: ./data_store
   command: bash -c "bash /entrypoint.sh"
   volumes:
-    - /var/lib/postgresql
+    - /var/lib/pgsql
     - /vagrant/data_store/data:/opt/data
-    - /vagrant/data_store/data/anaconda:/vagrant/data_store/data/anaconda
+    - /vagrant/data_store/data:/vagrant/data_store/data

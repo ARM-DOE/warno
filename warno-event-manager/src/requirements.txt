@@ -1,5 +1,4 @@
 Flask
 psutil
 pyyaml
-numpy
 requests
