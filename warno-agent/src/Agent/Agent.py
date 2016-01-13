@@ -1,22 +1,66 @@
 import os
-import numpy as np
-import flask
 import json
 import importlib
 import glob
 import multiprocessing
 import signal
 import sys
-import base64
 import requests
 from WarnoConfig import config
-from pyarmret.io.PAFClient import PAFClient
 
 from Queue import Empty
 from time import sleep
 from multiprocessing import Queue, Process
 
 headers = {'Content-Type': 'application/json', 'Host': "warno-event-manager.local"}
+
+DEFAULT_PLUGIN_PATH = 'plugins/'
+
+
+class Agent(object):
+    """ Class representing a radar agent to be run at each radar.
+
+    Agent is the top level class for the WARNO Agent microservice. This class is responsible
+    orchestrating the running of the different plugins, handling registration, and
+    communicating data from each plugin up to the event manager.
+    """
+    def __init__(self):
+        self.plugin_path = DEFAULT_PLUGIN_PATH
+
+    def set_plugin_path(self, path=None):
+        """
+        Change the path to the plugins directory. If no path is passed, resets back to default.
+
+        Parameters
+        ----------
+        path: str, optional
+            String to new plugin directory.
+
+        Returns
+        -------
+            Returns new plugin directory path.
+
+        """
+
+        if path is None:
+            self.plugin_path = DEFAULT_PLUGIN_PATH
+        else:
+            self.plugin_path = path
+        return self.plugin_path
+
+    def get_plugin_path(self):
+        """
+        Get current plugin path.
+
+        Returns
+        -------
+        path: str
+            Current plugin path.
+
+        """
+
+        return self.plugin_path
+
 
 
 def list_plugins():
@@ -30,6 +74,7 @@ def list_plugins():
     plugin_list: list
         list of modules representing plugins
     """
+
     plugin_path = 'plugins/'
 
     plugin_module_list = []
@@ -63,7 +108,6 @@ def signal_handler(signal, frame):
 
     print("Exiting due to SIGINT")
     sys.exit(0)
-
 
 
 if __name__ == "__main__":

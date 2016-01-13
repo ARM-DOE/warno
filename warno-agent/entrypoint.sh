@@ -4,4 +4,4 @@
 pip install --user -r /opt/warno-agent/requirements.txt
 pip install --user requests --upgrade
 echo "Starting Agent"
-python warno-agent.py
+python Agent/Agent.py
