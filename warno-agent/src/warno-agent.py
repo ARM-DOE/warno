@@ -74,7 +74,7 @@ if __name__ == "__main__":
 
     msg_queue = Queue()
     event_code_dict = {}
-    cfg = config.load_config()
+    cfg = config.get_config_context()
     em_url = cfg['setup']['em_url']
 
     # Get site_id
