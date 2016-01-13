@@ -49,7 +49,6 @@ Vagrant.configure(2) do |config|
   config.vm.provision :shell, inline: "setenforce 0", run: "always"
   #config.vm.provision :shell, inline: "git -C /vagrant submodule update --init --recursive
 
-
   ## Local install ##
   # config.vm.provision :shell, inline: "docker load -i /vagrant/warno-docker-image"
 
