@@ -7,10 +7,10 @@ MAINTAINER Joseph C. Hardin <joseph.hardin@pnnl.gov>
 COPY /src /opt/warno-agent/
 COPY entrypoint.sh /
 
-# RUN sed -i '1s/^/deb http:\/\/mirror.pnl.gov\/ubuntu\/ trusty main universe restricted /' /etc/apt/sources.list
-# RUN sed -i '2s/^/deb http:\/\/mirror.pnl.gov\/ubuntu\/ trusty-updates main universe restricted/' /etc/apt/sources.list
-# RUN sed -i '3s/^/deb http:\/\/mirror.pnl.gov\/ubuntu\/ trusty-security main universe restricted /' /etc/apt/sources.list
-# RUN sed -i '4,90d' /etc/apt/sources.list
+RUN sed -i '1s/^/deb http:\/\/mirror.pnl.gov\/ubuntu\/ trusty main universe restricted /' /etc/apt/sources.list
+RUN sed -i '2s/^/deb http:\/\/mirror.pnl.gov\/ubuntu\/ trusty-updates main universe restricted/' /etc/apt/sources.list
+RUN sed -i '3s/^/deb http:\/\/mirror.pnl.gov\/ubuntu\/ trusty-security main universe restricted /' /etc/apt/sources.list
+RUN sed -i '4,90d' /etc/apt/sources.list
 
 # Automatic install from remote
 RUN yum update -y
@@ -25,6 +25,11 @@ RUN yum groupinstall -y "Development Tools"
 
 ENV NOTVISIBLE "in users profile"
 ENV PATH /vagrant/data_store/data/anaconda/bin:$PATH
+ENV PATH=/opt/data/anaconda/bin:$PATH
+
+RUN /opt/data/anaconda/bin/python /opt/data/pyarmret/setup.py install
+
+
 RUN echo "export VISIBLE=now" >> /etc/profile
 
 
