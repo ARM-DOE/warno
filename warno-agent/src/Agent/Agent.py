@@ -12,6 +12,8 @@ from Queue import Empty
 from time import sleep
 from multiprocessing import Queue, Process
 
+import utility
+
 headers = {'Content-Type': 'application/json', 'Host': "warno-event-manager.local"}
 
 DEFAULT_PLUGIN_PATH = 'plugins/'
@@ -61,60 +63,46 @@ class Agent(object):
 
         return self.plugin_path
 
+    def list_plugins(self):
+        """List the plugins in the plugins directory as modules.
+
+        Return a list of module top levels that correspond to plugins. All plugins in the list
+        are guaranteed to have a run and register method.
+
+        Returns
+        -------
+        plugin_list: list
+            list of modules representing plugins
+        """
+
+        plugin_path = self.get_plugin_path()
+
+        plugin_module_list = []
+        potential_plugin_list = glob.glob(plugin_path+'*.py')
+        potential_plugin_list.sort()
+
+        for plugin in potential_plugin_list:
+            try:
+                module_name = plugin[:-3].replace('/', '.')
+                module_top = importlib.import_module(module_name)
+                if hasattr(module_top, 'run') and hasattr(module_top, 'register'):
+                    plugin_module_list.append(module_top)
+            except Exception, e:
+                print(e)
+                pass  # Just ignore, there will be a lot of hits on this
+
+        return plugin_module_list
 
 
-def list_plugins():
-    """List the plugins in the plugins directory as modules.
 
-    Return a list of module top levels that correspond to plugins. All plugins in the list
-    are guaranteed to have a run and register method.
-
-    Returns:
-    ---------
-    plugin_list: list
-        list of modules representing plugins
-    """
-
-    plugin_path = 'plugins/'
-
-    plugin_module_list = []
-    potential_plugin_list = glob.glob(plugin_path+'*.py')
-    potential_plugin_list.sort()
-
-    for plugin in potential_plugin_list:
-        try:
-            module_name = plugin[:-3].replace('/', '.')
-            module_top = importlib.import_module(module_name)
-            if hasattr(module_top, 'run') and hasattr(module_top, 'register'):
-                plugin_module_list.append(module_top)
-        except Exception, e:
-            pass  # Just ignore, there will be a lot of hits on this
-
-    return plugin_module_list
-
-
-def signal_handler(signal, frame):
-    """ Set up Ctrl-C Handling
-
-    This function sets up signal interrupt catching, primarily to handle Ctrl-C.
-
-    Parameters
-    ----------
-    signal: signal
-        Signal to catch
-    frame: frame
-        frame
-    """
-
-    print("Exiting due to SIGINT")
-    sys.exit(0)
 
 
 if __name__ == "__main__":
     # while True:
     sleep(30)
-    signal.signal(signal.SIGINT, signal_handler)
-    plugin_module_list = list_plugins()
+    agent = Agent()
+    signal.signal(signal.SIGINT, utility.signal_handler)
+    plugin_module_list = agent.list_plugins()
 
     msg_queue = Queue()
     event_code_dict = {}
