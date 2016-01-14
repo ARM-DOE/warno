@@ -66,6 +66,8 @@ class TestAgent(TestCase):
     @mock.patch.object(Agent, 'requests')
     def test_request_site_id_from_event_manager_raises_exception_on_bad_request(self,mock_post):
         post_return = mock.Mock()
+        previous_agent_value = self.agent.site_id
+        self.agent.site_id = None
         post_return.status_code = requests.codes.ok
         post_return.content='{"Site_Id": 1}'
 
@@ -77,4 +79,7 @@ class TestAgent(TestCase):
         mock_post.post.return_value = post_return
         self.assertRaises(requests.exceptions.HTTPError,
                           self.agent.request_site_id_from_event_manager())
+
+        self.assertIsNone(self.agent.site_id)
+        self.agent.site_id = previous_agent_value
 
