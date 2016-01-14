@@ -1,8 +1,10 @@
 from unittest import TestCase
 from Agent import Agent
 import os
-import glob
 import sys
+import mock
+import requests
+
 
 TEST_PLUGIN_PATH = 'test_plugins/'
 
@@ -18,7 +20,7 @@ class TestAgent(TestCase):
         test_directory = '/test'
 
         self.agent.set_plugin_path(test_directory)
-        self.assertEqual(self.agent.get_plugin_path(), test_directory,'Plugin Paths not equal after set')
+        self.assertEqual(self.agent.get_plugin_path(), test_directory, 'Plugin Paths not equal after set')
 
         self.agent.set_plugin_path()
 
@@ -35,7 +37,44 @@ class TestAgent(TestCase):
         plugin_name_list = [plugin.__name__ for plugin in plugin_list]
 
         self.assertIn('test_plugins.test_plugin1', plugin_name_list,'Did not see test plugins')
-        self.assertNotIn('test_plugins.bad_plugin', plugin_name_list, 'Accepted a bad plugin.')
+
+        self.assertNotIn('test_plugins.bad_plugin_no_register', plugin_name_list,
+                         'Accepted a plugin with no register function.')
+
+        self.assertNotIn('test_plugins.bad_plugin_no_run', plugin_name_list,
+                         'Accepted a bad plugin with no run function.')
 
         self.agent.set_plugin_path()
+
+
+    @mock.patch.object(Agent, 'requests')
+    def test_request_site_id_from_event_manager_proceses_site_id(self, mock_post):
+        post_return = mock.Mock()
+        post_return.status_code = requests.codes.ok
+        post_return.content='{"Site_Id": 1}'
+
+        mock_post.codes = requests.codes  # Pass Through
+
+        mock_post.post.return_value = post_return
+
+        self.agent.request_site_id_from_event_manager()
+        self.assertTrue(mock_post.post.called, "Post was not called")
+        self.assertEqual(self.agent.site_id, 1, 'Site Id was not 1')
+        self.agent.site_id = None
+
+
+    @mock.patch.object(Agent, 'requests')
+    def test_request_site_id_from_event_manager_raises_exception_on_bad_request(self,mock_post):
+        post_return = mock.Mock()
+        post_return.status_code = requests.codes.ok
+        post_return.content='{"Site_Id": 1}'
+
+        mock_post.codes = requests.codes  # Pass Through
+
+        mock_post.post.return_value = post_return
+
+        post_return.status_code = requests.codes.bad_request
+        mock_post.post.return_value = post_return
+        self.assertRaises(requests.exceptions.HTTPError,
+                          self.agent.request_site_id_from_event_manager())
 

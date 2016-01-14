@@ -28,6 +28,9 @@ class Agent(object):
     """
     def __init__(self):
         self.plugin_path = DEFAULT_PLUGIN_PATH
+        self.config_ctxt = config.get_config_context()
+        self.event_manager_url = self.config_ctxt['setup']['em_url']
+        self.site_id = None
 
     def set_plugin_path(self, path=None):
         """
@@ -93,7 +96,30 @@ class Agent(object):
 
         return plugin_module_list
 
+    def request_site_id_from_event_manager(self):
+        """Request site id from manager.
 
+        Contact Event manager and request the site id number. This works by passing the site name
+        in the configuration file to the event manager and asking for allocation of a site id.
+
+        Returns
+        -------
+        site_id: int
+            Site identification number.
+
+        """
+        msg = '{"Event_Code": 2, "Data": "%s"}' % self.config_ctxt['setup']['site']
+        payload = json.loads(msg)
+        response = requests.post(self.event_manager_url, json=payload, headers=headers)
+
+        if response.status_code == requests.codes.ok:
+            response_dict = dict(json.loads(response.content))
+            site_id = response_dict['Site_Id']
+            self.site_id = site_id
+        else:
+            response.raise_for_status()
+
+        return self.site_id
 
 
 
@@ -109,12 +135,8 @@ if __name__ == "__main__":
     cfg = config.get_config_context()
     em_url = cfg['setup']['em_url']
 
-    # Get site_id
-    msg = '{"Event_Code": 2, "Data": "%s"}' % cfg['setup']['site']
-    payload = json.loads(msg)
-    response = requests.post(em_url, json=payload, headers=headers)
-    response_dict = dict(json.loads(response.content))
-    site_id = response_dict['Site_Id']
+
+    site_id = agent.request_site_id_from_event_manager()
 
     instrument_ids = []
 
