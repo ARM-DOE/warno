@@ -59,6 +59,7 @@ Vagrant.configure(2) do |config|
   config.vm.provision :shell, inline: "systemctl enable docker.service"
   config.vm.provision :shell, inline: "groupadd docker"
   config.vm.provision :shell, inline: "gpasswd -a vagrant docker"
+  config.vm.provision :shell, inline: "systemctl restart docker.service
   # Manual installation for docker compose.  Most recent version fixes an issue with CentOS builds failing
   config.vm.provision :shell, inline: "curl -L https://github.com/docker/compose/releases/download/1.5.2/docker-compose-`uname -s`-`uname -m` > /usr/bin/docker-compose"
   config.vm.provision :shell, inline: "chmod +x /usr/bin/docker-compose"
