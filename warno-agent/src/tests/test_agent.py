@@ -5,9 +5,11 @@ import sys
 import mock
 import requests
 import importlib
+from multiprocessing import Process
 
 
 TEST_PLUGIN_PATH = 'test_plugins/'
+
 
 class TestAgent(TestCase):
 
@@ -15,6 +17,10 @@ class TestAgent(TestCase):
         self.agent = Agent.Agent()
         plugin_test_directory = os.path.abspath('./')
         sys.path.append(plugin_test_directory)
+
+    def tearDown(self):
+        sys.path.pop()
+
 
     def test_set_plugin_path_sets_to_string_and_default_on_None(self):
 
@@ -112,6 +118,19 @@ class TestAgent(TestCase):
         self.assertDictContainsSubset(dict_to_be_contained, self.agent.event_code_dict,
                                       'Event Codes did not contain expected items')
 
+    @mock.patch.object(Agent, 'multiprocessing')
+    def test_startup_plugin_runs_process(self, mock_process):
 
+        return_process = mock.create_autospec(Process)
+
+        mock_process.Process.return_value = return_process
+        test_plugin = importlib.import_module('test_plugins.test_plugin1')
+
+        self.agent.instrument_ids.append((test_plugin, 6))
+        self.agent.startup_plugin(test_plugin)
+
+        self.assertTrue(mock_process.Process.called, "Process was not called")
+
+        self.assertTrue(return_process.start.called, "Process.run was not called")
 
 

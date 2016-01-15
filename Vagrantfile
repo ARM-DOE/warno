@@ -41,13 +41,14 @@ Vagrant.configure(2) do |config|
 
   # libpq5 postgresql-client-9.3 postgresql-client-common
 
+<<<<<<< HEAD
   ## Automatic update/install ##
   config.vm.provision :shell, inline: "yum -y localinstall http://yum.postgresql.org/9.3/redhat/rhel-7-x86_64/pgdg-centos93-9.3-2.noarch.rpm"
   config.vm.provision :shell, inline: "yum install -y postgresql93 wget bzip2"
   # Without this,SELinux on CentOS blocks docker containers from 
   # accessing the NFS shared folders
   config.vm.provision :shell, inline: "setenforce 0", run: "always"
-  #config.vm.provision :shell, inline: "git -C /vagrant submodule update --init --recursive
+  #config.vm.provision :shell, inline: "git -C /vagrant submodule update --init --recursive"
 
   ## Local install ##
   # config.vm.provision :shell, inline: "docker load -i /vagrant/warno-docker-image"

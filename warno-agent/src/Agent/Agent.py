@@ -10,7 +10,7 @@ from WarnoConfig import config
 from WarnoConfig import network
 from Queue import Empty
 from time import sleep
-from multiprocessing import Queue, Process
+from multiprocessing import Queue
 
 import utility
 
@@ -34,6 +34,7 @@ class Agent(object):
         self.msg_queue = Queue()
         self.event_code_dict = {}
         self.instrument_ids = []
+        self.running_plugin_list = []
 
     def set_plugin_path(self, path=None):
         """
@@ -155,6 +156,28 @@ class Agent(object):
             response_dict = dict(json.loads(response.content))
             self.event_code_dict[response_dict['Data']['description']] = response_dict['Event_Code']
 
+    def startup_plugin(self, plugin):
+        """
+        Start up the listed plugin in a new thread and add it to the list of running plugins.
+
+        Parameters
+        ----------
+        plugin: module
+            Plugin to start
+
+        Returns
+        -------
+        p: Process
+            Running process.
+
+        """
+        plugin_instrument_id = [instrument_id for plugin_name, instrument_id in self.instrument_ids if plugin_name == plugin][0]
+        p = multiprocessing.Process(target=plugin.run, args=(self.msg_queue, plugin_instrument_id))
+
+        p.start()
+
+        self.running_plugin_list.append(p)
+        return p
 
 if __name__ == "__main__":
     # while True:
@@ -180,13 +203,11 @@ if __name__ == "__main__":
 
     # Loop through plugins and start each up
     for plugin in plugin_module_list:
-        plugin_instrument_id = [instrument_id for plugin_name, instrument_id in instrument_ids if plugin_name == plugin][0]
-        p = Process(target=plugin.run, args=(msg_queue, plugin_instrument_id))
-        p.start()
+        agent.startup_plugin(plugin)
 
     while 1:
-        if not msg_queue.empty():
-            rec_msg = msg_queue.get_nowait()
+        if not agent.msg_queue.empty():
+            rec_msg = agent.msg_queue.get_nowait()
             event = json.loads(rec_msg)
             event['data']['Site_Id'] = site_id
             event_code = event_code_dict[event['event']]
