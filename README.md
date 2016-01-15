@@ -31,7 +31,15 @@ vagrant plugin install vagrant-triggers
 WARNO now requires whatever platform it is installed on to be running NFSD. You can install this using whatever method is appropriate to your machine.
 
 <br>
-However, if you are running Vagrant on CentOS, you also must configure your firewalls to allow the nfsd to send and receive traffic
+NFS installation for CentOS
+```bash
+sudo yum install nfs-utils
+sudo systemctl enable nfs-server
+sudo systemctl restart nfs-server
+```
+
+<br>
+Also, if you are running Vagrant on CentOS, you also must configure your firewalls to allow the nfsd to send and receive traffic
 ```bash
 sudo firewall-cmd --permanent --add-service nfs
 sudo firewall-cmd --permanent --add-service rpc-bind
