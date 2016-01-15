@@ -48,6 +48,11 @@ Vagrant.configure(2) do |config|
   # accessing the NFS shared folders
   config.vm.provision :shell, inline: "setenforce 0", run: "always"
 
+  ## Halt Trigger ##
+  config.trigger.before [:halt, :reload] do
+    run "vagrant ssh -c 'bash /vagrant/data_store/data/db_save.sh'"
+  end
+
 
   ## Local install ##
   # config.vm.provision :shell, inline: "docker load -i /vagrant/warno-docker-image"
