@@ -6,10 +6,8 @@ from pyarmret.io.PAFClient import PAFClient
 
 
 def register(msg_queue):
-    event_names = ["prosensing_paf", "non_paf_event", "pulse_capture"]
-    instrument_name = "KAZR-2"
-
-    print("REGISTERING KAZR-2")
+    event_names = ["event1", "event2"]
+    instrument_name = "test-instrument"
 
     return {"instrument_name": instrument_name, "event_code_names": event_names}
 

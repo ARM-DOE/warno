@@ -1,3 +1,4 @@
 pyyaml
 Flask
 requests
+enum34

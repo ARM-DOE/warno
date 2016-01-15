@@ -7,7 +7,7 @@ import signal
 import sys
 import requests
 from WarnoConfig import config
-
+from WarnoConfig import network
 from Queue import Empty
 from time import sleep
 from multiprocessing import Queue, Process
@@ -31,6 +31,9 @@ class Agent(object):
         self.config_ctxt = config.get_config_context()
         self.event_manager_url = self.config_ctxt['setup']['em_url']
         self.site_id = None
+        self.msg_queue = Queue()
+        self.event_code_dict = {}
+        self.instrument_ids = []
 
     def set_plugin_path(self, path=None):
         """
@@ -108,7 +111,8 @@ class Agent(object):
             Site identification number.
 
         """
-        msg = '{"Event_Code": 2, "Data": "%s"}' % self.config_ctxt['setup']['site']
+        msg = '{"Event_Code": %d, "Data": "%s"}' % (network.SITE_ID_REQUEST,
+                                                    self.config_ctxt['setup']['site'])
         payload = json.loads(msg)
         response = requests.post(self.event_manager_url, json=payload, headers=headers)
 
@@ -121,6 +125,35 @@ class Agent(object):
 
         return self.site_id
 
+    def register_plugin(self, plugin):
+        """
+        Register a plugin.
+
+        Parameters
+        ----------
+        plugin: module
+            Plugin to be registered.
+
+        Returns
+        -------
+
+        """
+        response_dict = plugin.register(self.msg_queue)
+
+        # Get the instrument Id for each
+        instrument_name = response_dict['instrument_name']
+        msg = '{"Event_Code": 3, "Data": "%s"}' % instrument_name  # TODO: Switch hardcoded values to network.
+        payload = json.loads(msg)
+        response = requests.post(self.event_manager_url, json=payload, headers=headers)
+
+        data = dict(json.loads(response.content))
+        self.instrument_ids.append((plugin, data['Instrument_Id']))
+        for event in response_dict['event_code_names']:
+            msg = '{"Event_Code": 1, "Data": {"description": "%s", "instrument_id": %s}}' % (event, data['Instrument_Id'])
+            payload = json.loads(msg)
+            response = requests.post(self.event_manager_url, json=payload, headers=headers)
+            response_dict = dict(json.loads(response.content))
+            self.event_code_dict[response_dict['Data']['description']] = response_dict['Event_Code']
 
 
 if __name__ == "__main__":
@@ -135,27 +168,15 @@ if __name__ == "__main__":
     cfg = config.get_config_context()
     em_url = cfg['setup']['em_url']
 
-
     site_id = agent.request_site_id_from_event_manager()
 
     instrument_ids = []
 
     #  Loop through each plugin and register it, registering the plugin's event codes as well
     for plugin in plugin_module_list:
-        response_dict = plugin.register(msg_queue)
-        # Get the instrument Id for each
-        instrument_name = response_dict['instrument_name']
-        msg = '{"Event_Code": 3, "Data": "%s"}' % instrument_name
-        payload = json.loads(msg)
-        response = requests.post(em_url, json=payload, headers=headers)
-        data = dict(json.loads(response.content))
-        instrument_ids.append((plugin, data['Instrument_Id']))
-        for event in response_dict['event_code_names']:
-            msg = '{"Event_Code": 1, "Data": {"description": "%s", "instrument_id": %s}}' % (event, data['Instrument_Id'])
-            payload = json.loads(msg)
-            response = requests.post(em_url, json=payload, headers=headers)
-            response_dict = dict(json.loads(response.content))
-            event_code_dict[response_dict['Data']['description']] = response_dict['Event_Code']
+        agent.register_plugin(plugin)
+
+    event_code_dict = agent.event_code_dict
 
     # Loop through plugins and start each up
     for plugin in plugin_module_list:

@@ -4,6 +4,7 @@ import os
 import sys
 import mock
 import requests
+import importlib
 
 
 TEST_PLUGIN_PATH = 'test_plugins/'
@@ -66,8 +67,10 @@ class TestAgent(TestCase):
     @mock.patch.object(Agent, 'requests')
     def test_request_site_id_from_event_manager_raises_exception_on_bad_request(self,mock_post):
         post_return = mock.Mock()
+
         previous_agent_value = self.agent.site_id
         self.agent.site_id = None
+
         post_return.status_code = requests.codes.ok
         post_return.content='{"Site_Id": 1}'
 
@@ -82,4 +85,33 @@ class TestAgent(TestCase):
 
         self.assertIsNone(self.agent.site_id)
         self.agent.site_id = previous_agent_value
+
+    @mock.patch.object(Agent, 'requests')
+    def test_register_plugin_executes_calls_and_puts_in_event_code(self, mock_post):
+        return1 = mock.Mock()
+        return2 = mock.Mock()
+        return3 = mock.Mock()
+
+        return1.status_code = requests.codes.ok
+        return1.content = '{"Instrument_Id": 2}'
+
+        return2.status_code = requests.codes.ok
+        return2.content = '{"Event_Code": 3, "Data": {"description" : "description1"}}'
+
+        return3.status_code = requests.codes.ok
+        return3.content = '{"Event_Code": 4, "Data": {"description" : "description2"}}'
+
+        mock_post.codes = requests.codes
+        mock_post.post.side_effect = iter([return1, return2, return3])
+
+        test_plugin = importlib.import_module('test_plugins.test_plugin1')
+
+        self.agent.register_plugin(test_plugin)
+        dict_to_be_contained = {'description1': 3, 'description2': 4}
+
+        self.assertDictContainsSubset(dict_to_be_contained, self.agent.event_code_dict,
+                                      'Event Codes did not contain expected items')
+
+
+
 
