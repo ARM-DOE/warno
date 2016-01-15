@@ -20,12 +20,38 @@ https://www.vagrantup.com/
 
 https://www.virtualbox.org/wiki/Downloads
 <br><br>
-Then, install the [vagrant-docker-compose](https://github.com/leighmcculloch/vagrant-docker-compose) and [vagrant-triggers](https://github.com/emyl/vagrant-triggers) plugins (as root).
-(Note: Vagrant Triggers will probably be phased out soon)
+Then, install the [vagrant-docker-compose](https://github.com/leighmcculloch/vagrant-docker-compose) and [vagrant-triggers](https://github.com/emyl/vagrant-triggers) plugins (may require superuser privileges).
 ```bash
 vagrant plugin install vagrant-docker-compose
 vagrant plugin install vagrant-triggers
 ```
+
+## Before you Start
+
+WARNO now requires whatever platform it is installed on to be running NFSD. You can install this using whatever method is appropriate to your machine.
+
+<br>
+NFS installation for CentOS
+```bash
+sudo yum install nfs-utils
+sudo systemctl enable nfs-server
+sudo systemctl restart nfs-server
+```
+
+<br>
+Also, if you are running Vagrant on CentOS, you also must configure your firewalls to allow the nfsd to send and receive traffic
+```bash
+sudo firewall-cmd --permanent --add-service nfs
+sudo firewall-cmd --permanent --add-service rpc-bind
+sudo firewall-cmd --permanent --add-service mountd
+sudo firewall-cmd --permanent --add-port=2049/udp
+sudo firewall-cmd --reload
+```
+
+<br>
+After this, you should have everything set up on the host side.
+
+<br>
 
 ## Start Up Configuration
 
@@ -71,18 +97,31 @@ vagrant up
 
 <br>
 
-## Demo Data
-If you start up the virtual machine, you may want to initialize the database with some basic information. (This is currently a requirement if your machine is supposed to act as the "central" machine, as some of the basic event types in the database will not load without this.)
+Note that currently, occasionally the machine will get stuck at "connection timeout. retrying..."
 
-To initialise the database:
+If this should happen, reload the machine, either with the gentle
 ```bash
-vagrant ssh
- cd /vagrant/warno-event-manager/src/database/
- python initialize_db.py
- python populate_base_db.py
+vagrant reload
 ```
 
-To load the data with basic information (basic sites, instruments, instrument data, logs, etc.):
+<br>
+
+Or the more nuclear
+```bash
+vagrant destroy
+vagrant up
+```
+
+Note that this will destroy the current virtual machine.
+
+<br>
+
+## Demo Data
+
+WARNO pre-populates some basic sites and users when it loads up.
+
+<br>
+To demo data with basic information (basic sites, instruments, instrument data, logs, etc.):
 ```bash
 vagrant ssh
 cd /vagrant/warno-event-manager/src/database/

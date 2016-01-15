@@ -5,14 +5,14 @@
 # Local image
 # FROM warno-docker-image
 # Repository image
-FROM ubuntu:14.04
+FROM centos:7
 MAINTAINER Joseph C. Hardin <joseph.hardin@pnnl.gov>
 
 COPY /sshd-deb /opt/sshd-deb/
 
 # Automatic install from remote
-RUN apt-get update
-RUN apt-get install -y openssh-server
+RUN yum update -y
+RUN yum install -y openssh-server
 
 # Manual local install
 # RUN echo "Installing SSHD .deb files."

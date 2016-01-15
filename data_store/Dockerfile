@@ -1,7 +1,7 @@
 # Local image
 # FROM warno-docker-image
 # Repository image
-FROM ubuntu:14.04
+FROM centos:7
 MAINTAINER Joseph C. Hardin
 
 # COPY /postgres-deb /opt/postgres-deb/
@@ -10,20 +10,19 @@ MAINTAINER Joseph C. Hardin
 
 # Automatic install from remote
 COPY entrypoint.sh /
-RUN apt-get install -y postgresql-9.3 postgresql-contrib-9.3
+RUN yum -y localinstall http://yum.postgresql.org/9.3/redhat/rhel-7-x86_64/pgdg-centos93-9.3-2.noarch.rpm
+RUN yum install -y postgresql93 postgresql93-contrib postgresql93-server
 
 # Manual local install
 # RUN echo "Installing Postgres .deb files."
 # RUN dpkg --install --recursive /opt/postgres-deb
 
-# Update config to allow remote connections
-RUN echo "host all all 0.0.0.0/0 trust" >> /etc/postgresql/9.3/main/pg_hba.conf
-RUN echo "listen_addresses='*'" >> /etc/postgresql/9.3/main/postgresql.conf
+# Update config to allow remote connectionsRUN echo "initdb"
+RUN /usr/pgsql-9.3/bin/postgresql93-setup initdb
+RUN echo "host all all 0.0.0.0/0 trust" >> /var/lib/pgsql/9.3/data/pg_hba.conf
+RUN echo "listen_addresses='*'" >> /var/lib/pgsql/9.3/data/postgresql.conf
 
 #RUN echo;echo;ls -la /var/lib/postgresl;echo;echo
-
-# restart
-RUN service postgresql restart
 
 # switch to the postgres user
 USER postgres
@@ -31,17 +30,14 @@ USER postgres
 # Expose the PostgreSQL port
 EXPOSE 5432
 
+ENV PGDATA /var/lib/pgsql/9.3/data
+
 # Create root superuser
-RUN    /etc/init.d/postgresql start &&\
-    psql --command "CREATE USER root WITH SUPERUSER PASSWORD 'password';"
+RUN /usr/pgsql-9.3/bin/pg_ctl start; sleep 5; echo "root"; psql --command "CREATE USER root WITH SUPERUSER PASSWORD 'password';";\
+psql --command "CREATE USER warno WITH SUPERUSER PASSWORD 'warno';";\
+psql --command "CREATE DATABASE warno;"
 
-RUN    /etc/init.d/postgresql start &&\
-    psql --command "CREATE USER warno WITH SUPERUSER PASSWORD 'warno';"
-
-RUN    /etc/init.d/postgresql start &&\
-    psql --command "CREATE DATABASE warno;"
-
-ENV PATH=/vagrant/data_store/data/anaconda/bin:$PATH
+ENV PATH /vagrant/data_store/data/anaconda/bin:$PATH
 
 #RUN echo
 #RUN echo;echo;ls -la /var/lib/postgresql;echo;echo

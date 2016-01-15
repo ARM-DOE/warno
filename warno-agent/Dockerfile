@@ -1,7 +1,7 @@
 # Local image
 # FROM warno-docker-image
 # Repository image
-FROM ubuntu:14.04
+FROM centos:7
 MAINTAINER Joseph C. Hardin <joseph.hardin@pnnl.gov>
 
 COPY /src /opt/warno-agent/
@@ -13,8 +13,8 @@ COPY entrypoint.sh /
 # RUN sed -i '4,90d' /etc/apt/sources.list
 
 # Automatic install from remote
-RUN apt-get update
-RUN apt-get install -y build-essential
+RUN yum update -y
+RUN yum groupinstall -y "Development Tools"
 
 # Manual local install
 # RUN echo "Installing Agent .deb files."
@@ -24,7 +24,7 @@ RUN apt-get install -y build-essential
 #run pip install -r /opt/warno-agent/requirements.txt
 
 ENV NOTVISIBLE "in users profile"
-ENV PATH=/vagrant/data_store/data/anaconda/bin:$PATH
+ENV PATH /vagrant/data_store/data/anaconda/bin:$PATH
 RUN echo "export VISIBLE=now" >> /etc/profile
 
 
