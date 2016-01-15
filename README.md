@@ -55,7 +55,7 @@ After this, you should have everything set up on the host side.
 
 ## Start Up Configuration
 
-WARNO Vagrant is run with the event manager as either a "site" event manager or a "central" event manager.
+WARNO Vagrant is run with the event manager as either a "site"  event manager or a "central" event manager.
 
 <br>
 The default setting is as a "site" event manager.  In *warno-event-manager/src/config.yml* set "cf_url" to "http://**your_central_event_manager_ip**/eventmanager/event"
