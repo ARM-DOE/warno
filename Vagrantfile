@@ -41,7 +41,6 @@ Vagrant.configure(2) do |config|
 
   # libpq5 postgresql-client-9.3 postgresql-client-common
 
-<<<<<<< HEAD
   ## Automatic update/install ##
   config.vm.provision :shell, inline: "yum -y localinstall http://yum.postgresql.org/9.3/redhat/rhel-7-x86_64/pgdg-centos93-9.3-2.noarch.rpm"
   config.vm.provision :shell, inline: "yum install -y postgresql93 wget bzip2"
