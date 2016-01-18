@@ -9,6 +9,7 @@ COPY entrypoint.sh /
 
 # Automatic install from remote
 
+RUN yum -y install deltarpm
 RUN yum update -y
 RUN yum groupinstall -y "Development Tools"
 RUN yum install -y openssh-server

@@ -32,6 +32,7 @@ Vagrant.configure(2) do |config|
   end
 
   ## Set up NFS shared folders ##
+  config.vm.provision :shell, inline: "yum -y install deltarpm"
   config.vm.provision :shell, inline: "yum -y update"
   config.vm.provision :shell, inline: "yum -y install nfs-utils nfs-utils-lib"
   # First disable the CentOS default RSYNC one way synchronization, 
@@ -60,7 +61,7 @@ Vagrant.configure(2) do |config|
   # (may not be necessary because of docker provisioner)
   # Add vagrant to docker group, preventing the need to 'sudo' every command
   config.vm.provision :shell, inline: "systemctl enable docker.service"
-  config.vm.provision :shell, inline: "groupadd docker"
+  config.vm.provision :shell, inline: "getent group docker || groupadd docker"
   config.vm.provision :shell, inline: "gpasswd -a vagrant docker"
   config.vm.provision :shell, inline: "systemctl restart docker.service"
   # Manual installation for docker compose.
