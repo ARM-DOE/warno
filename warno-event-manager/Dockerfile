@@ -9,11 +9,6 @@ COPY entrypoint.sh /
 
 # Automatic install from remote
 
-# RUN sed -i '1s/^/deb http:\/\/mirror.pnl.gov\/ubuntu\/ trusty main universe restricted /' /etc/apt/sources.list
-# RUN sed -i '2s/^/deb http:\/\/mirror.pnl.gov\/ubuntu\/ trusty-updates main universe restricted/' /etc/apt/sources.list
-# RUN sed -i '3s/^/deb http:\/\/mirror.pnl.gov\/ubuntu\/ trusty-security main universe restricted /' /etc/apt/sources.list
-# RUN sed -i '4,90d' /etc/apt/sources.list
-
 RUN yum update -y
 RUN yum groupinstall -y "Development Tools"
 RUN yum install -y openssh-server

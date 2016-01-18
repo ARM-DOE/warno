@@ -17,6 +17,7 @@ def load_yaml_config(config_filename):
         config = yaml.load(ymlfile)
     return config
 
+
 def get_config_context():
     """Load Configuration Context Object.
     This loads the config.yml file to provide the configuration context, then it appends custom values.
