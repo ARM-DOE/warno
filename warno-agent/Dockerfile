@@ -21,7 +21,6 @@ ENV NOTVISIBLE "in users profile"
 ENV PATH /vagrant/data_store/data/anaconda/bin:$PATH
 ENV PATH=/opt/data/anaconda/bin:$PATH
 
-RUN /opt/data/anaconda/bin/python /opt/data/pyarmret/setup.py install
 
 
 RUN echo "export VISIBLE=now" >> /etc/profile

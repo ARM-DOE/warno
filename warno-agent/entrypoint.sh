@@ -3,5 +3,6 @@
 # Volumes_from links data_store container after Dockerfile finishes building.
 pip install --user -r /opt/warno-agent/requirements.txt
 pip install --user requests --upgrade
+/opt/data/anaconda/bin/python /opt/data/pyarmret/setup.py install
 echo "Starting Agent"
-python Agent/Agent.py
+/opt/data/anaconda/bin/python python Agent/Agent.py
