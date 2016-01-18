@@ -5,10 +5,10 @@ cur = db.cursor()
 
 # For each entry, first entry is table name, second entry is demo data for the table
 table_data = [
-                   ["users", "users.data"],
-                   ["sites", "sites.data"]
-               ]
+                   "users",
+                   "sites"
+             ]
 
 for table in table_data:
-    if utility.table_exists(table[0], cur):
-        utility.load_data_into_table("schema/%s" % table[1], table[0], db)
+    if utility.table_exists(table, cur):
+        utility.load_data_into_table("schema/%s.data" % table, table, db)
