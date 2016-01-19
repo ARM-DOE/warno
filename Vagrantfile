@@ -47,7 +47,13 @@ Vagrant.configure(2) do |config|
   # Without this,SELinux on CentOS blocks docker containers from 
   # accessing the NFS shared folders
   config.vm.provision :shell, inline: "setenforce 0", run: "always"
+
   #config.vm.provision :shell, inline: "git -C /vagrant submodule update --init --recursive"
+
+  ## Halt Trigger ##
+  config.trigger.before [:halt, :reload] do
+    run "vagrant ssh -c 'bash /vagrant/data_store/data/db_save.sh'"
+  end
 
   ## Local install ##
   # config.vm.provision :shell, inline: "docker load -i /vagrant/warno-docker-image"
