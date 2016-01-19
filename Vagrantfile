@@ -16,9 +16,6 @@ SCRIPT
 
 Vagrant.configure(2) do |config|
 
-  # Automatic remote box
-  #config.vm.box = "centos/7"
-  # Local box
   config.vm.box = "warnobox1"
 
   config.vm.network "private_network", ip: "192.168.50.100"
@@ -40,12 +37,8 @@ Vagrant.configure(2) do |config|
 
   # libpq5 postgresql-client-9.3 postgresql-client-common
 
-  ## Automatic update/install ##
-  ###config.vm.provision :shell, inline: "yum -y localinstall http://yum.postgresql.org/9.3/redhat/rhel-7-x86_64/pgdg-centos93-9.3-2.noarch.rpm"
-  ###config.vm.provision :shell, inline: "yum install -y postgresql93 wget bzip2"
   # Without this,SELinux on CentOS blocks docker containers from 
   # accessing the NFS shared folders
-
   config.vm.provision :shell, inline: "setenforce 0", run: "always"
 
   config.vm.provision :shell, inline: "cd /vagrant && git submodule update --init --recursive"
@@ -59,13 +52,14 @@ Vagrant.configure(2) do |config|
   config.vm.provision :shell, inline: "docker load -i /vagrant/warno-docker-image"
 
   ## Final Provisioning ##
+  # Docker and Docker compose are installed in the custom vagrant box
   # Must be unprivileged so Anaconda paths install for the vagrant user
   config.vm.provision :shell, path: "bootstrap.sh", privileged: false
 
   # Because we could not use the docker-compose provisioner, 
   # we instead write the three equivalent commands
- config.vm.provision :shell, inline: "docker-compose -f /vagrant/docker-compose.yml rm", run: "always"
- config.vm.provision :shell, inline: "docker-compose -f /vagrant/docker-compose.yml build", run: "always"
- config.vm.provision :shell, inline: "docker-compose -f /vagrant/docker-compose.yml up -d --timeout 20", run: "always"
+  config.vm.provision :shell, inline: "docker-compose -f /vagrant/docker-compose.yml rm", run: "always"
+  config.vm.provision :shell, inline: "docker-compose -f /vagrant/docker-compose.yml build", run: "always"
+  config.vm.provision :shell, inline: "docker-compose -f /vagrant/docker-compose.yml up -d --timeout 20", run: "always"
 
 end
