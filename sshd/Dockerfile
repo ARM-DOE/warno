@@ -3,21 +3,12 @@
 # VERSION               0.0.2
 
 # Local image
-# FROM warno-docker-image
+FROM warno-docker-image
 # Repository image
-FROM centos:7
+# FROM centos:7
 MAINTAINER Joseph C. Hardin <joseph.hardin@pnnl.gov>
 
 COPY /sshd-deb /opt/sshd-deb/
-
-# Automatic install from remote
-RUN yum -y install deltarpm
-RUN yum update -y
-RUN yum install -y openssh-server
-
-# Manual local install
-# RUN echo "Installing SSHD .deb files."
-# RUN dpkg --install --recursive /opt/sshd-deb
 
 RUN mkdir /var/run/sshd
 RUN echo 'root:screencast' | chpasswd
