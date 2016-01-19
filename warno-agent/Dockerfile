@@ -1,14 +1,12 @@
 # Local image
-# FROM warno-docker-image
+FROM warno-docker-image
 # Repository image
-FROM centos:7
+# FROM centos:7
 MAINTAINER Joseph C. Hardin <joseph.hardin@pnnl.gov>
 
 COPY /src /opt/warno-agent/
 COPY entrypoint.sh /
 # Automatic install from remote
-RUN yum update -y
-RUN yum groupinstall -y "Development Tools"
 
 # Manual local install
 # RUN echo "Installing Agent .deb files."

@@ -1,16 +1,11 @@
 # Local image
-# FROM warno-docker-image
+FROM warno-docker-image
 # Repository image
-FROM centos:7
+# FROM centos:7
 MAINTAINER Joseph C. Hardin <joseph.hardin@pnnl.gov>
 
 COPY /src /opt/warno-user-portal/
 COPY entrypoint.sh /
-
-# Automatic install from remote
-RUN yum update -y
-RUN yum groupinstall -y "Development Tools"
-RUN yum install -y openssh-server
 
 # Manual local install
 # RUN echo "Installing User Portal .deb files."

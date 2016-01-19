@@ -1,7 +1,7 @@
 # Local image
-# FROM warno-docker-image
+FROM warno-docker-image
 # Repository image
-FROM centos:7
+# FROM centos:7
 MAINTAINER Joseph C. Hardin
 
 # COPY /postgres-deb /opt/postgres-deb/
@@ -10,8 +10,7 @@ MAINTAINER Joseph C. Hardin
 
 # Automatic install from remote
 COPY entrypoint.sh /
-RUN yum -y localinstall http://yum.postgresql.org/9.3/redhat/rhel-7-x86_64/pgdg-centos93-9.3-2.noarch.rpm
-RUN yum install -y postgresql93 postgresql93-contrib postgresql93-server
+
 
 # Manual local install
 # RUN echo "Installing Postgres .deb files."
