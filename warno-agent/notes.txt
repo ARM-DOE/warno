@@ -10,6 +10,7 @@ Notes on Agent Refactor:
 10) Clean up and formalize plugin registration and communication.
 11) Refactor out the network send to event manager.
 12) Enumerate static event codes
+13) Update Event Manager to always get a dictioary for data entry.
 
 Completed:
 ---------

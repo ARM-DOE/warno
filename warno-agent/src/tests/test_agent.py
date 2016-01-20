@@ -144,7 +144,7 @@ class TestAgent(TestCase):
 
         self.assertTrue(mock_requests.post.called,'requests.post is never called')
         call_args = mock_requests.post.call_args
-
+        print(call_args)
 
         self.assertTrue(len(call_args[0]) == 1, 'Wrong number of positional arguments in requests.post call')
         self.assertTrue(len(call_args[1]) == 2, 'Wrong number of named arguments in requests.post call')
@@ -167,3 +167,5 @@ class TestAgent(TestCase):
         self.assertTrue(len(call_args[1]) == 2, 'Wrong number of named arguments in requests.post call')
         self.assertTrue('json' in call_args[1], 'json not passed as arg')
         self.assertTrue('headers' in call_args[1], 'json not passed as arg')
+
+

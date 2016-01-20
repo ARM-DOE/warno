@@ -195,10 +195,11 @@ class Agent(object):
             Response from request.
         """
 
-        msg = '{"Event_Code": %d, "Data": "%s"}' % (code, data)
+        msg = '{"Event_Code": %d, "Data": %s}' % (code, json.dumps(data))
         payload = json.loads(msg)
         response = requests.post(self.event_manager_url, json=payload, headers=headers)
         return response
+
 
 if __name__ == "__main__":
     # while True:
