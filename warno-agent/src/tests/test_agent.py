@@ -6,7 +6,7 @@ import mock
 import requests
 import importlib
 from multiprocessing import Process
-
+from WarnoConfig import network
 
 TEST_PLUGIN_PATH = 'test_plugins/'
 
@@ -132,5 +132,40 @@ class TestAgent(TestCase):
         self.assertTrue(mock_process.Process.called, "Process was not called")
 
         self.assertTrue(return_process.start.called, "Process.run was not called")
+
+
+    @mock.patch.object(Agent, 'requests')
+    def test_send_em_message_request_site_id_works(self, mock_requests):
+
+        code = network.SITE_ID_REQUEST
+        data = 'kazr'
+
+        self.agent.send_em_message(code, data)
+
+        self.assertTrue(mock_requests.post.called,'requests.post is never called')
+        call_args = mock_requests.post.call_args
+        print(call_args)
+
+        self.assertTrue(len(call_args[0]) == 1, 'Wrong number of positional arguments in requests.post call')
+        self.assertTrue(len(call_args[1]) == 2, 'Wrong number of named arguments in requests.post call')
+        self.assertTrue('json' in call_args[1], 'json not passed as arg')
+        self.assertTrue('headers' in call_args[1], 'json not passed as arg')
+
+    @mock.patch.object(Agent, 'requests')
+    def test_send_em_message_handles_multiple_data(self, mock_requests):
+
+        code = network.SITE_ID_REQUEST
+        data = {'description': 'red', 'instrument_id': '1'}
+
+        self.agent.send_em_message(code, data)
+
+        self.assertTrue(mock_requests.post.called,'requests.post is never called')
+        call_args = mock_requests.post.call_args
+
+
+        self.assertTrue(len(call_args[0]) == 1, 'Wrong number of positional arguments in requests.post call')
+        self.assertTrue(len(call_args[1]) == 2, 'Wrong number of named arguments in requests.post call')
+        self.assertTrue('json' in call_args[1], 'json not passed as arg')
+        self.assertTrue('headers' in call_args[1], 'json not passed as arg')
 
 
