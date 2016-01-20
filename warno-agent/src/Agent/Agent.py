@@ -180,7 +180,25 @@ class Agent(object):
         return p
 
     def send_em_message(self, code, data):
-        pass
+        """ Send event code message to event manager.
+
+        Parameters
+        ----------
+        code: integer
+            event manager code
+        data: dict
+            List of payloads for the Data dictionary.
+
+        Returns
+        -------
+        response: `requests.response`
+            Response from request.
+        """
+
+        msg = '{"Event_Code": %d, "Data": "%s"}' % (code, data)
+        payload = json.loads(msg)
+        response = requests.post(self.event_manager_url, json=payload, headers=headers)
+        return response
 
 if __name__ == "__main__":
     # while True:

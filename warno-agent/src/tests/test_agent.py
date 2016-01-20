@@ -137,8 +137,33 @@ class TestAgent(TestCase):
     @mock.patch.object(Agent, 'requests')
     def test_send_em_message_request_site_id_works(self, mock_requests):
 
-        code = config.network.
+        code = network.SITE_ID_REQUEST
+        data = 'kazr'
 
-        self.assertTrue(requests.post.called,'requests.post is never called')
+        self.agent.send_em_message(code, data)
+
+        self.assertTrue(mock_requests.post.called,'requests.post is never called')
+        call_args = mock_requests.post.call_args
 
 
+        self.assertTrue(len(call_args[0]) == 1, 'Wrong number of positional arguments in requests.post call')
+        self.assertTrue(len(call_args[1]) == 2, 'Wrong number of named arguments in requests.post call')
+        self.assertTrue('json' in call_args[1], 'json not passed as arg')
+        self.assertTrue('headers' in call_args[1], 'json not passed as arg')
+
+    @mock.patch.object(Agent, 'requests')
+    def test_send_em_message_handles_multiple_data(self, mock_requests):
+
+        code = network.SITE_ID_REQUEST
+        data = {'description': 'red', 'instrument_id': '1'}
+
+        self.agent.send_em_message(code, data)
+
+        self.assertTrue(mock_requests.post.called,'requests.post is never called')
+        call_args = mock_requests.post.call_args
+
+
+        self.assertTrue(len(call_args[0]) == 1, 'Wrong number of positional arguments in requests.post call')
+        self.assertTrue(len(call_args[1]) == 2, 'Wrong number of named arguments in requests.post call')
+        self.assertTrue('json' in call_args[1], 'json not passed as arg')
+        self.assertTrue('headers' in call_args[1], 'json not passed as arg')
