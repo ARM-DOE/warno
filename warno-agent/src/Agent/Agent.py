@@ -112,10 +112,7 @@ class Agent(object):
             Site identification number.
 
         """
-        msg = '{"Event_Code": %d, "Data": "%s"}' % (network.SITE_ID_REQUEST,
-                                                    self.config_ctxt['setup']['site'])
-        payload = json.loads(msg)
-        response = requests.post(self.event_manager_url, json=payload, headers=headers)
+        response = self.send_em_message(network.SITE_ID_REQUEST, self.config_ctxt['setup']['site'])
 
         if response.status_code == requests.codes.ok:
             response_dict = dict(json.loads(response.content))
@@ -143,16 +140,15 @@ class Agent(object):
 
         # Get the instrument Id for each
         instrument_name = response_dict['instrument_name']
-        msg = '{"Event_Code": 3, "Data": "%s"}' % instrument_name  # TODO: Switch hardcoded values to network.
-        payload = json.loads(msg)
-        response = requests.post(self.event_manager_url, json=payload, headers=headers)
+        response = self.send_em_message(network.INSTRUMENT_ID_REQUEST, instrument_name)
 
         data = dict(json.loads(response.content))
         self.instrument_ids.append((plugin, data['Instrument_Id']))
+
         for event in response_dict['event_code_names']:
-            msg = '{"Event_Code": 1, "Data": {"description": "%s", "instrument_id": %s}}' % (event, data['Instrument_Id'])
-            payload = json.loads(msg)
-            response = requests.post(self.event_manager_url, json=payload, headers=headers)
+            data_send = {'description': event, 'instrument_id': data['Instrument_Id']}
+            response = self.send_em_message(network.EVENT_CODE_REQUEST, data_send )
+
             response_dict = dict(json.loads(response.content))
             self.event_code_dict[response_dict['Data']['description']] = response_dict['Event_Code']
 
