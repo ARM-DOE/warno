@@ -6,7 +6,7 @@ import mock
 import requests
 import importlib
 from multiprocessing import Process
-
+from WarnoConfig import network
 
 TEST_PLUGIN_PATH = 'test_plugins/'
 
@@ -132,5 +132,13 @@ class TestAgent(TestCase):
         self.assertTrue(mock_process.Process.called, "Process was not called")
 
         self.assertTrue(return_process.start.called, "Process.run was not called")
+
+
+    @mock.patch.object(Agent, 'requests')
+    def test_send_em_message_request_site_id_works(self, mock_requests):
+
+        code = config.network.
+
+        self.assertTrue(requests.post.called,'requests.post is never called')
 
 

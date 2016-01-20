@@ -10,7 +10,6 @@ Notes on Agent Refactor:
 10) Clean up and formalize plugin registration and communication.
 11) Refactor out the network send to event manager.
 12) Enumerate static event codes
-13) Fix Break on groupadd docker on mac os x
 
 Completed:
 ---------
@@ -24,3 +23,5 @@ Completed:
 2) Turn Agent into an object, so that configurations can be added to it.
 10) Mock up network site id request
 4) Break plugin registering up to a single plugin at at time
+13) Fix Break on groupadd docker on mac os
+

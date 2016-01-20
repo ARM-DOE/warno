@@ -179,6 +179,9 @@ class Agent(object):
         self.running_plugin_list.append(p)
         return p
 
+    def send_em_message(self, code, data):
+        pass
+
 if __name__ == "__main__":
     # while True:
     sleep(30)
