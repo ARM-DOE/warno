@@ -32,6 +32,7 @@ Vagrant.configure(2) do |config|
   end
 
   ## Set up NFS shared folders ##
+  config.vm.provision :shell, inline: "yum -y install deltarpm"
   config.vm.provision :shell, inline: "yum -y update"
   config.vm.provision :shell, inline: "yum -y install nfs-utils nfs-utils-lib, git"
   # First disable the CentOS default RSYNC one way synchronization, 
