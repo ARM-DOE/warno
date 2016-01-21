@@ -5,6 +5,7 @@ FROM centos:7
 MAINTAINER Joseph C. Hardin
 
 
+RUN yum -y install deltarpm
 RUN yum update -y
 RUN yum install -y epel-release
 RUN yum install -y nginx vim inotify-tools systemd
