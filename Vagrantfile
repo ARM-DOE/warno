@@ -55,6 +55,9 @@ Vagrant.configure(2) do |config|
   # Docker and Docker compose are installed in the custom vagrant box
   # Must be unprivileged so Anaconda paths install for the vagrant user
   config.vm.provision :shell, path: "bootstrap.sh", privileged: false
+  
+  # Add crontab for regular database backup
+  config.vm.provision :shell, inline: "(crontab -l; echo '0 22 * * * bash /vagrant/data_store/data/db_save.sh') | crontab -"
 
   # Because we could not use the docker-compose provisioner, 
   # we instead write the three equivalent commands
