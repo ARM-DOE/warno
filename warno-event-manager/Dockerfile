@@ -1,25 +1,11 @@
 # Local image
-# FROM warno-docker-image
+FROM warno-docker-image
 # Repository image
-FROM centos:7
+# FROM centos:7
 MAINTAINER Joseph C. Hardin <joseph.hardin@pnnl.gov>
 
 COPY /src /opt/warno-event-manager/
 COPY entrypoint.sh /
-
-# Automatic install from remote
-
-RUN yum -y install deltarpm
-RUN yum update -y
-RUN yum groupinstall -y "Development Tools"
-RUN yum install -y openssh-server
-
-# Manual local install
-# RUN echo "Installing Event Manager .deb files."
-# WORKDIR /opt/warno-event-manager
-# RUN dpkg --install --recursive warno-event-manager-deb
-# RUN echo "Installing Event Manager pip requirements."
-# RUN bash wempip_install.sh
 
 
 WORKDIR /opt/warno-event-manager
