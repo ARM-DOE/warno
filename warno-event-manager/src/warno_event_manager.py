@@ -10,6 +10,7 @@ import time
 import database.utility
 
 from WarnoConfig import config
+from WarnoConfig import network
 
 app = Flask(__name__)
 
@@ -72,21 +73,21 @@ def event():
 
     msg_event_code = msg_struct['Event_Code']
     # Request for the event code for a given description
-    if msg_event_code == 1:
+    if msg_event_code == network.EVENT_CODE_REQUEST:
         save_instrument_data_reference(msg, msg_struct)
         return get_event_code(msg, msg_struct)
 
     # Request a site id from site name
-    elif msg_event_code == 2:
+    elif msg_event_code == network.SITE_ID_REQUEST:
         return get_site_id(msg, msg_struct)
 
     # Request an instrument id from instrument name
-    elif msg_event_code == 3:
+    elif msg_event_code == network.INSTRUMENT_ID_REQUEST:
         return get_instrument_id(msg, msg_struct)
-    elif msg_event_code == 4:
+    elif msg_event_code == network.PULSE_CAPTURE:
         return save_pulse_capture(msg, msg_struct)
     # Event is special case: 'prosensing_paf' structure
-    elif msg_event_code == 5:
+    elif msg_event_code == network.PROSENSING_PAF:
         return save_special_prosensing_paf(msg, msg_struct)
 
     # Any other event
@@ -160,7 +161,7 @@ def get_instrument_id(msg, msg_struct):
     if row:
         if is_central:
             print("Found Existing Instrument")
-            return '{"Event_code": 3, "Data": {"Instrument_Id": %s, "Site_Id": %s, "Name_Short": "%s", "Name_Long": "%s", "Type": "%s", "Vendor": "%s", "Description": "%s", "Frequency_Band": "%s"}}' % (row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
+            return '{"Event_code": %i, "Data": {"Instrument_Id": %s, "Site_Id": %s, "Name_Short": "%s", "Name_Long": "%s", "Type": "%s", "Vendor": "%s", "Description": "%s", "Frequency_Band": "%s"}}' % (network.INSTRUMENT_ID_REQUEST, row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
         else:
             print("Found Existing Instrument")
             return '{"Instrument_Id": %i, "Data": "%s"}' % (row[0], msg_struct['Data'])
@@ -170,11 +171,8 @@ def get_instrument_id(msg, msg_struct):
             return '{"Instrument_Id": -1}'
         # If it does not exist at a site, requests the site information from the central facility
         else:
-            print "\n\nmessage ************* %s ************\n\n" % msg
             payload = json.loads(msg)
-            print "\n\npayload *********** %s ************\n\n" % msg
             response = requests.post(cf_url, json=payload, headers=headers)
-            print "\n\nresponst ************** %s ***********\n\n" % response
             cf_msg = dict(json.loads(response.content))
             cf_data = cf_msg['Data']
             # Need to add handler for if there is a bad return from CF (if clause above)
@@ -196,7 +194,7 @@ def get_site_id(msg, msg_struct):
     if row:
         if is_central:
             print("Found Existing Site")
-            return '{"Event_code": 2, "Data": {"Site_Id": %s, "Name_Short": "%s", "Name_Long": "%s", "Latitude": "%s", "Longitude": "%s", "Facility": "%s", "Mobile": "%s", "Location_Name": "%s"}}' % (row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
+            return '{"Event_code": %i, "Data": {"Site_Id": %s, "Name_Short": "%s", "Name_Long": "%s", "Latitude": "%s", "Longitude": "%s", "Facility": "%s", "Mobile": "%s", "Location_Name": "%s"}}' % (network.SITE_ID_REQUEST, row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
         else:
             print("Found Existing Site")
             return '{"Site_Id": %i, "Data": "%s"}' % (row[0], msg_struct['Data'])
