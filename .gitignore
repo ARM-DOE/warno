@@ -15,3 +15,5 @@ warno-user-portal/src/wuppbundle.tar.bz2
 *.pyc
 .idea
 *.swp
+*.gz
+*.box
