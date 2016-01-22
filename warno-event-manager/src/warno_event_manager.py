@@ -272,6 +272,12 @@ def initialize_database():
     db = database.utility.connect_db()
     cur = db.cursor()
 
+    # If it is a test database, first wipe and clean up the database.
+    if cfg['database']['test_db']:
+        cur.execute("DROP SCHEMA public CASCADE;")
+        cur.execute("CREATE SCHEMA public;")
+        db.commit()
+
     database.utility.initialize_database(cur, path="database/schema")
     db.commit()
 
@@ -288,6 +294,30 @@ def initialize_database():
         database.utility.load_data_into_table("database/schema/sites.data", "sites", db)
     else:
         print("Sites in table.")
+
+    # If it is set to be a test database, populate extra information.
+    if cfg['database']['test_db']:
+        print ("Test Database Triggered")
+        test_tables = [
+                       "instruments",
+                       "instrument_logs",
+                       "prosensing_paf",
+                       "event_codes",
+                       "events_with_text",
+                       "events_with_value",
+                       "pulse_captures",
+                       "table_references",
+                       "instrument_data_references"
+                   ]
+        for table in test_tables:
+            cur.execute("SELECT * FROM %s LIMIT 1" % table)
+            if cur.fetchone() == None:
+                print("Populating %s" % table)
+                database.utility.load_data_into_table("database/schema/%s.data" % table, table, db)
+            else:
+                print("Sites in table.")
+    else:
+        print ("Test Database is a falsehood")
 
 @app.route('/eventmanager')
 def hello_world():
