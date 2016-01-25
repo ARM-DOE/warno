@@ -1,7 +1,4 @@
-# Local image
 FROM warno-docker-image
-# Repository image
-# FROM centos:7
 MAINTAINER Joseph C. Hardin <joseph.hardin@pnnl.gov>
 
 COPY /src /opt/warno-agent/
