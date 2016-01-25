@@ -1,19 +1,15 @@
 FROM warno-docker-image
 MAINTAINER Joseph C. Hardin <joseph.hardin@pnnl.gov>
 
-COPY /src /opt/warno-agent/
-COPY entrypoint.sh /
+EXPOSE 80
 
-
-ENV NOTVISIBLE "in users profile"
 ENV PATH /vagrant/data_store/data/anaconda/bin:$PATH
+
 ENV PATH=/opt/data/anaconda/bin:$PATH
 
-
-RUN echo "export VISIBLE=now" >> /etc/profile
-
-
-EXPOSE 80
 EXPOSE 6310
+
+COPY /src /opt/warno-agent/
+COPY entrypoint.sh /
 
 WORKDIR /opt/warno-agent
