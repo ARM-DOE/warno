@@ -1,5 +1,5 @@
 FROM warno-docker-image
-MAINTAINER Joseph C. Hardin
+MAINTAINER Joseph C. Hardin <joseph.hardin@pnnl.gov>
 
 # Update config to allow remote connections
 RUN /usr/pgsql-9.3/bin/postgresql93-setup initdb
