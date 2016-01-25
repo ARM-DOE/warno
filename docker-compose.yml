@@ -9,24 +9,24 @@ postgres:
     - "5432:5432"
 
 eventmanager:
-  build: ./warno-event-manager
+  build: ./warno_event_manager
   command: bash -c "bash /entrypoint.sh" # "python warno_event_manager.py"
   links:
     - postgres
   volumes:
-    - /vagrant/warno-event-manager/src:/opt/warno-event-manager
+    - /vagrant/warno_event_manager/src:/opt/warno_event_manager
   volumes_from:
     - datastore
   env_file: .env
 
 userportal:
-  build: ./warno-user-portal
+  build: ./warno_user_portal
   command: bash -c "bash /entrypoint.sh"
   links:
     - postgres
     - eventmanager
   volumes:
-    - /vagrant/warno-user-portal/src:/opt/warno-user-portal
+    - /vagrant/warno_user_portal/src:/opt/warno_user_portal
   volumes_from:
     - datastore
   env_file: .env
@@ -43,12 +43,12 @@ proxy:
   env_file: .env
 
 agent:
-    build: ./warno-agent
+    build: ./warno_agent
     command: bash -c "bash /entrypoint.sh"
     ports:
       - "6310:6310"
     volumes:
-        - /vagrant/warno-agent/src:/opt/agent
+        - /vagrant/warno_agent/src:/opt/agent
     volumes_from:
       - datastore
     links:
