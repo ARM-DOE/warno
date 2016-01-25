@@ -14,6 +14,8 @@ Notes on Agent Refactor:
 14) Refine tests on plugin registration
 15) Make some fake agent plugins to test out process.
 
+16) Need a way to drop instruments
+
 Completed:
 ---------
 1) Make Pyarmret a git submodule.
