@@ -1,7 +1,7 @@
 #! /usr/bin/env bash
 DB_ADDRESS=192.168.50.99
 DUMPFILE=/vagrant/warno_event_manager/src/database/db_dump.data
-DB_FOLDER=/vagrant/warno_event-manager/src/database
+DB_FOLDER=/vagrant/warno_event_manager/src/database
 USERNAME=warno
 ready=0
 
