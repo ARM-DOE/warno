@@ -36,7 +36,7 @@
         </tr>
         {%  for instrument in instruments %}
         <tr>
-            <td><a href = "{{url_for('show_instrument', instrument_id=instrument.id)}}">{{ instrument.abbv }}</a></td>
+            <td><a href = "{{url_for('instrument', instrument_id=instrument.id)}}">{{ instrument.abbv }}</a></td>
             <td>{{ instrument.status }}</td>
             <td>{{ instrument.last_author }}</td>
             <td>{{ instrument.name }}</td>

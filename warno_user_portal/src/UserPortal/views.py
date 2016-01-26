@@ -321,9 +321,9 @@ def list_instruments():
     return render_template('instrument_list.html', instruments=instruments)
 
 
-@app.route('/instruments/<instrument_id>')
-def show_instrument(instrument_id):
-    """Show an individual ARM Instrument.
+@app.route('/instruments/<instrument_id>', methods=['GET', 'DELETE'])
+def instrument(instrument_id):
+    """Manage an individual ARM Instrument.
 
     Parameters
     ----------
@@ -340,53 +340,63 @@ def show_instrument(instrument_id):
 
     cur = g.db.cursor()
 
-    # Grabs the instrument information for the instrument matching "instrument_id" from the database
-    cur.execute('''SELECT i.instrument_id, i.name_short, i.name_long, i.type,
-            i.vendor, i.description, i.frequency_band, s.name_short, s.latitude, s.longitude, s.site_id
-            FROM instruments i JOIN sites s ON (i.site_id = s.site_id)
-            WHERE i.instrument_id = %s''', (instrument_id,))
-    row = cur.fetchone()
-    # Inserts the information from the query into a dictionary object
-    instrument = dict(abbv=row[1], name=row[2], type=row[3], vendor=row[4], description=row[5],
-                      frequency_band=row[6], location=row[7], latitude=row[8], longitude=row[9],
-                      site_id=row[10], id=row[0])
+    if request.method == "GET":
+        # Grabs the instrument information for the instrument matching "instrument_id" from the database
+        cur.execute('''SELECT i.instrument_id, i.name_short, i.name_long, i.type,
+                i.vendor, i.description, i.frequency_band, s.name_short, s.latitude, s.longitude, s.site_id
+                FROM instruments i JOIN sites s ON (i.site_id = s.site_id)
+                WHERE i.instrument_id = %s''', (instrument_id,))
+        row = cur.fetchone()
+        # Inserts the information from the query into a dictionary object
+        instrument = dict(abbv=row[1], name=row[2], type=row[3], vendor=row[4], description=row[5],
+                          frequency_band=row[6], location=row[7], latitude=row[8], longitude=row[9],
+                          site_id=row[10], id=row[0])
 
-    # Grabs the most recent 5 logs for the instrument matching "instrument_id" from the database
-    cur.execute('''SELECT l.time, l.contents, l.status, l.supporting_images, u.name
-                    FROM instrument_logs l JOIN users u
-                    ON l.author_id = u.user_id WHERE l.instrument_id = %s
-                    ORDER BY time DESC LIMIT 5''', (instrument_id,))
-    # Creates a list of dictionaries, each dictionary being one of the log entries
-    recent_logs = [dict(time=row[0], contents=row[1], status=row[2], supporting_images=row[3],
-                        author=row[4]) for row in cur.fetchall()]
+        # Grabs the most recent 5 logs for the instrument matching "instrument_id" from the database
+        cur.execute('''SELECT l.time, l.contents, l.status, l.supporting_images, u.name
+                        FROM instrument_logs l JOIN users u
+                        ON l.author_id = u.user_id WHERE l.instrument_id = %s
+                        ORDER BY time DESC LIMIT 5''', (instrument_id,))
+        # Creates a list of dictionaries, each dictionary being one of the log entries
+        recent_logs = [dict(time=row[0], contents=row[1], status=row[2], supporting_images=row[3],
+                            author=row[4]) for row in cur.fetchall()]
 
-    # If there are any log, the most recent log (the first of the list) has the status
-    # Uses helper function to print the status code to text
-    if recent_logs:
-        status = status_code_to_text(recent_logs[0]["status"])
-    # If there are no recent logs, assume the instrument is operational
-    else:
-        status = "OPERATIONAL"
-
-    cur = g.db.cursor()
-    # Grabs all columns available to plot. Uses the table data references table to determine which columns to use
-    # and which references are to full tables, in which case, it pulls all value columns from the table.
-    cur.execute("SELECT special, description FROM instrument_data_references WHERE instrument_id = %s",
-                (instrument_id,))
-    references = cur.fetchall()
-    column_list = []
-    for reference in references:
-        if reference[0] == True:
-            cur.execute("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = %s",
-                        (reference[1],))
-            rows = cur.fetchall()
-            columns = [row[0] for row in rows if row[1] in ["integer", "boolean", "double precision"]]
+        # If there are any log, the most recent log (the first of the list) has the status
+        # Uses helper function to print the status code to text
+        if recent_logs:
+            status = status_code_to_text(recent_logs[0]["status"])
+        # If there are no recent logs, assume the instrument is operational
         else:
-            columns = [reference[1]]
-        column_list.extend(columns)
+            status = "OPERATIONAL"
 
-    return render_template('show_instrument.html', instrument=instrument,
-                           recent_logs=recent_logs, status=status, columns=sorted(column_list))
+        cur = g.db.cursor()
+        # Grabs all columns available to plot. Uses the table data references table to determine which columns to use
+        # and which references are to full tables, in which case, it pulls all value columns from the table.
+        cur.execute("SELECT special, description FROM instrument_data_references WHERE instrument_id = %s",
+                    (instrument_id,))
+        references = cur.fetchall()
+        column_list = []
+        for reference in references:
+            if reference[0] == True:
+                cur.execute("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = %s",
+                            (reference[1],))
+                rows = cur.fetchall()
+                columns = [row[0] for row in rows if row[1] in ["integer", "boolean", "double precision"]]
+            else:
+                columns = [reference[1]]
+            column_list.extend(columns)
+
+        return render_template('show_instrument.html', instrument=instrument,
+                               recent_logs=recent_logs, status=status, columns=sorted(column_list))
+
+    elif request.method == "DELETE":
+        cur.execute("DELETE FROM table_references WHERE instrument_id = %s", (instrument_id,))
+        cur.execute("DELETE FROM prosensing_paf WHERE instrument_id = %s", (instrument_id,))
+        cur.execute("DELETE FROM instrument_logs WHERE instrument_id = %s", (instrument_id,))
+        cur.execute("DELETE FROM pulse_captures WHERE instrument_id = %s", (instrument_id,))
+        cur.execute("DELETE FROM instruments WHERE instrument_id = %s", (instrument_id,))
+        cur.execute("COMMIT")
+        return json.dumps({'id': instrument_id}), 200
 
 
 @app.route('/pulse')
@@ -548,7 +558,7 @@ def show_site(site_id):
 
     Returns
     -------
-    show_instrument.html: HTML document
+    show_site.html: HTML document
         Returns an HTML document with arguments including site information, the 5 most
             recent logs of all instruments at the site, and a list of the instruments at the site
             along with their information.
@@ -672,9 +682,9 @@ def new_log():
         If the new log insertion was attempted but failed, or if no insertion was attempted,
             returns an HTML form to create a new site, with an optional argument 'error' if it
             was a failed database insertion.
-    show_instrument: Flask redirect location
+    instrument: Flask redirect location
         If a new log insertion was attempted and succeded,  returns a Flask redirect location
-            to the show_instrument function, redirecting the user to the page showing the
+            to the instrument function, redirecting the user to the page showing the
             instrument with the instrument_id matching the insertion.
     """
 
@@ -702,7 +712,7 @@ def new_log():
             # Redirect to the instrument page that the log was submitted for.
             # Log will likely appear on page.
             # May not appear if the date was set to older than the 5 most recent logs
-            return redirect(url_for('show_instrument', instrument_id=instrument_id))
+            return redirect(url_for('instrument', instrument_id=instrument_id))
         except psycopg2.DataError:
             # If the timedate object expected by the database was incorrectly formatted, error is set
             # for when the page is rendered again
