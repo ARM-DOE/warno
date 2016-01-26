@@ -7,8 +7,11 @@ import requests
 import importlib
 from multiprocessing import Process
 from WarnoConfig import network
+import os
 
-TEST_PLUGIN_PATH = 'test_plugins/'
+TEST_PLUGIN_PATH = 'warno_agent/src/tests/test_plugins/'
+PLUGIN_ROOT = 'warno_agent.src.tests.test_plugins.'
+
 
 
 class TestAgent(TestCase):
@@ -36,14 +39,15 @@ class TestAgent(TestCase):
 
     def test_list_plugins_base_test(self):
 
-        plugin_test_directory = os.path.abspath('./')
         self.agent.set_plugin_path(TEST_PLUGIN_PATH)
         plugin_list = self.agent.list_plugins()
+        print(plugin_list)
 
         # Get list of plugin names..a little hacky.
         plugin_name_list = [plugin.__name__ for plugin in plugin_list]
 
-        self.assertIn('test_plugins.test_plugin1', plugin_name_list,'Did not see test plugins')
+
+        self.assertIn(PLUGIN_ROOT+'test_plugin1', plugin_name_list,'Did not see test plugins')
 
         self.assertNotIn('test_plugins.bad_plugin_no_register', plugin_name_list,
                          'Accepted a plugin with no register function.')
@@ -110,8 +114,7 @@ class TestAgent(TestCase):
         mock_post.codes = requests.codes
         mock_post.post.side_effect = iter([return1, return2, return3])
 
-        test_plugin = importlib.import_module('test_plugins.test_plugin1')
-
+        test_plugin = importlib.import_module(PLUGIN_ROOT+'test_plugin1')
         self.agent.register_plugin(test_plugin)
         dict_to_be_contained = {'description1': 3, 'description2': 4}
 
@@ -124,7 +127,7 @@ class TestAgent(TestCase):
         return_process = mock.create_autospec(Process)
 
         mock_process.Process.return_value = return_process
-        test_plugin = importlib.import_module('test_plugins.test_plugin1')
+        test_plugin = importlib.import_module(PLUGIN_ROOT+'test_plugin1')
 
         self.agent.instrument_ids.append((test_plugin, 6))
         self.agent.startup_plugin(test_plugin)
