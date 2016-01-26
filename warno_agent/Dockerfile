@@ -5,7 +5,11 @@ EXPOSE 80
 
 ENV PATH /vagrant/data_store/data/anaconda/bin:$PATH
 
-COPY /src /opt/warno-user-portal/
+ENV PATH=/opt/data/anaconda/bin:$PATH
+
+EXPOSE 6310
+
+COPY /src /opt/warno_agent/
 COPY entrypoint.sh /
 
-WORKDIR /opt/warno-user-portal
+WORKDIR /opt/warno_agent
