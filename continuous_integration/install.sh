@@ -22,24 +22,23 @@ chmod +x miniconda.sh
 ./miniconda.sh -b
 export PATH=/home/jenkins/anaconda/bin:$PATH
 conda update --yes conda
-conda update --yes conda
+
 
 # Create a testenv with the correct Python version
 conda create -n testenv --yes pip python=2.7
 source activate testenv
 
+
 # Install dependencies
-conda install --yes numpy nose netcdf4
+conda install --yes numpy nose netcdf4 psycopg2
 
+pip install pyyaml Flask requests selenium nose-cov nose-exclude mock
 
-conda install --yes sphinx numpydoc
-conda install --yes sphinx_rtd_theme
-pip install pyyaml Flask requests enum34 requests psutil selenium
-pip install sphinxcontrib-bibtex
-pip install xmltodict
-pip install coveralls
+git clone http://overwatch.pnl.gov/hard505/pypro-aflib.git
+cd pypro-aflib
+python setup.py install
+cd ..
 
 # install coverage modules
-pip install nose-cov nose-exclude
-pip install python-coveralls
+source set_env_for_testing.sh
 

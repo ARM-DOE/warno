@@ -75,8 +75,8 @@ class TestAgent(TestCase):
 
 
     @mock.patch.object(Agent, 'requests')
-    def test_request_site_id_from_event_manager_raises_exception_on_bad_request(self,mock_post):
-        post_return = mock.Mock()
+    def test_request_site_id_from_event_manager_raises_exception_on_bad_request(self, mock_request):
+        post_return = mock.create_autospec(requests.models.Response)
 
         previous_agent_value = self.agent.site_id
         self.agent.site_id = None
@@ -84,14 +84,13 @@ class TestAgent(TestCase):
         post_return.status_code = requests.codes.ok
         post_return.content='{"Site_Id": 1}'
 
-        mock_post.codes = requests.codes  # Pass Through
-
-        mock_post.post.return_value = post_return
+        mock_request.codes = requests.codes  # Pass Through
+        mock_request.post.return_value = post_return
 
         post_return.status_code = requests.codes.bad_request
-        mock_post.post.return_value = post_return
-        self.assertRaises(requests.exceptions.HTTPError,
-                          self.agent.request_site_id_from_event_manager())
+        mock_request.post.return_value = post_return
+        self.agent.request_site_id_from_event_manager()
+        self.assertTrue(post_return.raise_for_status.called, 'Exception not raised')
 
         self.assertIsNone(self.agent.site_id)
         self.agent.site_id = previous_agent_value
