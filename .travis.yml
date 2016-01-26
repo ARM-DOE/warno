@@ -7,6 +7,7 @@ matrix:
         - NOSE_ARGS="-v --no-skip --with-cov --cov pyarmret pyarmret --exclude-dir=selenium_tests"
         - COVERALLS="true"
 
+
 install: source continuous_integration/install.sh
 
 script:
