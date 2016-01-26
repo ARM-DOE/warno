@@ -7,9 +7,6 @@ matrix:
         - NOSE_ARGS="-v --no-skip --with-cov --cov pyarmret pyarmret --exclude-dir=selenium_tests"
         - COVERALLS="true"
 
-before_install:
-    - pip install pytest pytest-cov nose nose-exclude
-    - pip install coveralls
 install: source continuous_integration/install.sh
 
 script:
