@@ -6,6 +6,12 @@ from UserPortal import views
 
 class test_views(TestCase):
 
+  def substring_in_call_args(self, substring, call_list):
+    print [call[0] for call in call_list]
+    print u'1' == call_list[2][0][1][0]
+    print "DELETE" in call_list[2][0]
+    print "DELETE" in call_list[2][0][0]
+
   @mock.patch('psycopg2.connect')
   def test_get_instruments_1(self, connect):
     with views.app.test_client() as c:
@@ -28,9 +34,21 @@ class test_views(TestCase):
       cursor = connection.cursor.return_value
       result = c.delete("/instruments/1")
       execute_calls = cursor.execute.call_args_list
+      ec = cursor.execute.call_args
+      print execute_calls
+      print "\nOne Call\n"
+      print execute_calls[2]
+      print execute_calls[2][0]
+      print execute_calls[2][0][0]
+      print execute_calls[2][0][1]
+      print execute_calls[2][0][1][0]
+      print "\nNext Set\n"
+      #print execute_calls[0][0]
+      #self.assertTrue("COMM" in ec)
+      self.substring_in_call_args("DELETE", execute_calls)
       self.assertTrue(mock.call("DELETE FROM instruments WHERE instrument_id = %s",(u'1',)) in execute_calls)
       self.assertEqual(result.status, '200 OK')
-      # self.assertEqual(True, False)
+      self.assertEqual(True, False)
 
 
 
