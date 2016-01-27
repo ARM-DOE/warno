@@ -88,6 +88,7 @@ class Agent(object):
         potential_plugin_list = glob.glob(plugin_path+'*.py')
         potential_plugin_list.sort()
 
+
         for plugin in potential_plugin_list:
             try:
                 module_name = plugin[:-3].replace('/', '.')
