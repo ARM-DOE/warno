@@ -41,7 +41,7 @@ class test_views(TestCase):
       print execute_calls[2][0]
       print execute_calls[2][0][0]
       print execute_calls[2][0][1]
-      print execute_calls[2][0][1][0]
+      self.assertTrue(u'1' in execute_calls[2][0][1])
       print "\nNext Set\n"
       #print execute_calls[0][0]
       #self.assertTrue("COMM" in ec)
