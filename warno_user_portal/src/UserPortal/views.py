@@ -122,18 +122,13 @@ def generate_instrument_graph():
     instrument_id = request.args.get("instrument_id")
     start = request.args.get("start")
     end = request.args.get("end")
-    print("Start %s" % start)
-    print("End %s" % end)
 
     # Get a list of valid column names for the table in the database
     cur.execute("SELECT special, description FROM instrument_data_references WHERE instrument_id = %s",
                 (instrument_id,))
     references = cur.fetchall()
-    print("Reference selection: %s" % references)
     column_list = []
     for reference in references:
-        print("Current reference:")
-        print reference
         if reference[0] == True:
             cur.execute("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = %s",
                         (reference[1],))
@@ -242,13 +237,6 @@ def list_users():
     # Render the template with the list of users
     return render_template('users_template.html', users=users)
 
-
-
-
-
-
-
-
 @app.route('/instruments/new', methods=['GET', 'POST'])
 def new_instrument():
     """Create a new ARM Instrument.
@@ -320,6 +308,35 @@ def list_instruments():
     # Render the template with the generated
     return render_template('instrument_list.html', instruments=instruments)
 
+def db_select_instrument(instrument_id, cursor):
+    # Grabs the instrument information for the instrument matching "instrument_id" from the database
+    cursor.execute('''SELECT i.instrument_id, i.name_short, i.name_long, i.type,
+        i.vendor, i.description, i.frequency_band, s.name_short, s.latitude, s.longitude, s.site_id
+        FROM instruments i JOIN sites s ON (i.site_id = s.site_id)
+        WHERE i.instrument_id = %s''', (instrument_id,))
+    row = cursor.fetchone()
+    return dict(abbv=row[1], name=row[2], type=row[3], vendor=row[4], description=row[5],
+                    frequency_band=row[6], location=row[7], latitude=row[8], longitude=row[9],
+                    site_id=row[10], id=row[0])
+
+def db_delete_instrument(instrument_id, cursor):
+    # Delete instrument and all table entries that reference the instrument.
+    cursor.execute("DELETE FROM table_references WHERE instrument_id = %s", (instrument_id,))
+    cursor.execute("DELETE FROM prosensing_paf WHERE instrument_id = %s", (instrument_id,))
+    cursor.execute("DELETE FROM instrument_logs WHERE instrument_id = %s", (instrument_id,))
+    cursor.execute("DELETE FROM pulse_captures WHERE instrument_id = %s", (instrument_id,))
+    cursor.execute("DELETE FROM instruments WHERE instrument_id = %s", (instrument_id,))
+    cursor.execute("COMMIT")
+
+def db_recent_logs_by_instrument(instrument_id, cursor, maximum_number = 5):
+    # Grabs the most recent "maximum_number" logs for the instrument matching "instrument_id" from the database
+    cursor.execute('''SELECT l.time, l.contents, l.status, l.supporting_images, u.name
+                FROM instrument_logs l JOIN users u
+                ON l.author_id = u.user_id WHERE l.instrument_id = %s
+                ORDER BY time DESC LIMIT %s''', (instrument_id, maximum_number))
+    # Creates a list of dictionaries, each dictionary being one of the log entries
+    return [dict(time=row[0], contents=row[1], status=row[2], supporting_images=row[3],
+                    author=row[4]) for row in cursor.fetchall()]
 
 @app.route('/instruments/<instrument_id>', methods=['GET', 'DELETE'])
 def instrument(instrument_id):
@@ -337,41 +354,20 @@ def instrument(instrument_id):
         the 5 most recent log entries, the status of the instrument, and the list of
         columns for available data to plot on graphs.
     """
-
     cur = g.db.cursor()
-
     if request.method == "GET":
-        # Grabs the instrument information for the instrument matching "instrument_id" from the database
-        cur.execute('''SELECT i.instrument_id, i.name_short, i.name_long, i.type,
-                i.vendor, i.description, i.frequency_band, s.name_short, s.latitude, s.longitude, s.site_id
-                FROM instruments i JOIN sites s ON (i.site_id = s.site_id)
-                WHERE i.instrument_id = %s''', (instrument_id,))
-        row = cur.fetchone()
-        # Inserts the information from the query into a dictionary object
-        instrument = dict(abbv=row[1], name=row[2], type=row[3], vendor=row[4], description=row[5],
-                          frequency_band=row[6], location=row[7], latitude=row[8], longitude=row[9],
-                          site_id=row[10], id=row[0])
-
-        # Grabs the most recent 5 logs for the instrument matching "instrument_id" from the database
-        cur.execute('''SELECT l.time, l.contents, l.status, l.supporting_images, u.name
-                        FROM instrument_logs l JOIN users u
-                        ON l.author_id = u.user_id WHERE l.instrument_id = %s
-                        ORDER BY time DESC LIMIT 5''', (instrument_id,))
-        # Creates a list of dictionaries, each dictionary being one of the log entries
-        recent_logs = [dict(time=row[0], contents=row[1], status=row[2], supporting_images=row[3],
-                            author=row[4]) for row in cur.fetchall()]
-
-        # If there are any log, the most recent log (the first of the list) has the status
-        # Uses helper function to print the status code to text
+        instrument = db_select_instrument(instrument_id, cur)
+        recent_logs = db_recent_logs_by_instrument(instrument_id, cur)
+        # If there are any logs, the most recent log (the first of the list) has the status
         if recent_logs:
             status = status_code_to_text(recent_logs[0]["status"])
-        # If there are no recent logs, assume the instrument is operational
         else:
+            # If there are no recent logs, assume the instrument is operational
             status = "OPERATIONAL"
 
         cur = g.db.cursor()
         # Grabs all columns available to plot. Uses the table data references table to determine which columns to use
-        # and which references are to full tables, in which case, it pulls all value columns from the table.
+        # and which references are to special tables, in which case, it pulls all value columns from the table.
         cur.execute("SELECT special, description FROM instrument_data_references WHERE instrument_id = %s",
                     (instrument_id,))
         references = cur.fetchall()
@@ -390,12 +386,7 @@ def instrument(instrument_id):
                                recent_logs=recent_logs, status=status, columns=sorted(column_list))
 
     elif request.method == "DELETE":
-        cur.execute("DELETE FROM table_references WHERE instrument_id = %s", (instrument_id,))
-        cur.execute("DELETE FROM prosensing_paf WHERE instrument_id = %s", (instrument_id,))
-        cur.execute("DELETE FROM instrument_logs WHERE instrument_id = %s", (instrument_id,))
-        cur.execute("DELETE FROM pulse_captures WHERE instrument_id = %s", (instrument_id,))
-        cur.execute("DELETE FROM instruments WHERE instrument_id = %s", (instrument_id,))
-        cur.execute("COMMIT")
+        db_delete_instrument(instrument_id, cur)
         return json.dumps({'id': instrument_id}), 200
 
 
@@ -505,7 +496,7 @@ def new_site():
         else:
             mobile = False
 
-        # Uses helper function to check if latitude and longitude are valid numbers
+        # Checks if latitude and longitude are valid values
         if is_number(lat) and is_number(lon):
             cur = g.db.cursor()
             cur.execute('''INSERT INTO sites(name_short, name_long, latitude, longitude, facility, mobile, location_name)
