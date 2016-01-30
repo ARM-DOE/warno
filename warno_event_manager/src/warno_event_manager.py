@@ -26,7 +26,7 @@ config_path = "/opt/data/config.yml"
 
 is_central = 0
 cf_url = ""
-headers = {'Content-Type': 'application/json', 'Host': "warno-event-manager.local"}
+headers = {'Content-Type': 'application/json'}
 
 
 def connect_db():
