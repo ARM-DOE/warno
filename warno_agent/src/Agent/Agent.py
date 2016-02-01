@@ -14,9 +14,9 @@ from multiprocessing import Queue
 
 import utility
 
-headers = {'Content-Type': 'application/json', 'Host': "warno-event-manager.local"}
+headers = {'Content-Type': 'application/json'}
 
-DEFAULT_PLUGIN_PATH = 'plugins/'
+DEFAULT_PLUGIN_PATH = 'Agent/plugins/'
 
 
 class Agent(object):
@@ -92,7 +92,7 @@ class Agent(object):
         for plugin in potential_plugin_list:
             try:
                 module_name = plugin[:-3].replace('/', '.')
-                module_top = importlib.import_module(module_name)
+                module_top = importlib.import_module(module_name[6:])
                 if hasattr(module_top, 'run') and hasattr(module_top, 'register'):
                     plugin_module_list.append(module_top)
             except Exception, e:
