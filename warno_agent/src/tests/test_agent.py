@@ -24,7 +24,6 @@ class TestAgent(TestCase):
     def tearDown(self):
         sys.path.pop()
 
-
     def test_set_plugin_path_sets_to_string_and_default_on_None(self):
 
         test_directory = '/test'
@@ -41,7 +40,9 @@ class TestAgent(TestCase):
 
         self.agent.set_plugin_path(TEST_PLUGIN_PATH)
         plugin_list = self.agent.list_plugins()
-        print(plugin_list)
+        print("Plugin List",plugin_list)
+        print("Plugin Path:", TEST_PLUGIN_PATH)
+
 
         # Get list of plugin names..a little hacky.
         plugin_name_list = [plugin.__name__ for plugin in plugin_list]

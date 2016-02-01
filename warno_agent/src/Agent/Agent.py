@@ -87,12 +87,14 @@ class Agent(object):
         plugin_module_list = []
         potential_plugin_list = glob.glob(plugin_path+'*.py')
         potential_plugin_list.sort()
+        print('Potential Plugins:',potential_plugin_list)
 
 
         for plugin in potential_plugin_list:
             try:
                 module_name = plugin[:-3].replace('/', '.')
-                module_top = importlib.import_module(module_name[6:])
+                module_name = module_name.replace('Agent.','')
+                module_top = importlib.import_module(module_name[0:])
                 if hasattr(module_top, 'run') and hasattr(module_top, 'register'):
                     plugin_module_list.append(module_top)
             except Exception, e:
@@ -200,10 +202,11 @@ class Agent(object):
 
 if __name__ == "__main__":
     # while True:
-    sleep(30)
+    # sleep(30)
     agent = Agent()
     signal.signal(signal.SIGINT, utility.signal_handler)
     plugin_module_list = agent.list_plugins()
+    print('Plugin_module_list:', plugin_module_list)
 
     msg_queue = Queue()
     event_code_dict = {}
