@@ -171,4 +171,6 @@ class TestAgent(TestCase):
         self.assertTrue('json' in call_args[1], 'json not passed as arg')
         self.assertTrue('headers' in call_args[1], 'json not passed as arg')
 
-
+    @mock.patch.object(Agent, 'list_plugins')
+    def test_main_loop(self, list_plugins):
+        list_plugins.return_value = ['test1', 'test2']

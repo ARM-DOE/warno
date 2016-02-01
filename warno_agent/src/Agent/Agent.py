@@ -1,14 +1,11 @@
-import os
 import json
 import importlib
 import glob
 import multiprocessing
 import signal
-import sys
 import requests
 from WarnoConfig import config
 from WarnoConfig import network
-from Queue import Empty
 from time import sleep
 from multiprocessing import Queue
 
@@ -30,11 +27,13 @@ class Agent(object):
         self.plugin_path = DEFAULT_PLUGIN_PATH
         self.config_ctxt = config.get_config_context()
         self.event_manager_url = self.config_ctxt['setup']['em_url']
+        self.em_url = self.config_ctxt['setup']['em_url']
         self.site_id = None
         self.msg_queue = Queue()
         self.event_code_dict = {}
         self.instrument_ids = []
         self.running_plugin_list = []
+        self.plugin_module_list = []
 
     def set_plugin_path(self, path=None):
         """
@@ -87,8 +86,6 @@ class Agent(object):
         plugin_module_list = []
         potential_plugin_list = glob.glob(plugin_path+'*.py')
         potential_plugin_list.sort()
-        print('Potential Plugins:',potential_plugin_list)
-
 
         for plugin in potential_plugin_list:
             try:
@@ -199,43 +196,55 @@ class Agent(object):
         response = requests.post(self.event_manager_url, json=payload, headers=headers)
         return response
 
+    def main(self):
+        """ Start radar agent.
+
+        Returns
+        -------
+        """
+        print("Starting Agent Main Loop:")
+
+        self.plugin_module_list = self.list_plugins()
+        print("Starting up the following plugins:", self.plugin_module_list)
+
+        conn_attempt = 0
+        while conn_attempt < 5:
+            try:
+                conn_attempt +=1
+                self.site_id = self.request_site_id_from_event_manager()
+            except Exception as e:
+                print("Error Connecting. Connection Attempt {0}. Sleeping for 5 seconds.".format(conn_attempt))
+                print(e)
+                sleep(5)
+
+
+
+        print("Registering Plugins.")
+        for plugin in self.plugin_module_list:
+            self.register_plugin(plugin)
+
+        print("Starting up Plugins.")
+        for plugin in self.plugin_module_list:
+            self.startup_plugin(plugin)
+
+
+        while 1:
+            if not self.msg_queue.empty():
+                rec_msg = self.msg_queue.get_nowait()
+                event = json.loads(rec_msg)
+                event['data']['Site_Id'] = self.site_id
+                event_code = self.event_code_dict[event['event']]
+                event_msg = '{"Event_Code": %s, "Data": %s}' % (event_code, json.dumps(event['data']))
+                payload = json.loads(event_msg)
+                response = requests.post(self.em_url, json=payload, headers=headers)
+
+            else:
+                sleep(0.1)
+
 
 if __name__ == "__main__":
-    # while True:
-    # sleep(30)
     agent = Agent()
     signal.signal(signal.SIGINT, utility.signal_handler)
-    plugin_module_list = agent.list_plugins()
-    print('Plugin_module_list:', plugin_module_list)
+    agent.main()
 
-    msg_queue = Queue()
-    event_code_dict = {}
-    cfg = config.get_config_context()
-    em_url = cfg['setup']['em_url']
 
-    site_id = agent.request_site_id_from_event_manager()
-
-    instrument_ids = []
-
-    #  Loop through each plugin and register it, registering the plugin's event codes as well
-    for plugin in plugin_module_list:
-        agent.register_plugin(plugin)
-
-    event_code_dict = agent.event_code_dict
-
-    # Loop through plugins and start each up
-    for plugin in plugin_module_list:
-        agent.startup_plugin(plugin)
-
-    while 1:
-        if not agent.msg_queue.empty():
-            rec_msg = agent.msg_queue.get_nowait()
-            event = json.loads(rec_msg)
-            event['data']['Site_Id'] = site_id
-            event_code = event_code_dict[event['event']]
-            event_msg = '{"Event_Code": %s, "Data": %s}' % (event_code, json.dumps(event['data']))
-            payload = json.loads(event_msg)
-            response = requests.post(em_url, json=payload, headers=headers)
-
-        else:
-            sleep(0.1)
