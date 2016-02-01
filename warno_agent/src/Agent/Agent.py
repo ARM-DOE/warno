@@ -34,6 +34,7 @@ class Agent(object):
         self.instrument_ids = []
         self.running_plugin_list = []
         self.plugin_module_list = []
+        self.main_loop_boolean = True
 
     def set_plugin_path(self, path=None):
         """
@@ -212,6 +213,7 @@ class Agent(object):
             try:
                 conn_attempt +=1
                 self.site_id = self.request_site_id_from_event_manager()
+                continue
             except Exception as e:
                 print("Error Connecting. Connection Attempt {0}. Sleeping for 5 seconds.".format(conn_attempt))
                 print(e)
@@ -228,7 +230,7 @@ class Agent(object):
             self.startup_plugin(plugin)
 
 
-        while 1:
+        while self.main_loop_boolean:
             if not self.msg_queue.empty():
                 rec_msg = self.msg_queue.get_nowait()
                 event = json.loads(rec_msg)
@@ -237,7 +239,6 @@ class Agent(object):
                 event_msg = '{"Event_Code": %s, "Data": %s}' % (event_code, json.dumps(event['data']))
                 payload = json.loads(event_msg)
                 response = requests.post(self.em_url, json=payload, headers=headers)
-
             else:
                 sleep(0.1)
 

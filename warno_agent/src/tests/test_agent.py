@@ -171,6 +171,20 @@ class TestAgent(TestCase):
         self.assertTrue('json' in call_args[1], 'json not passed as arg')
         self.assertTrue('headers' in call_args[1], 'json not passed as arg')
 
-    @mock.patch.object(Agent, 'list_plugins')
-    def test_main_loop(self, list_plugins):
-        list_plugins.return_value = ['test1', 'test2']
+    @mock.patch.object(Agent, 'requests')
+    @mock.patch.object(Agent.Agent, 'startup_plugin')
+    @mock.patch.object(Agent.Agent, 'register_plugin')
+    @mock.patch.object(Agent.Agent, 'request_site_id_from_event_manager')
+    @mock.patch.object(Agent.Agent, 'list_plugins')
+    def test_main_loop(self, mock_list_plugins, mock_request_id, mock_register, mock_startup, mock_requests):
+        mock_list_plugins.return_value = ['test1', 'test2']
+        mock_request_id.return_value = 123
+
+        self.agent.main_loop_boolean=False
+        self.agent.main()
+
+        self.assertTrue(mock_list_plugins.called,'Plugins were never listed')
+        self.assertTrue(mock_request_id.called, 'ID Never Requested')
+        self.assertTrue(mock_register.called, 'Plugins never registered')
+        self.assertTrue(mock_startup.called, 'Plugin Startup Never Called')
+
