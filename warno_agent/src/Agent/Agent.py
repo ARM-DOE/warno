@@ -204,6 +204,7 @@ class Agent(object):
         -------
         """
         print("Starting Agent Main Loop:")
+	sleep(30)
 
         self.plugin_module_list = self.list_plugins()
         print("Starting up the following plugins:", self.plugin_module_list)

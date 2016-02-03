@@ -295,6 +295,14 @@ def initialize_database():
     else:
         print("Sites in table.")
 
+    cur.execute("SELECT * FROM event_codes LIMIT 1")
+    if cur.fetchone() == None:
+        print("Populating Sites")
+        database.utility.load_data_into_table("database/schema/event_codes.data
+    else:
+        print("Event_codes in table.")
+
+
     # If it is set to be a test database, populate extra information.
     if cfg['database']['test_db']:
         print ("Test Database Triggered")
@@ -302,7 +310,6 @@ def initialize_database():
                        "instruments",
                        "instrument_logs",
                        "prosensing_paf",
-                       "event_codes",
                        "events_with_text",
                        "events_with_value",
                        "pulse_captures",
