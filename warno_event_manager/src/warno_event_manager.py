@@ -18,10 +18,6 @@ cfg = None
 ticks = 0
 tocks = 0
 
-DB_HOST = '192.168.50.100'
-DB_NAME = 'warno'
-DB_USER = 'warno'
-DB_PASS = 'warno'
 config_path = "/opt/data/config.yml"
 
 is_central = 0
@@ -37,7 +33,9 @@ def connect_db():
     A Psycopg2 connection object to the default database.
     """
 
-    return psycopg2.connect("host=%s dbname=%s user=%s password=%s" % (DB_HOST, DB_NAME, DB_USER, DB_PASS))
+    db_cfg = config.get_config_context()['database']
+    return psycopg2.connect("host=%s dbname=%s user=%s password=%s" %
+                            (db_cfg['DB_HOST'], db_cfg['DB_NAME'], db_cfg['DB_USER'], db_cfg['DB_PASS']))
 
 
 @app.before_request
@@ -331,7 +329,6 @@ if __name__ == '__main__':
 
     if cfg['type']['central_facility']:
         is_central = 1
-        DB_HOST = "192.168.50.100"
     else:
         cf_url = cfg['setup']['cf_url']
 
