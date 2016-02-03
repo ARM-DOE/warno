@@ -57,4 +57,4 @@ def run(msg_queue, instrument_id):
                     log.write("\nException Traceback\n")
                     traceback.print_exc(limit=5, file=log)
 
-        time.sleep(5)
+        time.sleep(60)
