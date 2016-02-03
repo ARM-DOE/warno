@@ -298,7 +298,7 @@ def initialize_database():
     cur.execute("SELECT * FROM event_codes LIMIT 1")
     if cur.fetchone() == None:
         print("Populating Sites")
-        database.utility.load_data_into_table("database/schema/event_codes.data
+        database.utility.load_data_into_table("database/schema/event_codes.data", "event_codes", db)
     else:
         print("Event_codes in table.")
 
