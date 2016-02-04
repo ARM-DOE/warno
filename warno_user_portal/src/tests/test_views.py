@@ -16,10 +16,11 @@ class test_views(TestCase):
             result = c.get(test_url)
             execute_calls = cursor.execute.call_args
             print execute_calls
-            self.assertTrue(u'%s' % instrument_id in execute_calls[0][1])
-            self.assertTrue("SELECT special, description" in execute_calls[0][0])
-            self.assertEqual(result.status, '200 OK')
-            #self.assertEqual(True, False)
+            self.assertTrue(u'%s' % instrument_id in execute_calls[0][1],
+                            "cursor.execute is not called with correct instrument id")
+            self.assertTrue("SELECT special, description" in execute_calls[0][0],
+                            "cursor.execute does not select the columns 'special' and 'description'")
+            self.assertEqual(result.status, '200 OK', "GET return is not '200 OK'")
 
     ### /instruments/instrument_id ###
     @mock.patch('psycopg2.connect')
@@ -27,21 +28,21 @@ class test_views(TestCase):
         with views.app.test_client() as c:
             connection = connect.return_value
             cursor = connection.cursor.return_value
-            instrument_id = 22
+            instrument_id = 23
             test_url = "/instruments/%s" % instrument_id
             result = c.delete(test_url)
-            self.assertEqual(result.status, '200 OK')
+            self.assertEqual(result.status, '200 OK', "GET return is not '200 OK'")
 
     def test_db_delete_instrument_id_is_10(self):
         cursor = mock.Mock()
         instrument_id = 10
         views.db_delete_instrument(instrument_id, cursor)
         execute_calls = cursor.execute.call_args_list
-        print execute_calls
-        self.assertTrue(instrument_id in execute_calls[2][0][1])
-        self.assertTrue("COMMIT" in execute_calls[-1][0][0])
-        self.assertTrue("DELETE FROM instruments" in execute_calls[-2][0][0])
-        #self.assertEqual(True, False)
+        self.assertTrue(instrument_id in execute_calls[2][0][1],
+                        "Third cursor.execute is not called with correct instrument id")
+        self.assertTrue("COMMIT" in execute_calls[-1][0][0], "Final cursor.execute is not called as 'COMMIT'")
+        self.assertTrue("DELETE FROM instruments" in execute_calls[-2][0][0],
+                        "cursor.execute does not delete from instruments")
 
     ### Database Helpers ###
     def test_db_select_instrument_id_is_10(self):
@@ -51,14 +52,14 @@ class test_views(TestCase):
         instrument_id = 10
         result = views.db_select_instrument(instrument_id, cursor)
         executed_call = cursor.execute.call_args
-        self.assertTrue(instrument_id in executed_call[0][1])
-        self.assertTrue("SELECT" in executed_call[0][0])
-        self.assertTrue("instrument_id" in executed_call[0][0])
-        self.assertTrue("name_short" in executed_call[0][0])
+        self.assertTrue(instrument_id in executed_call[0][1], "cursor.execute is not called with correct instrument id")
+        self.assertTrue("SELECT" in executed_call[0][0], "cursor.execute does not 'SELECT'")
+        self.assertTrue("instrument_id" in executed_call[0][0], "cursor.execute does not involve 'instrument_id'")
+        self.assertTrue("name_short" in executed_call[0][0], "cursor.execute does not involve 'name_short'")
         values = [value for key, value in result.iteritems()]
-        self.assertTrue(0 in values)
-        self.assertTrue(1 in values)
-        self.assertTrue(10 in values)
+        self.assertTrue(0 in values, "Value '0' is not in the returned dictionary")
+        self.assertTrue(1 in values, "Value '1' is not in the returned dictionary")
+        self.assertTrue(10 in values, "Value '10' is not in the returned dictionary")
         #self.assertTrue(False)
 
     def test_db_recent_logs_by_instrument_id_is_15_default_maximum_number(self):
@@ -68,16 +69,17 @@ class test_views(TestCase):
         instrument_id = 15
         result = views.db_recent_logs_by_instrument(instrument_id, cursor)
         executed_call = cursor.execute.call_args
-        self.assertTrue(instrument_id in executed_call[0][1])
+        self.assertTrue(instrument_id in executed_call[0][1], "cursor.execute is not called with correct instrument id")
         # Make sure the default maximum number (whatever it is) made it into the cursor.execute
-        self.assertTrue(executed_call[0][1][1] != None)
-        self.assertTrue("SELECT" in executed_call[0][0])
-        self.assertTrue("instrument_logs" in executed_call[0][0])
-        self.assertTrue("status" in executed_call[0][0])
+        self.assertTrue(executed_call[0][1][1] != None,
+                        "cursor.execute is not called with an argument for maximum number of logs")
+        self.assertTrue("SELECT" in executed_call[0][0], "cursor.execute does not 'SELECT'")
+        self.assertTrue("instrument_logs" in executed_call[0][0], "cursor.execute does not involve 'instrument_logs'")
+        self.assertTrue("status" in executed_call[0][0], "cursor.execute does not involve 'status'")
         values = [value for key, value in result[1].iteritems()]
-        self.assertTrue(5 in values)
-        self.assertTrue(6 in values)
-        self.assertTrue(9 in values)
+        self.assertTrue(5 in values, "Value '5' is not in the returned dictionary for the second log")
+        self.assertTrue(6 in values, "Value '6' is not in the returned dictionary for the second log")
+        self.assertTrue(9 in values, "Value '9' is not in the returned dictionary for the second log")
 
     def test_db_recent_logs_by_instrument_id_is_15_maximum_number_is_11(self):
         cursor = mock.Mock()
@@ -92,6 +94,32 @@ class test_views(TestCase):
         self.assertTrue("SELECT" in executed_call[0][0])
         self.assertTrue("instrument_logs" in executed_call[0][0])
         self.assertTrue("status" in executed_call[0][0])
+
+    def test_valid_columns_for_instrument(self):
+        cursor = mock.Mock()
+        expected_column_list = ["integer", "not_special_table"]
+        references = [[True, "special_table"], [False, "not_special_table"]]
+        special_table_entries = [["integer", "integer"],["datetime", "datetime"]]
+        cursor.fetchall.side_effect = [references, special_table_entries]
+        instrument_id = 10
+        result_column_list = views.valid_columns_for_instrument(instrument_id, cursor)
+        executed_calls = cursor.execute.call_args_list
+        self.assertTrue(expected_column_list[0] in result_column_list,
+                        "First valid column string '%s' not returned in columns" % expected_column_list[0])
+        self.assertTrue(expected_column_list[1] in result_column_list,
+                        "Second valid column string '%s' not returned in columns" % expected_column_list[1])
+        self.assertTrue("datetime" not in result_column_list, "Invalid column string 'datetime' in returned columns")
+
+        self.assertTrue("instrument_data_references" in executed_calls[0][0][0],
+                        "First cursor.execute never accesses 'instrument_data_references'")
+        self.assertTrue(instrument_id in executed_calls[0][0][1],
+                        "First cursor.execute not called with correct instrument id")
+
+        self.assertTrue("FROM information_schema.columns" in executed_calls[1][0][0],
+                        "Second cursor.execute never accesses 'information_schema.columns'")
+        self.assertTrue("special_table" in executed_calls[1][0][1],
+                        "Second cursor.execute not called with 'special_table' table name")
+
 
     ### Helper Functions ###
     @mock.patch('psycopg2.connect')
