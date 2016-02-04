@@ -124,9 +124,7 @@ def generate_instrument_graph():
 
     if key not in valid_columns_for_instrument(instrument_id, cur):
         return json.dumps({"x": [], "y": []})
-    cur.execute("SELECT special, description FROM instrument_data_references WHERE instrument_id = %s",
-                (instrument_id,))
-    references = cur.fetchall()
+    references = db_get_instrument_references(instrument_id, cur)
     # Build the SQL query for the given key.  If the key is a part of a special table, build a query based on the key and containing table
     for reference in references:
         if reference[1] == key:
@@ -293,6 +291,7 @@ def valid_columns_for_instrument(instrument_id, cursor):
     ----------
     instrument_id: integer
         Database id of the instrument to be searched
+
     cursor: database cursor
 
     Returns
@@ -302,9 +301,7 @@ def valid_columns_for_instrument(instrument_id, cursor):
             data value for the instrument that is suitable for plotting.
 
     """
-    cursor.execute("SELECT special, description FROM instrument_data_references WHERE instrument_id = %s",
-                (instrument_id,))
-    references = cursor.fetchall()
+    references = db_get_instrument_references(instrument_id, cursor)
     column_list = []
     for reference in references:
         if reference[0] == True:
@@ -316,6 +313,26 @@ def valid_columns_for_instrument(instrument_id, cursor):
             columns = [reference[1]]
         column_list.extend(columns)
     return column_list
+
+def db_get_instrument_references(instrument_id, cursor):
+    """Gets the set of table references for the specified instrument
+
+    Parameters
+    ----------
+    instrument_id: integer
+        Database id of the instrument to be searched
+
+    cursor: database cursor
+
+    Returns
+    -------
+        list of table references
+            Each element being the name of the reference and whether or not it is a special reference
+            (meaning it references a full table rather than just a certain event type)
+    """
+    cursor.execute("SELECT special, description FROM instrument_data_references WHERE instrument_id = %s",
+                   (instrument_id,))
+    return cursor.fetchall()
 
 def db_select_instrument(instrument_id, cursor):
     """Get an instrument's information by its database id
