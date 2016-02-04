@@ -1,3 +1,3 @@
 [submodule "data_store/data/pyarmret"]
 	path = data_store/data/pyarmret
-	url = git@overwatch.pnl.gov:hard505/pypro-aflib.git
+	url = https://EsfSzFhZyGmjXdo75h88:x-oauth-basic@overwatch.pnl.gov/hard505/pypro-aflib.git
