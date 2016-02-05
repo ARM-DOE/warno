@@ -14,6 +14,7 @@ import utility
 headers = {'Content-Type': 'application/json'}
 
 DEFAULT_PLUGIN_PATH = 'Agent/plugins/'
+MAX_CONN_ATTEMPTS = 10
 
 
 class Agent(object):
@@ -209,7 +210,7 @@ class Agent(object):
         print("Starting up the following plugins:", self.plugin_module_list)
 
         conn_attempt = 0
-        while conn_attempt < 5:
+        while conn_attempt < MAX_CONN_ATTEMPTS:
             try:
                 conn_attempt +=1
                 self.site_id = self.request_site_id_from_event_manager()
