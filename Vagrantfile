@@ -42,6 +42,9 @@ Vagrant.configure(2) do |config|
   # accessing the NFS shared folders
   config.vm.provision :shell, inline: "setenforce 0", run: "always"
 
+  ## Load Keys ##
+  config.vm.provision :shell, path: "load_keys.sh", privileged: false, run: "always"
+
   ## Git Submodule ##
   #config.vm.provision :shell, inline: "cd /vagrant && git submodule update --init --recursive"
 
