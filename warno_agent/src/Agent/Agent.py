@@ -15,6 +15,7 @@ headers = {'Content-Type': 'application/json'}
 
 DEFAULT_PLUGIN_PATH = 'Agent/plugins/'
 MAX_CONN_ATTEMPTS = 10
+CONN_RETRY_TIME = 10
 
 
 class Agent(object):
@@ -218,7 +219,7 @@ class Agent(object):
             except Exception as e:
                 print("Error Connecting. Connection Attempt {0}. Sleeping for 5 seconds.".format(conn_attempt))
                 print(e)
-                sleep(5)
+                sleep(CONN_RETRY_TIME)
 
 
 
@@ -233,15 +234,33 @@ class Agent(object):
 
         while self.main_loop_boolean:
             if not self.msg_queue.empty():
-                rec_msg = self.msg_queue.get_nowait()
-                event = json.loads(rec_msg)
-                event['data']['Site_Id'] = self.site_id
-                event_code = self.event_code_dict[event['event']]
-                event_msg = '{"Event_Code": %s, "Data": %s}' % (event_code, json.dumps(event['data']))
-                payload = json.loads(event_msg)
-                response = requests.post(self.em_url, json=payload, headers=headers)
+                response = self.process_plugin_event()
             else:
                 sleep(0.1)
+
+    def process_plugin_event(self):
+        """ Process message from a plugin.
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        response: requests.response
+            Response from Event Manager
+
+
+        """
+
+        rec_msg = self.msg_queue.get_nowait()
+        event = json.loads(rec_msg)
+        event['data']['Site_Id'] = self.site_id
+        event_code = self.event_code_dict[event['event']]
+        event_msg = '{"Event_Code": %s, "Data": %s}' % (event_code, json.dumps(event['data']))
+        payload = json.loads(event_msg)
+        response = requests.post(self.em_url, json=payload, headers=headers)
+        return response
+
 
 
 if __name__ == "__main__":
