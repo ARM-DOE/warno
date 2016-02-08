@@ -28,7 +28,7 @@
     </tr>
     {%  for instrument in instruments %}
     <tr>
-        <td><a href = "{{url_for('instrument', instrument_id=instrument.id)}}">{{ instrument.abbv }}</a></td>
+        <td><a href = "{{url_for('instruments.instrument', instrument_id=instrument.id)}}">{{ instrument.abbv }}</a></td>
         <td>{{ instrument.name }}</td>
         <td>{{ instrument.type }}</td>
         <td>{{ instrument.vendor }}</td>
@@ -45,7 +45,7 @@
 <hr>
 <br>
 
-<form action="{{ url_for('new_instrument') }}" method="get">
+<form action="{{ url_for('instruments.new_instrument') }}" method="get">
   <input type="submit" id="new-instrument-redirect-button"
          value="Add New Instrument"/>
 </form>
