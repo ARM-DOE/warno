@@ -43,7 +43,8 @@ Vagrant.configure(2) do |config|
   config.vm.provision :shell, inline: "setenforce 0", run: "always"
 
   ## Git Submodule ##
-  #config.vm.provision :shell, inline: "cd /vagrant && git submodule update --init --recursive"
+  config.vm.provision :shell, inline: "yum install -y git"
+  config.vm.provision :shell, inline: "cd /vagrant && git submodule update --init --recursive"
 
   ## Halt Trigger ##
   config.trigger.before [:halt, :reload] do
