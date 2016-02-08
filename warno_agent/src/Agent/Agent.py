@@ -30,6 +30,7 @@ class Agent(object):
         self.config_ctxt = config.get_config_context()
         self.event_manager_url = self.config_ctxt['setup']['em_url']
         self.em_url = self.config_ctxt['setup']['em_url']
+        self.is_central = self.config_ctxt['type']['central_facility']
         self.site_id = None
         self.msg_queue = Queue()
         self.event_code_dict = {}
@@ -206,6 +207,10 @@ class Agent(object):
         -------
         """
         print("Starting Agent Main Loop:")
+        if self.is_central:
+            print("Agent is disabled.")
+            exit(0)
+
 
         self.plugin_module_list = self.list_plugins()
         print("Starting up the following plugins:", self.plugin_module_list)
