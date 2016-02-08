@@ -33,7 +33,7 @@
         <td>{{ instrument.type }}</td>
         <td>{{ instrument.vendor }}</td>
         <td>{{ instrument.description }}</td>
-        <td><a href= "{{url_for('show_site', site_id=instrument.site_id)}}">{{ instrument.location }}</a></td>
+        <td><a href= "{{url_for('sites.show_site', site_id=instrument.site_id)}}">{{ instrument.location }}</a></td>
         <td>{{ instrument.frequency_band }}</td>
         <td>{{ instrument.id }}</td>
     </tr>

@@ -33,7 +33,7 @@
             Frequency Band: {{instrument.frequency_band}}
             <br>
             Location:
-            <a href="{{url_for('show_site', site_id= instrument.site_id)}}">{{instrument.location}}</a>
+            <a href="{{url_for('sites.show_site', site_id= instrument.site_id)}}">{{instrument.location}}</a>
             <br>
             Description:    {{instrument.description}}
         </div>
