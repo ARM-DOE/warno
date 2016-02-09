@@ -3,6 +3,7 @@ import psycopg2
 import numpy as np
 import pandas
 from sqlalchemy import create_engine
+import subprocess
 
 import config
 
@@ -78,6 +79,11 @@ def signal_handler( signal, frame):
 
 
 ### Database ###
+def load_dumpfile():
+    #cmd = "ls /vagrant; ls /vagrant/data_store; ls vagrant/data_store/data"#; bash /vagrant/data_store/data/db_load.sh"
+    p = subprocess.Popen(["bash", "/vagrant/data_store/data/db_load.sh"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p.wait()
+
 def table_exists(table_name, curr):
     SQL = "SELECT relname FROM pg_class WHERE relname = %s;"
     curr.execute(SQL, (table_name,))

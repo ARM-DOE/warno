@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
-PRIVATE_KEY="/vagrant/warno_rsa"
-PUBLIC_KEY="/vagrant/warno_rsa.pub"
+PRIVATE_KEY="/vagrant/id_rsa"
+PUBLIC_KEY="/vagrant/id_rsa.pub"
 
 if [[ -f $PRIVATE_KEY ]]; then
     echo "Loading $PRIVATE_KEY"
