@@ -5,8 +5,13 @@ from flask import Blueprint
 from jinja2 import TemplateNotFound
 
 from WarnoConfig import config
+from WarnoConfig.network import status_code_to_text
+
 
 instruments = Blueprint('instruments', __name__, template_folder='templates')
+
+
+
 
 @instruments.route('/instruments')
 def list_instruments():
@@ -23,11 +28,11 @@ def list_instruments():
     cur.execute('''SELECT i.instrument_id, i.name_short, i.name_long, i.type,
                 i.vendor, i.description, i.frequency_band, s.name_short, s.site_id FROM instruments i
                 JOIN sites s ON (i.site_id = s.site_id) ORDER BY i.instrument_id ASC''')
-    instruments = [dict(abbv=row[1], name=row[2], type=row[3], vendor=row[4], description=row[5],
+    instrument_list = [dict(abbv=row[1], name=row[2], type=row[3], vendor=row[4], description=row[5],
                         frequency_band=row[6], location=row[7], site_id=row[8], id=row[0])
                    for row in cur.fetchall()]
 
-    return render_template('instrument_list.html', instruments=instruments)
+    return render_template('instrument_list.html', instruments=instrument_list)
 
 
 
@@ -80,8 +85,6 @@ def new_instrument():
         return render_template('new_instrument.html', sites=sites)
 
 
-
-
 def valid_columns_for_instrument(instrument_id, cursor):
     """Returns a list of columns of data for an instrument that is suitable for plotting.
 
@@ -112,6 +115,7 @@ def valid_columns_for_instrument(instrument_id, cursor):
         column_list.extend(columns)
     return column_list
 
+
 def db_get_instrument_references(instrument_id, cursor):
     """Gets the set of table references for the specified instrument
 
@@ -131,6 +135,7 @@ def db_get_instrument_references(instrument_id, cursor):
     cursor.execute("SELECT special, description FROM instrument_data_references WHERE instrument_id = %s",
                    (instrument_id,))
     return cursor.fetchall()
+
 
 def db_select_instrument(instrument_id, cursor):
     """Get an instrument's information by its database id
@@ -214,3 +219,103 @@ def instrument(instrument_id):
         db_delete_instrument(instrument_id, cur)
         return json.dumps({'id': instrument_id}), 200
 
+def db_recent_logs_by_instrument(instrument_id, cursor, maximum_number = 5):
+    """Get the most recent logs for the specified instrument, up to "maximum_number" logs
+
+    Parameters
+    ----------
+    instrument_id: integer
+        Database id of the instrument
+
+    cursor: database cursor
+
+    maximum_number: integer
+        The maximum number of logs that will be returned.
+
+    Returns
+    -------
+    A list containing logs, each log returned as a dictionary containing its information.
+
+    """
+    cursor.execute('''SELECT l.time, l.contents, l.status, l.supporting_images, u.name
+                FROM instrument_logs l JOIN users u
+                ON l.author_id = u.user_id WHERE l.instrument_id = %s
+                ORDER BY time DESC LIMIT %s''', (instrument_id, maximum_number))
+    # Creates a list of dictionaries, each dictionary being one of the log entries
+    return [dict(time=row[0], contents=row[1], status=row[2], supporting_images=row[3],
+                author=row[4]) for row in cursor.fetchall()]
+
+
+@instruments.route('/generate_instrument_graph', methods=['GET', 'POST'])
+def generate_instrument_graph():
+    """Generate graph data for a Dygraph for an instrument.
+
+    Uses the supplied key and instrument_id to get all data from the 'time' and
+        specified 'key' column for the instrument with 'instrument_id', passing them
+        as 'x' and 'y' values to be graphed together.  Limits range to those with
+        timestamps between 'start' and 'end' time
+
+    Parameters
+    ----------
+    key: string
+        Passed as an HTML query parameter, the name of the database column
+            to plot against time.
+
+    instrument_id: integer
+        Passed as an HTML query parameter, the id of the instrument in the
+            database, indicates which instrument's data to use.
+
+    start: JSON JavaScript Date
+        Passed as an HTML query parameter, the beginning time to limit results to.
+
+    end: JSON JavaScript Date
+        Passed as an HTML query parameter, the end time to limit results to.
+
+    Returns
+    -------
+    message: JSON object
+        Returns a JSON object with a list of 'x' values corresponding to a list of 'y' values.
+    """
+
+    cur = g.db.cursor()
+
+    key = request.args.get("key")
+    instrument_id = request.args.get("instrument_id")
+    start = request.args.get("start")
+    end = request.args.get("end")
+
+    if key not in valid_columns_for_instrument(instrument_id, cur):
+        return json.dumps({"x": [], "y": []})
+    references = db_get_instrument_references(instrument_id, cur)
+    # Build the SQL query for the given key.  If the key is a part of a special table, build a query based on the key and containing table
+    for reference in references:
+        if reference[1] == key:
+            cur.execute('SELECT event_code FROM event_codes WHERE description = %s', (key,))
+            event_code = cur.fetchone()
+            sql_query = ('SELECT time, value FROM events_with_value WHERE instrument_id = %%s '
+                         'AND time >= %%s AND time <= %%s AND event_code = %s') % event_code[0]
+            break
+        elif reference[0] == True:
+            cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name = %s", (reference[1],))
+            rows = cur.fetchall()
+            columns = [row[0] for row in rows]
+            if key in columns:
+                sql_query = 'SELECT time, %s FROM %s WHERE instrument_id = %%s AND time >= %%s AND time <= %%s' % (
+                key, reference[1])
+    # Selects the time and the "key" column from the data table with time between 'start' and 'end'
+    try:
+        cur.execute(sql_query, (instrument_id, start, end))
+    except Exception, e:
+        print(e)
+        return json.dumps({"x": [], "y": []})
+    rows = cur.fetchall()
+
+    # Prepares a JSON message, an array of x values and an array of y values, for the graph to plot
+    # TODO Determine: Is iso format timezone ambiguous?
+    x = [row[0].isoformat() for row in rows]
+    y = [row[1] for row in rows]
+    message = {"x": x, "y": y}
+    message = json.dumps(message)
+
+    # Send out the JSON message
+    return message

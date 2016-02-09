@@ -4,7 +4,7 @@ from flask import g, render_template, request, redirect, url_for, request
 from flask import Blueprint
 from jinja2 import TemplateNotFound
 
-from WarnoConfig import config
+from WarnoConfig.network import status_code_to_text
 
 sites = Blueprint('sites', __name__, template_folder='templates')
 

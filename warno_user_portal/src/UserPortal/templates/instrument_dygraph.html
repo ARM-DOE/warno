@@ -114,7 +114,7 @@
 					end_utc = end.toLocaleString()
 					console.log(start_utc)
 					console.log(end_utc)
-					url = "{{url_for('generate_instrument_graph')}}" + "?key=" + key + "&instrument_id=" + {{instrument_id}} + "&start=" + start_utc + "&end=" + end_utc;
+					url = "{{url_for('instruments.generate_instrument_graph')}}" + "?key=" + key + "&instrument_id=" + {{instrument_id}} + "&start=" + start_utc + "&end=" + end_utc;
 					console.log(url)
 					xmlhttp.open("POST", url, true);
 

@@ -1,12 +1,14 @@
 from flask import Flask
 
-from UserPortal.users import users
-from UserPortal.sites import sites
-from UserPortal.instruments import instruments
+from . import users
+from . import sites
+from . import instruments
+from . import logs
 
 app = Flask(__name__)
 import UserPortal.views
 
-app.register_blueprint(users)
-app.register_blueprint(sites)
-app.register_blueprint(instruments)
+app.register_blueprint(users.users)
+app.register_blueprint(sites.sites)
+app.register_blueprint(instruments.instruments)
+app.register_blueprint(logs.logs)
