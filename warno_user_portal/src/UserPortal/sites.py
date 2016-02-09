@@ -4,7 +4,7 @@ from flask import g, render_template, request, redirect, url_for, request
 from flask import Blueprint
 from jinja2 import TemplateNotFound
 
-from WarnoConfig.network import status_code_to_text
+from WarnoConfig.utility import status_code_to_text, is_number
 
 sites = Blueprint('sites', __name__, template_folder='templates')
 
@@ -162,4 +162,7 @@ def show_site(site_id):
         instrument['status'] = status_code_to_text(instrument['status'])
 
     return render_template('show_site.html', site=site, instruments=instruments, recent_logs=recent_logs)
+
+
+
 

@@ -5,11 +5,9 @@ import multiprocessing
 import signal
 import requests
 from WarnoConfig import config
-from WarnoConfig import network
+from WarnoConfig import utility
 from time import sleep
 from multiprocessing import Queue
-
-import utility
 
 headers = {'Content-Type': 'application/json'}
 
@@ -116,7 +114,7 @@ class Agent(object):
             Site identification number.
 
         """
-        response = self.send_em_message(network.SITE_ID_REQUEST, self.config_ctxt['setup']['site'])
+        response = self.send_em_message(utility.SITE_ID_REQUEST, self.config_ctxt['setup']['site'])
 
         if response.status_code == requests.codes.ok:
             response_dict = dict(json.loads(response.content))
@@ -144,14 +142,14 @@ class Agent(object):
 
         # Get the instrument Id for each
         instrument_name = response_dict['instrument_name']
-        response = self.send_em_message(network.INSTRUMENT_ID_REQUEST, instrument_name)
+        response = self.send_em_message(utility.INSTRUMENT_ID_REQUEST, instrument_name)
 
         data = dict(json.loads(response.content))
         self.instrument_ids.append((plugin, data['Instrument_Id']))
 
         for event in response_dict['event_code_names']:
             data_send = {'description': event, 'instrument_id': data['Instrument_Id']}
-            response = self.send_em_message(network.EVENT_CODE_REQUEST, data_send )
+            response = self.send_em_message(utility.EVENT_CODE_REQUEST, data_send)
 
             response_dict = dict(json.loads(response.content))
             self.event_code_dict[response_dict['Data']['description']] = response_dict['Event_Code']

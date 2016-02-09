@@ -7,7 +7,7 @@ import psycopg2
 
 from UserPortal import app
 from WarnoConfig import config
-from WarnoConfig.network import status_code_to_text
+from WarnoConfig.utility import status_code_to_text
 
 is_central = 0
 
@@ -198,32 +198,6 @@ def query():
 
     return render_template("query.html", data=data)
 
-
-def is_number(s):
-    """Checks if a string is a valid floating point number.
-
-    Attempts to convert a string to a floating point number.
-
-    Parameters
-    ----------
-    s: string
-        The string to be checked.
-
-    Returns
-    -------
-    True: Boolean
-        Returns True if the conversion works successfully.
-
-    False: Boolean
-        Returns False if the conversion throws a 'ValueError' Exception.
-    """
-
-    try:
-        # Attempts to convert the string into a float. Returns True if it works
-        float(s)
-        return True
-    except ValueError:
-        return False
 
 
 if __name__ == '__main__':
