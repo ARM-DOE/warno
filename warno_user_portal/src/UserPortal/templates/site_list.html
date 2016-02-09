@@ -27,7 +27,7 @@
     </tr>
     {%  for site in sites %}
     <tr>
-        <td><a href="{{url_for('show_site', site_id= site.id)}}">{{ site.abbv }}</a></td>
+        <td><a href="{{url_for('sites.show_site', site_id= site.id)}}">{{ site.abbv }}</a></td>
         <td>{{ site.name }}</td>
         <td>{{ site.latitude }}</td>
         <td>{{ site.longitude }}</td>
@@ -47,7 +47,7 @@
 <hr>
 <br>
 
-<form action="{{ url_for('new_site') }}" method="get">
+<form action="{{ url_for('sites.new_site') }}" method="get">
   <input type="submit" id="new-site-redirect-button"
          value="Add New Site"/>
 </form>

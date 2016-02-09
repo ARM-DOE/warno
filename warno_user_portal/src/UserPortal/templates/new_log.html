@@ -17,7 +17,7 @@
 <div>
     <h1 class="title">Log Entry Submission</h1>
 </div>
-<form id="log-submit-form" action="{{url_for('new_log')}}">
+<form id="log-submit-form" action="{{url_for('logs.new_log')}}">
     <p><label for="user-id">User Name:</label>
         <select name="user-id">
             {% for user in users %}

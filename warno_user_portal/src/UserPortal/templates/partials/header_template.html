@@ -13,11 +13,11 @@
 		<h1>WARNO</h1>
 		<ul class="nav-buttons">
 			<a href="{{url_for('show_radar_status')}}"><li>Status</li></a>
-			<a href="{{url_for('list_sites')}}"><li>Sites</li></a>
-			<a href="{{url_for('list_instruments')}}"><li>Instruments</li></a>
+			<a href="{{url_for('sites.list_sites')}}"><li>Sites</li></a>
+			<a href="{{url_for('instruments.list_instruments')}}"><li>Instruments</li></a>
 			<a href="{{url_for('show_pulse')}}"><li>Pulses</li></a>
-			<a href="{{url_for('list_users')}}"><li>Users</li></a>
-			<a href="{{url_for('new_log')}}"><li>Submit Log</li></a>
+			<a href="{{url_for('users.list_users')}}"><li>Users</li></a>
+			<a href="{{url_for('logs.new_log')}}"><li>Submit Log</li></a>
 		</ul>
 	</div>
 </div>

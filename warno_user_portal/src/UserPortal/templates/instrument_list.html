@@ -28,12 +28,12 @@
     </tr>
     {%  for instrument in instruments %}
     <tr>
-        <td><a href = "{{url_for('instrument', instrument_id=instrument.id)}}">{{ instrument.abbv }}</a></td>
+        <td><a href = "{{url_for('instruments.instrument', instrument_id=instrument.id)}}">{{ instrument.abbv }}</a></td>
         <td>{{ instrument.name }}</td>
         <td>{{ instrument.type }}</td>
         <td>{{ instrument.vendor }}</td>
         <td>{{ instrument.description }}</td>
-        <td><a href= "{{url_for('show_site', site_id=instrument.site_id)}}">{{ instrument.location }}</a></td>
+        <td><a href= "{{url_for('sites.show_site', site_id=instrument.site_id)}}">{{ instrument.location }}</a></td>
         <td>{{ instrument.frequency_band }}</td>
         <td>{{ instrument.id }}</td>
     </tr>
@@ -45,7 +45,7 @@
 <hr>
 <br>
 
-<form action="{{ url_for('new_instrument') }}" method="get">
+<form action="{{ url_for('instruments.new_instrument') }}" method="get">
   <input type="submit" id="new-instrument-redirect-button"
          value="Add New Instrument"/>
 </form>
