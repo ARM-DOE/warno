@@ -108,7 +108,7 @@ vagrant reload
 
 <br>
 
-Or the more nuclear
+Or the more nuclear:
 ```bash
 vagrant destroy
 vagrant up
