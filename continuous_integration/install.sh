@@ -30,7 +30,7 @@ source activate testenv
 
 
 # Install dependencies
-conda install --yes numpy nose netcdf4 psycopg2
+conda install --yes numpy nose netcdf4 psycopg2 pandas
 
 pip install pyyaml Flask requests selenium nose-cov nose-exclude mock
 
@@ -41,4 +41,3 @@ cd ..
 
 # install coverage modules
 source set_env_for_testing.sh
-
