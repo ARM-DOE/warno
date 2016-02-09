@@ -64,9 +64,6 @@ def hello_world():
     return redirect(url_for('show_radar_status'))
 
 
-
-
-
 @app.route('/dygraph')
 def show_dygraph():
     """Show Dygraphs.
@@ -85,9 +82,6 @@ def show_dygraph():
     columns = [row[0] for row in rows if row[1] in ["integer", "boolean", "double precision"]]
 
     return render_template('instrument_dygraph.html', columns=columns)
-
-
-
 
 
 @app.route('/pulse')
@@ -174,7 +168,6 @@ def show_radar_status():
     logs = [dict(instrument_name=row[0], instrument_id=row[1], site_id=row[2], site=row[3],
                  contents=row[4], author=row[5], status=status_code_to_text(row[6])) for row in cur.fetchall()]
     return render_template('radar_status.html', logs=logs)
-
 
 
 @app.route("/query", methods=['GET', 'POST'])
