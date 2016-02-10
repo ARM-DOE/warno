@@ -273,6 +273,9 @@ def initialize_database():
         cur.execute("DROP SCHEMA public CASCADE;")
         cur.execute("CREATE SCHEMA public;")
         db.commit()
+    else:
+        # If it is not a test database, first attempt to load database from an existing postgres dumpfile
+        utility.load_dumpfile()
 
     utility.initialize_database(cur, path="database/schema")
     db.commit()
