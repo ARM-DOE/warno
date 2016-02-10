@@ -25,6 +25,7 @@ if [[ -f $ZIPFILE ]]; then
         fi
       fi
     done
+    rm $DUMPFILE
 else
     echo "No dumpfile found"
 fi
