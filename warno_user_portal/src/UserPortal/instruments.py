@@ -5,7 +5,7 @@ from flask import Blueprint
 from jinja2 import TemplateNotFound
 
 from WarnoConfig import config
-from WarnoConfig.network import status_code_to_text
+from WarnoConfig.utility import status_code_to_text
 
 
 instruments = Blueprint('instruments', __name__, template_folder='templates')
@@ -72,7 +72,7 @@ def new_instrument():
         cur.execute('COMMIT')
 
         # Redirect to the updated list of instruments
-        return redirect(url_for("list_instruments"))
+        return redirect(url_for("instruments.list_instruments"))
 
     # If the request is to get the form
     if request.method == 'GET':

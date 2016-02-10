@@ -7,10 +7,8 @@ import yaml
 import psycopg2
 import time
 
-import database.utility
-
 from WarnoConfig import config
-from WarnoConfig import network
+from WarnoConfig import utility
 
 app = Flask(__name__)
 
@@ -71,21 +69,21 @@ def event():
 
     msg_event_code = msg_struct['Event_Code']
     # Request for the event code for a given description
-    if msg_event_code == network.EVENT_CODE_REQUEST:
+    if msg_event_code == utility.EVENT_CODE_REQUEST:
         save_instrument_data_reference(msg, msg_struct)
         return get_event_code(msg, msg_struct)
 
     # Request a site id from site name
-    elif msg_event_code == network.SITE_ID_REQUEST:
+    elif msg_event_code == utility.SITE_ID_REQUEST:
         return get_site_id(msg, msg_struct)
 
     # Request an instrument id from instrument name
-    elif msg_event_code == network.INSTRUMENT_ID_REQUEST:
+    elif msg_event_code == utility.INSTRUMENT_ID_REQUEST:
         return get_instrument_id(msg, msg_struct)
-    elif msg_event_code == network.PULSE_CAPTURE:
+    elif msg_event_code == utility.PULSE_CAPTURE:
         return save_pulse_capture(msg, msg_struct)
     # Event is special case: 'prosensing_paf' structure
-    elif msg_event_code == network.PROSENSING_PAF:
+    elif msg_event_code == utility.PROSENSING_PAF:
         return save_special_prosensing_paf(msg, msg_struct)
 
     # Any other event
@@ -159,7 +157,7 @@ def get_instrument_id(msg, msg_struct):
     if row:
         if is_central:
             print("Found Existing Instrument")
-            return '{"Event_code": %i, "Data": {"Instrument_Id": %s, "Site_Id": %s, "Name_Short": "%s", "Name_Long": "%s", "Type": "%s", "Vendor": "%s", "Description": "%s", "Frequency_Band": "%s"}}' % (network.INSTRUMENT_ID_REQUEST, row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
+            return '{"Event_code": %i, "Data": {"Instrument_Id": %s, "Site_Id": %s, "Name_Short": "%s", "Name_Long": "%s", "Type": "%s", "Vendor": "%s", "Description": "%s", "Frequency_Band": "%s"}}' % (utility.INSTRUMENT_ID_REQUEST, row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
         else:
             print("Found Existing Instrument")
             return '{"Instrument_Id": %i, "Data": "%s"}' % (row[0], msg_struct['Data'])
@@ -192,7 +190,7 @@ def get_site_id(msg, msg_struct):
     if row:
         if is_central:
             print("Found Existing Site")
-            return '{"Event_code": %i, "Data": {"Site_Id": %s, "Name_Short": "%s", "Name_Long": "%s", "Latitude": "%s", "Longitude": "%s", "Facility": "%s", "Mobile": "%s", "Location_Name": "%s"}}' % (network.SITE_ID_REQUEST, row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
+            return '{"Event_code": %i, "Data": {"Site_Id": %s, "Name_Short": "%s", "Name_Long": "%s", "Latitude": "%s", "Longitude": "%s", "Facility": "%s", "Mobile": "%s", "Location_Name": "%s"}}' % (utility.SITE_ID_REQUEST, row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
         else:
             print("Found Existing Site")
             return '{"Site_Id": %i, "Data": "%s"}' % (row[0], msg_struct['Data'])
@@ -267,7 +265,7 @@ def get_event_code(msg, msg_struct):
 
 def initialize_database():
     print("Initialization Function")
-    db = database.utility.connect_db()
+    db = utility.connect_db()
     cur = db.cursor()
 
     # If it is a test database, first wipe and clean up the database.
@@ -276,27 +274,27 @@ def initialize_database():
         cur.execute("CREATE SCHEMA public;")
         db.commit()
 
-    database.utility.initialize_database(cur, path="database/schema")
+    utility.initialize_database(cur, path="database/schema")
     db.commit()
 
     cur.execute("SELECT * FROM users LIMIT 1")
     if cur.fetchone() == None:
         print("Populating Users")
-        database.utility.load_data_into_table("database/schema/users.data", "users", db)
+        utility.load_data_into_table("database/schema/users.data", "users", db)
     else:
         print("Users in table.")
 
     cur.execute("SELECT * FROM sites LIMIT 1")
     if cur.fetchone() == None:
         print("Populating Sites")
-        database.utility.load_data_into_table("database/schema/sites.data", "sites", db)
+        utility.load_data_into_table("database/schema/sites.data", "sites", db)
     else:
         print("Sites in table.")
 
     cur.execute("SELECT * FROM event_codes LIMIT 1")
     if cur.fetchone() == None:
         print("Populating Sites")
-        database.utility.load_data_into_table("database/schema/event_codes.data", "event_codes", db)
+        utility.load_data_into_table("database/schema/event_codes.data", "event_codes", db)
     else:
         print("Event_codes in table.")
 
@@ -318,7 +316,7 @@ def initialize_database():
             cur.execute("SELECT * FROM %s LIMIT 1" % table)
             if cur.fetchone() == None:
                 print("Populating %s" % table)
-                database.utility.load_data_into_table("database/schema/%s.data" % table, table, db)
+                utility.load_data_into_table("database/schema/%s.data" % table, table, db)
             else:
                 print("Sites in table.")
     else:

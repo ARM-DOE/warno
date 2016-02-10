@@ -6,7 +6,7 @@ import mock
 import requests
 import importlib
 from multiprocessing import Process
-from WarnoConfig import network
+from WarnoConfig import utility
 import os
 
 TEST_PLUGIN_PATH = 'warno_agent/src/tests/test_plugins/'
@@ -140,7 +140,7 @@ class TestAgent(TestCase):
     @mock.patch.object(Agent, 'requests')
     def test_send_em_message_request_site_id_works(self, mock_requests):
 
-        code = network.SITE_ID_REQUEST
+        code = utility.SITE_ID_REQUEST
         data = 'kazr'
 
         self.agent.send_em_message(code, data)
@@ -157,7 +157,7 @@ class TestAgent(TestCase):
     @mock.patch.object(Agent, 'requests')
     def test_send_em_message_handles_multiple_data(self, mock_requests):
 
-        code = network.SITE_ID_REQUEST
+        code = utility.SITE_ID_REQUEST
         data = {'description': 'red', 'instrument_id': '1'}
 
         self.agent.send_em_message(code, data)

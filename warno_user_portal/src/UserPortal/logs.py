@@ -6,7 +6,7 @@ from jinja2 import TemplateNotFound
 import psycopg2
 
 from WarnoConfig import config
-from WarnoConfig.network import status_code_to_text, status_text
+from WarnoConfig.utility import status_code_to_text, status_text
 
 logs = Blueprint('logs', __name__, template_folder='templates')
 

@@ -78,14 +78,11 @@ Vagrantfile:
 - Change the ip to 192.168.50.99
 - Change the vm hostname and virtualbox name away from "warno"
       
-event_manager/src/database/utility.py:
-- Change 192.168.50.100 to 192.168.50.100 in three places
-      
-event_manager/src/warno_event_manager.py:
-- Change database address from 192.168.50.100 to 192.168.50.100
-      
-user_portal/src/RadarStatusMonitor.py:
-- Change database address from 192.168.50.100 to 192.168.50.99
+data_store/data/config.yml:
+- Change 192.168.50.100 to 192.168.50.99
+
+data_store/data/db_save.sh:
+- Change 192.168.50.100 to 192.168.50.99
 
 <br>
 ## Start Up
@@ -111,7 +108,7 @@ vagrant reload
 
 <br>
 
-Or the more nuclear
+Or the more nuclear:
 ```bash
 vagrant destroy
 vagrant up
