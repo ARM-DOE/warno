@@ -89,7 +89,7 @@ def event():
     # Any other event
     else:
         cur = g.db.cursor()
-        timestamp = time.asctime(time.gmtime(msg_struct['Data']['Time']))
+        timestamp = msg_struct['Data']['Time']
         try:
             # If it can cast as a number, save as a number.  If not, save as text
             value = float(msg_struct['Data']['Value'])
@@ -111,7 +111,7 @@ def event():
 
 def save_special_prosensing_paf(msg, msg_struct):
     cur = g.db.cursor()
-    timestamp = time.asctime(time.gmtime(msg_struct['Data']['Time']))
+    timestamp = msg_struct['Data']['Time']
     sql_query_a = "INSERT INTO prosensing_paf(time, site_id, instrument_id"
     sql_query_b = ") VALUES ('%s', %s, %s" % (timestamp, msg_struct['Data']['Site_Id'], msg_struct['Data']['Instrument_Id'])
     for key, value in msg_struct['Data']['Value'].iteritems():
@@ -135,7 +135,7 @@ def save_special_prosensing_paf(msg, msg_struct):
 
 def save_pulse_capture(msg, msg_struct):
     cur = g.db.cursor()
-    timestamp = time.asctime(time.gmtime(msg_struct['Data']['Time']))
+    timestamp = msg_struct['Data']['Time']
     sql_query = ("INSERT INTO pulse_captures(time, instrument_id, data)"
                  " VALUES ('%s', %s, ARRAY%s)") % (timestamp, msg_struct['Data']['Instrument_Id'], msg_struct['Data']['Value'])
 
