@@ -140,6 +140,32 @@ def generate_pulse_graph():
 
     return message
 
+def status_log_for_each_instrument(cursor):
+    """Get a dictionary containing the most recent log entry for each instrument with log entries.
+
+    Parameters
+    ----------
+    cursor: database cursor
+
+    Returns
+    -------
+    Dictionary with the instrument ids for each log as the key and a dictionary for the log's 'author', 'status code',
+    and 'contents' as the value.
+
+    """
+    sql_query = '''SELECT i.instrument_id, users.name, l1.status, l1.contents
+            FROM instruments i
+            JOIN instrument_logs l1 ON (i.instrument_id = l1.instrument_id)
+            LEFT OUTER JOIN instrument_logs l2 ON (i.instrument_id = l2.instrument_id AND
+                (l1.time < l2.time OR l1.time = l2.time AND l1.instrument_id < l2.instrument_id))
+            LEFT OUTER JOIN sites
+                  ON (sites.site_id = i.site_id)
+                LEFT OUTER JOIN users
+                  ON (l1.author_id = users.user_id)
+            WHERE l2.instrument_id IS NULL  ORDER BY sites.name_short;
+        '''
+    cursor.execute(sql_query)
+    return {row[0]: dict(author=row[1], status_code=row[2], contents=row[3]) for row in cursor.fetchall()}
 
 @app.route('/radar_status')
 def show_radar_status():
@@ -152,22 +178,30 @@ def show_radar_status():
             their status and their most recent log entries.
     """
     cur = g.db.cursor()
-    sql_query = '''SELECT i.name_short, i.instrument_id, sites.site_id, sites.name_short, l1.contents, users.name, l1.status
-                FROM instruments i
-                JOIN instrument_logs l1 ON (i.instrument_id = l1.instrument_id)
-                LEFT OUTER JOIN instrument_logs l2 ON (i.instrument_id = l2.instrument_id AND
-                    (l1.time < l2.time OR l1.time = l2.time AND l1.instrument_id < l2.instrument_id))
-                LEFT OUTER JOIN sites
-                      ON (sites.site_id = i.site_id)
-                    LEFT OUTER JOIN users
-                      ON (l1.author_id = users.user_id)
-                WHERE l2.instrument_id IS NULL  ORDER BY sites.name_short;
-            '''
 
-    cur.execute(sql_query)
-    logs = [dict(instrument_name=row[0], instrument_id=row[1], site_id=row[2], site=row[3],
-                 contents=row[4], author=row[5], status=status_code_to_text(row[6])) for row in cur.fetchall()]
-    return render_template('radar_status.html', logs=logs)
+    # Get the most recent log for each instrument to determine its current status
+    status = status_log_for_each_instrument(cur)
+
+    # Assume the instrument status is operational unless the status has changed, handled afterward
+    cur.execute('''SELECT i.instrument_id, i.name_long, i.site_id, s.name_short
+                    FROM instruments i JOIN sites s ON s.site_id = i.site_id''')
+    rows = cur.fetchall()
+    instruments = [dict( id=row[0], instrument_name=row[1], site_id=row[2],
+                         site=row[3], status=1, author="", contents="") for row in rows]
+
+    # For each instrument, if there is a corresponding status entry from the query above,
+    # add the status and the last log's author.  If not, status will stay default operational
+    for instrument in instruments:
+        if instrument['id'] in status:
+            instrument['status'] = status[instrument['id']]["status_code"]
+            instrument['author'] = status[instrument['id']]["author"]
+            instrument['contents'] = status[instrument['id']]["contents"]
+        instrument['status'] = status_code_to_text(instrument['status'])
+
+    #logs = [dict(instrument_name=row[0], instrument_id=row[1], site_id=row[2], site=row[3],
+    #             contents=row[4], author=row[5], status=status_code_to_text(row[6])) for row in cur.fetchall()]
+
+    return render_template('radar_status.html', instruments=instruments)
 
 
 @app.route("/query", methods=['GET', 'POST'])
