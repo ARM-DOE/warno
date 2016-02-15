@@ -49,7 +49,8 @@ class test_instruments(TestCase):
         self.assertTrue(1 in values, "Value '1' is not in the returned dictionary")
         self.assert_template_used('new_instrument.html')
 
-
+    # TODO method post new instrument
+    # TODO method get generate_instrument_dygraph arguments?
     @mock.patch('psycopg2.connect')
     def test_method_get_on_instrument_when_id_is_23_calls_db_with_correct_arguments_and_returns_200(self, connect):
         connection = connect.return_value
@@ -68,6 +69,7 @@ class test_instruments(TestCase):
         self.assertTrue("description" in execute_calls[0][0],
                         "cursor.execute does not involve 'description'")
         self.assert200(result, "GET return is not '200 OK'")
+        self.assert_template_used('show_instrument.html')
 
 
     ### /instruments/instrument_id ###
@@ -79,17 +81,21 @@ class test_instruments(TestCase):
         self.assert200(result, "GET return is not '200 OK'")
 
 
-    def test_db_delete_instrument_when_id_is_10_calls_db_with_correct_arguments_and_returns_200(self):
-        # TODO Fix the reliance on 3rd execute, split delete from instruments, add 200 check
+    def test_db_delete_instrument_when_id_is_10_calls_db_with_correct_arguments(self):
         cursor = mock.Mock()
         instrument_id = 10
         instruments.db_delete_instrument(instrument_id, cursor)
         execute_calls = cursor.execute.call_args_list
-        self.assertTrue(instrument_id in execute_calls[2][0][1],
-                        "Third cursor.execute is not called with correct instrument id")
+        execute_calls_with_2_or_more_args = [call for call in execute_calls if len(call[0]) >= 2]
+        # This will only be true if there is any call with two or more arguments
+        # in which the second argument included instrument id
+        self.assertTrue(True in [instrument_id in call[0][1] for call in execute_calls_with_2_or_more_args],
+                        "No cursor execute is called with correct instrument id")
         self.assertTrue("COMMIT" in execute_calls[-1][0][0], "Final cursor.execute is not called as 'COMMIT'")
-        self.assertTrue("DELETE FROM instruments" in execute_calls[-2][0][0],
-                        "cursor.execute does not delete from instruments")
+        # Each of these checks if string is in any of the calls' sql text
+        self.assertTrue(True in ["DELETE" in call[0][0] for call in execute_calls], "No cursor has a 'DELETE'' call")
+        self.assertTrue(True in ["instruments" in call[0][0] for call in execute_calls],
+                        "No cursor execute involves 'instruments'")
 
 
     ### Database Helpers ###
