@@ -2,6 +2,7 @@ import time
 import traceback
 import json
 import os
+import datetime
 from pyarmret.io.PAFClient import PAFClient
 
 
@@ -16,7 +17,7 @@ def register(msg_queue):
     return {"instrument_name": instrument_name, "event_code_names": event_names}
 
 def get_timestamp():
-    return time.mktime(time.localtime())
+    return datetime.datetime.utcnow()
 
 def run(msg_queue, instrument_id):
     pafc = PAFClient("ena-kazr", 3000)
@@ -25,11 +26,10 @@ def run(msg_queue, instrument_id):
     i = 1
     while True:
         timestamp = get_timestamp()
-
         try:
             events = pafc.get_all_text_dict()
             events_payload = json.dumps(events)
-            msg_queue.put('{"event": "%s", "data": {"Instrument_Id": %s, "Time": %s, "Value": %s}}' % ("prosensing_paf", instrument_id, timestamp, events_payload))
+            msg_queue.put('{"event": "%s", "data": {"Instrument_Id": %s, "Time": "%s", "Value": %s}}' % ("prosensing_paf", instrument_id, timestamp, events_payload))
         except UnicodeDecodeError, e:
             with open(logfile, "a+") as log:
                 log.write("\nUnicodeDecodeError\n")
@@ -44,14 +44,14 @@ def run(msg_queue, instrument_id):
                 traceback.print_exc(limit=5, file=log)
 
         timestamp = get_timestamp()
-        msg_queue.put('{"event": "non_paf_event", "data": {"Instrument_Id": %s, "Time": %s, "Value": "%s"}}' % (instrument_id, timestamp, i))
+        msg_queue.put('{"event": "non_paf_event", "data": {"Instrument_Id": %s, "Time": "%s", "Value": "%s"}}' % (instrument_id, timestamp, i))
 
         timestamp = get_timestamp()
         i = i + 1
         if (i % 2) == 0:
             try:
                 data = pafc.get_data(product_code=32)
-                msg_queue.put('{"event": "pulse_capture", "data": {"Instrument_Id": %s, "Time": %s, "Value": %s}}' % (instrument_id, timestamp, data['data_contents'][0]))
+                msg_queue.put('{"event": "pulse_capture", "data": {"Instrument_Id": %s, "Time": "%s", "Value": %s}}' % (instrument_id, timestamp, data['data_contents'][0]))
             except Exception:
                 with open(logfile, "a+") as log:
                     log.write("\nException Traceback\n")
