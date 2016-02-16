@@ -22,7 +22,7 @@
         </tr>
 
 
-    {%  for instrument in logs %}
+    {%  for instrument in instruments %}
         <tr>
         <td><a href="{{url_for('sites.show_site', site_id= instrument.site_id)}}">{{   instrument.site }}</a></td>
         <td><a href="{{url_for('instruments.instrument', instrument_id= instrument.instrument_id)}}">{{  instrument.instrument_name }}</a></td>
