@@ -25,6 +25,7 @@ if PREFIX_PATH is None:
     print("Failed to get environment variable 'DEPLOY_CONFIG_PATH',\n"
           "which is used to determine where the configuration file\n"
           "directory is located.  Please refer to the documentation.")
+    exit(1)
 
 ## Test Commands ##
 def host_type():
