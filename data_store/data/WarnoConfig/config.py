@@ -20,16 +20,15 @@ def load_yaml_config(config_filename):
 
 def get_config_context():
     """Load Configuration Context Object.
-    This loads the config.yml file to provide the configuration context, then it appends custom values.
+    This loads the config.yml file to provide the configuration context, then it appends the secrets.yml configuration.
     """
-
-    # First we load the standard config yaml file.
     base_path = os.getenv("DATA_STORE_PATH")
     config_filename = base_path + "config.yml"
+    secrets_filename = base_path + "secrets.yml"
+
+    # First we load the standard config yaml file.
     cfg = load_yaml_config(config_filename)
-
-    # Next we add a few fields that are only here for testing.
-
-    cfg['database']['DB_PASS'] = 'warno'
+    # And then append anything from the secrets yaml file.
+    cfg.update(load_yaml_config(secrets_filename))
 
     return cfg
