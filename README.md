@@ -132,3 +132,71 @@ python populate_demo_db.py
 
 ## User Portal Access
 To access the web server from your browser, just enter "http://**ip_of_host_machine**/radar_status"
+
+<br>
+
+## Fabric
+Fabric allows the manipulation of WARNO vms remotely.
+
+### Environment
+First, running the Fabric script works best when run from the directory that
+fabfile.py is located in.
+
+Second, this Fabric script requires that you set the environment variable 
+"DEPLOY_CONFIG_PATH" to point to a configuration directory.  The configuration
+directory has a top level "secrets.yml" that will be pushed to all hosts, as well
+as a sub directory for each host, with the same name as the host.  
+
+Each directory can have it's own "config.yml", rsa key pair, or zipped database 
+dump file.  When Fabric executes for a host, it first checks for the host-specific 
+configuration file, then for a top level default in the main configuration 
+directory before abandoning.
+
+### Syntax
+```bash
+fab <command>:arg1=val1,arg2=val2 -H <host1>,<host2>
+```
+
+For the vast majority of commands run, it should be fine to use the default values, 
+simplifying it to:
+```bash
+fab <command> -H <host>
+```
+
+### Current commands
+- push_config:  pushes a "config.yml" file from the calling directory into WARNO's 
+default location for the file
+- push_keys:  pushes a pair of ssh keys, default "id_rsa" and "id_rsa.pub"
+- push_secrets: pushes "secrets.yml" in the same fashion as push_config
+- push_db_dump: pushes "db_dump.data.gz" in the same fashion as push_config
+- start_application: starts the Vagrant machine (vagrant up)
+- stop_application: stops the Vagrant machine (vagrant halt)
+- reload_application: reloads the Vagrant machine (vagrant reload)
+- destroy_application: destroys the Vagrant machine (vagrant destroy -f)
+- purge_application: destroys the Vagrant machine and forcibly removes the 
+containing folder and all files
+- push_and_replace_database: callse push_db_dump, then calls destroy_application 
+and start_application. This forces the application to reload the database dump 
+file as the database
+- update_application: the heavy hitter.  If the directory for the application 
+does not exist, creates it and moves into it. Then, if the git repository does 
+not already exist, clones the git repository into the directory.  If a Vagrant 
+machine is already running, it then halts the machine to preserve the database.  
+If "config.yml", the ssh keys, or "secrets.yml" exist in the calling directory, 
+they are then pushed into the application directory (push_config, push_keys, push_secrets). 
+After everything is in place, it then starts the application (start application)
+
+### Default Configuration
+The default configuration is meant to work in tandem with [warno-configuration]
+(http://overwatch.pnl.gov/schuman/warno-configuration).  The directory structure
+is explained on the README.
+
+The Fabric commands are designed to be run from the directory where fabfile.py
+is located.
+
+### Custom File Paths
+
+You can change the path prefix in fabfile.py, pointing to wherever you have cloned
+the configuration directory.
+
+<br>

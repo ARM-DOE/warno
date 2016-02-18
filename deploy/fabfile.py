@@ -3,8 +3,8 @@ from fabric.contrib.files import exists
 from fabric.contrib.console import confirm
 import os.path
 
-PREFIX_PATH = "../../warno-configuration/deployment/"
-WARNO_REPO = "git@overwatch.pnl.gov:hard505/warno-vagrant.git"
+PREFIX_PATH = os.environ.get('DEPLOY_CONFIG_PATH')
+
 DEFAULT_HOME = "~/warno/"
 IMAGE_SCRIPT = "set_up_images.sh"
 
@@ -21,6 +21,10 @@ SECRETS_FILENAME = "secrets.yml"
 SECRETS_FILE = DEFAULT_HOME + "warno-vagrant/data_store/data/" + SECRETS_FILENAME
 # TODO: String formatting may not be compatible with python 3
 
+if PREFIX_PATH is None:
+    print("Failed to get environment variable 'DEPLOY_CONFIG_PATH',\n"
+          "which is used to determine where the configuration file\n"
+          "directory is located.  Please refer to the documentation.")
 
 ## Test Commands ##
 def host_type():
@@ -55,6 +59,7 @@ def hello(name="world"):
 ## Push Commands ##
 # These commands by default push files from whichever directory the command was called from.
 def push_config(config=CONFIG_FILENAME, target=CONFIG_FILE, local_prefix=PREFIX_PATH):
+    print local_prefix + env.host + "/" + config
     if os.path.isfile(local_prefix + env.host + "/" + config):
         put(local_prefix + env.host + "/" + config, target)
     elif os.path.isfile(local_prefix + config):
