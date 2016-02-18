@@ -145,7 +145,8 @@ fabfile.py is located in.
 Second, this Fabric script requires that you set the environment variable 
 "DEPLOY_CONFIG_PATH" to point to a configuration directory.  The configuration
 directory has a top level "secrets.yml" that will be pushed to all hosts, as well
-as a sub directory for each host, with the same name as the host.  
+as a sub directory for each host, with the same name as the host.  The path must
+end with a trailing "/" or the script may run into parsing errors.
 
 Each directory can have it's own "config.yml", rsa key pair, or zipped database 
 dump file.  When Fabric executes for a host, it first checks for the host-specific 
