@@ -1,6 +1,6 @@
 :mod:`UserPortal.users`
 =======================
-Use it or lose it.
+Flask blueprint for reading or managing Users.
 
 Module Contents
 ---------------

@@ -1,4 +1,4 @@
 Tutorial
 ========
 
-Ha.  Future Feature.
+Future Feature.

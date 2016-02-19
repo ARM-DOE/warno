@@ -212,7 +212,7 @@ def query():
     ----------
     query: string
         Passed as an HTML form parameter, the sql query to execute.
-        
+
     Returns
     -------
     query.html: HTML document

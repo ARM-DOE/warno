@@ -1,6 +1,6 @@
 :mod:`UserPortal.logs`
 ======================
-Captain's log, stardate unknown.
+Flask blueprint for reading or managing Instrument Logs.
 
 Module Contents
 ---------------
