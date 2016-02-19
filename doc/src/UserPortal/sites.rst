@@ -1,6 +1,6 @@
 :mod:`UserPortal.sites`
 =======================
-Area 51.
+Flask blueprint for reading or managing Sites.
 
 Module Contents
 ---------------

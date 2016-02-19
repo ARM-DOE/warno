@@ -1,6 +1,6 @@
 :mod:`UserPortal.instruments`
 =============================
-Instrumentation nation.
+Flask blueprint for reading or managing Instruments.
 
 Module Contents
 ---------------

@@ -6,7 +6,8 @@
 Welcome to WARNO's documentation!
 =================================
 
-Never been cooler.
+WARNO uses microservices working in concert to monitor and pull metadata from ARM radars across the world,
+process the information, and aggregate it in a central location for long term storage and retrieval.
 
 Latest Release
 ==============
