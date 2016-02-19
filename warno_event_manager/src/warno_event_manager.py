@@ -52,7 +52,7 @@ def teardown_request(exception):
     Closes the database connection if connected.
 
     Parameters
-    -------
+    ----------
     exception: optional, Exception
         An Exception that may have caused the teardown.
     """

@@ -139,6 +139,7 @@ def db_get_instrument_references(instrument_id, cursor):
 
 def db_select_instrument(instrument_id, cursor):
     """Get an instrument's information by its database id
+
     Parameters
     ----------
     instrument_id: integer

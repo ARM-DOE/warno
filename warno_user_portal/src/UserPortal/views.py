@@ -48,7 +48,7 @@ def teardown_request(exception):
     Closes the database connection if connected.
 
     Parameters
-    -------
+    ----------
     exception: optional, Exception
         An Exception that may have caused the teardown.
     """
@@ -207,10 +207,12 @@ def show_radar_status():
 @app.route("/query", methods=['GET', 'POST'])
 def query():
     """Execute a SQL query string specified by the user.
+
     Parameters
     ----------
     query: string
         Passed as an HTML form parameter, the sql query to execute.
+        
     Returns
     -------
     query.html: HTML document
