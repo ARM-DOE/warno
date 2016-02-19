@@ -22,6 +22,7 @@ status_text = {1: "OPERATIONAL",
 
 def status_code_to_text(status):
     """Convert an instrument's status code to its text equivalent.
+
     Parameters
     ----------
     status: integer
