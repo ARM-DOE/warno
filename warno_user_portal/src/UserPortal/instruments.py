@@ -205,6 +205,9 @@ def instrument(instrument_id):
         # If there are any logs, the most recent log (the first of the list) has the current status
         if recent_logs:
             status = status_code_to_text(recent_logs[0]["status"])
+            # Change the status for each log from the enumerated code to the text name
+            for log in recent_logs:
+                log['status'] = status_code_to_text(log['status'])
         else:
             # If there are no recent logs, assume the instrument is operational
             status = "OPERATIONAL"
