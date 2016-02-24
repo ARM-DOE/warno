@@ -14,10 +14,12 @@ EXPOSE 5432
 
 ENV PGDATA /var/lib/pgsql/9.3/data
 
-# Create root superuser
-RUN /usr/pgsql-9.3/bin/pg_ctl start; sleep 5; echo "root"; psql --command "CREATE USER root WITH SUPERUSER PASSWORD 'password';";\
-psql --command "CREATE USER warno WITH SUPERUSER PASSWORD 'warno';";\
-psql --command "CREATE DATABASE warno;"
+# Set up database
+COPY data/db_setup.sh /
+COPY data/parse_yaml.sh /
+COPY data/config.yml /
+COPY data/secrets.yml /
+RUN bash db_setup.sh
 
 ENV PATH /vagrant/data_store/data/anaconda/bin:$PATH
 

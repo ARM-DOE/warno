@@ -4,9 +4,11 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source $DIR/parse_yaml.sh
 # Pulls the yaml variables out as constant variables.
 eval $(parse_yaml $DIR/config.yml)
+eval $(parse_yaml $DIR/secrets.yml)
 
 USERNAME=$database__DB_USER
 DB_ADDRESS=$database__DB_HOST
+
 
 ZIPFILE=$DIR/db_dump.data.gz
 DUMPFILE=$DIR/db_dump.data
@@ -21,11 +23,11 @@ if [[ -f $ZIPFILE ]]; then
     mv tmp.zip $ZIPFILE
     echo "Waiting for database to be ready to load data."
     while [ $ready -lt 1 ]; do
-      psql -h $DB_ADDRESS --username=$USERNAME -t -c "select now()" postgres &> /dev/null
+      PGPASSWORD=$s_database__DB_PASS psql -h $DB_ADDRESS --username=$USERNAME -t -c "select now()" postgres &> /dev/null
 
       if [ $? == 0 ]; then
         ready=1
-        psql -h $DB_ADDRESS --username=$USERNAME < $DUMPFILE
+        PGPASSWORD=$s_database__DB_PASS psql -h $DB_ADDRESS --username=$USERNAME < $DUMPFILE
         if [ $? != 0 ]; then
           echo "Could not load database from file."
         fi
