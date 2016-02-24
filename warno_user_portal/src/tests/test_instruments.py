@@ -1,53 +1,105 @@
 import flask
 import mock
 import requests
-from unittest import TestCase
+from flask.ext.testing import TestCase
 
 from UserPortal import instruments
 from UserPortal import views
 
 class test_instruments(TestCase):
 
+    render_templates = False
+
+    def create_app(self):
+        views.app.config['TESTING'] = True
+        return views.app
+
+
     @mock.patch('psycopg2.connect')
-    def test_method_type_get_instrument_id_is_23(self, connect):
-        with views.app.test_client() as c:
-            connection = connect.return_value
-            cursor = connection.cursor.return_value
-            instrument_id = 23
-            test_url = "/instruments/%s" % instrument_id
-            result = c.get(test_url)
-            execute_calls = cursor.execute.call_args
-            print execute_calls
-            self.assertTrue(u'%s' % instrument_id in execute_calls[0][1],
-                            "cursor.execute is not called with correct instrument id")
-            self.assertTrue("SELECT special, description" in execute_calls[0][0],
-                            "cursor.execute does not select the columns 'special' and 'description'")
-            self.assertEqual(result.status, '200 OK', "GET return is not '200 OK'")
+    def test_list_instruments_returns_200_and_passes_mock_db_instruments_as_context_variable_using_correct_template(self, connect):
+        connection = connect.return_value
+        cursor = connection.cursor.return_value
+        # Mocked return is larger than necessary to allow the code some flexibility
+        db_return = [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]]
+        cursor.fetchall.return_value = db_return
+        result = self.client.get('/instruments')
+        self.assert200(result, "GET return is not '200 OK'")
+        # Accessing context variable by name feels brittle, but it seems to be the only way
+        context_instruments = self.get_context_variable('instruments')
+        values = [value for key, value in context_instruments[0].iteritems()]
+        self.assertTrue(0 in values, "Value '0' is not in the returned dictionary")
+        self.assertTrue(1 in values, "Value '1' is not in the returned dictionary")
+        self.assertTrue(2 in values, "Value '2' is not in the returned dictionary")
+        self.assert_template_used('instrument_list.html')
+
+
+    @mock.patch('psycopg2.connect')
+    def test_method_get_on_new_instrument_returns_200_ok_and_passes_mock_db_sites_as_context_variable_using_correct_template(self, connect):
+        connection = connect.return_value
+        cursor = connection.cursor.return_value
+        # Mocked return is larger than necessary to allow the code some flexibility
+        db_return = [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]]
+        cursor.fetchall.return_value = db_return
+        result = self.client.get('/instruments/new')
+        self.assert200(result)
+        # Accessing context variable by name feels brittle, but it seems to be the only way
+        context_instruments = self.get_context_variable('sites')
+        values = [value for key, value in context_instruments[0].iteritems()]
+        self.assertTrue(0 in values, "Value '0' is not in the returned dictionary")
+        self.assertTrue(1 in values, "Value '1' is not in the returned dictionary")
+        self.assert_template_used('new_instrument.html')
+
+    # TODO method post new instrument
+    # TODO method get generate_instrument_dygraph arguments?
+    @mock.patch('psycopg2.connect')
+    def test_method_get_on_instrument_when_id_is_23_calls_db_with_correct_arguments_and_returns_200(self, connect):
+        connection = connect.return_value
+        cursor = connection.cursor.return_value
+        instrument_id = 23
+        test_url = "/instruments/%s" % instrument_id
+        result = self.client.get(test_url)
+        execute_calls = cursor.execute.call_args
+        print execute_calls
+        self.assertTrue(u'%s' % instrument_id in execute_calls[0][1],
+                        "cursor.execute is not called with correct instrument id")
+        self.assertTrue("SELECT" in execute_calls[0][0],
+                        "cursor.execute does not 'SELECT'")
+        self.assertTrue("special" in execute_calls[0][0],
+                        "cursor.execute does not involve 'special'")
+        self.assertTrue("description" in execute_calls[0][0],
+                        "cursor.execute does not involve 'description'")
+        self.assert200(result, "GET return is not '200 OK'")
+        self.assert_template_used('show_instrument.html')
+
 
     ### /instruments/instrument_id ###
     @mock.patch('psycopg2.connect')
-    def test_method_type_delete_instrument_id_is_23(self, connect):
-        with views.app.test_client() as c:
-            connection = connect.return_value
-            cursor = connection.cursor.return_value
-            instrument_id = 23
-            test_url = "/instruments/%s" % instrument_id
-            result = c.delete(test_url)
-            self.assertEqual(result.status, '200 OK', "GET return is not '200 OK'")
+    def test_method_delete_on_instrument_when_id_is_23_returns_200(self, connect):
+        instrument_id = 23
+        test_url = "/instruments/%s" % instrument_id
+        result = self.client.delete(test_url)
+        self.assert200(result, "GET return is not '200 OK'")
 
-    def test_db_delete_instrument_id_is_10(self):
+
+    def test_db_delete_instrument_when_id_is_10_calls_db_with_correct_arguments(self):
         cursor = mock.Mock()
         instrument_id = 10
         instruments.db_delete_instrument(instrument_id, cursor)
         execute_calls = cursor.execute.call_args_list
-        self.assertTrue(instrument_id in execute_calls[2][0][1],
-                        "Third cursor.execute is not called with correct instrument id")
+        execute_calls_with_2_or_more_args = [call for call in execute_calls if len(call[0]) >= 2]
+        # This will only be true if there is any call with two or more arguments
+        # in which the second argument included instrument id
+        self.assertTrue(True in [instrument_id in call[0][1] for call in execute_calls_with_2_or_more_args],
+                        "No cursor execute is called with correct instrument id")
         self.assertTrue("COMMIT" in execute_calls[-1][0][0], "Final cursor.execute is not called as 'COMMIT'")
-        self.assertTrue("DELETE FROM instruments" in execute_calls[-2][0][0],
-                        "cursor.execute does not delete from instruments")
+        # Each of these checks if string is in any of the calls' sql text
+        self.assertTrue(True in ["DELETE" in call[0][0] for call in execute_calls], "No cursor has a 'DELETE'' call")
+        self.assertTrue(True in ["instruments" in call[0][0] for call in execute_calls],
+                        "No cursor execute involves 'instruments'")
+
 
     ### Database Helpers ###
-    def test_db_get_instrument_references(self):
+    def test_db_get_instrument_references_calls_db_with_correct_arguments_and_returns_mock_db_results(self):
         cursor = mock.Mock()
         db_return = ["return"]
         cursor.fetchall.return_value = db_return
@@ -62,9 +114,10 @@ class test_instruments(TestCase):
         self.assertEqual(db_return, result, "cursor.execute does not return the select result")
 
 
-    def test_db_select_instrument_id_is_10(self):
+    def test_db_select_instrument_when_id_is_10_calls_db_with_correct_arguments_and_returns_mock_db_results(self):
         cursor = mock.Mock()
-        db_return = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        # Mocked return is larger than necessary to allow the code some flexibility
+        db_return = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
         cursor.fetchone.return_value = db_return
         instrument_id = 10
         result = instruments.db_select_instrument(instrument_id, cursor)
@@ -76,12 +129,13 @@ class test_instruments(TestCase):
         values = [value for key, value in result.iteritems()]
         self.assertTrue(0 in values, "Value '0' is not in the returned dictionary")
         self.assertTrue(1 in values, "Value '1' is not in the returned dictionary")
-        self.assertTrue(10 in values, "Value '10' is not in the returned dictionary")
-        #self.assertTrue(False)
+        self.assertTrue(2 in values, "Value '2' is not in the returned dictionary")
 
-    def test_db_recent_logs_by_instrument_id_is_15_default_maximum_number(self):
+
+    def test_db_recent_logs_by_instrument_when_id_is_15_and_maximum_number_is_default_calls_db_with_correct_arguments(self):
         cursor = mock.Mock()
-        db_return = [[0, 1, 2, 3, 4], [5, 6, 7, 8, 9]]
+        # Mocked returns are larger than necessary to allow the code some flexibility
+        db_return = [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9], [11, 12, 13, 14, 15, 16, 17, 18, 19]]
         cursor.fetchall.return_value = db_return
         instrument_id = 15
         result = instruments.db_recent_logs_by_instrument(instrument_id, cursor)
@@ -94,13 +148,15 @@ class test_instruments(TestCase):
         self.assertTrue("instrument_logs" in executed_call[0][0], "cursor.execute does not involve 'instrument_logs'")
         self.assertTrue("status" in executed_call[0][0], "cursor.execute does not involve 'status'")
         values = [value for key, value in result[1].iteritems()]
-        self.assertTrue(5 in values, "Value '5' is not in the returned dictionary for the second log")
-        self.assertTrue(6 in values, "Value '6' is not in the returned dictionary for the second log")
-        self.assertTrue(9 in values, "Value '9' is not in the returned dictionary for the second log")
+        self.assertTrue(11 in values, "Value '11' is not in the returned dictionary for the second log")
+        self.assertTrue(12 in values, "Value '12' is not in the returned dictionary for the second log")
+        self.assertTrue(13 in values, "Value '13' is not in the returned dictionary for the second log")
 
-    def test_db_recent_logs_by_instrument_id_is_15_maximum_number_is_11(self):
+
+    def test_db_recent_logs_by_instrument_when_id_is_15_and_maximum_number_is_11_calls_db_with_correct_arguments(self):
         cursor = mock.Mock()
-        db_return = [[0, 1, 2, 3, 4], [5, 6, 7, 8, 9]]
+        # Mocked returns are larger than necessary to allow the code some flexibility
+        db_return = [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9], [11, 12, 13, 14, 15, 16, 17, 18, 19]]
         cursor.fetchall.return_value = db_return
         instrument_id = 15
         maximum_number = 11
@@ -115,10 +171,12 @@ class test_instruments(TestCase):
 
     ### Helper Functions ###
 
-    def test_valid_columns_for_instrument(self):
+    def test_valid_columns_for_instrument_calls_db_with_correct_arguments_and_returns_expected_column_list(self):
         cursor = mock.Mock()
         expected_column_list = ["integer", "not_special_table"]
+        # Each reference is a boolean specifying whether it is a 'special' table along with the name of the table
         references = [[True, "special_table"], [False, "not_special_table"]]
+        # Datetime should not be a valid data type and should not make it into results
         special_table_entries = [["integer", "integer"],["datetime", "datetime"]]
         cursor.fetchall.side_effect = [references, special_table_entries]
         instrument_id = 10
@@ -135,6 +193,7 @@ class test_instruments(TestCase):
         self.assertTrue(instrument_id in executed_calls[0][0][1],
                         "First cursor.execute not called with correct instrument id")
 
+        # Second database execute expected to be performed on a 'special' table only
         self.assertTrue("FROM information_schema.columns" in executed_calls[1][0][0],
                         "Second cursor.execute never accesses 'information_schema.columns'")
         self.assertTrue("special_table" in executed_calls[1][0][1],
