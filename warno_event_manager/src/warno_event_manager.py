@@ -61,6 +61,7 @@ is_central = 0
 cf_url = ""
 headers = {'Content-Type': 'application/json'}
 
+cert_verify=False
 
 def connect_db():
     """Connect to database.
@@ -144,7 +145,7 @@ def event():
         # If application is at a site instead of the central facility, passes data on to be saved at central facility
         if not is_central:
             payload = json.loads(msg)
-            requests.post(cf_url, json=payload, headers=headers)
+            requests.post(cf_url, json=payload, headers=headers, verify=cert_verify)
         return msg
 
 
@@ -168,7 +169,7 @@ def save_special_prosensing_paf(msg, msg_struct):
 
     if not is_central:
         payload = json.loads(msg)
-        requests.post(cf_url, json=payload, headers=headers)
+        requests.post(cf_url, json=payload, headers=headers, verify=cert_verify)
     return msg
 
 
@@ -184,7 +185,7 @@ def save_pulse_capture(msg, msg_struct):
 
     if not is_central:
         payload = json.loads(msg)
-        requests.post(cf_url, json=payload, headers=headers)
+        requests.post(cf_url, json=payload, headers=headers, verify=cert_verify)
     return msg
 
 def get_instrument_id(msg, msg_struct):
@@ -207,7 +208,7 @@ def get_instrument_id(msg, msg_struct):
         # If it does not exist at a site, requests the site information from the central facility
         else:
             payload = json.loads(msg)
-            response = requests.post(cf_url, json=payload, headers=headers)
+            response = requests.post(cf_url, json=payload, headers=headers, verify=cert_verify)
             cf_msg = dict(json.loads(response.content))
             cf_data = cf_msg['Data']
             # Need to add handler for if there is a bad return from CF (if clause above)
@@ -240,7 +241,7 @@ def get_site_id(msg, msg_struct):
         # If it does not exist at a site, requests the site information from the central facility
         else:
             payload = json.loads(msg)
-            response = requests.post(cf_url, json=payload, headers=headers)
+            response = requests.post(cf_url, json=payload, headers=headers, verify=cert_verify)
             cf_msg = dict(json.loads(response.content))
             cf_data = cf_msg['Data']
             # Need to add handler for if there is a bad return from CF (if clause above)
@@ -292,7 +293,7 @@ def get_event_code(msg, msg_struct):
     # If it is not defined at a site, requests the event code from the central facility
     else:
         payload = json.loads(msg)
-        response = requests.post(cf_url, json=payload, headers=headers)
+        response = requests.post(cf_url, json=payload, headers=headers, verify=cert_verify)
         cf_msg = dict(json.loads(response.content))
         cur.execute('''INSERT INTO event_codes(event_code, description) VALUES (%s, %s)''',
                     (cf_msg['Event_Code'], cf_msg['Data']['description']))
@@ -378,6 +379,7 @@ if __name__ == '__main__':
         is_central = 1
     else:
         cf_url = cfg['setup']['cf_url']
+        cert_verify = cfg['setup']['cert_verify']
 
     initialize_database()
 
