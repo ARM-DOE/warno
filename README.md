@@ -49,24 +49,42 @@ sudo firewall-cmd --reload
 ```
 
 <br>
+
+Then, make sure to download the newest VM and Docker images. In the main directory:
+```bash
+bash set_up_images.sh
+```
+
+<br>
 After this, you should have everything set up on the host side.
 
 <br>
 
 ## Start Up Configuration
 
-WARNO Vagrant is run with the event manager as either a "site"  event manager or a "central" event manager.
+WARNO Vagrant is run with the event manager as either a "site"  event manager or a "central" event manager.  
+
+WARNO now runs encrypted by SSL between machines.  On the same VM, however, it communicates internally with standard HTTP requests.
 
 <br>
-The default setting is as a "site" event manager.  In *warno-event-manager/src/config.yml* set "cf_url" to "http://**your_central_event_manager_ip**/eventmanager/event"
+The default setting is as a "site" event manager.  In *data_store/data/config.yml* set "cf_url" to "https://**your_central_event_manager_ip**/eventmanager/event"
+
+If you want to run it as a "central" event manager instead, in *data_store/data/config.yml*, change "central: 0" to "central: 1"
+
+If you want to receive data from the agent running in the virtual machine, set "em_url" in *data_store/data/config.yml* to "https://**your_event_manager_ip**/eventmanager/event" or to "http://eventmanager/event" if it is in the same Vagrant virtual machine.
 
 <br>
-If you want to run it as a "central" event manager instead, there are a few different configuration files to change with the current version:
-- In both *warno-event-manager/src/config.yml* and *warno-user-portal/src/config.yml*, change "central: 0" to "central: 1"
-- In *warno-event-manager/src/database/utility.py* change the db address at the top and in each of the engine calls to "192.168.50.100"
 
-<br>
-If you want to receive data from the agent running in the virtual machine, set "em_url" in *warno-agent/src/config.yml* to "http://**your_event_manager_ip**/eventmanager/event" or to "http://eventmanager/event" if it is in the same Vagrant virtual machine.
+If you have a self signed SSL certificate and private certificate key you would like to use on a machine to encrypt incoming connections, name them *cacert.pem* and *privkey.pem* respectively and place them in *proxy/*
+
+If you would rather generate new ones, run the bash script *gen_certs.sh* in the main directory, which will generate and place the files.
+
+On any machine that would like to communicate with the certified machine, there are three settings for "cert_verify" in *data_store/data/config.yml*:
+- "False"  Means the machine will not try to verify that the certificate is correct, and will blindly trust it (not safe for production).
+- "True"  Means the machine will attempt to verify the certificate with a real certificate authority (CA).
+- "container/path/to/cert"  Will look for a copy of the self signed certificate mentioned above to locally verify the connection.  
+This allows you to manually copy the "cacert.pem" from before into the data directory to allow for fairly confident verification without an outside CA.
+Currently, setting this to "/opt/data/cacert.pem" and copying the *cacert.pem* from before to *data_store/data/cacert.pem* allows either the Event Manager or the Agent to access it as needed.
 
 <br>
 ## Multiple VM's one one machine
@@ -92,29 +110,33 @@ To start up your Vagrant machine, enter
 vagrant up
 ```
 
-If you have just cloned this repository, it is required to do a 
-```bash
-git submodule update --init --recursive
-```
-to pull in the pyarmret submodule.
-<br>
 
-Note that currently, occasionally the machine will get stuck at "connection timeout. retrying..."
+Note that currently, occasionally the machine will get stuck at "Mounting NFS shared folders...".
 
-If this should happen, reload the machine, either with the gentle
+If this is the case, first attempt:
 ```bash
-vagrant reload
+sudo systemctl restart nfs-server
 ```
 
+If that doesn't work, your firewall may be misconfigured, in which case a quick
+```bash
+sudo systemctl stop firewalld
+```
+followed by a
+```bash
+sudo systemctl start firewalld
+```
+after the VM starts making progress again should remedy the issue.  This is not a permanent solution, however, and you should attempt to remedy the firewall configuration issues.
+
 <br>
 
-Or the more nuclear:
+If you suspect the machine failed in some way to be properly created, you can recreate it by:
 ```bash
 vagrant destroy
 vagrant up
 ```
 
-Note that this will destroy the current virtual machine.
+Note that this will destroy the current virtual machine, and any non-persistant data inside.
 
 <br>
 
@@ -123,12 +145,8 @@ Note that this will destroy the current virtual machine.
 WARNO pre-populates some basic sites and users when it loads up.
 
 <br>
-To demo data with basic information (basic sites, instruments, instrument data, logs, etc.):
-```bash
-vagrant ssh
-cd /vagrant/warno-event-manager/src/database/
-python populate_demo_db.py
-```
+To demo data with basic information (basic sites, instruments, instrument data, logs, etc.), simply set "database":"test_db" to True in *data_store/data/config.yml*
 
 ## User Portal Access
-To access the web server from your browser, just enter "http://**ip_of_host_machine**/radar_status"
+To access the web server from your browser, just enter "https://**ip_of_host_machine**"
+
