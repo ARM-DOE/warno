@@ -36,6 +36,7 @@ class Agent(object):
         self.running_plugin_list = []
         self.plugin_module_list = []
         self.main_loop_boolean = True
+        self.cert_verify = self.config_ctxt['setup']['cert_verify']
 
     def set_plugin_path(self, path=None):
         """
@@ -195,7 +196,7 @@ class Agent(object):
 
         msg = '{"Event_Code": %d, "Data": %s}' % (code, json.dumps(data))
         payload = json.loads(msg)
-        response = requests.post(self.event_manager_url, json=payload, headers=headers)
+        response = requests.post(self.event_manager_url, json=payload, headers=headers, verify=self.cert_verify)
         return response
 
     def main(self):
@@ -218,7 +219,7 @@ class Agent(object):
             try:
                 conn_attempt +=1
                 self.site_id = self.request_site_id_from_event_manager()
-                continue
+                break
             except Exception as e:
                 print("Error Connecting. Connection Attempt {0}. Sleeping for 5 seconds.".format(conn_attempt))
                 print(e)
@@ -261,7 +262,7 @@ class Agent(object):
         event_code = self.event_code_dict[event['event']]
         event_msg = '{"Event_Code": %s, "Data": %s}' % (event_code, json.dumps(event['data']))
         payload = json.loads(event_msg)
-        response = requests.post(self.em_url, json=payload, headers=headers)
+        response = requests.post(self.em_url, json=payload, headers=headers, verify=self.cert_verify)
         return response
 
 
