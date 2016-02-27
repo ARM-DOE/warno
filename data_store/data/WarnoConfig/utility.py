@@ -70,7 +70,7 @@ def signal_handler( signal, frame):
     Parameters
     ----------
     signal: signal
-        Signal to catch
+        Signal to catch.
     frame: frame
         frame
     """
@@ -81,11 +81,28 @@ def signal_handler( signal, frame):
 
 ### Database ###
 def load_dumpfile():
-    #cmd = "ls /vagrant; ls /vagrant/data_store; ls vagrant/data_store/data"#; bash /vagrant/data_store/data/db_load.sh"
+    """Runs the 'db_load' script in a subprocess to load a postgresql database dump into the database, and waits for the
+    subprocess to finish.
+
+    """
     p = subprocess.Popen(["bash", "/vagrant/data_store/data/db_load.sh"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     p.wait()
 
 def table_exists(table_name, curr):
+    """Checks whether a table with name 'table_name' exists in the database.
+
+    Parameters
+    ----------
+    table_name: string
+        Name of the postgresql table to be checked.
+    curr: database cursor
+
+    Returns
+    -------
+    result: boolean
+        Returns True if the table exists, otherwise False.
+
+    """
     SQL = "SELECT relname FROM pg_class WHERE relname = %s;"
     curr.execute(SQL, (table_name,))
     if curr.fetchone() == None:
@@ -95,6 +112,15 @@ def table_exists(table_name, curr):
 
 
 def drop_table(table_name, curr):
+    """Drops the database table with the name 'table_name'
+
+    Parameters
+    ----------
+    table_name: string
+        Name of table to drop.
+    curr: database cursor
+
+    """
     SQL = "DROP TABLE IF EXISTS %s;"
     try:
         curr.execute(SQL, (table_name,))
@@ -103,6 +129,14 @@ def drop_table(table_name, curr):
 
 
 def create_table_from_file(filename, curr):
+    """Reads in a data file written in postgresql and executes the contents in the database
+
+    Parameters
+    ----------
+    filename: string
+        Name of the file to read from.
+    curr: database cursor
+    """
     f = open(filename)
     try:
         curr.execute(f.read())
@@ -111,6 +145,41 @@ def create_table_from_file(filename, curr):
 
 
 def initialize_database(curr, path="schema/"):
+    """Initializes the database with the schemas in the "path" directory. Current tables to be created are:
+
+    - users
+
+    - sites
+
+    - instruments
+
+    - instrument_logs
+
+    - usage
+
+    - prosensing_paf
+
+    - event_codes
+
+    - events_with_text
+
+    - events_with_value
+
+    - pulse_captures
+
+    - table_references
+
+    - instrument_data_references
+
+    If the table does not already exist, creates it from the file 'path/table_name.schema'
+
+    Parameters
+    ----------
+    curr: database cursor
+    path: string, optional
+        Path that the schema files are expected to be in, defaults to "schema/".
+
+    """
     schema_list = [
                    "users",
                    "sites",
@@ -133,6 +202,25 @@ def initialize_database(curr, path="schema/"):
 
 
 def load_data_into_table(filename, table, conn):
+    """Loads a comma separated (no spaces) file 'filename' into the database table 'table'.
+
+    Example data file "table_name.schema":
+
+    | column_name_1,column_name_2
+    | row_1_column_1_value,row_1_column_2_value
+    | row_2_column_1_value,row_2_column_2_value
+    | ...
+    | (etc.)
+
+    Parameters
+    ----------
+    filename: string
+        Name of the file to load into the table.
+    table: string
+        Name of the table to load the file into.
+    conn: database connection
+
+    """
     df = pandas.read_csv(filename)
     keys = df.keys()
     db_cfg = config.get_config_context()['database']
@@ -143,7 +231,18 @@ def load_data_into_table(filename, table, conn):
 
 
 def dump_table_to_csv(filename, table, server=None):
+    """Dumps the database table named 'table' as a comma separated file into 'filename', from database server 'server' if supplied.
 
+    Parameters
+    ----------
+    filename: string
+        Name of the file to be written to.
+    table: string
+        Name of the database table to dump into a file.
+    server: sqlalchemy engine, optional
+        A sqlalchemy engine for whichever database server the data will be read from, defaults to the default WARNO server.
+
+    """
     if server is None:
         db_cfg = config.get_config_context()['database']
         s_db_cfg = config.get_config_context()['s_database']
@@ -157,6 +256,12 @@ def dump_table_to_csv(filename, table, server=None):
 
 
 def connect_db():
+    """ Connects to the default WARNO database server.
+    Returns
+    -------
+    psychopg2 connection object for the WARNO database server.
+
+    """
     db_cfg = config.get_config_context()['database']
     s_db_cfg = config.get_config_context()['s_database']
     return psycopg2.connect("host=%s dbname=%s user=%s password=%s" %
