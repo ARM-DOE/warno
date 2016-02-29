@@ -332,6 +332,21 @@ def get_site_id(msg, msg_struct):
 
 
 def save_instrument_data_reference(msg, msg_struct):
+    """Checks to see if there is already an instrument data reference for this event code, and if there isn't, creates
+    one. Instrument data references are used to allow the servers to track which events are pertinent to a particular
+    instrument (some events are for all instruments, some only for specific instrument types).  If an instrument data
+    reference is to be added, this function also determines whether the reference is 'special' or not.  If there is an
+    entire special table devoted to the event (where 'description' is the table name), then it is classified as 'special'.
+
+    Parameters
+    ----------
+    msg: JSON
+        JSON message structure, expected format:
+        {Event_Code: *code*, Data: {instrument_id: *instrument id*, description: *event description*}}
+    msg_struct: dictionary
+        Decoded version of msg, converted to python dictionary.
+
+    """
     print("Message Struct for Data Reference: %s", msg_struct)
     cur = g.db.cursor()
     cur.execute('''SELECT * FROM instrument_data_references WHERE instrument_id = %s AND description = %s''', (msg_struct['Data']['instrument_id'], msg_struct['Data']['description']))
@@ -399,7 +414,14 @@ def get_event_code(msg, msg_struct):
 
 
 def initialize_database():
+    """Initializes the database.  If the database is specified in config.yml as a 'test_db', the database is wiped when
+    at the beginning to ensure a clean load.  If it is not a test database, a utility function is called to attempt to
+    load in a postgresql database dumpfile if it exists.  First, the tables are initialized, and then if no basic database
+    entries exists (users, sites, event codes), they are created.  Then, if it is designated a test database, any table
+    that does not contain any entries will be filled with demo data.
 
+    """
+    print("Initialization Function")
     db = utility.connect_db()
     cur = db.cursor()
 
@@ -465,6 +487,13 @@ def initialize_database():
 
 @app.route('/eventmanager')
 def hello_world():
+    """Calculates very basic information and returns a string with it.  Used to verify that the event manager is
+    operational and accessible from the outside.
+
+    Returns
+    -------
+    String message with basic information such as current CPU usage.
+    """
     ret_message = 'Hello World! Event Manager is operational. CPU Usage on Event Manager VM is: %g \n ' % psutil.cpu_percent()
     ret_message2 = '\n Site is: %s' % os.environ.get('SITE')
     return ret_message + ret_message2
