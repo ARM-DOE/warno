@@ -32,8 +32,9 @@ def connect_db():
     """
 
     db_cfg = config.get_config_context()['database']
+    s_db_cfg = config.get_config_context()['s_database']
     return psycopg2.connect("host=%s dbname=%s user=%s password=%s" %
-                            (db_cfg['DB_HOST'], db_cfg['DB_NAME'], db_cfg['DB_USER'], db_cfg['DB_PASS']))
+                            (db_cfg['DB_HOST'], db_cfg['DB_NAME'], db_cfg['DB_USER'], s_db_cfg['DB_PASS']))
 
 
 @app.before_request

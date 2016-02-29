@@ -4,7 +4,7 @@ from .. import config
 
 
 class TestGet_config_context(TestCase):
-    list_required_keys = ['DB_HOST', 'DB_USER', 'DB_PASS']
+    list_required_keys = ['DB_HOST', 'DB_USER', 'DB_NAME']
 
     def test_get_config_context_database_entries(self):
         '''Test the configuration context'''
@@ -13,6 +13,8 @@ class TestGet_config_context(TestCase):
 
         for value in self.list_required_keys:
             self.assertIn(value, cfg['database'], 'config context does not contain key:"%s"' % value)
+
+        self.assertIn('DB_PASS', cfg['s_database'], 'config context does not contain key: "DB_PASS"')
 
     def test_get_config_context_top_level_dicts(self):
         cfg = config.get_config_context()
