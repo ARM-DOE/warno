@@ -4,6 +4,7 @@ from fabric.contrib.console import confirm
 import os.path
 
 PREFIX_PATH = os.environ.get('DEPLOY_CONFIG_PATH')
+WARNO_REPO = "git@overwatch.pnl.gov:hard505/warno-vagrant.git"
 
 DEFAULT_HOME = "~/warno/"
 IMAGE_SCRIPT = "set_up_images.sh"
