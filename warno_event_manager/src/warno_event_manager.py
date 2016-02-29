@@ -7,8 +7,13 @@ import yaml
 import psycopg2
 import time
 
+
+import sqlalchemy
 from WarnoConfig import config
 from WarnoConfig import utility
+from WarnoConfig import database
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 app = Flask(__name__)
 
@@ -265,7 +270,7 @@ def get_event_code(msg, msg_struct):
 
 
 def initialize_database():
-    print("Initialization Function")
+
     db = utility.connect_db()
     cur = db.cursor()
 
@@ -278,8 +283,11 @@ def initialize_database():
         # If it is not a test database, first attempt to load database from an existing postgres dumpfile
         utility.load_dumpfile()
 
-    utility.initialize_database(cur, path="database/schema")
-    db.commit()
+
+    print("Initialization Function")
+    engine = create_engine('postgresql://warno:warno@192.168.50.100:5432/warno')
+    database.Base.metadata.bind = engine
+    database.Base.metadata.create_all(engine)
 
     cur.execute("SELECT * FROM users LIMIT 1")
     if cur.fetchone() == None:
