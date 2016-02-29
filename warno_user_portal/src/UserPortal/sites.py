@@ -128,7 +128,7 @@ def show_site(site_id):
                     JOIN sites s ON i.site_id = s.site_id
                     WHERE s.site_id = %s
                     ORDER BY time DESC LIMIT 5''', (site_id,))
-    recent_logs = [dict(time=row[0], contents=row[1], status=row[2], supporting_images=row[3],
+    recent_logs = [dict(time=row[0], contents=row[1], status=status_code_to_text(row[2]), supporting_images=row[3],
                         author=row[4], instrument=row[5]) for row in cur.fetchall()]
 
     # Get the most recent log for each instrument to determine its current status
