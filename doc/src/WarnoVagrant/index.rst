@@ -9,17 +9,16 @@ Welcome to WARNO's documentation!
 WARNO uses microservices working in concert to monitor and pull metadata from ARM radars across the world,
 process the information, and aggregate it in a central location for long term storage and retrieval.
 
-Table of Contents
-=================
+Latest Release
+==============
 
 .. toctree::
    :maxdepth: 2
 
-   introduction
-   design
-   tutorial
-   WarnoVagrant/index.rst
-
+   WarnoConfig/index
+   Agent/index
+   UserPortal/index
+   EventManager/index
 
 Indices and tables
 ==================
@@ -27,8 +26,4 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
-.. include:: introduction.rst
-
-.. include:: design.rst
 
