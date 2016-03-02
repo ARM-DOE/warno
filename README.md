@@ -75,16 +75,21 @@ If you want to receive data from the agent running in the virtual machine, set "
 
 <br>
 
-If you have a self signed SSL certificate and private certificate key you would like to use on a machine to encrypt incoming connections, name them *cacert.pem* and *privkey.pem* respectively and place them in *proxy/*
+If you have a self signed SSL certificate and private certificate key you would like to use on a machine to encrypt incoming 
+connections, name them *cacert.pem* and *privkey.pem* respectively and place them in *proxy/*
 
-If you would rather generate new ones, run the bash script *gen_certs.sh* in the main directory, which will generate and place the files.
+If you would rather generate new ones, run the bash scripts *gen_ca.sh* and then *gen_certs.sh* in the main directory, 
+which will generate and place the files. 
 
-On any machine that would like to communicate with the certified machine, there are three settings for "cert_verify" in *data_store/data/config.yml*:
+On any machine that would like to communicate with the certified machine, there are three settings for "cert_verify" in 
+*data_store/data/config.yml*:
 - "False"  Means the machine will not try to verify that the certificate is correct, and will blindly trust it (not safe for production).
 - "True"  Means the machine will attempt to verify the certificate with a real certificate authority (CA).
 - "container/path/to/cert"  Will look for a copy of the self signed certificate mentioned above to locally verify the connection.  
-This allows you to manually copy the "cacert.pem" from before into the data directory to allow for fairly confident verification without an outside CA.
-Currently, setting this to "/opt/data/cacert.pem" and copying the *cacert.pem* from before to *data_store/data/cacert.pem* allows either the Event Manager or the Agent to access it as needed.
+This allows you to manually copy the "rootCA.pem" that was used to generate the certs (either locally if you generated the certs 
+or copied from where the certs came from) into the data directory to allow for fairly confident verification without an outside CA.
+Currently, setting this to "/opt/data/rootCA.pem" (path is due to how docker adds the volume) and copying the *rootCA.pem* from 
+before to *data_store/data/rootCA.pem* allows either the Event Manager or the Agent to access it as needed.
 
 <br>
 ## Multiple VM's one one machine
@@ -218,4 +223,3 @@ You can change the path prefix in fabfile.py, pointing to wherever you have clon
 the configuration directory.
 
 <br>
-
