@@ -2,9 +2,6 @@
 =======================
 The Views module is responsible for tying together the other code categories, which are stored as Flask blueprints.
 
-Module Contents
----------------
-
 .. automodule:: UserPortal.views
     :members:
     :undoc-members:

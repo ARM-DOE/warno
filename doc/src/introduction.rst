@@ -1,20 +1,16 @@
 Introduction
 ============
 
-WARNO uses a Vagrant VM to create a uniform environment regardless of what OS it is on, and within that VM
-starts and manages multiple Docker containers, each of them providing their own service to the other containers
-or to the user.
+WARNO is designed to allow communication and management of data between machines.  It is used primarily for the
+acquisition and processing of instrument status information. An 'Agent' VM uses plugins to process data from an
+instrument, generalizes the information, and passes it along to an 'Event Manager'.
 
-Current services include:
+The Event Manager then saves the
+data locally and passes the information on to a central Event Manager.  The end result of this is that one or more
+Agents can gather and process data from their respective instruments and then all nearby agents can pass their information
+one Event Manager.
 
-- Agent: Gathers, processes, and passes information to the Event Manager (localhost or remote)
-
-- Event Manager: Gathers data passed from multiple agents and either passes it to a more comprehensive Event Manager or stores it in database.
-
-- User Portal:  Web server allowing users to either visit the web site to access data or to pull out data through a set of API hooks.
-
-- Postgresql:  A database server.
-
-- Data Store:  The physical location for database files, configuration, tool installations, and more to be shared between containers.
-
-- Proxy:  An NGINX proxy server responsible for determining whether requests should be passed to the User Portal or the Event Manager running within the same VM.
+All of the Event Managers, each managing the messages from one or more Agents, can then pass on their
+messages onto the central Event Manager, which will receive, process, and store all of the data from all instruments.
+Users can then browse to a 'User Portal' from any VM with an Event Manager to view data or modify they system, such as
+submitting an instrument log.
