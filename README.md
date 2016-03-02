@@ -124,6 +124,7 @@ sudo systemctl restart nfs-server
 ```
 
 If that doesn't work, your firewall may be misconfigured, in which case a quick
+<<<<<<< HEAD
 ```bash
 sudo systemctl stop firewalld
 ```
@@ -131,6 +132,15 @@ followed by a
 ```bash
 sudo systemctl start firewalld
 ```
+=======
+```bash
+sudo systemctl stop firewalld
+```
+followed by a
+```bash
+sudo systemctl start firewalld
+```
+>>>>>>> 53cf69b87a02b8a897c1e04b4af33fcf99bcdcd2
 after the VM starts making progress again should remedy the issue.  This is not a permanent solution, however, and you should attempt to remedy the firewall configuration issues.
 
 <br>
@@ -223,3 +233,4 @@ You can change the path prefix in fabfile.py, pointing to wherever you have clon
 the configuration directory.
 
 <br>
+
