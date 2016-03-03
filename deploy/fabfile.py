@@ -95,7 +95,7 @@ def push_ssl_CA(local_prefix):
     else:
         print("No local CA file found")
 
-def push_ssl_certs(local_prefix)
+def push_ssl_certs(local_prefix):
     if (os.path.isfile(local_prefix + env.host + "/" + "cacert.pem") and os.path.isfile(local_prefix + env.host + "/" + "privkey.pem")):
         put(local_prefix + env.host + "/cacert.pem", "~/warno/warno-vagrant/proxy/cacert.pem")
         put(local_prefix + env.host + "/privkey.pem", "~/warno/warno-vagrant/proxy/privkey.pem")
