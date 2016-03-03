@@ -83,9 +83,6 @@ def push_config(config=CONFIG_FILENAME, target=CONFIG_FILE, local_prefix=PREFIX_
     else:
         print("No config file found to copy.")
 
-
-
-
 def gen_and_push_ssl_certs(generated_cert=CERT_GEN, generated_cert_key=CERT_KEY_GEN,
                            local_cert=CERT_LOCAL, target_cert=CERT_REMOTE,
                            local_cert_key=CERT_KEY_LOCAL, target_cert_key=CERT_KEY_REMOTE,
@@ -93,7 +90,21 @@ def gen_and_push_ssl_certs(generated_cert=CERT_GEN, generated_cert_key=CERT_KEY_
                            cert_gen_script=CERT_GEN_SCRIPT, local_prefix=PREFIX_PATH):
     """Generates an ssl certificate and its private key from the local custom Certificate Authority (CA) if they are not
     already present in the host's directory.  Then pushes the cert and key in the host's directory and the local CA file
-    into the remote host.
+    into the remote host. 'local_prefix' will prefix any path in the funtion.
+
+    Parameters
+    ----------
+    generated_cert
+    generated_cert_key
+    local_cert
+    target_cert
+    local_cert_key
+    target_cert_key
+    local_ca
+    target_ca
+    cert_gen_script
+    local_prefix
+
     """
     if (not os.path.isfile(local_prefix + env.host + "/" + local_cert)) or (not os.path.isfile(local_prefix + env.host + "/" + local_cert_key)):
         if os.path.isfile(local_prefix + local_ca):
@@ -109,6 +120,16 @@ def gen_and_push_ssl_certs(generated_cert=CERT_GEN, generated_cert_key=CERT_KEY_
     push_ssl_CA(local_ca, target_ca, local_prefix)
 
 def push_ssl_CA(local_ca=CA_LOCAL, target_ca=CA_REMOTE, local_prefix=PREFIX_PATH):
+    """Pushes a personal Certificate Authority bundle to the remote host if it exists.  'local_prefix' will prefix
+    any path in the funtion.
+
+    Parameters
+    ----------
+    local_ca
+    target_ca
+    local_prefix
+
+    """
     if os.path.isfile(local_prefix + local_ca):
         put(local_prefix + local_ca, target_ca)
     else:
@@ -117,15 +138,26 @@ def push_ssl_CA(local_ca=CA_LOCAL, target_ca=CA_REMOTE, local_prefix=PREFIX_PATH
 def push_ssl_certs(local_cert=CERT_LOCAL, target_cert=CERT_REMOTE,
                    local_cert_key=CERT_KEY_LOCAL, target_cert_key=CERT_KEY_REMOTE,
                    local_prefix=PREFIX_PATH):
+    """Pushes a local ssl certificate and its private key to the remote host, if they exist.  'local_prefix' will prefix
+    any path in the funtion.
+
+    Parameters
+    ----------
+    local_cert
+    target_cert
+    local_cert_key
+    target_cert_key
+    local_prefix
+
+    Returns
+    -------
+
+    """
     if (os.path.isfile(local_prefix + env.host + "/" + local_cert) and os.path.isfile(local_prefix + env.host + "/" + local_cert_key)):
         put(local_prefix + env.host + "/" + local_cert, target_cert)
         put(local_prefix + env.host + "/" + local_cert_key, target_cert_key)
     else:
         print("No certificate/key pair found")
-
-
-
-
 
 def push_keys(private=PRIVATE_KEY, public=PUBLIC_KEY,
               dir=DEFAULT_HOME + "warno-vagrant/",
@@ -223,8 +255,9 @@ def update_application(dir=DEFAULT_HOME, local_prefix=PREFIX_PATH,
         if not exists(new_dir):
             run("echo 'Acquiring Application Code'")
             run("git clone %s" % WARNO_REPO)
-            with cd(new_dir):
-                run ("git checkout -b ar96_ssl_pract origin/ar96_ssl_pract")
+            # If a developer needs to use a specific branch, one change here and one change further in the function.
+            # with cd(new_dir):
+            #     run ("git checkout -b ar96_ssl_pract origin/ar96_ssl_pract")
         with cd(new_dir):
             needs_halt = False
             with settings(warn_only=True):
@@ -237,7 +270,9 @@ def update_application(dir=DEFAULT_HOME, local_prefix=PREFIX_PATH,
             run("echo 'Updating source code'")
             # May eventually want to use a different method than fetch->reset
             run("git fetch")
-            run("git reset --hard origin/ar96_ssl_pract")
+            # If a developer needs to use a specific branch, change to 'git reset --hard origin/branch_name' along with
+            # the changes earlier in the function.
+            run("git reset --hard origin/master")
             run("bash %s" % IMAGE_SCRIPT)
 
             push_config(config, config_target, local_prefix)
