@@ -92,6 +92,24 @@ Currently, setting this to "/opt/data/rootCA.pem" (path is due to how docker add
 before to *data_store/data/rootCA.pem* allows either the Event Manager or the Agent to access it as needed.
 
 <br>
+## NFS Permissions
+Because Vagrant uses NFS for file syncing, it requires permission to edit NFS exports.  Although it is possible to enter
+the sudo password every time, one alternative is to add the following to /etc/sudoers (CentOS 7, other solutions in the
+Vagrant documentation for [NFS Permissions](https://www.vagrantup.com/docs/synced-folders/nfs.html)).
+
+```bash
+Cmnd_Alias VAGRANT_EXPORTS_ADD = /usr/bin/tee -a /etc/exports
+Cmnd_Alias VAGRANT_EXPORTS_COPY = /bin/cp /tmp/exports /etc/exports
+Cmnd_Alias VAGRANT_NFSD_CHECK = /etc/init.d/nfs-kernel-server status
+Cmnd_Alias VAGRANT_NFSD_START = /etc/init.d/nfs-kernel-server start
+Cmnd_Alias VAGRANT_NFSD_APPLY = /usr/sbin/exportfs -ar
+Cmnd_Alias VAGRANT_EXPORTS_REMOVE = /bin/sed -r -e * d -ibak /tmp/exports
+%vboxusers ALL=(root) NOPASSWD: VAGRANT_EXPORTS_ADD, VAGRANT_NFSD_CHECK, VAGRANT_NFSD_START, VAGRANT_NFSD_APPLY, VAGRANT_EXPORTS_REMOVE, VAGRANT_EXPORTS_COPY
+```
+
+"vboxusers" can be replaced with any group name you would like to give the permissions to.
+
+<br>
 ## Multiple VM's one one machine
 If you wish to start up a second Vagrant VM on the same machine, there are a few hoops to jump through:
 
