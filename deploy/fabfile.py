@@ -14,6 +14,18 @@ IMAGE_SCRIPT = "set_up_images.sh"
 PRIVATE_KEY = "id_rsa"
 PUBLIC_KEY = "id_rsa.pub"
 
+
+CERT_KEY_LOCAL = "privkey.pem"
+CERT_KEY_GEN = "self_ca/privkey.pem"
+CERT_KEY_REMOTE = DEFAULT_HOME + "warno-vagrant/proxy/privkey.pem"
+CERT_LOCAL = "cacert.pem"
+CERT_GEN = "self_ca/cacert.pem"
+CERT_REMOTE = DEFAULT_HOME + "warno-vagrant/proxy/cacert.pem"
+CA_LOCAL = "self_ca/rootCA.pem"
+CA_REMOTE = DEFAULT_HOME + "warno-vagrant/data_store/data/rootCA.pem"
+CERT_GEN_SCRIPT = "self_ca/gen_certs.sh"
+
+
 CONFIG_FILENAME = "config.yml"
 CONFIG_FILE = DEFAULT_HOME + "warno-vagrant/data_store/data/config.yml"
 
@@ -71,36 +83,48 @@ def push_config(config=CONFIG_FILENAME, target=CONFIG_FILE, local_prefix=PREFIX_
     else:
         print("No config file found to copy.")
 
-def gen_and_push_ssl_certs(local_prefix=PREFIX_PATH):
+
+
+
+def gen_and_push_ssl_certs(generated_cert=CERT_GEN, generated_cert_key=CERT_KEY_GEN,
+                           local_cert=CERT_LOCAL, target_cert=CERT_REMOTE,
+                           local_cert_key=CERT_KEY_LOCAL, target_cert_key=CERT_KEY_REMOTE,
+                           local_ca=CA_LOCAL, target_ca=CA_REMOTE,
+                           cert_gen_script=CERT_GEN_SCRIPT, local_prefix=PREFIX_PATH):
     """Generates an ssl certificate and its private key from the local custom Certificate Authority (CA) if they are not
     already present in the host's directory.  Then pushes the cert and key in the host's directory and the local CA file
     into the remote host.
     """
-    if (not os.path.isfile(local_prefix + env.host + "/" + "cacert.pem")) or (not os.path.isfile(local_prefix + env.host + "/" + "privkey.pem")):
-        if os.path.isfile(local_prefix + "self_ca/rootCA.pem"):
+    if (not os.path.isfile(local_prefix + env.host + "/" + local_cert)) or (not os.path.isfile(local_prefix + env.host + "/" + local_cert_key)):
+        if os.path.isfile(local_prefix + local_ca):
             print("Generating certificate/key pair from local CA")
-            process = subprocess.Popen('bash ' + local_prefix + "self_ca/gen_certs.sh", shell=True, stdout=subprocess.PIPE)
+            process = subprocess.Popen('bash ' + local_prefix + cert_gen_script, shell=True, stdout=subprocess.PIPE)
             process.wait()
-            copyfile(local_prefix + "self_ca/cacert.pem", local_prefix + env.host + "/cacert.pem")
-            copyfile(local_prefix + "self_ca/privkey.pem", local_prefix + env.host + "/privkey.pem")
+            copyfile(local_prefix + generated_cert, local_prefix + env.host + "/" + local_cert)
+            copyfile(local_prefix + generated_cert_key, local_prefix + env.host + "/" + local_cert_key)
         else:
             print("No local CA file found")
 
-    push_ssl_certs(local_prefix)
-    push_ssl_CA(local_prefix)
+    push_ssl_certs(local_cert, target_cert, local_cert_key, target_cert_key, local_prefix)
+    push_ssl_CA(local_ca, target_ca, local_prefix)
 
-def push_ssl_CA(local_prefix):
-    if (os.path.isfile(local_prefix + "/self_ca/rootCA.pem")):
-        put(local_prefix + "/self_ca/rootCA.pem", "~/warno/warno-vagrant/data_store/data/rootCA.pem")
+def push_ssl_CA(local_ca=CA_LOCAL, target_ca=CA_REMOTE, local_prefix=PREFIX_PATH):
+    if os.path.isfile(local_prefix + local_ca):
+        put(local_prefix + local_ca, target_ca)
     else:
         print("No local CA file found")
 
-def push_ssl_certs(local_prefix):
-    if (os.path.isfile(local_prefix + env.host + "/" + "cacert.pem") and os.path.isfile(local_prefix + env.host + "/" + "privkey.pem")):
-        put(local_prefix + env.host + "/cacert.pem", "~/warno/warno-vagrant/proxy/cacert.pem")
-        put(local_prefix + env.host + "/privkey.pem", "~/warno/warno-vagrant/proxy/privkey.pem")
+def push_ssl_certs(local_cert=CERT_LOCAL, target_cert=CERT_REMOTE,
+                   local_cert_key=CERT_KEY_LOCAL, target_cert_key=CERT_KEY_REMOTE,
+                   local_prefix=PREFIX_PATH):
+    if (os.path.isfile(local_prefix + env.host + "/" + local_cert) and os.path.isfile(local_prefix + env.host + "/" + local_cert_key)):
+        put(local_prefix + env.host + "/" + local_cert, target_cert)
+        put(local_prefix + env.host + "/" + local_cert_key, target_cert_key)
     else:
         print("No certificate/key pair found")
+
+
+
 
 
 def push_keys(private=PRIVATE_KEY, public=PUBLIC_KEY,
@@ -179,11 +203,15 @@ def purge_application(dir=DEFAULT_HOME + "warno-vagrant/"):
         print("No. Cancelling")
 
 
-def update_application(dir=DEFAULT_HOME,
+def update_application(dir=DEFAULT_HOME, local_prefix=PREFIX_PATH,
                        config=CONFIG_FILENAME, config_target=CONFIG_FILE,
                        private=PRIVATE_KEY, public=PUBLIC_KEY,
                        secrets=SECRETS_FILENAME, secrets_target=SECRETS_FILE,
-                       local_prefix=PREFIX_PATH, generate_missing_certs=True, push_ca=True):
+                       generated_cert=CERT_GEN, generated_cert_key=CERT_KEY_GEN,
+                       local_cert=CERT_LOCAL, target_cert=CERT_REMOTE,
+                       local_cert_key=CERT_KEY_LOCAL, target_cert_key=CERT_KEY_REMOTE,
+                       local_ca=CA_LOCAL, target_ca=CA_REMOTE, cert_gen_script=CERT_GEN_SCRIPT,
+                       generate_missing_certs=True, push_ca=True):
     # Creates necessary directories if they don't exist, clones the repo if necessary, stops the VM if it is running
     # to preserve the database.  It then pushes any relevant local files and starts up the application.
     if not exists(dir):
@@ -216,11 +244,14 @@ def update_application(dir=DEFAULT_HOME,
             push_keys(public, private, new_dir, local_prefix)
             push_secrets(secrets, secrets_target, local_prefix)
             if(generate_missing_certs):
-                gen_and_push_ssl_certs(local_prefix)
+                gen_and_push_ssl_certs(generated_cert, generated_cert_key,
+                                       local_cert, target_cert,
+                                       local_cert_key, target_cert_key,
+                                       local_ca, target_ca, cert_gen_script, local_prefix)
             else:
-                push_ssl_certs(local_prefix)
+                push_ssl_certs(local_cert, target_cert, local_cert_key, target_cert_key, local_prefix)
                 if(push_ca):
-                    push_ssl_CA(local_prefix)
+                    push_ssl_CA(local_ca, target_ca, local_prefix)
 
 
             start_application(new_dir)
