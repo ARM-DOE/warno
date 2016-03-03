@@ -2,6 +2,8 @@ from fabric.api import run, put, cd, settings, env
 from fabric.contrib.files import exists
 from fabric.contrib.console import confirm
 import os.path
+import subprocess
+from shutil import copyfile
 
 PREFIX_PATH = os.environ.get('DEPLOY_CONFIG_PATH')
 WARNO_REPO = "git@overwatch.pnl.gov:hard505/warno-vagrant.git"
@@ -61,7 +63,6 @@ def hello(name="world"):
 ## Push Commands ##
 # These commands by default push files from whichever directory the command was called from.
 def push_config(config=CONFIG_FILENAME, target=CONFIG_FILE, local_prefix=PREFIX_PATH):
-    print local_prefix + env.host + "/" + config
     if os.path.isfile(local_prefix + env.host + "/" + config):
         put(local_prefix + env.host + "/" + config, target)
     elif os.path.isfile(local_prefix + config):
@@ -70,7 +71,41 @@ def push_config(config=CONFIG_FILENAME, target=CONFIG_FILE, local_prefix=PREFIX_
     else:
         print("No config file found to copy.")
 
-def push_keys(private=PRIVATE_KEY, public=PUBLIC_KEY, dir=DEFAULT_HOME + "warno-vagrant/", local_prefix=PREFIX_PATH):
+def gen_and_push_ssl_certs(local_prefix=PREFIX_PATH):
+    """Generates an ssl certificate and its private key from the local custom Certificate Authority (CA) if they are not
+    already present in the host's directory.  Then pushes the cert and key in the host's directory and the local CA file
+    into the remote host.
+    """
+    if (not os.path.isfile(local_prefix + env.host + "/" + "cacert.pem")) or (not os.path.isfile(local_prefix + env.host + "/" + "privkey.pem")):
+        if os.path.isfile(local_prefix + "self_ca/rootCA.pem"):
+            print("Generating certificate/key pair from local CA")
+            process = subprocess.Popen('bash ' + local_prefix + "self_ca/gen_certs.sh", shell=True, stdout=subprocess.PIPE)
+            process.wait()
+            copyfile(local_prefix + "self_ca/cacert.pem", local_prefix + env.host + "/cacert.pem")
+            copyfile(local_prefix + "self_ca/privkey.pem", local_prefix + env.host + "/privkey.pem")
+        else:
+            print("No local CA file found")
+
+    push_ssl_certs(local_prefix)
+    push_ssl_CA(local_prefix)
+
+def push_ssl_CA(local_prefix):
+    if (os.path.isfile(local_prefix + "/self_ca/rootCA.pem")):
+        put(local_prefix + "/self_ca/rootCA.pem", "~/warno/warno-vagrant/data_store/data/rootCA.pem")
+    else:
+        print("No local CA file found")
+
+def push_ssl_certs(local_prefix)
+    if (os.path.isfile(local_prefix + env.host + "/" + "cacert.pem") and os.path.isfile(local_prefix + env.host + "/" + "privkey.pem")):
+        put(local_prefix + env.host + "/cacert.pem", "~/warno/warno-vagrant/proxy/cacert.pem")
+        put(local_prefix + env.host + "/privkey.pem", "~/warno/warno-vagrant/proxy/privkey.pem")
+    else:
+        print("No certificate/key pair found")
+
+
+def push_keys(private=PRIVATE_KEY, public=PUBLIC_KEY,
+              dir=DEFAULT_HOME + "warno-vagrant/",
+              local_prefix=PREFIX_PATH):
     # Will only work with pairs of keys, not single keys.
     if os.path.isfile(local_prefix + env.host + "/" + private) and os.path.isfile(local_prefix + env.host + "/" + public):
         put(local_prefix + env.host + "/" + private, dir)
@@ -99,7 +134,8 @@ def push_db_dump(dumpfile=DUMP_FILENAME, target=DUMP_FILE, local_prefix=PREFIX_P
 
 
 ## Vagrant Commands ##
-def push_and_replace_database(dir=DEFAULT_HOME + "warno-vagrant", dumpfile=DUMP_FILENAME, dump_target=DUMP_FILE, local_prefix=PREFIX_PATH):
+def push_and_replace_database(dir=DEFAULT_HOME + "warno-vagrant", dumpfile=DUMP_FILENAME,
+                              dump_target=DUMP_FILE, local_prefix=PREFIX_PATH):
     # The destroy->start combination forces the VM to load the pushed database file rather than initialize a new database
     if os.path.isfile(local_prefix + env.host + "/" + dumpfile) or os.path.isfile(local_prefix + dumpfile):
         push_db_dump(dumpfile, dump_target, local_prefix)
@@ -146,7 +182,8 @@ def purge_application(dir=DEFAULT_HOME + "warno-vagrant/"):
 def update_application(dir=DEFAULT_HOME,
                        config=CONFIG_FILENAME, config_target=CONFIG_FILE,
                        private=PRIVATE_KEY, public=PUBLIC_KEY,
-                       secrets=SECRETS_FILENAME, secrets_target=SECRETS_FILE, local_prefix=PREFIX_PATH):
+                       secrets=SECRETS_FILENAME, secrets_target=SECRETS_FILE,
+                       local_prefix=PREFIX_PATH, generate_missing_certs=True, push_ca=True):
     # Creates necessary directories if they don't exist, clones the repo if necessary, stops the VM if it is running
     # to preserve the database.  It then pushes any relevant local files and starts up the application.
     if not exists(dir):
@@ -158,6 +195,8 @@ def update_application(dir=DEFAULT_HOME,
         if not exists(new_dir):
             run("echo 'Acquiring Application Code'")
             run("git clone %s" % WARNO_REPO)
+            with cd(new_dir):
+                run ("git checkout -b ar96_ssl_pract origin/ar96_ssl_pract")
         with cd(new_dir):
             needs_halt = False
             with settings(warn_only=True):
@@ -170,12 +209,19 @@ def update_application(dir=DEFAULT_HOME,
             run("echo 'Updating source code'")
             # May eventually want to use a different method than fetch->reset
             run("git fetch")
-            run("git reset --hard origin/master")
+            run("git reset --hard origin/ar96_ssl_pract")
             run("bash %s" % IMAGE_SCRIPT)
+
             push_config(config, config_target, local_prefix)
             push_keys(public, private, new_dir, local_prefix)
-
             push_secrets(secrets, secrets_target, local_prefix)
+            if(generate_missing_certs):
+                gen_and_push_ssl_certs(local_prefix)
+            else:
+                push_ssl_certs(local_prefix)
+                if(push_ca):
+                    push_ssl_CA(local_prefix)
 
 
             start_application(new_dir)
+            print("\n\n\nREMEMBER TO REMOVE TEST CHECKOUT OF BRANCH\n\n\n")
