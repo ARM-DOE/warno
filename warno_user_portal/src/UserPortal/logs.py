@@ -88,7 +88,7 @@ def new_log():
 
     # Format the instrument names to be more descriptive
     db_instruments = database.db_session.query(Instrument).all()
-    instruments = [dict(id=instrument.id, name=instrument.name_short + ":" + instrument.site.name_short)
+    instruments = [dict(id=instrument.id, name=instrument.site.name_short + ":" + instrument.name_short)
                    for instrument in db_instruments]
 
     # Get a list of users so the user can choose who submitted the log.
