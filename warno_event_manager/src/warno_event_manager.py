@@ -68,6 +68,19 @@ def teardown_request(exception):
         db.close()
 
 
+@app.teardown_appcontext
+def shutdown_session(exception=None):
+    """Closes database session on request or application teardown.
+
+    Parameters
+    ----------
+    exception: optional, Exception
+        An Exception that may have caused the teardown.
+
+    """
+    database.db_session.remove()
+
+
 @app.route("/eventmanager/event", methods=['POST'])
 def event():
     """Event comes as a web request with a JSON packet.  The JSON is loaded into dictionary, and the event code is extracted.
@@ -434,11 +447,7 @@ def initialize_database():
         # If it is not a test database, first attempt to load database from an existing postgres dumpfile
         utility.load_dumpfile()
 
-
-    print("Initialization Function")
-    engine = create_engine('postgresql://warno:warno@192.168.50.100:5432/warno')
-    database.Base.metadata.bind = engine
-    database.Base.metadata.create_all(engine)
+    database.init_db()
 
     cur.execute("SELECT * FROM users LIMIT 1")
     if cur.fetchone() == None:
@@ -461,7 +470,6 @@ def initialize_database():
     else:
         print("Event_codes in table.")
 
-
     # If it is set to be a test database, populate extra information.
     if cfg['database']['test_db']:
         print ("Test Database Triggered")
@@ -481,7 +489,7 @@ def initialize_database():
                 print("Populating %s" % table)
                 utility.load_data_into_table("database/schema/%s.data" % table, table, db)
             else:
-                print("Sites in table.")
+                print("%ss in table." % table)
     else:
         print ("Test Database is a falsehood")
 
