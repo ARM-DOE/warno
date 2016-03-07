@@ -5,6 +5,10 @@ from flask import Blueprint
 from jinja2 import TemplateNotFound
 
 from WarnoConfig.utility import status_code_to_text, is_number
+from WarnoConfig.models import InstrumentLog, User, Instrument, Site
+from WarnoConfig import database
+from sqlalchemy import desc, and_, or_
+from sqlalchemy.orm import aliased
 
 sites = Blueprint('sites', __name__, template_folder='templates')
 
@@ -42,28 +46,25 @@ def new_site():
     if request.method == 'POST':
         # Get the parameters from the url request
         # Field lengths limited in the views
-        abbv = request.form.get('abbv')
-        name = request.form.get('name')
-        lat = request.form.get('lat')
-        lon = request.form.get('lon')
-        facility = request.form.get('facility')
-        mobile = request.form.get('mobile')
-        location_name = request.form.get('location_name')
+        new_site = Site()
+        new_site.name_short = request.form.get('abbv')
+        new_site.name_long = request.form.get('name')
+        new_site.latitude = request.form.get('lat')
+        new_site.longitude = request.form.get('lon')
+        new_site.facility = request.form.get('facility')
+        new_site.location_name = request.form.get('location_name')
 
+        mobile = request.form.get('mobile')
         # If the "mobile" box was checked in new_site, mobile is True. Else, false
         if mobile == "on":
-            mobile = True
+            new_site.mobile = True
         else:
-            mobile = False
+            new_site.mobile = False
 
         # Checks if latitude and longitude are valid values
-        if is_number(lat) and is_number(lon):
-            cur = g.db.cursor()
-            cur.execute('''INSERT INTO sites(name_short, name_long, latitude, longitude, facility, mobile, location_name)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s)''',
-                        (abbv, name, float(lat), float(lon), facility, mobile, location_name))
-            cur.execute('COMMIT')
-
+        if is_number(new_site.latitude) and is_number(new_site.longitude):
+            database.db_session.add(new_site)
+            database.db_session.commit()
             # After insertion, redirect to the updated list of sites
             return redirect(url_for("sites.list_sites"))
         else:
@@ -84,13 +85,10 @@ def list_sites():
         Returns an HTML document with an argument for a list of sites and their information.
     """
 
-    cur = g.db.cursor()
-
-    sql_query = '''SELECT s.name_short, s.name_long, s.latitude, s.longitude,
-                    s.facility, s.mobile, s.location_name, s.site_id FROM sites s'''
-    cur.execute(sql_query)
-    sites = [dict(abbv=row[0], name=row[1], latitude=row[2], longitude=row[3], facility=row[4],
-                  mobile=row[5], location_name=row[6], id=row[7]) for row in cur.fetchall()]
+    db_sites = database.db_session.query(Site).all()
+    sites = [dict(abbv=site.name_short, name=site.name_long, latitude=site.latitude, longitude=site.longitude,
+                  facility=site.facility, mobile=site.mobile, location_name=site.location_name, id=site.id)
+             for site in db_sites]
 
     return render_template('site_list.html', sites=sites)
 
@@ -112,46 +110,34 @@ def show_site(site_id):
             recent logs of all instruments at the site, and a list of the instruments at the site
             along with their information.
     """
-
-    cur = g.db.cursor()
-
-    cur.execute('''SELECT site_id, name_short, name_long, latitude, longitude, facility,
-                    mobile, location_name FROM sites WHERE site_id = %s''', (site_id,))
-    row = cur.fetchone()
-    site = dict(abbv=row[1], name=row[2], latitude=row[3], longitude=row[4],
-                facility=row[5], mobile=row[6], location_name=row[7], id=row[0])
+    db_site = database.db_session.query(Site).filter(Site.id == site_id).first()
+    site = dict(abbv=db_site.name_short, name=db_site.name_long, latitude=db_site.latitude, longitude=db_site.longitude,
+                  facility=db_site.facility, mobile=db_site.mobile, location_name=db_site.location_name, id=db_site.id)
 
     # Get the 5 most recent logs from all instruments at the site to display
-    cur.execute('''SELECT l.time, l.contents, l.status, l.supporting_images, u.name, i.name_short
-                    FROM instrument_logs l JOIN users u
-                    ON l.author_id = u.user_id JOIN instruments i ON i.instrument_id = l.instrument_id
-                    JOIN sites s ON i.site_id = s.site_id
-                    WHERE s.site_id = %s
-                    ORDER BY time DESC LIMIT 5''', (site_id,))
-    recent_logs = [dict(time=row[0], contents=row[1], status=status_code_to_text(row[2]), supporting_images=row[3],
-                        author=row[4], instrument=row[5]) for row in cur.fetchall()]
+    db_logs = database.db_session.query(InstrumentLog).join(InstrumentLog.instrument).join(Instrument.site).\
+        filter(Instrument.site_id == site_id).order_by(desc(InstrumentLog.time)).limit(5).all()
+    recent_logs = [dict(time=log.time, contents=log.contents, status=status_code_to_text(log.status),
+                        supporting_images=log.supporting_images,
+                        author=log.author.name, instrument=log.instrument.name_short)
+                   for log in db_logs]
 
     # Get the most recent log for each instrument to determine its current status
-    sql_query = '''SELECT i.instrument_id, users.name, l1.status
-                FROM instruments i
-                JOIN instrument_logs l1 ON (i.instrument_id = l1.instrument_id)
-                LEFT OUTER JOIN instrument_logs l2 ON (i.instrument_id = l2.instrument_id AND
-                    (l1.time < l2.time OR l1.time = l2.time AND l1.instrument_id < l2.instrument_id))
-                LEFT OUTER JOIN sites
-                      ON (sites.site_id = i.site_id)
-                    LEFT OUTER JOIN users
-                      ON (l1.author_id = users.user_id)
-                WHERE (l2.instrument_id IS NULL AND i.site_id = %s)  ORDER BY sites.name_short;
-            '''
-    cur.execute(sql_query, (site_id,))
-    status = {row[0]: dict(last_author=row[1], status_code=row[2]) for row in cur.fetchall()}
+    il_alias_1 = aliased(InstrumentLog, name='il_alias_1')
+    il_alias_2 = aliased(InstrumentLog, name='il_alias_2')
+    logs = database.db_session.query(il_alias_1).join(il_alias_1.instrument).join(il_alias_1.author).join(Instrument.site).\
+        outerjoin(il_alias_2, and_(Instrument.id == il_alias_2.instrument_id,
+                                 or_(il_alias_1.time < il_alias_2.time,
+                                     and_(il_alias_1.time == il_alias_2.time, il_alias_1.instrument_id < il_alias_2.instrument_id)))).\
+        filter(il_alias_2.id == None).filter(Instrument.site_id == site_id).all()
+    status = {log.instrument.id: dict(last_author=log.author.name, status_code=log.status) for log in logs}
 
     # Assume the instrument status is operational unless the status has changed, handled afterward
-    cur.execute('''SELECT instrument_id, name_short, name_long, type, vendor, frequency_band, description
-                    FROM instruments WHERE site_id = %s''', (site_id,))
-    rows = cur.fetchall()
-    instruments = [dict(abbv=row[1], name=row[2], type=row[3], vendor=row[4], frequency_band=row[5],
-                        description=row[6], status=1, last_author="", id=row[0]) for row in rows]
+    db_instruments = database.db_session.query(Instrument).filter(Instrument.site_id == site_id).all()
+    instruments = [dict(abbv=instrument.name_short, name=instrument.name_long, type=instrument.type,
+                        vendor=instrument.vendor, frequency_band=instrument.frequency_band,
+                        description=instrument.description, status=1, last_author="", id=instrument.id)
+                   for instrument in db_instruments]
 
     # For each instrument, if there is a corresponding status entry from the query above,
     # add the status and the last log's author.  If not, status will stay default operational
