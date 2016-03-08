@@ -148,10 +148,6 @@ def generate_pulse_graph():
 def status_log_for_each_instrument():
     """Get a dictionary containing the most recent log entry for each instrument with log entries.
 
-    Parameters
-    ----------
-    cursor: database cursor
-
     Returns
     -------
     Dictionary with the instrument ids for each log as the key and a dictionary for the log's 'author', 'status code',
