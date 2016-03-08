@@ -58,7 +58,7 @@ def teardown_request(exception):
     Closes the database connection if connected.
 
     Parameters
-    -------
+    ----------
     exception: optional, Exception
         An Exception that may have caused the teardown.
     """
@@ -70,6 +70,20 @@ def teardown_request(exception):
 
 @app.route("/eventmanager/event", methods=['POST'])
 def event():
+    """Event comes as a web request with a JSON packet.  The JSON is loaded into dictionary, and the event code is extracted.
+    Dependent on the event code, different functions are called.
+
+    If it is part of a predefined set of special event codes, calls a new function to handle it, depending on the
+    event code.  Passes the message in to the call, then returns the return of whichever sub-function was called.
+
+    If it is not a special case, it extracts the information from the packet and saves the event to the database.
+    If the 'is_central' flag is not set, it then forwards the packet on to the 'cf_url' (both specified in *config.yml*).
+
+    Returns
+    -------
+    The original message packet if a sub-function was not called, the sub-function's return if it was called.
+
+    """
     msg = request.data
     msg_struct = dict(json.loads(msg))
 
@@ -116,6 +130,25 @@ def event():
 
 
 def save_special_prosensing_paf(msg, msg_struct):
+    """Inserts the information given in 'msg_struct' into the database, with all of the values being mapped into columns
+    for the database.  If the 'is_central' flag is not set, it then forwards the packet on to the 'cf_url'
+    (both specified in *config.yml*).
+
+    Parameters
+    ----------
+    msg: JSON
+        JSON message structure, expected format:
+        {Event_Code: *code*, Data: {Time: *ISO DateTime*, Site_Id: *Integer*, Instrument_Id: *Integer*,
+        Value: *Dictionary of database column names mapped to their values*}}
+    msg_struct: dictionary
+        Decoded version of msg, converted to python dictionary.
+
+    Returns
+    -------
+    The original message 'msg' passed to it.
+
+    """
+
     cur = g.db.cursor()
     timestamp = msg_struct['Data']['Time']
     sql_query_a = "INSERT INTO prosensing_paf(time, site_id, instrument_id"
@@ -140,6 +173,25 @@ def save_special_prosensing_paf(msg, msg_struct):
 
 
 def save_pulse_capture(msg, msg_struct):
+    """Inserts the information given in 'msg_struct' into the database 'pulse_captures' table, with all of the values
+    being mapped into columns for the database.  If the 'is_central' flag is not set, it then forwards the packet on
+    to the 'cf_url' (both specified in *config.yml*).
+
+    Parameters
+    ----------
+    msg: JSON
+        JSON message structure, expected format:
+        {Event_Code: *code*, Data: {Time: *ISO DateTime*, Site_Id: *Integer*, Instrument_Id: *Integer*,
+        Value: *Array of Floats*}}
+    msg_struct: dictionary
+        Decoded version of msg, converted to python dictionary.
+
+    Returns
+    -------
+    The original message 'msg' passed to it.
+
+    """
+
     cur = g.db.cursor()
     timestamp = msg_struct['Data']['Time']
     sql_query = ("INSERT INTO pulse_captures(time, instrument_id, data)"
@@ -155,6 +207,36 @@ def save_pulse_capture(msg, msg_struct):
     return msg
 
 def get_instrument_id(msg, msg_struct):
+    """Searches the database for any instruments where the instrument abbreviation matches 'msg_struct['Data']'.  If the
+    'is_central' flag is set and there is no instrument, returns a -1 to indicate nothing was found, but if it was found,
+    returns the instrument's information to be saved. If the 'is_central' flag is not set, it then forwards the
+    packet on to the 'cf_url' (both specified in *config.yml*) and returns whatever the central facility determines
+    the instrument id is, saving the returned site.
+
+    Parameters
+    ----------
+    msg: JSON
+        JSON message structure, expected format: {Event_Code: *code*, Data: *instrument abbreviation*}
+    msg_struct: dictionary
+        Decoded version of msg, converted to python dictionary.
+
+    Returns
+    -------
+    The instrument id or information determined by the function.
+
+    If returned from the central facility, returned in the form of a string structured as
+    {"Event_code": *integer event code*, "Data": {"Instrument_Id": *integer instrument id*, "Site_Id":
+    *integer site id instrument is at*, "Name_Short": *string instrument abbreviation*, "Name_Long":
+    *string full instrument name*, "Type": *string type of instrument*, "Vendor": *string instrument's vendor*,
+    "Description": *string description of instrument*, "Frequency_Band":
+    *two character frequency band instrument operates at*}}.
+
+    If returned from the non central event manager to the agent, sends a simplified version
+    '{"Instrument_Id: *integer instrument id*}'.
+
+    If no instrument was found, the instrument id is passed as -1.
+
+    """
     cur = g.db.cursor()
     cur.execute('''SELECT * FROM instruments where name_short = %s''', (msg_struct['Data'],))
     row = cur.fetchone()
@@ -188,6 +270,35 @@ def get_instrument_id(msg, msg_struct):
 
 
 def get_site_id(msg, msg_struct):
+    """Searches the database for any sites where the site abbreviation matches 'msg_struct['Data']'.  If the
+    'is_central' flag is set and there is no site, returns a -1 to indicate nothing was found, but if it was found,
+    returns the site's information to be saved. If the 'is_central' flag is not set, it then forwards the packet on
+    to the 'cf_url' (both specified in *config.yml*) and returns whatever the central facility determines the site
+    id is, saving the returned site.
+
+    Parameters
+    ----------
+    msg: JSON
+        JSON message structure, expected format: {Event_Code: *code*, Data: *site abbreviation*}
+    msg_struct: dictionary
+        Decoded version of msg, converted to python dictionary.
+
+    Returns
+    -------
+    The site id or information determined by the function.
+
+    If returned from the central facility, returned in the form of a string structured as
+    {"Event_code": *integer event code*, "Data": {"Site_Id": *integer site id*, "Latitude":
+    *float latitude coordinate*, "Longitude": *float longitude coordinate*, "Name_Short": *string site abbreviation*, "Name_Long":
+    *string full site name*, "Facility": *string facility name*, "Mobile": *boolean true if is a mobile site*,
+    "Location Name": *string location name*}}.
+    
+    If returned from the non central event manager to the agent, sends a simplified version
+    '{"Site_Id: *integer site id*}'.
+
+    If no site was found, the site id is passed as -1.
+
+    """
     cur = g.db.cursor()
     cur.execute('''SELECT * FROM sites where name_short = %s''', (msg_struct['Data'],))
     row = cur.fetchone()
@@ -221,6 +332,21 @@ def get_site_id(msg, msg_struct):
 
 
 def save_instrument_data_reference(msg, msg_struct):
+    """Checks to see if there is already an instrument data reference for this event code, and if there isn't, creates
+    one. Instrument data references are used to allow the servers to track which events are pertinent to a particular
+    instrument (some events are for all instruments, some only for specific instrument types).  If an instrument data
+    reference is to be added, this function also determines whether the reference is 'special' or not.  If there is an
+    entire special table devoted to the event (where 'description' is the table name), then it is classified as 'special'.
+
+    Parameters
+    ----------
+    msg: JSON
+        JSON message structure, expected format:
+        {Event_Code: *code*, Data: {instrument_id: *instrument id*, description: *event description*}}
+    msg_struct: dictionary
+        Decoded version of msg, converted to python dictionary.
+
+    """
     print("Message Struct for Data Reference: %s", msg_struct)
     cur = g.db.cursor()
     cur.execute('''SELECT * FROM instrument_data_references WHERE instrument_id = %s AND description = %s''', (msg_struct['Data']['instrument_id'], msg_struct['Data']['description']))
@@ -238,6 +364,24 @@ def save_instrument_data_reference(msg, msg_struct):
 
 
 def get_event_code(msg, msg_struct):
+    """Searches the database for any event codes where the description matches 'msg_struct['Data']'.  If the
+    'is_central' flag is set and there is no event code, creates the event code in the database and returns it. If the
+    'is_central' flag is not set, it then forwards the packet on to the 'cf_url' (both specified in *config.yml*) and
+    returns whatever the central facility determines the event code is.
+
+    Parameters
+    ----------
+    msg: JSON
+        JSON message structure, expected format: {Event_Code: *code*, Data: *description*}
+    msg_struct: dictionary
+        Decoded version of msg, converted to python dictionary.
+
+    Returns
+    -------
+    The site id determined by the function, in the form of a string structured as
+    '{"Site_Id: *site id*}'.
+
+    """
     cur = g.db.cursor()
     cur.execute('''SELECT event_code FROM event_codes WHERE description = %s''', (msg_struct['Data']['description'],))
     row = cur.fetchone()
@@ -270,7 +414,14 @@ def get_event_code(msg, msg_struct):
 
 
 def initialize_database():
+    """Initializes the database.  If the database is specified in config.yml as a 'test_db', the database is wiped when
+    at the beginning to ensure a clean load.  If it is not a test database, a utility function is called to attempt to
+    load in a postgresql database dumpfile if it exists.  First, the tables are initialized, and then if no basic database
+    entries exists (users, sites, event codes), they are created.  Then, if it is designated a test database, any table
+    that does not contain any entries will be filled with demo data.
 
+    """
+    print("Initialization Function")
     db = utility.connect_db()
     cur = db.cursor()
 
@@ -336,6 +487,13 @@ def initialize_database():
 
 @app.route('/eventmanager')
 def hello_world():
+    """Calculates very basic information and returns a string with it.  Used to verify that the event manager is
+    operational and accessible from the outside.
+
+    Returns
+    -------
+    String message with basic information such as current CPU usage.
+    """
     ret_message = 'Hello World! Event Manager is operational. CPU Usage on Event Manager VM is: %g \n ' % psutil.cpu_percent()
     ret_message2 = '\n Site is: %s' % os.environ.get('SITE')
     return ret_message + ret_message2
