@@ -4,7 +4,7 @@ from flask import g, render_template, request, redirect, url_for, request
 from flask import Blueprint
 from jinja2 import TemplateNotFound
 import psycopg2
-import sqlalchemy
+
 import requests
 
 from WarnoConfig import config
@@ -77,13 +77,13 @@ def new_log():
         # Attempt to insert an item into the database. Try/Except is necessary because
         # the timedate datatype the database expects has to be formatted correctly.
         try:
-            database.db_session.add(new_log)
-            database.db_session.commit()
-
+            cur.execute('''INSERT INTO instrument_logs(time, instrument_id, author_id, contents, status)
+                           VALUES (%s, %s, %s, %s, %s)''', (time, instrument_id, user_id, contents, status))
+            cur.execute('COMMIT')
             # If it is not a central facility, pass the log to the central facility
             if not cfg['type']['central_facility']:
-                packet = dict(Event_Code=5, Data = dict(instrument_id=new_log.instrument_id, author_id = new_log.author_id, time = str(new_log.time),
-                                                status = new_log.status, contents = new_log.contents, supporting_images = None))
+                packet = dict(Event_Code=5, Data = dict(instrument_id=instrument_id, author_id = user_id, time = time,
+                                                status = status, contents = contents, supporting_images = None))
                 payload = json.dumps(packet)
                 requests.post(cfg['setup']['cf_url'], data = payload,
                                       headers = {'Content-Type': 'application/json'})
