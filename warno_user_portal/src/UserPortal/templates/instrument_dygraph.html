@@ -41,11 +41,41 @@
 		<div id="master-graphdiv"></div>
 
 		<script>
+		    console.log('Goopy');
    			g = [];
    			id = 0;
+            function GraphManager() {
+                this.graph_index = 0;
+                this.graphs = [];
+            }
+
+            GraphManager.prototype.plus = function() {
+                this.graph_index += 1;
+            }
+
+            GraphManager.prototype.add_graph = function(beginning_time, end_time) {
+                this.graphs.push(new Graph(this.graph_index, beginning_time, end_time));
+                this.plus();
+                console.log(this.graphs);
+            }
+
+            GraphManager.prototype.get_count = function() {
+                return this.graph_index;
+            }
+
+            function Graph(id, beginning_time, end_time) {
+                this.id = id;
+                this.beginning_time = beginning_time;
+                this.end_time = end_time;
+            }
+
+            console.log('Gotcha');
+
+            grapo = new GraphManager();
 
 			function add_graph()
 				{
+
 					//XMLHTTPRequest to server xml generator
 					xmlhttp = new XMLHttpRequest();
 					key = document.getElementById('keySelect').value;
@@ -116,6 +146,10 @@
 					url = "{{url_for('instruments.generate_instrument_graph')}}" + "?key=" + key + "&instrument_id=" + {{instrument_id}} + "&start=" + start_utc + "&end=" + end_utc;
 					console.log(url)
 					xmlhttp.open("POST", url, true);
+
+
+                    grapo.add_graph(start, end);
+
 
 					//Send out the request
 					xmlhttp.send();
