@@ -4,7 +4,11 @@ from flask import g, render_template, request, redirect, url_for, request
 from flask import Blueprint
 from jinja2 import TemplateNotFound
 import psycopg2
+<<<<<<< HEAD
 import sqlalchemy
+=======
+import requests
+>>>>>>> UserPortal now forwards committed logs to central Event Manager if necessary.
 
 from WarnoConfig import config
 from WarnoConfig.utility import status_code_to_text, status_text
@@ -12,7 +16,6 @@ from WarnoConfig import database
 from WarnoConfig.models import InstrumentLog, User, Instrument
 
 logs = Blueprint('logs', __name__, template_folder='templates')
-
 
 @logs.route('/submit_log')
 def new_log():
@@ -24,7 +27,8 @@ def new_log():
         log will render. If all of those options exist, the function will attempt a database insertion
         with the data.  If the insertion fails, the form to create a new log will render with an error
         message.  If the insertion is successful, the user will be redirected instead to the page of
-        the instrument the log was submitted for.
+        the instrument the log was submitted for.  Also, upon success, if it is not the central facility,
+        the log's information will be sent to the central facility's Event Manager.
 
     Parameters
     ----------
@@ -68,6 +72,8 @@ def new_log():
     new_log.status = request.args.get('status')
     new_log.contents = request.args.get('contents')
 
+    cfg = config.get_config_context()
+
     # If there is valid data entered with the get request, insert and redirect to the instrument
     # that the log was placed for
     if new_log.author_id and new_log.instrument_id and new_log.status and new_log.time:
@@ -76,6 +82,15 @@ def new_log():
         try:
             database.db_session.add(new_log)
             database.db_session.commit()
+
+            # If it is not a central facility, pass the log to the central facility
+            if not cfg['type']['central_facility']:
+                packet = dict(Event_Code=5, Data = dict(instrument_id=instrument_id, author_id = user_id, time = time,
+                                                status = status, contents = contents, supporting_images = None))
+                payload = json.dumps(packet)
+                requests.post(cfg['setup']['cf_url'], data = payload,
+                                      headers = {'Content-Type': 'application/json'})
+
             # Redirect to the instrument page that the log was submitted for.
             return redirect(url_for('instruments.instrument', instrument_id=new_log.instrument_id))
         except sqlalchemy.exc.DataError:

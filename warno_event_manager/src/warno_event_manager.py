@@ -115,6 +115,8 @@ def event():
         return get_instrument_id(msg, msg_struct)
     elif msg_event_code == utility.PULSE_CAPTURE:
         return save_pulse_capture(msg, msg_struct)
+    elif msg_event_code == utility.INSTRUMENT_LOG:
+        return save_instrument_log(msg, msg_struct)
     # Event is special case: 'prosensing_paf' structure
     elif msg_event_code == utility.PROSENSING_PAF:
         return save_special_prosensing_paf(msg, msg_struct)
@@ -183,12 +185,46 @@ def save_special_prosensing_paf(msg, msg_struct):
 
     cur.execute(sql_query)
     cur.execute("COMMIT")
-    "Saved Special Type: Prosensing PAF"
 
     if not is_central:
         payload = json.loads(msg)
         requests.post(cf_url, json=payload, headers=headers)
     return msg
+
+
+def save_instrument_log(msg, msg_struct):
+    """Inserts the information given in 'msg_struct' into the database 'instrument_logs' table, with all of the values
+    being mapped into columns for the database.
+
+    Parameters
+    ----------
+    msg: JSON
+        JSON message structure, expected format:
+        {Event_Code: *code*, Data: {Time: *ISO DateTime*, Author_Id: *Integer*, Instrument_Id: *Integer*,
+        Status: *Integer status code*, Contents: *Log Message*, Supporting_Images: *Image*}}
+    msg_struct: dictionary
+        Decoded version of msg, converted to python dictionary.
+
+    Returns
+    -------
+    The original message 'msg' passed to it.
+
+    """
+
+    cur = g.db.cursor()
+    timestamp = msg_struct['Data']['time']
+    print msg_struct
+
+    sql_query = ("INSERT INTO instrument_logs(time, instrument_id, author_id, status, contents, supporting_images) "
+                 "VALUES ('%s', %s, %s, %s, '%s', '%s')" % (msg_struct['Data']['time'], msg_struct['Data']['instrument_id'],
+                                                      msg_struct['Data']['author_id'], msg_struct['Data']['status'],
+                                                      msg_struct['Data']['contents'], msg_struct['Data']['supporting_images'],))
+
+    cur.execute(sql_query)
+    cur.execute("COMMIT")
+
+    return msg
+
 
 
 def save_pulse_capture(msg, msg_struct):
@@ -218,7 +254,6 @@ def save_pulse_capture(msg, msg_struct):
 
     cur.execute(sql_query)
     cur.execute("COMMIT")
-    "Saved Pulse Capture"
 
     if not is_central:
         payload = json.loads(msg)

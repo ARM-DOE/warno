@@ -3,4 +3,5 @@ description
 "site_id_request"
 "instrument_id_request"
 "pulse_capture"
+"instrument_log"
 "prosensing_paf"
