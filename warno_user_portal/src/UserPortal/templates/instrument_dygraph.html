@@ -52,21 +52,125 @@
             GraphManager.prototype.plus = function() {
                 this.graph_index += 1;
             }
+            console.log("gm add")
 
-            GraphManager.prototype.add_graph = function(beginning_time, end_time) {
-                this.graphs.push(new Graph(this.graph_index, beginning_time, end_time));
+            GraphManager.prototype.add_graph = function(key, beginning_time, end_time) {
+                console.log(key + beginning_time + end_time)
+                this.graphs.push(new Graph(this.graph_index, key, beginning_time, end_time));
                 this.plus();
                 console.log(this.graphs);
             }
 
+            console.log("gm get count")
             GraphManager.prototype.get_count = function() {
                 return this.graph_index;
             }
 
-            function Graph(id, beginning_time, end_time) {
+            console.log("graph")
+            function Graph(id, key, beginning_time, end_time) {
                 this.id = id;
+                this.key = key;
                 this.beginning_time = beginning_time;
                 this.end_time = end_time;
+                this.graph_data = []
+
+                this.div_id = "graphdiv" + id;
+                this.div = document.createElement('div');
+                this.div.innerHTML = '<div id = "' + this.div_id + '-parent"><div id="' + this.div_id + '" style="width: 400px; height: 250px; display: inline-block;"></div><br><button type="button" onclick="remove_graph(this)">Remove Graph</button></div>'
+                master_div = document.getElementById('master-graphdiv');
+                master_div.insertBefore(this.div, master_div.firstChild);
+                this.inner_div = document.getElementById(this.div_id);
+
+                this.dygraph = ""
+
+                this.request_values(key, beginning_time, end_time);
+            }
+
+            Graph.prototype.update_with_values = function(values) {
+                console.log(this.graph_data.length)
+                if (this.graph_data.length <= 0) {
+                    if (values.length > 0){
+                        console.log(values)
+                        console.log("Concat")
+                        this.graph_data = this.graph_data.concat(values)
+                        console.log(this.graph_data)
+                        this.dygraph = new Dygraph(
+                        this.inner_div,
+                        this.graph_data,
+                        {
+                            rollPeriod: 3,
+                            showRoller: true,
+                            showRangeSelector: true,
+                            rangeSelectorHeight: 20,
+                            rangeSelectorPlotStrokeColor: 'darkred',
+                            rangeSelectorPlotFillColor: 'lightgreen',
+
+                            title: this.key,
+                            labels: ["Time", ""],
+                            axes: {
+                                ticker: function (a, b, pixels, opts, dygraph, vals) {
+                                            return Dygraph.getDateAxis(a, b, Dygraph.ANNUAL, opts, dygraph);
+                                }
+                            }
+                        });
+                    }
+                    else {
+                        console.log("we have a loser")
+                        this.inner_div.innerHTML = "<p>No Data Available<br>Verify that the start and end times are valid and formatted correctly.</p>";
+                    }
+                }
+                else
+                {
+                    console.log(this.graph_data)
+                    this.graph_data = this.graph_data.concat(values);
+                    console.log(this.graph_data)
+                    this.dygraph.updateOptions({ 'file': data });
+                }
+            }
+
+            Graph.prototype.request_values = function(key, beginning_time, end_time) {
+                graph_data = "";
+                this_graph = this
+                xmlhttp = new XMLHttpRequest();
+
+                xmlhttp.onreadystatechange = function() {
+                    //After the asyncronous request successfully returns
+                    if (xmlhttp.readyState == 4 && xmlhttp.status == 200)
+                    {
+                        //Pull out the response text from the request
+                        rec_message = JSON.parse(xmlhttp.responseText);
+                        values = []
+
+                        if (rec_message["x"].length > 0)
+                        {
+                            for (i = 0; i < rec_message["x"].length; i ++)
+                            {
+                                values.push([new Date(rec_message["x"][i]), rec_message["y"][i]]);
+                            }
+
+                        }
+
+                        this_graph.update_with_values(values);
+                    }
+                }
+			    //Send JSON POST XMLHTTPRequest to generator controller.
+                //Include keys for the generated graph, and convert start and end datetimes to a valid argument format
+                //Assume input is in UTC
+
+                start_utc = beginning_time.toLocaleString();
+                end_utc = end_time.toLocaleString();
+                console.log(start_utc);
+                console.log(end_utc);
+
+                url = "{{url_for('instruments.generate_instrument_graph')}}" + "?key=" + key + "&instrument_id=" + {{instrument_id}} + "&start=" + start_utc + "&end=" + end_utc;
+                console.log(url);
+                xmlhttp.open("POST", url, true);
+
+                //Send out the request
+				xmlhttp.send();
+
+				//Set the beginning time for this graph to now.  This meand updating the graph will only add new values.
+                this.beginning_time = new Date()
             }
 
             console.log('Gotcha');
@@ -76,86 +180,15 @@
 			function add_graph()
 				{
 
-					//XMLHTTPRequest to server xml generator
-					xmlhttp = new XMLHttpRequest();
 					key = document.getElementById('keySelect').value;
 
-					div_id = "graphdiv" + id;
-					div = document.createElement('div');
-					div.innerHTML = '<div id = "' + div_id + '-parent"><div id="' + div_id + '" style="width: 400px; height: 250px; display: inline-block;"></div><br><button type="button" onclick="remove_graph(this)">Remove Graph</button></div>'
-			           master_div = document.getElementById('master-graphdiv');
-			           master_div.insertBefore(div, master_div.firstChild);
-
-					xmlhttp.onreadystatechange = function() {
-						//After the asyncronous request successfully returns
-						if (xmlhttp.readyState == 4 && xmlhttp.status == 200)
-						{
-							//Pull out the response text from the request
-							rec_message = JSON.parse(xmlhttp.responseText);
-
-							//console.log(rec_message);
-							if (rec_message["x"].length > 0)
-							{
-								graph_data = "x,y\n"
-								for (i = 0; i < rec_message["x"].length; i ++)
-								{
-									graph_data += rec_message["x"][i] + "," + rec_message["y"][i] + "\n";
-								}
-
-
-								//Add a new graph to the list of tracked graphs, insert into
-								//div created above
-								g.push(new Dygraph(
-										document.getElementById(div_id),
-										graph_data,
-										{
-											rollPeriod: 3,
-					            			showRoller: true,
-					            			showRangeSelector: true,
-					            			rangeSelectorHeight: 20,
-					            			rangeSelectorPlotStrokeColor: 'green',
-					            			rangeSelectorPlotFillColor: 'lightgreen',
-
-											title: key,
-											xlabel: "Time",
-											axes: {
-												ticker: function (a, b, pixels, opts, dygraph, vals) {
-					                                        return Dygraph.getDateAxis(a, b, Dygraph.ANNUAL, opts, dygraph);
-												}
-											}
-										}));
-							}
-							else
-							{
-								document.getElementById(div_id).innerHTML = "<p>No Data Available<br>Verify that the start and end times are valid and formatted correctly.</p>";
-							}
-						}
-					}
-
-					//Send JSON POST XMLHTTPRequest to generator controller.
-					//Include keys for the generated graph, and convert start and end datetimes to a valid argument format
-					//Assume input is in UTC
 					start_str = document.getElementById("datetime-input-start").value;
 					start = new Date(start_str);
-					start_utc = start.toLocaleString()
 					end_str = document.getElementById("datetime-input-end").value;
 					end = new Date(end_str)
-					end_utc = end.toLocaleString()
-					console.log(start_utc)
-					console.log(end_utc)
-					url = "{{url_for('instruments.generate_instrument_graph')}}" + "?key=" + key + "&instrument_id=" + {{instrument_id}} + "&start=" + start_utc + "&end=" + end_utc;
-					console.log(url)
-					xmlhttp.open("POST", url, true);
 
+                    grapo.add_graph(key, start, end);
 
-                    grapo.add_graph(start, end);
-
-
-					//Send out the request
-					xmlhttp.send();
-
-					//Increment the id for the next graph created
-					id += 1;
 				};
 			function remove_graph(e)
 				{
