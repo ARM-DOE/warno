@@ -41,32 +41,31 @@
 		<div id="master-graphdiv"></div>
 
 		<script>
-		    console.log('Goopy');
    			g = [];
    			id = 0;
+
+
             function GraphManager() {
                 this.graph_index = 0;
                 this.graphs = [];
+                this.timer = setInterval(this.tick.bind(this), 2000)
             }
 
-            GraphManager.prototype.plus = function() {
-                this.graph_index += 1;
+            GraphManager.prototype.tick = function(){
+                for (i = 0; i < this.graphs.length; i++){
+                    this.graphs[i].tick()
+                }
             }
-            console.log("gm add")
 
             GraphManager.prototype.add_graph = function(key, beginning_time, end_time) {
-                console.log(key + beginning_time + end_time)
                 this.graphs.push(new Graph(this.graph_index, key, beginning_time, end_time));
-                this.plus();
-                console.log(this.graphs);
+                this.graph_index += 1;
             }
 
-            console.log("gm get count")
             GraphManager.prototype.get_count = function() {
                 return this.graph_index;
             }
 
-            console.log("graph")
             function Graph(id, key, beginning_time, end_time) {
                 this.id = id;
                 this.key = key;
@@ -87,13 +86,9 @@
             }
 
             Graph.prototype.update_with_values = function(values) {
-                console.log(this.graph_data.length)
                 if (this.graph_data.length <= 0) {
                     if (values.length > 0){
-                        console.log(values)
-                        console.log("Concat")
                         this.graph_data = this.graph_data.concat(values)
-                        console.log(this.graph_data)
                         this.dygraph = new Dygraph(
                         this.inner_div,
                         this.graph_data,
@@ -115,16 +110,22 @@
                         });
                     }
                     else {
-                        console.log("we have a loser")
                         this.inner_div.innerHTML = "<p>No Data Available<br>Verify that the start and end times are valid and formatted correctly.</p>";
                     }
                 }
                 else
                 {
-                    console.log(this.graph_data)
-                    this.graph_data = this.graph_data.concat(values);
-                    console.log(this.graph_data)
-                    this.dygraph.updateOptions({ 'file': data });
+                    if (values.length > 0) {
+                        this.graph_data = this.graph_data.concat(values);
+                        this.dygraph.updateOptions({ 'file': data });
+                    }
+                }
+            }
+
+            Graph.prototype.tick = function(){
+                //Only update if the last update finished before the specified end time
+                if (this.beginning_time <= this.end_time) {
+                    this.request_values(this.key, this.beginning_time, this.end_time);
                 }
             }
 
@@ -159,11 +160,8 @@
 
                 start_utc = beginning_time.toLocaleString();
                 end_utc = end_time.toLocaleString();
-                console.log(start_utc);
-                console.log(end_utc);
 
                 url = "{{url_for('instruments.generate_instrument_graph')}}" + "?key=" + key + "&instrument_id=" + {{instrument_id}} + "&start=" + start_utc + "&end=" + end_utc;
-                console.log(url);
                 xmlhttp.open("POST", url, true);
 
                 //Send out the request
@@ -173,9 +171,7 @@
                 this.beginning_time = new Date()
             }
 
-            console.log('Gotcha');
-
-            grapo = new GraphManager();
+            gm = new GraphManager();
 
 			function add_graph()
 				{
@@ -187,7 +183,7 @@
 					end_str = document.getElementById("datetime-input-end").value;
 					end = new Date(end_str)
 
-                    grapo.add_graph(key, start, end);
+                    gm.add_graph(key, start, end);
 
 				};
 			function remove_graph(e)
