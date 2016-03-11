@@ -58,7 +58,6 @@ def new_log():
             instrument with the instrument_id matching the insertion.
     """
 
-    cur = g.db.cursor()
     # Default error message will not show on template when its the empty string
     error = ""
 

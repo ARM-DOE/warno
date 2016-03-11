@@ -75,15 +75,13 @@ def new_instrument():
         return render_template('new_instrument.html', sites=sites)
 
 
-def valid_columns_for_instrument(instrument_id, cursor):
+def valid_columns_for_instrument(instrument_id):
     """Returns a list of columns of data for an instrument that is suitable for plotting.
 
     Parameters
     ----------
     instrument_id: integer
         Database id of the instrument to be searched
-
-    cursor: database cursor
 
     Returns
     -------
@@ -96,9 +94,9 @@ def valid_columns_for_instrument(instrument_id, cursor):
     column_list = []
     for reference in references:
         if reference.special == True:
-            cursor.execute("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = %s",
-                        (reference.description,))
-            rows = cursor.fetchall()
+            rows = database.db_session.execute("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = :table",
+                                               dict(table= reference.description)).fetchall()
+            print rows
             columns = [row[0] for row in rows if row[1] in ["integer", "boolean", "double precision"]]
         else:
             columns = [reference.description]
@@ -113,8 +111,6 @@ def db_get_instrument_references(instrument_id):
     ----------
     instrument_id: integer
         Database id of the instrument to be searched
-
-    cursor: database cursor
 
     Returns
     -------
@@ -194,9 +190,7 @@ def instrument(instrument_id):
             # If there are no recent logs, assume the instrument is operational
             status = "OPERATIONAL"
 
-        cur = g.db.cursor()
-
-        column_list = valid_columns_for_instrument(instrument_id, cur)
+        column_list = valid_columns_for_instrument(instrument_id)
         return render_template('show_instrument.html', instrument=instrument,
                                recent_logs=recent_logs, status=status, columns=sorted(column_list))
 
@@ -259,37 +253,36 @@ def generate_instrument_graph():
         Returns a JSON object with a list of 'x' values corresponding to a list of 'y' values.
     """
 
-    cur = g.db.cursor()
     key = request.args.get("key")
     instrument_id = request.args.get("instrument_id")
     start = request.args.get("start")
     end = request.args.get("end")
 
-    if key not in valid_columns_for_instrument(instrument_id, cur):
+    if key not in valid_columns_for_instrument(instrument_id):
         return json.dumps({"x": [], "y": []})
     references = db_get_instrument_references(instrument_id)
     # Build the SQL query for the given key.  If the key is a part of a special table, build a query based on the key and containing table
     for reference in references:
         if reference.description == key:
-            cur.execute('SELECT event_code FROM event_codes WHERE description = %s', (key,))
-            event_code = cur.fetchone()
-            sql_query = ('SELECT time, value FROM events_with_value WHERE instrument_id = %%s '
-                         'AND time >= %%s AND time <= %%s AND event_code = %s') % event_code[0]
+            event_code = database.db_session.execute('SELECT event_code FROM event_codes WHERE description = :key',
+                                                     {'key': key}).fetchone()
+            sql_query = ('SELECT time, value FROM events_with_value WHERE instrument_id = :id '
+                         'AND time >= :start AND time <= :end AND event_code = %s') % event_code[0]
             break
         elif reference.special == True:
-            cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name = %s", (reference.description,))
-            rows = cur.fetchall()
+            rows = database.db_session.execute("SELECT column_name FROM information_schema.columns WHERE table_name = :table",
+                                               {'table': reference.description}).fetchall()
             columns = [row[0] for row in rows]
             if key in columns:
-                sql_query = 'SELECT time, %s FROM %s WHERE instrument_id = %%s AND time >= %%s AND time <= %%s' % (
+                sql_query = 'SELECT time, %s FROM %s WHERE instrument_id = :id AND time >= :start AND time <= :end' % (
                 key, reference.description)
     # Selects the time and the "key" column from the data table with time between 'start' and 'end'
     try:
-        cur.execute(sql_query, (instrument_id, start, end))
+        print("probably blew up here")
+        rows = database.db_session.execute(sql_query, dict(id = instrument_id, start= start, end= end)).fetchall()
     except Exception, e:
         print(e)
         return json.dumps({"x": [], "y": []})
-    rows = cur.fetchall()
 
     # Prepares a JSON message, an array of x values and an array of y values, for the graph to plot
     # TODO Determine: Is iso format timezone ambiguous?

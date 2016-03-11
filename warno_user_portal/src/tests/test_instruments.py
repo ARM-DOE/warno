@@ -248,7 +248,6 @@ class test_instruments(TestCase):
     ### Helper Functions ###
     @mock.patch('UserPortal.instruments.db_get_instrument_references')
     def test_valid_columns_for_instrument_calls_db_with_correct_arguments_and_returns_expected_column_list(self, get_refs):
-        cursor = mock.Mock()
         expected_column_list = ["integer", "not_special_table"]
         # Each reference is a boolean specifying whether it is a 'special' table along with the name of the table
         ref1 = mock.Mock()
@@ -261,10 +260,11 @@ class test_instruments(TestCase):
         get_refs.return_value = references
         # Datetime should not be a valid data type and should not make it into results
         special_table_entries = [["integer", "integer"],["datetime", "datetime"]]
-        cursor.fetchall.return_value = special_table_entries
+        database.db_session.execute().fetchall.return_value = special_table_entries
         instrument_id = 10
-        result_column_list = instruments.valid_columns_for_instrument(instrument_id, cursor)
-        executed_calls = cursor.execute.call_args_list
+        result_column_list = instruments.valid_columns_for_instrument(instrument_id)
+        executed_calls = database.db_session.execute.call_args_list
+
         self.assertTrue(expected_column_list[0] in result_column_list,
                         "First valid column string '%s' not returned in columns" % expected_column_list[0])
         self.assertTrue(expected_column_list[1] in result_column_list,
@@ -272,7 +272,7 @@ class test_instruments(TestCase):
         self.assertTrue("datetime" not in result_column_list, "Invalid column string 'datetime' in returned columns")
 
         # Second database execute expected to be performed on a 'special' table only
-        self.assertTrue("FROM information_schema.columns" in executed_calls[0][0][0],
+        self.assertTrue("FROM information_schema.columns" in executed_calls[1][0][0],
                         "cursor.execute never accesses 'information_schema.columns'")
-        self.assertTrue("special_table" in executed_calls[0][0][1],
+        self.assertTrue("special_table" in str(executed_calls[1][0][1]),
                         "cursor.execute not called with 'special_table' table name")

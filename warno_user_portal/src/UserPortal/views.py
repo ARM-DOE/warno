@@ -24,26 +24,10 @@ status_text = {1: "OPERATIONAL",
                5: "TRANSIT"}
 
 
-def connect_db():
-    """Connect to database.
-
-    Returns
-    -------
-    A Psycopg2 connection object to the default database.
-    """
-    db_cfg = config.get_config_context()['database']
-    s_db_cfg = config.get_config_context()['s_database']
-    return psycopg2.connect("host=%s dbname=%s user=%s password=%s" %
-                            (db_cfg['DB_HOST'], db_cfg['DB_NAME'], db_cfg['DB_USER'], s_db_cfg['DB_PASS']))
-
-
 @app.before_request
 def before_request():
     """Before each Request.
-
-    Connects to the database.
     """
-    g.db = connect_db()
 
 
 @app.teardown_request
@@ -216,11 +200,9 @@ def query():
     data = ""
     if request.method == 'POST':
         query = request.form.get("query")
-        cur = g.db.cursor()
         try:
-            cur.execute(query)
-            data = cur.fetchall()
-            cur.execute('COMMIT')
+            data = database.db_session.execute(query).fetchall()
+            database.db_session.execute('COMMIT')
         except psycopg2.ProgrammingError, e:
             data = "Invalid Query.  Error: %s" % e
 
