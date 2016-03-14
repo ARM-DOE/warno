@@ -1,137 +1,66 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<script type="text/javascript" src="{{ url_for('static', filename='dygraph-combined-dev.js')}}"></script>
-		<script type="text/javascript" src="{{ url_for('static', filename='jquery-2.1.4.js')}}"></script>
-	</head>
-	<body>
-<!-- 		<br>
-		<br>
-		<div id="graphdiv0" style="width: 400px; height: 200px;"></div>
-		<br>
-		<br>
-		<div id="graphdiv1" style="width: 400px; height: 200px;"></div>
-		<br>
-		<hr> -->
-		<div>
-		    <div style=" vertical-align: top;">
-			Add a Graph By Attribute
-			<br>
-			<select id="keySelect" name="Data">
-		        {% for column in columns %}
-		          <option value="{{column}}">{{column}}</option>
-		       {% endfor %}
-	             </select>
-		      <button type="button" onclick="add_graph()">Add</button>
-		   </div>
-		   <div style=" vertical-align: top;">
-                  <p><label for="time">Start Date/Time in UTC:</label>
-                     <input type="datetime" id="datetime-input-start" name="start" value="01/01/1970 12:27:31">
-                  </p>
-                  <p><label for="time">End Date/Time in UTC:</label>
-                     <input type="datetime" id="datetime-input-end" name="end" value="01/01/2170 12:27:31">
-                     <br>
-                      (MM/DD/YYYY HH:MM:SS)
-                      {% if error %}
-                       <div id="new-log-error" style="color: red">{{error}}</div>
-                      {% endif %}
-                  </p>
+    <head>
+        <script type="text/javascript" src="{{ url_for('static', filename='dygraph-combined-dev.js')}}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='jquery-2.1.4.js')}}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='instrument_graph.js')}}"></script>
+    </head>
+    <body>
+        <div>
+
+            <div style=" vertical-align: top;">
+                Add a Graph By Attribute
+                <br>
+
+                <select id="keySelect" name="Data">
+                    {% for column in columns %}
+                    <option value="{{column}}">{{column}}</option>
+                    {% endfor %}
+                </select>
+
+                <button type="button" onclick="add_graph()">Add</button>
+            </div>
+
+            <div style=" vertical-align: top;">
+
+                <p><label for="time">Start Date/Time in UTC:</label>
+                    <input type="datetime" id="datetime-input-start" name="start" value="01/01/1970 12:27:31">
+                </p>
+
+                <p><label for="time">End Date/Time in UTC:</label>
+                    <input type="datetime" id="datetime-input-end" name="end" value="01/01/2170 12:27:31">
+                    <br>
+                    (MM/DD/YYYY HH:MM:SS)
+                    {% if error %}
+                        <div id="new-log-error" style="color: red">{{error}}</div>
+                    {% endif %}
+                </p>
+
 		    </div>
+
 		</div>
 		<div id="master-graphdiv"></div>
 
-		<script>
-   			g = [];
-   			id = 0;
+        <script>
 
-			function add_graph()
-				{
-					//XMLHTTPRequest to server xml generator
-					xmlhttp = new XMLHttpRequest();
-					key = document.getElementById('keySelect').value;
+            gm = new GraphManager();
 
-					div_id = "graphdiv" + id;
-					div = document.createElement('div');
-					div.innerHTML = '<div id = "' + div_id + '-parent"><div id="' + div_id + '" style="width: 400px; height: 250px; display: inline-block;"></div><br><button type="button" onclick="remove_graph(this)">Remove Graph</button></div>'
-			           master_div = document.getElementById('master-graphdiv');
-			           master_div.insertBefore(div, master_div.firstChild);
+            function add_graph()
+                {
 
-					xmlhttp.onreadystatechange = function() {
-						//After the asyncronous request successfully returns
-						if (xmlhttp.readyState == 4 && xmlhttp.status == 200)
-						{
-							//Pull out the response text from the request
-							rec_message = JSON.parse(xmlhttp.responseText);
+                    key = document.getElementById('keySelect').value;
 
-							//console.log(rec_message);
-							if (rec_message["x"].length > 0)
-							{
-								graph_data = "x,y\n"
-								for (i = 0; i < rec_message["x"].length; i ++)
-								{
-									graph_data += rec_message["x"][i] + "," + rec_message["y"][i] + "\n";
-								}
+                    start_str = document.getElementById("datetime-input-start").value;
+                    start = new Date(start_str + " UTC");
 
+                    end_str = document.getElementById("datetime-input-end").value;
+                    end = new Date(end_str + " UTC")
 
-								//Add a new graph to the list of tracked graphs, insert into
-								//div created above
-								g.push(new Dygraph(
-										document.getElementById(div_id),
-										graph_data,
-										{
-											rollPeriod: 3,
-					            			showRoller: true,
-					            			showRangeSelector: true,
-					            			rangeSelectorHeight: 20,
-					            			rangeSelectorPlotStrokeColor: 'green',
-					            			rangeSelectorPlotFillColor: 'lightgreen',
+                    master_div = document.getElementById('master-graphdiv');
 
-											title: key,
-											xlabel: "Time",
-											axes: {
-												ticker: function (a, b, pixels, opts, dygraph, vals) {
-					                                        return Dygraph.getDateAxis(a, b, Dygraph.ANNUAL, opts, dygraph);
-												}
-											}
-										}));
-							}
-							else
-							{
-								document.getElementById(div_id).innerHTML = "<p>No Data Available<br>Verify that the start and end times are valid and formatted correctly.</p>";
-							}
-						}
-					}
+                    gm.add_graph(key, {{instrument_id}}, "{{url_for('instruments.generate_instrument_graph')}}", start, end, master_div);
 
-					//Send JSON POST XMLHTTPRequest to generator controller.
-					//Include keys for the generated graph, and convert start and end datetimes to a valid argument format
-					//Assume input is in UTC
-					start_str = document.getElementById("datetime-input-start").value;
-					start = new Date(start_str);
-					start_utc = start.toLocaleString()
-					end_str = document.getElementById("datetime-input-end").value;
-					end = new Date(end_str)
-					end_utc = end.toLocaleString()
-					console.log(start_utc)
-					console.log(end_utc)
-					url = "{{url_for('instruments.generate_instrument_graph')}}" + "?key=" + key + "&instrument_id=" + {{instrument_id}} + "&start=" + start_utc + "&end=" + end_utc;
-					console.log(url)
-					xmlhttp.open("POST", url, true);
-
-					//Send out the request
-					xmlhttp.send();
-
-					//Increment the id for the next graph created
-					id += 1;
-				};
-			function remove_graph(e)
-				{
-					id = e.closest("div").id;
-					elem = document.getElementById(id);
-					elem.parentNode.removeChild(elem);
-				}
-		</script>
-	</body>
-
-
-
+                };
+        </script>
+    </body>
 </html>
