@@ -4,9 +4,13 @@ from flask import g, render_template, request, redirect, url_for
 from flask import Blueprint
 from jinja2 import TemplateNotFound
 import psycopg2
+from sqlalchemy import Float, Boolean, Integer, or_, and_
+from sqlalchemy.orm import aliased
 
 from UserPortal import app
 from WarnoConfig import config
+from WarnoConfig import database
+from WarnoConfig.models import PulseCapture, ProsensingPAF, Instrument, InstrumentLog, Site, User
 from WarnoConfig.utility import status_code_to_text
 
 is_central = 0
@@ -20,26 +24,10 @@ status_text = {1: "OPERATIONAL",
                5: "TRANSIT"}
 
 
-def connect_db():
-    """Connect to database.
-
-    Returns
-    -------
-    A Psycopg2 connection object to the default database.
-    """
-    db_cfg = config.get_config_context()['database']
-    s_db_cfg = config.get_config_context()['s_database']
-    return psycopg2.connect("host=%s dbname=%s user=%s password=%s" %
-                            (db_cfg['DB_HOST'], db_cfg['DB_NAME'], db_cfg['DB_USER'], s_db_cfg['DB_PASS']))
-
-
 @app.before_request
 def before_request():
     """Before each Request.
-
-    Connects to the database.
     """
-    g.db = connect_db()
 
 
 @app.teardown_request
@@ -58,6 +46,17 @@ def teardown_request(exception):
     if db is not None:
         db.close()
 
+@app.teardown_appcontext
+def shutdown_session(exception=None):
+    """Closes database session on request or application teardown.
+
+    Parameters
+    ----------
+    exception: optional, Exception
+        An Exception that may have caused the teardown.
+
+    """
+    database.db_session.remove()
 
 @app.route('/')
 def hello_world():
@@ -75,12 +74,9 @@ def show_dygraph():
         Returns an HTML document with a list of table columns to select from.
     """
 
-    cur = g.db.cursor()
-    # Column list allows the template to create a dropdown list with fixed values.
-    cur.execute("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'prosensing_paf'")
-    rows = cur.fetchall()
-    # Only allows a an entry if it is an acceptable data type.
-    columns = [row[0] for row in rows if row[1] in ["integer", "boolean", "double precision"]]
+    # Lists available columns to graph, and only allows an entry if it is an acceptable data type (graphable).
+    columns = [col.key for col in ProsensingPAF.__table__.columns
+               if type(col.type) in [Integer, Boolean, Float]]
 
     return render_template('instrument_dygraph.html', columns=columns)
 
@@ -96,10 +92,9 @@ def show_pulse():
         for deciding which pulse's series to plot.
     """
 
-    cur = g.db.cursor()
-    sql_query = """SELECT p.pulse_id, i.name_short, p.time FROM pulse_captures p JOIN instruments i ON (p.instrument_id = i.instrument_id)"""
-    cur.execute(sql_query)
-    pulses = [(row[0], row[1], row[2]) for row in cur.fetchall()]
+    db_pulses = database.db_session.query(PulseCapture).join(PulseCapture.instrument).all()
+    pulses = [(pulse.id, pulse.instrument.name_short, pulse.time)
+              for pulse in db_pulses]
 
     return render_template('show_pulse.html', pulses=pulses)
 
@@ -121,32 +116,21 @@ def generate_pulse_graph():
     message: JSON object
         Returns a JSON object with a list of 'x' values corresponding to a list of 'y' values.
     """
-
-    cur = g.db.cursor()
-
     pulse_id = request.args.get("pulse_id")
-
-    sql_query = """SELECT data FROM pulse_captures WHERE pulse_id = %s"""
-    cur.execute(sql_query, (pulse_id,))
-    row = cur.fetchone()
 
     # Prepares a JSON message, an array of x values and an array of y values, for the graph to plot
     # X is just a placeholder for now, since the x type is not known (time, distance, etc.)
     # TODO Determine 'X' units
-    x = [i for i in range(len(row[0]))]
-    y = row[0]
+    y = database.db_session.query(PulseCapture).filter_by(pulse_id=pulse_id).first().data
+    x = [i for i in range(len(y))]
 
     message = {"x": x, "y": y}
     message = json.dumps(message)
 
     return message
 
-def status_log_for_each_instrument(cursor):
+def status_log_for_each_instrument():
     """Get a dictionary containing the most recent log entry for each instrument with log entries.
-
-    Parameters
-    ----------
-    cursor: database cursor
 
     Returns
     -------
@@ -154,19 +138,18 @@ def status_log_for_each_instrument(cursor):
     and 'contents' as the value.
 
     """
-    sql_query = '''SELECT i.instrument_id, users.name, l1.status, l1.contents
-            FROM instruments i
-            JOIN instrument_logs l1 ON (i.instrument_id = l1.instrument_id)
-            LEFT OUTER JOIN instrument_logs l2 ON (i.instrument_id = l2.instrument_id AND
-                (l1.time < l2.time OR l1.time = l2.time AND l1.instrument_id < l2.instrument_id))
-            LEFT OUTER JOIN sites
-                  ON (sites.site_id = i.site_id)
-                LEFT OUTER JOIN users
-                  ON (l1.author_id = users.user_id)
-            WHERE l2.instrument_id IS NULL  ORDER BY sites.name_short;
-        '''
-    cursor.execute(sql_query)
-    return {row[0]: dict(author=row[1], status_code=row[2], contents=row[3]) for row in cursor.fetchall()}
+    il_alias_1 = aliased(InstrumentLog, name='il_alias_1')
+    il_alias_2 = aliased(InstrumentLog, name='il_alias_2')
+    logs = database.db_session.query(il_alias_1).join(il_alias_1.instrument).join(il_alias_1.author).\
+        outerjoin(il_alias_2, and_(Instrument.id == il_alias_2.instrument_id,
+                                 or_(il_alias_1.time < il_alias_2.time,
+                                     and_(il_alias_1.time == il_alias_2.time, il_alias_1.instrument_id < il_alias_2.instrument_id)))).\
+        filter(il_alias_2.id == None).all()
+
+    recent_logs = {log.instrument.id: dict(author=log.author.name, status_code=log.status, contents=log.contents)
+                   for log in logs}
+
+    return recent_logs
 
 @app.route('/radar_status')
 def show_radar_status():
@@ -178,17 +161,15 @@ def show_radar_status():
         Returns an HTML document with arguments including a list of instruments,
             their status and their most recent log entries.
     """
-    cur = g.db.cursor()
 
     # Get the most recent log for each instrument to determine its current status
-    status = status_log_for_each_instrument(cur)
+    status = status_log_for_each_instrument()
 
     # Assume the instrument status is operational unless the status has changed, handled afterward
-    cur.execute('''SELECT i.instrument_id, i.name_long, i.site_id, s.name_short
-                    FROM instruments i JOIN sites s ON s.site_id = i.site_id''')
-    rows = cur.fetchall()
-    instruments = [dict( id=row[0], instrument_name=row[1], site_id=row[2],
-                         site=row[3], status=1, author="", contents="") for row in rows]
+    db_instruments = database.db_session.query(Instrument).join(Instrument.site).all()
+    instruments = [dict( id=instrument.id, instrument_name=instrument.name_long, site_id=instrument.site_id,
+                         site=instrument.site.name_short, status=1, author="", contents="")
+                   for instrument in db_instruments]
 
     # For each instrument, if there is a corresponding status entry from the query above,
     # add the status and the last log's author.  If not, status will stay default operational
@@ -198,9 +179,6 @@ def show_radar_status():
             instrument['author'] = status[instrument['id']]["author"]
             instrument['contents'] = status[instrument['id']]["contents"]
         instrument['status'] = status_code_to_text(instrument['status'])
-
-    #logs = [dict(instrument_name=row[0], instrument_id=row[1], site_id=row[2], site=row[3],
-    #             contents=row[4], author=row[5], status=status_code_to_text(row[6])) for row in cur.fetchall()]
 
     return render_template('radar_status.html', instruments=instruments)
 
@@ -222,11 +200,9 @@ def query():
     data = ""
     if request.method == 'POST':
         query = request.form.get("query")
-        cur = g.db.cursor()
         try:
-            cur.execute(query)
-            data = cur.fetchall()
-            cur.execute('COMMIT')
+            data = database.db_session.execute(query).fetchall()
+            database.db_session.execute('COMMIT')
         except psycopg2.ProgrammingError, e:
             data = "Invalid Query.  Error: %s" % e
 

@@ -4,9 +4,12 @@ from flask import g, render_template, request, redirect, url_for, request
 from flask import Blueprint
 from jinja2 import TemplateNotFound
 import psycopg2
+import sqlalchemy
 
 from WarnoConfig import config
 from WarnoConfig.utility import status_code_to_text, status_text
+from WarnoConfig import database
+from WarnoConfig.models import InstrumentLog, User, Instrument
 
 logs = Blueprint('logs', __name__, template_folder='templates')
 
@@ -55,48 +58,40 @@ def new_log():
             instrument with the instrument_id matching the insertion.
     """
 
-    cur = g.db.cursor()
     # Default error message will not show on template when its the empty string
     error = ""
 
-    user_id = request.args.get('user-id')
-    instrument_id = request.args.get('instrument')
-    time = request.args.get('time')
-    status = request.args.get('status')
-    contents = request.args.get('contents')
+    new_log = InstrumentLog()
+    new_log.author_id = request.args.get('user-id')
+    new_log.instrument_id = request.args.get('instrument')
+    new_log.time = request.args.get('time')
+    new_log.status = request.args.get('status')
+    new_log.contents = request.args.get('contents')
 
     # If there is valid data entered with the get request, insert and redirect to the instrument
     # that the log was placed for
-    if user_id and instrument_id and status and time:
+    if new_log.author_id and new_log.instrument_id and new_log.status and new_log.time:
         # Attempt to insert an item into the database. Try/Except is necessary because
         # the timedate datatype the database expects has to be formatted correctly.
         try:
-            cur.execute('''INSERT INTO instrument_logs(time, instrument_id, author_id, contents, status)
-                           VALUES (%s, %s, %s, %s, %s)''', (time, instrument_id, user_id, contents, status))
-            cur.execute('COMMIT')
+            database.db_session.add(new_log)
+            database.db_session.commit()
             # Redirect to the instrument page that the log was submitted for.
-            return redirect(url_for('instruments.instrument', instrument_id=instrument_id))
-        except psycopg2.DataError:
+            return redirect(url_for('instruments.instrument', instrument_id=new_log.instrument_id))
+        except sqlalchemy.exc.DataError:
             # If the timedate object expected by the database was incorrectly formatted, error is set
             # for when the page is rendered again
             error = "Invalid Date/Time Format"
-        # Commit required, especially if there is an exception, or cursor breaks on next execute
-        cur.execute('COMMIT')
 
     # If there was no valid insert, render form normally
-    instrument_sql = (
-        "SELECT i.instrument_id, i.name_short, s.name_short FROM instruments i, sites s "
-        "WHERE i.site_id = s.site_id"
-    )
-    user_sql = "select u.user_id, u.name from users u"
 
-    cur.execute(instrument_sql)
     # Format the instrument names to be more descriptive
-    instruments = [dict(id=row[0], name=row[2] + ":" + row[1]) for row in cur.fetchall()]
+    db_instruments = database.db_session.query(Instrument).all()
+    instruments = [dict(id=instrument.id, name=instrument.site.name_short + ":" + instrument.name_short)
+                   for instrument in db_instruments]
 
     # Get a list of users so the user can choose who submitted the log.
-    cur.execute(user_sql)
-    # Add a dictionary for each site and its information to the list of sites
-    users = [dict(id=row[0], name=row[1]) for row in cur.fetchall()]
+    db_users = database.db_session.query(User).all()
+    users = [dict(id=user.id, name=user.name) for user in db_users]
 
     return render_template('new_log.html', users=users, instruments=instruments, status=status_text, error=error)
