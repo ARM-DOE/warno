@@ -7,6 +7,8 @@ import psycopg2
 from sqlalchemy import Float, Boolean, Integer, or_, and_
 from sqlalchemy.orm import aliased
 
+from werkzeug.contrib.fixers import ProxyFix
+
 from UserPortal import app
 from WarnoConfig import config
 from WarnoConfig import database
@@ -16,6 +18,7 @@ from WarnoConfig.utility import status_code_to_text
 is_central = 0
 
 app.config.from_object(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app)
 
 status_text = {1: "OPERATIONAL",
                2: "NOT WORKING",

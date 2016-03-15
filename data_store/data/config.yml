@@ -4,7 +4,7 @@ setup:
     em_url: "http://eventmanager/eventmanager/event"
 
 type:
-    central_facility: 0
+    central_facility: 1
 
 database:
     test_db : false
@@ -12,5 +12,5 @@ database:
     DB_NAME : "warno"
     DB_USER : "warno"
 
-test:
-    test_value: 1
+debug:
+    no_gunicorn: 1
