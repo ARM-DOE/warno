@@ -27,4 +27,4 @@ conda install -y psycopg2
 conda install -y pandas
 conda install -y numpy
 conda install -y netcdf4
-pip install sqlalchemy
+pip install sqlalchemy alembic

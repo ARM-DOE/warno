@@ -447,7 +447,7 @@ def initialize_database():
         # If it is not a test database, first attempt to load database from an existing postgres dumpfile
         utility.load_dumpfile()
 
-    database.init_db()
+    utility.upgrade_db()
 
     cur.execute("SELECT * FROM users LIMIT 1")
     if cur.fetchone() == None:

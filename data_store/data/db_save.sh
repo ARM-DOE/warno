@@ -10,10 +10,11 @@ eval $(parse_yaml $DIR/secrets.yml)
 
 USERNAME=$database__DB_USER
 DB_ADDRESS=$database__DB_HOST
+DB_NAME=$database__DB_NAME
 
 
 DUMPFILE=$DIR/db_dump.data
-PGPASSWORD=$s_database__DB_PASS pg_dump -f $DUMPFILE -h "$DB_ADDRESS" --username=$USERNAME
+PGPASSWORD=$s_database__DB_PASS pg_dump --data-only -f $DUMPFILE -h "$DB_ADDRESS" --username=$USERNAME $DB_NAME
 
 if [ $? != 0 ]
 then
