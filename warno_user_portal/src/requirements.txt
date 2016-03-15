@@ -4,3 +4,4 @@ requests
 django==1.7
 Flask
 pyyaml
+gunicorn
