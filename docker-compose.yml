@@ -15,6 +15,8 @@ eventmanager:
     - postgres
   volumes:
     - /vagrant/warno_event_manager/src:/opt/warno_event_manager
+    - /vagrant/alembic:/vagrant/alembic
+    - /vagrant/alembic.ini:/vagrant/alembic.ini
   volumes_from:
     - datastore
   env_file: .env

@@ -1,15 +1,9 @@
 #! /usr/bin/env bash
-PYTHONPATH=/vagrant/data_store/data/
-export PYTHONPATH
-DATA_STORE_PATH=/vagrant/data_store/data/
-export DATA_STORE_PATH
-echo ""
-echo ""
-echo "UPGRADING"
-echo ""
-echo ""
+# Designed to be run within VM, otherwise the absolute paths will probably not be correct.
+export PYTHONPATH=/vagrant/data_store/data/
+export DATA_STORE_PATH=/vagrant/data_store/data/
+cd /vagrant
 alembic upgrade head
-echo "Schleep?"
 
 
 

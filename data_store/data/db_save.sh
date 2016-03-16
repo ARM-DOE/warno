@@ -14,7 +14,7 @@ DB_NAME=$database__DB_NAME
 
 
 DUMPFILE=$DIR/db_dump.data
-PGPASSWORD=$s_database__DB_PASS pg_dump --data-only -f $DUMPFILE -h "$DB_ADDRESS" --username=$USERNAME $DB_NAME
+PGPASSWORD=$s_database__DB_PASS pg_dump --data-only --exclude-table 'alembic_version' -f $DUMPFILE -h "$DB_ADDRESS" --username=$USERNAME $DB_NAME
 
 if [ $? != 0 ]
 then
