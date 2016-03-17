@@ -168,11 +168,19 @@ def save_special_prosensing_paf(msg, msg_struct):
     sql_query_b = ") VALUES ('%s', %s, %s" % (timestamp, msg_struct['Data']['Site_Id'], msg_struct['Data']['Instrument_Id'])
     for key, value in msg_struct['Data']['Value'].iteritems():
         sql_query_a = ', '.join([sql_query_a, key])
-        try:
-            float(value)
-            sql_query_b = ', '.join([sql_query_b, "%s" % value])
-        except ValueError:
-            sql_query_b = ', '.join([sql_query_b, "'%s'" % value])
+        #Converts inf and -inf to Postgresql equivalents
+        if ("-inf" in str(value)):
+            print "NEGINF ENCOUNTERED"
+            sql_query_b = ', '.join([sql_query_b, "'-Infinity'"])
+        elif  ("inf" in str(value)):
+            print "INF ENCOUNTERED"
+            sql_query_b = ', '.join([sql_query_b, "'Infinity'"])
+        else:
+            try:
+                float(value)
+                sql_query_b = ', '.join([sql_query_b, "%s" % value])
+            except ValueError:
+                sql_query_b = ', '.join([sql_query_b, "'%s'" % value])
     sql_query = ''.join([sql_query_a, sql_query_b, ")"])
 
     cur.execute(sql_query)
