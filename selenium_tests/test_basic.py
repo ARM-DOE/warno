@@ -58,7 +58,7 @@ class TestIndexFunctionality(TestCase):
         sub_title = self.browser.find_element_by_class_name("sub-title")
         self.assertTrue(site_name in sub_title.text, 'Site %s did not have "%s" in sub-title' % (site_name,site_name))
 
-    def test_kazr2_instrument_has_kazr2_in_title_and_is_accessible_through_instruments_list(self):
+    def test_kazr_instrument_has_kazr_in_title_and_is_accessible_through_instruments_list(self):
         instrument_name = "ENA"
         self.browser.get(self.warno_url)
         self.browser.find_element_by_link_text("Instruments").click()
@@ -73,8 +73,8 @@ class TestIndexFunctionality(TestCase):
         for that instrument and displays the log.
         """
         test_log = {'user': 'John J. Technician',
-                    'instrument': 'ENA:KAZR-2',
-                    'instrument_name_only': 'KAZR-2',
+                    'instrument': 'ENA:KAZR',
+                    'instrument_name_only': 'KAZR',
                     'date': '01/01/2016 22:22:22',
                     'status': 'NOT WORKING',
                     'contents': 'TESTLOGCONTENTS'}
@@ -213,7 +213,7 @@ class TestIndexFunctionality(TestCase):
         rows = table_id.find_elements_by_tag_name('tr')
         test_row = []
         for row in rows[1:]:
-            if row.find_elements_by_tag_name("td")[0].text == test_instrument['abbv']:
+            if row.find_elements_by_tag_name("td")[1].text == test_instrument['abbv']:
                 test_row = row
 
         ## Now we make sure we get back out what we put in
