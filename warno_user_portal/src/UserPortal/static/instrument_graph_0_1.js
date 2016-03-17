@@ -108,12 +108,13 @@ Graph.prototype.request_values = function(key, beginning_time, end_time) {
             //Pull out the response text from the request
             var rec_message = JSON.parse(xmlhttp.responseText);
             var values = []
-
             if (rec_message["x"].length > 0)
             {
                 for (i = 0; i < rec_message["x"].length; i ++)
                 {
-                    values.push([new Date(rec_message["x"][i] + "Z"), rec_message["y"][i]]);
+
+                    if (!(rec_message["y"][i] === null))
+                        values.push([new Date(rec_message["x"][i] + "Z"), rec_message["y"][i]]);
                 }
             }
 
