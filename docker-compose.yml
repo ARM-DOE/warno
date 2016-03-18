@@ -59,6 +59,7 @@ agent:
     extra_hosts:
       - "ena-kazr:192.148.95.5"
       - "ena-sacr:192.148.95.7"
+      - "amf3-kazr:198.124.100.5"
     env_file: .env
 
 datastore:
