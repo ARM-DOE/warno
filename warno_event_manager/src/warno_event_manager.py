@@ -170,10 +170,8 @@ def save_special_prosensing_paf(msg, msg_struct):
         sql_query_a = ', '.join([sql_query_a, key])
         #Converts inf and -inf to Postgresql equivalents
         if ("-inf" in str(value)):
-            print "NEGINF ENCOUNTERED"
             sql_query_b = ', '.join([sql_query_b, "'-Infinity'"])
         elif  ("inf" in str(value)):
-            print "INF ENCOUNTERED"
             sql_query_b = ', '.join([sql_query_b, "'Infinity'"])
         else:
             try:
