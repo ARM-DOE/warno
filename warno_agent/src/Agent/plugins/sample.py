@@ -22,6 +22,7 @@ def get_timestamp():
 def run(msg_queue, instrument_id):
     pafc = PAFClient("ena-kazr", 3000)
     pafc.connect()
+    si = pafc.get_server_info()
     i = 1
     while True:
         timestamp = get_timestamp()
