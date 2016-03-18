@@ -10,9 +10,9 @@ logfile = "/vagrant/data_store/data/agent_exceptions.log"
 
 def register(msg_queue):
     event_names = ["prosensing_paf", "non_paf_event"]
-    instrument_name = "KAZR-OLI"
+    instrument_name = "KAZR-NSA"
 
-    print("REGISTERING KAZR-OLI")
+    print("REGISTERING KAZR-NSA")
 
     return {"instrument_name": instrument_name, "event_code_names": event_names}
 
