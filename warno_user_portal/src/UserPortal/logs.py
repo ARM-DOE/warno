@@ -71,8 +71,6 @@ def new_log():
 
     cfg = config.get_config_context()
 
-    cfg = config.get_config_context()
-
     # If there is valid data entered with the get request, insert and redirect to the instrument
     # that the log was placed for
     if new_log.author_id and new_log.instrument_id and new_log.status and new_log.time:
@@ -84,8 +82,8 @@ def new_log():
 
             # If it is not a central facility, pass the log to the central facility
             if not cfg['type']['central_facility']:
-                packet = dict(Event_Code=5, Data = dict(instrument_id=instrument_id, author_id = user_id, time = time,
-                                                status = status, contents = contents, supporting_images = None))
+                packet = dict(Event_Code=5, Data = dict(instrument_id=new_log.instrument_id, author_id = new_log.user_id, time = new_log.time,
+                                                status = new_log.status, contents = new_log.contents, supporting_images = None))
                 payload = json.dumps(packet)
                 requests.post(cfg['setup']['cf_url'], data = payload,
                                       headers = {'Content-Type': 'application/json'})
