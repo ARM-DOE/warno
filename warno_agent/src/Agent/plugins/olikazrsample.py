@@ -10,9 +10,9 @@ logfile = "/vagrant/data_store/data/agent_exceptions.log"
 
 def register(msg_queue):
     event_names = ["prosensing_paf", "non_paf_event"]
-    instrument_name = "KAZR"
+    instrument_name = "KAZR-OLI"
 
-    print("REGISTERING KAZR")
+    print("REGISTERING KAZR-OLI")
 
     return {"instrument_name": instrument_name, "event_code_names": event_names}
 
@@ -20,7 +20,7 @@ def get_timestamp():
     return datetime.datetime.utcnow()
 
 def run(msg_queue, instrument_id):
-    pafc = PAFClient("ena-kazr", 3000)
+    pafc = PAFClient("amf3-kazr", 3000)
     pafc.connect()
     i = 1
     while True:

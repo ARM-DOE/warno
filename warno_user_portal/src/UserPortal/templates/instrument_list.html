@@ -17,23 +17,23 @@
 <div>
 <table class="listing-table sortable" id='instrument-table'>
     <tr>
+        <th> Location</th>
         <th> Abbv</th>
         <th> Intrument Name</th>
         <th> Type</th>
         <th> Vendor</th>
         <th> Description</th>
-        <th> Location</th>
         <th> Frequency Band</th>
         <th> Instrument ID </th>
     </tr>
     {%  for instrument in instruments %}
     <tr>
+        <td><a href= "{{url_for('sites.show_site', site_id=instrument.site_id)}}">{{ instrument.location }}</a></td>
         <td><a href = "{{url_for('instruments.instrument', instrument_id=instrument.id)}}">{{ instrument.abbv }}</a></td>
         <td>{{ instrument.name }}</td>
         <td>{{ instrument.type }}</td>
         <td>{{ instrument.vendor }}</td>
         <td>{{ instrument.description }}</td>
-        <td><a href= "{{url_for('sites.show_site', site_id=instrument.site_id)}}">{{ instrument.location }}</a></td>
         <td>{{ instrument.frequency_band }}</td>
         <td>{{ instrument.id }}</td>
     </tr>
