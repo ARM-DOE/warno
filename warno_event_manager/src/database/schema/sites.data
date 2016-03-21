@@ -1,6 +1,6 @@
 name_short,name_long,latitude,longitude,facility,mobile,location_name
 SGP,Southern Great Plains,36.607,97.488,SGP,True,Southern Great Plains
-ENA,Eastern North Atlantic,39.091578,-156.61575,ENA,True,Graciosa Island
+ENA,Eastern North Atlantic,39.091578,-28.029167,ENA,True,Graciosa Island
 OLI,Oliktok Point,70.495247,-149.886883,AMF3,True,Oliktok Point
 NSA,Barrows Alaska,71.323258,-149.886883,AMF2,True,Barrows Alaska
 AWR,Aware,0,0,AMF2,True,McMurdo Antartica

@@ -74,6 +74,59 @@ def new_site():
         error = request.args.get('error')
         return render_template('new_site.html', error=error)
 
+@sites.route('/sites/<site_id>/edit', methods=['GET', 'POST'])
+def edit_site(site_id):
+    """Update WARNO site.
+
+    Returns
+    -------
+    new_site.html: HTML document
+        If the request method is 'GET', returns a form to update site .
+
+    list_sites: Flask redirect location
+        If the request method is 'POST', returns a Flask redirect location to the
+            list_sites function, redirecting the site to the list of sites.
+    """
+    # If the form information has been received, update the site in the database
+    if request.method == 'POST':
+        # Get the site information from the request
+        updated_site = database.db_session.query(Site).filter(Site.id == site_id).first()
+        updated_site.name_short = request.form.get('abbv')
+        updated_site.name_long = request.form.get('name')
+        updated_site.latitude = request.form.get('lat')
+        updated_site.longitude = request.form.get('lon')
+        updated_site.facility = request.form.get('facility')
+        updated_site.location_name = request.form.get('location_name')
+
+        mobile = request.form.get('mobile')
+        # If the "mobile" box was checked in new_site, mobile is True. Else, false
+        if mobile == "on":
+            updated_site.mobile = True
+        else:
+            updated_site.mobile = False
+
+        # Checks if latitude and longitude are valid values
+        if is_number(updated_site.latitude) and is_number(updated_site.longitude):
+            database.db_session.commit()
+            # After update, redirect to the updated list of sites
+            return redirect(url_for("sites.list_sites"))
+        else:
+            db_site = database.db_session.query(Site).filter(Site.id == site_id).first()
+            site = dict(name_short=db_site.name_short, name_long=db_site.name_long, latitude=db_site.latitude,
+                        longitude=db_site.longitude, facility=db_site.facility, location_name=db_site.location_name, mobile=db_site.mobile)
+            return redirect(url_for("sites.edit_site", site_id=site_id, site=site, error="Latitude and Longitude must be numbers."))
+
+        # Redirect to the updated list of sites
+        return redirect(url_for("sites.list_sites"))
+
+    # If the request is to get the form, get the site and pass it to fill default values.
+    if request.method == 'GET':
+        error = request.args.get('error')
+        db_site = database.db_session.query(Site).filter(Site.id == site_id).first()
+        site = dict(name_short=db_site.name_short, name_long=db_site.name_long, latitude=db_site.latitude,
+                    longitude=db_site.longitude, facility=db_site.facility, location_name=db_site.location_name, mobile=db_site.mobile)
+
+        return render_template('edit_site.html', site=site, error=error)
 
 @sites.route('/sites')
 def list_sites():

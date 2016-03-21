@@ -63,3 +63,39 @@ def new_user():
     if request.method == 'GET':
         # Render the new user template
         return render_template('new_user.html')
+
+@users.route('/users/<user_id>/edit', methods=['GET', 'POST'])
+def edit_user(user_id):
+    """Update WARNO user.
+
+    Returns
+    -------
+    new_user.html: HTML document
+        If the request method is 'GET', returns a form to update user .
+
+    list_users: Flask redirect location
+        If the request method is 'POST', returns a Flask redirect location to the
+            list_users function, redirecting the user to the list of users.
+    """
+    # If the form information has been received, update the user in the database
+    if request.method == 'POST':
+        # Get the user information from the request
+        updated_user = database.db_session.query(User).filter(User.id == user_id).first()
+        updated_user.name = request.form.get('name')
+        updated_user.email = request.form.get('email')
+        updated_user.location = request.form.get('location')
+        updated_user.position = request.form.get('position')
+        updated_user.password = request.form.get('password')
+
+        # Update user in the database
+        database.db_session.commit()
+
+        # Redirect to the updated list of users
+        return redirect(url_for("users.list_users"))
+
+    # If the request is to get the form, get the user and pass it to fill default values.
+    if request.method == 'GET':
+        db_user = database.db_session.query(User).filter(User.id == user_id).first()
+        user = dict(name=db_user.name, email=db_user.email, location=db_user.location, position=db_user.position)
+
+        return render_template('edit_user.html', user=user)

@@ -21,8 +21,8 @@ class test_instruments(TestCase):
         return views.app
 
 
-    @mock.patch('psycopg2.connect')
-    def test_list_instruments_returns_200_and_passes_mock_db_instruments_as_context_variable_using_correct_template(self, connect):
+
+    def test_list_instruments_returns_200_and_passes_mock_db_instruments_as_context_variable_using_correct_template(self):
         # SQLAlchemy turns our previous testing methodology fairly brittle/bulky
         db_return = mock.Mock()
         db_return.id = 0
@@ -52,8 +52,7 @@ class test_instruments(TestCase):
         self.assert_template_used('instrument_list.html')
 
 
-    @mock.patch('psycopg2.connect')
-    def test_method_get_on_new_instrument_returns_200_ok_and_passes_mock_db_sites_as_context_variable_using_correct_template(self, connect):
+    def test_method_get_on_new_instrument_returns_200_ok_and_passes_mock_db_sites_as_context_variable_using_correct_template(self):
         db_return = mock.Mock()
         db_return.id = 0
         db_return.name_short = 1
@@ -66,13 +65,44 @@ class test_instruments(TestCase):
         self.assertTrue(True in [Site in call[0] for call in calls], "'Site' class not called in a query")
 
         # Accessing context variable by name feels brittle, but it seems to be the only way
-        context_instruments = self.get_context_variable('sites')
-        values = [value for key, value in context_instruments[0].iteritems()]
+        context_sites = self.get_context_variable('sites')
+        values = [value for key, value in context_sites[0].iteritems()]
         self.assertTrue(0 in values, "Value '0' is not in the returned dictionary")
         self.assertTrue(1 in values, "Value '1' is not in the returned dictionary")
         self.assert_template_used('new_instrument.html')
 
-    # TODO method post new instrument
+
+    def test_method_get_on_edit_instrument_returns_200_ok_and_passes_mock_db_sites_and_instrument_as_context_variables_using_correct_template(self):
+        site_return = mock.Mock()
+        site_return.id = 0
+        site_return.name_short = 1
+        instrument_return = mock.Mock()
+        instrument_return.name_long= 2
+        instrument_return.name_short = 3
+        database.db_session.query().all.return_value = [site_return]
+        database.db_session.query().filter().first.return_value = instrument_return
+
+        result = self.client.get('/instruments/10/edit')
+        self.assert200(result)
+
+        calls = database.db_session.query.call_args_list
+        self.assertTrue(True in [Site in call[0] for call in calls], "'Site' class not called in a query")
+        self.assertTrue(True in [Instrument in call[0] for call in calls], "'Instrument' class not called in a query")
+
+        # Accessing context variable by name feels brittle, but it seems to be the only way
+        context_sites = self.get_context_variable('sites')
+        values = [value for key, value in context_sites[0].iteritems()]
+        self.assertTrue(0 in values, "Value '0' is not in the returned sites dictionary")
+        self.assertTrue(1 in values, "Value '1' is not in the returned sites dictionary")
+
+        context_instrument = self.get_context_variable('instrument')
+        values = [value for key, value in context_instrument.iteritems()]
+        self.assertTrue(2 in values, "Value '2' is not in the returned instrument dictionary")
+        self.assertTrue(3 in values, "Value '3' is not in the returned instrument dictionary")
+
+        self.assert_template_used('edit_instrument.html')
+
+    # TODO method post new instrument, post edit instrument
     # TODO method get generate_instrument_dygraph arguments?
     @mock.patch('psycopg2.connect')
     @mock.patch('UserPortal.instruments.db_recent_logs_by_instrument')
@@ -97,8 +127,7 @@ class test_instruments(TestCase):
 
 
     ### /instruments/instrument_id ###
-    @mock.patch('psycopg2.connect')
-    def test_method_delete_on_instrument_when_id_is_23_returns_200(self, connect):
+    def test_method_delete_on_instrument_when_id_is_23_returns_200(self):
         instrument_id = 23
         test_url = "/instruments/%s" % instrument_id
         result = self.client.delete(test_url)
@@ -183,7 +212,7 @@ class test_instruments(TestCase):
         log2.supporting_images = 13
         log2.author.name = 14
         db_return = [log1, log2]
-        database.db_session.query().filter().limit().all.return_value = db_return
+        database.db_session.query().filter().order_by().limit().all.return_value = db_return
 
         # The parameters for the instrument id integer seem to be passed in a strange way for the 'filter' part
         # of a query, and I cannot find a way to access it from the tests.
@@ -199,7 +228,7 @@ class test_instruments(TestCase):
         self.assertTrue(True in ["log" in str(call[0][0]) for call in filter_calls if len(call[0]) > 0],
                         "'log' nowhere in calls to query filter")
 
-        limit_calls = database.db_session.query().filter().limit.call_args_list
+        limit_calls = database.db_session.query().filter().order_by().limit.call_args_list
         self.assertTrue(True in [call[0] != None for call in limit_calls],
                         "No default maximum number in calls to query filter")
 
@@ -223,7 +252,7 @@ class test_instruments(TestCase):
         log2.supporting_images = 13
         log2.author.name = 14
         db_return = [log1, log2]
-        database.db_session.query().filter().limit().all.return_value = db_return
+        database.db_session.query().filter().order_by().limit().all.return_value = db_return
 
         # The parameters for the instrument id integer seem to be passed in a strange way for the 'filter' part
         # of a query, and I cannot find a way to access it from the tests.
@@ -240,7 +269,7 @@ class test_instruments(TestCase):
         self.assertTrue(True in ["log" in str(call[0][0]) for call in filter_calls if len(call[0]) > 0],
                         "'log' nowhere in calls to query filter")
 
-        limit_calls = database.db_session.query().filter().limit.call_args_list
+        limit_calls = database.db_session.query().filter().order_by().limit.call_args_list
         self.assertTrue(True  in [maximum_number in call[0] for call in limit_calls],
                         "maximum_number '%s' nowhere in calls to query filter" % maximum_number)
 

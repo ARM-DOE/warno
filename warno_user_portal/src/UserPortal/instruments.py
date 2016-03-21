@@ -74,6 +74,48 @@ def new_instrument():
 
         return render_template('new_instrument.html', sites=sites)
 
+@instruments.route('/instruments/<instrument_id>/edit', methods=['GET', 'POST'])
+def edit_instrument(instrument_id):
+    """Update WARNO instrument.
+
+    Returns
+    -------
+    new_instrument.html: HTML document
+        If the request method is 'GET', returns a form to update instrument .
+
+    list_instruments: Flask redirect location
+        If the request method is 'POST', returns a Flask redirect location to the
+            list_instruments function, redirecting the site to the list of instruments.
+    """
+    if request.method == 'POST':
+        # Get the instrument information from the request
+        # Field lengths limited in the views
+        updated_instrument = database.db_session.query(Instrument).filter(Instrument.id == instrument_id).first()
+        updated_instrument.name_short = request.form.get('abbv')
+        updated_instrument.name_long = request.form.get('name')
+        updated_instrument.type = request.form.get('type')
+        updated_instrument.vendor = request.form.get('vendor')
+        updated_instrument.description = request.form.get('description')
+        updated_instrument.frequency_band = request.form.get('frequency_band')
+        updated_instrument.site_id = request.form.get('site')
+
+        # Update instrument in the database
+        database.db_session.commit()
+
+        # Redirect to the updated list of instruments
+        return redirect(url_for("instruments.list_instruments"))
+
+    # If the request is to get the form, get a list of sites and their ids for the dropdown in the update instrument form
+    if request.method == 'GET':
+        db_sites = database.db_session.query(Site).all()
+        sites = [dict(id=site.id, name=site.name_short) for site in db_sites]
+
+        db_instrument = database.db_session.query(Instrument).filter(Instrument.id == instrument_id).first()
+        instrument = dict(name_short=db_instrument.name_short, name_long=db_instrument.name_long, type=db_instrument.type,
+                          vendor=db_instrument.vendor, description=db_instrument.description,
+                          frequency_band=db_instrument.frequency_band, site_id=db_instrument.site_id)
+
+        return render_template('edit_instrument.html', sites=sites, instrument=instrument)
 
 def valid_columns_for_instrument(instrument_id):
     """Returns a list of columns of data for an instrument that is suitable for plotting.
@@ -215,7 +257,8 @@ def db_recent_logs_by_instrument(instrument_id, maximum_number = 5):
 
     """
     # Creates a list of dictionaries, each dictionary being one of the log entries
-    db_logs = database.db_session.query(InstrumentLog).filter(InstrumentLog.instrument_id == instrument_id).limit(maximum_number).all()
+    db_logs = database.db_session.query(InstrumentLog).filter(InstrumentLog.instrument_id == instrument_id)\
+            .order_by(InstrumentLog.time.desc()).limit(maximum_number).all()
 
     return [dict(time=log.time, contents=log.contents, status=log.status,
                  supporting_images=log.supporting_images,author=log.author.name)
