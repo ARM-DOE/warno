@@ -4,15 +4,8 @@ from flask import g, render_template, request, redirect, url_for, request
 from flask import Blueprint
 from jinja2 import TemplateNotFound
 import psycopg2
-<<<<<<< HEAD
-<<<<<<< HEAD
 import sqlalchemy
-=======
 import requests
->>>>>>> UserPortal now forwards committed logs to central Event Manager if necessary.
-=======
-import requests
->>>>>>> a45382a068f4a93206c67d0cc790a6c9cdc044ff
 
 from WarnoConfig import config
 from WarnoConfig.utility import status_code_to_text, status_text
