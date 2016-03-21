@@ -4,7 +4,6 @@ from flask import g, render_template, request, redirect, url_for, request
 from flask import Blueprint
 from jinja2 import TemplateNotFound
 import psycopg2
-
 import sqlalchemy
 import requests
 
