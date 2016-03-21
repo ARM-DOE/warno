@@ -31,7 +31,9 @@ class Agent(object):
     def __init__(self):
         self.plugin_path = DEFAULT_PLUGIN_PATH
         self.config_ctxt = config.get_config_context()
+        self.event_manager_url = self.config_ctxt['setup']['em_url']
         self.em_url = self.config_ctxt['setup']['em_url']
+        self.is_central = self.config_ctxt['type']['central_facility']
         self.site_id = None
         self.msg_queue = Queue()
         self.event_code_dict = {}
@@ -39,7 +41,7 @@ class Agent(object):
         self.running_plugin_list = []
         self.plugin_module_list = []
         self.main_loop_boolean = True
-        self.cert_verify =  self.config_ctxt['setup']['cert_verify']
+        self.cert_verify = self.config_ctxt['setup']['cert_verify']
 
         #Set up logging
         log_path = os.environ.get("LOG_PATH")
@@ -116,8 +118,10 @@ class Agent(object):
                 module_name = plugin[:-3].replace('/', '.')
                 module_name = module_name.replace('Agent.','')
                 module_top = importlib.import_module(module_name[0:])
-                if hasattr(module_top, 'run') and hasattr(module_top, 'register'):
-                    plugin_module_list.append(module_top)
+                if hasattr(module_top, 'get_plugin'):
+                    candidate_plugin = module_top.get_plugin()
+                    if hasattr(candidate_plugin, 'register') and hasattr(candidate_plugin, 'run'):
+                        plugin_module_list.append(module_top.get_plugin())
             except Exception, e:
                 self.agent_logger.debug("Potential plugin search exception: %s", e)
                 pass  # Just ignore, there will be a lot of hits on this
@@ -191,6 +195,7 @@ class Agent(object):
             Running process.
 
         """
+
         plugin_instrument_id = [instrument_id for plugin_name, instrument_id in self.instrument_ids if plugin_name == plugin][0]
         p = multiprocessing.Process(target=plugin.run, args=(self.msg_queue, plugin_instrument_id))
 
@@ -217,7 +222,7 @@ class Agent(object):
 
         msg = '{"event_code": %d, "data": %s}' % (code, json.dumps(data))
         payload = json.loads(msg)
-        response = requests.post(self.em_url, json=payload, headers=headers, verify=self.cert_verify)
+        response = requests.post(self.event_manager_url, json=payload, headers=headers, verify=self.cert_verify)
         return response
 
     def main(self):
@@ -252,7 +257,6 @@ class Agent(object):
         for plugin in self.plugin_module_list:
             self.startup_plugin(plugin)
 
-
         while self.main_loop_boolean:
             if not self.msg_queue.empty():
                 response = self.process_plugin_event()
@@ -270,7 +274,6 @@ class Agent(object):
         response: requests.response
             Response from Event Manager
 
-
         """
 
         rec_msg = self.msg_queue.get_nowait()
@@ -282,6 +285,23 @@ class Agent(object):
         response = requests.post(self.em_url, json=payload, headers=headers, verify=self.cert_verify)
         return response
 
+
+class PluginManager(object):
+
+    def __init__(self, msg_queue):
+        self.plugin_list = {}
+        self.msg_queue = msg_queue
+        # self.thread_control_queue = Queue.Queue()
+        pass
+
+    def add_plugin(self, plugin):
+        pass
+
+    def register_plugin(self, plugin):
+        pass
+
+    def initialize_plugin(self, plugin):
+        pass
 
 
 if __name__ == "__main__":

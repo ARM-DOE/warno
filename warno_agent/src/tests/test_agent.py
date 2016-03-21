@@ -13,7 +13,6 @@ TEST_PLUGIN_PATH = 'warno_agent/src/tests/test_plugins/'
 PLUGIN_ROOT = 'warno_agent.src.tests.test_plugins.'
 
 
-
 class TestAgent(TestCase):
 
     def setUp(self):
@@ -45,15 +44,15 @@ class TestAgent(TestCase):
 
 
         # Get list of plugin names..a little hacky.
-        plugin_name_list = [plugin.__name__ for plugin in plugin_list]
+        plugin_name_list = [plugin.__class__.__name__ for plugin in plugin_list]
+        print(plugin_name_list)
 
+        self.assertIn('TestPassingPlugin', plugin_name_list,'Did not see test plugins')
 
-        self.assertIn(PLUGIN_ROOT+'test_plugin1', plugin_name_list,'Did not see test plugins')
-
-        self.assertNotIn('test_plugins.bad_plugin_no_register', plugin_name_list,
+        self.assertNotIn('BadPluginNoRegister', plugin_name_list,
                          'Accepted a plugin with no register function.')
 
-        self.assertNotIn('test_plugins.bad_plugin_no_run', plugin_name_list,
+        self.assertNotIn('BadPluginNoRun', plugin_name_list,
                          'Accepted a bad plugin with no run function.')
 
         self.agent.set_plugin_path()
@@ -115,7 +114,7 @@ class TestAgent(TestCase):
         mock_post.post.side_effect = iter([return1, return2, return3])
 
         test_plugin = importlib.import_module(PLUGIN_ROOT+'test_plugin1')
-        self.agent.register_plugin(test_plugin)
+        self.agent.register_plugin(test_plugin.get_plugin())
         dict_to_be_contained = {'description1': 3, 'description2': 4}
 
         self.assertDictContainsSubset(dict_to_be_contained, self.agent.event_code_dict,
@@ -127,7 +126,7 @@ class TestAgent(TestCase):
         return_process = mock.create_autospec(Process)
 
         mock_process.Process.return_value = return_process
-        test_plugin = importlib.import_module(PLUGIN_ROOT+'test_plugin1')
+        test_plugin = importlib.import_module(PLUGIN_ROOT+'test_plugin1').get_plugin()
 
         self.agent.instrument_ids.append((test_plugin, 6))
         self.agent.startup_plugin(test_plugin)

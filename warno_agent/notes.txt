@@ -30,3 +30,51 @@ Completed:
 4) Break plugin registering up to a single plugin at at time
 13) Fix Break on groupadd docker on mac os
 
+
+
+Agent Redesign Notes:
+---------------------
+
+1) Create central data structures
+2) Add Dashboard
+    1) Create flask App
+    2) break app into thread
+    3) Create dashboard
+    4) Create HTML/CSS Page
+3) Handle Plugin crashes
+4) Create plugin registry
+    1) Class for plugin registration
+5) Redo Plugin registration
+6) Config script for plugins
+7) check plugin status
+
+
+
+Plugin manager:
+1) Register plugin
+2) Start Plugin
+3) Stop Plugin
+4) Restart Plugin
+5) List of active plugins
+6) Store plugin classes
+7) Track threads
+
+
+Plugin class:
+1) Store metadata about each class
+2) Store pointer to each thread
+3) Store plugin state?
+4) Store path to each plugin
+5) Knows how to operate on itself or dumb container?
+
+
+
+
+Running TodoList:
+-----------------
+Plugin Registration
+
+
+
+Finished Running Todolist:
+--------------------------
