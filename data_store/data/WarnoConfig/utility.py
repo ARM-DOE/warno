@@ -88,6 +88,13 @@ def load_dumpfile():
     p = subprocess.Popen(["bash", "/vagrant/data_store/data/db_load.sh"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     p.wait()
 
+def upgrade_db():
+    """Runs the 'db_migrate' script in a subprocess to migrate the database using 'alembic'.
+
+    """
+    p = subprocess.Popen(["bash", "/vagrant/data_store/data/db_upgrade.sh"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p.wait()
+
 def table_exists(table_name, curr):
     """Checks whether a table with name 'table_name' exists in the database.
 

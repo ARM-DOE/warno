@@ -96,7 +96,6 @@ def valid_columns_for_instrument(instrument_id):
         if reference.special == True:
             rows = database.db_session.execute("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = :table",
                                                dict(table= reference.description)).fetchall()
-            print rows
             columns = [row[0] for row in rows if row[1] in ["integer", "boolean", "double precision"]]
         else:
             columns = [reference.description]
@@ -278,7 +277,6 @@ def generate_instrument_graph():
                 key, reference.description)
     # Selects the time and the "key" column from the data table with time between 'start' and 'end'
     try:
-        print("probably blew up here")
         rows = database.db_session.execute(sql_query, dict(id = instrument_id, start= start, end= end)).fetchall()
     except Exception, e:
         print(e)

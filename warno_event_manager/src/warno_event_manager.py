@@ -443,12 +443,19 @@ def initialize_database():
         cur.execute("DROP SCHEMA public CASCADE;")
         cur.execute("CREATE SCHEMA public;")
         db.commit()
-    else:
         # If it is not a test database, first attempt to load database from an existing postgres dumpfile
-        utility.load_dumpfile()
 
-    database.init_db()
 
+    utility.upgrade_db()
+
+    # If there there are no users in the database (which any active db should have users) and it is not a test db,
+    # attempt to load in a dumpfile.
+    if not cfg['database']['test_db']:
+        cur.execute("SELECT * FROM users LIMIT 1")
+        if cur.fetchone() == None:
+            utility.load_dumpfile()
+
+    # If there are still no users, assume the database is empty and populate the basic information
     cur.execute("SELECT * FROM users LIMIT 1")
     if cur.fetchone() == None:
         print("Populating Users")
