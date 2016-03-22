@@ -456,7 +456,7 @@ def get_event_code(msg, msg_struct):
         # Generated event codes have id's of 10000 or greater
         if insert_id < 10000:
             insert_id = 10000
-        cur.execute('''INSERT INTO event_codes(id, description) VALUES (%s, %s)''', (insert_id, msg_struct['Data']['description']))
+        cur.execute('''INSERT INTO event_codes(event_code, description) VALUES (%s, %s)''', (insert_id, msg_struct['Data']['description']))
         cur.execute("COMMIT")
         cur.execute("SELECT event_code FROM event_codes WHERE description = %s", (msg_struct['Data']['description'],))
         row = cur.fetchone()
