@@ -446,7 +446,17 @@ def get_event_code(msg, msg_struct):
         return '{"Event_Code": %i, "Data": {"description": "%s", "instrument_id": %s}}' % (row[0], msg_struct['Data']['description'], msg_struct['Data']['instrument_id'])
     # If it is not defined at the central facility, inserts a new entry into the table and returns the new code
     elif is_central:
-        cur.execute('''INSERT INTO event_codes(description) VALUES (%s)''', (msg_struct['Data']['description'],))
+        # Gets the highest current event code number
+        cur.execute('SELECT event_code FROM event_codes ORDER BY event_code DESC LIMIT 1')
+        row = cur.fetchone()
+        max_id = row[0]
+        # Manually sets the new ID to be the next available ID
+        insert_id = max_id + 1
+        # ID's 1-9999 are reserved for explicitly set event codes, such as 'instrument_id_request'
+        # Generated event codes have id's of 10000 or greater
+        if insert_id < 10000:
+            insert_id = 10000
+        cur.execute('''INSERT INTO event_codes(id, description) VALUES (%s, %s)''', (insert_id, msg_struct['Data']['description']))
         cur.execute("COMMIT")
         cur.execute("SELECT event_code FROM event_codes WHERE description = %s", (msg_struct['Data']['description'],))
         row = cur.fetchone()
