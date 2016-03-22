@@ -72,9 +72,14 @@ Plugin class:
 
 Running TodoList:
 -----------------
-Plugin Registration
+move startup_plugin to plugin manager
+Plugins using built in methods
+plugin registering data stream
+rewrite existing plugins
+Plugin Initialization.
 
 
 
 Finished Running Todolist:
 --------------------------
+Plugin converted to class object

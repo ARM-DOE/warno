@@ -2,12 +2,13 @@ class Plugin(object):
     """Plugin base object to be used to derive plugins from.
     """
 
-    def __init__(self, path):
+    def __init__(self, path=None):
         self.path = path
         self.config_data = {}
         self.plugin_name = "base_plugin"
         self.plugin_description = "Base plugin class"
         self.event_code_names = []
+        self.instrument_name = None
 
     def run(self, msg_queue, control_queue):
         pass
@@ -31,7 +32,8 @@ class Plugin(object):
         return {'plugin_name': self.plugin_name,
                 'plugin_description': self.plugin_description,
                 'event_code_names': self.event_code_names,
-                'path': self.path}
+                'path': self.path,
+                'instrument_name': self.instrument_name}
 
     def add_event_code(self, event_code_name):
         """ Add an event code. Does not need to be changed in inherited class.

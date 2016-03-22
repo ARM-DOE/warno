@@ -42,6 +42,7 @@ class Agent(object):
         self.plugin_module_list = []
         self.main_loop_boolean = True
         self.cert_verify = self.config_ctxt['setup']['cert_verify']
+        self.plugin_manager = PluginManager(self.msg_queue)
 
         #Set up logging
         log_path = os.environ.get("LOG_PATH")
@@ -120,13 +121,14 @@ class Agent(object):
                 module_top = importlib.import_module(module_name[0:])
                 if hasattr(module_top, 'get_plugin'):
                     candidate_plugin = module_top.get_plugin()
+                    candidate_plugin.path = plugin
                     if hasattr(candidate_plugin, 'register') and hasattr(candidate_plugin, 'run'):
-                        plugin_module_list.append(module_top.get_plugin())
+                        self.plugin_manager.add_plugin(candidate_plugin)
             except Exception, e:
                 self.agent_logger.debug("Potential plugin search exception: %s", e)
                 pass  # Just ignore, there will be a lot of hits on this
 
-        return plugin_module_list
+        return self.plugin_manager.get_plugin_list()
 
     def request_site_id_from_event_manager(self):
         """Request site id from manager.
@@ -164,9 +166,10 @@ class Agent(object):
         -------
 
         """
-        response_dict = plugin.register(self.msg_queue)
+        response_dict = plugin.get_registration_info()
 
-        # Get the instrument Id for each
+        # Get the instrument Id for each ****TODO Rework this later.
+
         instrument_name = response_dict['instrument_name']
         response = self.send_em_message(utility.INSTRUMENT_ID_REQUEST, instrument_name)
 
@@ -247,14 +250,13 @@ class Agent(object):
                 self.agent_logger.warn(e)
                 sleep(CONN_RETRY_TIME)
 
-
-
-        self.agent_logger.info("Registering Plugins.")
-        for plugin in self.plugin_module_list:
+        print("Registering Plugins.")
+        for plugin in self.plugin_manager.get_plugin_list():
+            print(plugin)
             self.register_plugin(plugin)
 
-        self.agent_logger.info("Starting up Plugins.")
-        for plugin in self.plugin_module_list:
+        print("Starting up Plugins.")
+        for plugin in self.plugin_manager.get_plugin_list():
             self.startup_plugin(plugin)
 
         while self.main_loop_boolean:
@@ -288,20 +290,27 @@ class Agent(object):
 
 class PluginManager(object):
 
-    def __init__(self, msg_queue):
-        self.plugin_list = {}
+    def __init__(self, msg_queue ):
+        self.plugin_list = []
         self.msg_queue = msg_queue
-        # self.thread_control_queue = Queue.Queue()
-        pass
 
-    def add_plugin(self, plugin):
-        pass
+    def add_plugin(self, plugin): # TODO: Switch this to be a dictionary of dictionaries. keys to iter
+        self.plugin_list.append({'plugin_handle': plugin,
+                                 'status': 'NotStarted',
+                                 'thread': None,
+                                 'ctrl_queue': Queue()})
 
-    def register_plugin(self, plugin):
-        pass
+    def get_plugin_list(self):
+        return [plugin['plugin_handle'] for plugin in self.plugin_list]
 
-    def initialize_plugin(self, plugin):
-        pass
+    def start_plugin(self, i):
+        plugin_instrument_id = self.plugin_list[i].get_registration_info()['instrument_id']
+        p = multiprocessing.Process(target=plugin.run, args=(self.msg_queue, plugin_instrument_id))
+
+        p.start()
+        self.plugin_list[i]['thread'] = p
+
+        return p
 
 
 if __name__ == "__main__":

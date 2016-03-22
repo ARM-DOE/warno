@@ -1,6 +1,3 @@
-import time
-from datetime import datetime
-import numpy as np
 from pyarmret.io.PAFClient import PAFClient
 
 from Agent.Plugin import Plugin
@@ -8,9 +5,13 @@ from Agent.Plugin import Plugin
 
 class TestPassingPlugin(Plugin):
 
-    def __init__(self):
-        super(Plugin, self).__init__()
 
+    def __init__(self):
+        super(TestPassingPlugin, self).__init__()
+        self.plugin_name = "TestPassingPlugin"
+        self.plugin_description = "A plugin that passes unit tests"
+        self.instrument_name = "test_instrument"
+        self.event_code_names = ["event1", "event2"]
 
     def register(self, msg_queue):
         event_names = ["event1", "event2"]
