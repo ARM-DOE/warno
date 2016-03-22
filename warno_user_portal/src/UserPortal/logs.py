@@ -32,7 +32,7 @@ def new_log():
     error: optional, integer
         Passed as an HTML parameter, an error message set if the latitude or longitude are not
         floating point numbers
-    user_id: optional, integer
+    author_id: optional, integer
         Passed as an HTML parameter, the database id of the author of the new log
 
     instrument_id: optional, integer
@@ -82,7 +82,7 @@ def new_log():
 
             # If it is not a central facility, pass the log to the central facility
             if not cfg['type']['central_facility']:
-                packet = dict(Event_Code=5, Data = dict(instrument_id=new_log.instrument_id, author_id = new_log.user_id, time = new_log.time,
+                packet = dict(Event_Code=5, Data = dict(instrument_id=new_log.instrument_id, author_id = new_log.author_id, time = new_log.time,
                                                 status = new_log.status, contents = new_log.contents, supporting_images = None))
                 payload = json.dumps(packet)
                 requests.post(cfg['setup']['cf_url'], data = payload,
