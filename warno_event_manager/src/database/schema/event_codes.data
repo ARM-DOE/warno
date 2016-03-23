@@ -1,4 +1,4 @@
-id,description
+event_code,description
 1,"event_code_request"
 2,"site_id_request"
 3,"instrument_id_request"
