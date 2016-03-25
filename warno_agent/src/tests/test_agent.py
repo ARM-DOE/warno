@@ -63,7 +63,7 @@ class TestAgent(TestCase):
     def test_request_site_id_from_event_manager_proceses_site_id(self, mock_post):
         post_return = mock.Mock()
         post_return.status_code = requests.codes.ok
-        post_return.content='{"Site_Id": 1}'
+        post_return.content='{"Data": {"Site_Id": 1}}'
 
         mock_post.codes = requests.codes  # Pass Through
 
@@ -103,7 +103,7 @@ class TestAgent(TestCase):
         return3 = mock.Mock()
 
         return1.status_code = requests.codes.ok
-        return1.content = '{"Instrument_Id": 2}'
+        return1.content = '{"Data": {"Instrument_Id": 2}}'
 
         return2.status_code = requests.codes.ok
         return2.content = '{"Event_Code": 3, "Data": {"description" : "description1"}}'
