@@ -119,7 +119,7 @@ class Agent(object):
 
         if response.status_code == requests.codes.ok:
             response_dict = dict(json.loads(response.content))
-            site_id = response_dict['Site_Id']
+            site_id = response_dict['Data']['Site_Id']
             self.site_id = site_id
         else:
             response.raise_for_status()
@@ -146,10 +146,10 @@ class Agent(object):
         response = self.send_em_message(utility.INSTRUMENT_ID_REQUEST, instrument_name)
 
         data = dict(json.loads(response.content))
-        self.instrument_ids.append((plugin, data['Instrument_Id']))
+        self.instrument_ids.append((plugin, data['Data']['Instrument_Id']))
 
         for event in response_dict['event_code_names']:
-            data_send = {'description': event, 'instrument_id': data['Instrument_Id']}
+            data_send = {'description': event, 'instrument_id': data['Data']['Instrument_Id']}
             response = self.send_em_message(utility.EVENT_CODE_REQUEST, data_send)
 
             response_dict = dict(json.loads(response.content))

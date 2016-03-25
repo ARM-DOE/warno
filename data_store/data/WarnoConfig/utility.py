@@ -209,7 +209,7 @@ def initialize_database(curr, path="schema/"):
             create_table_from_file("%s/%s.schema" % (path, schema), curr)
 
 
-def load_data_into_table(filename, table, conn):
+def load_data_into_table(filename, table):
     """Loads a comma separated (no spaces) file 'filename' into the database table 'table'.
 
     Example data file "table_name.schema":
@@ -230,7 +230,6 @@ def load_data_into_table(filename, table, conn):
 
     """
     df = pandas.read_csv(filename)
-    keys = df.keys()
     db_cfg = config.get_config_context()['database']
     s_db_cfg = config.get_config_context()['s_database']
     engine = create_engine('postgresql://%s:%s@%s:5432/%s' %

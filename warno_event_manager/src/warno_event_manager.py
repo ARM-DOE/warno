@@ -1,19 +1,17 @@
-from flask import Flask, request, g
+import psycopg2
 import requests
 import psutil
-import os
 import json
-import yaml
-import psycopg2
-import time
+import os
 
+from flask import Flask, request, g
 
-import sqlalchemy
 from WarnoConfig import config
 from WarnoConfig import utility
 from WarnoConfig import database
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from WarnoConfig.models import EventWithValue, EventWithText, ProsensingPAF, InstrumentDataReference, User
+from WarnoConfig.models import Instrument, Site, InstrumentLog, PulseCapture, EventCode
+
 
 
 # Located http://flask.pocoo.org/snippets/35/
@@ -94,31 +92,14 @@ class ReverseProxied(object):
 app = Flask(__name__)
 app.wsgi_app = ReverseProxied(app.wsgi_app)
 
-cfg = None
-ticks = 0
-tocks = 0
-
-config_path = "/opt/data/config.yml"
-
 is_central = 0
 cf_url = ""
+cfg = None
+
+config_path = "/opt/data/config.yml"
 headers = {'Content-Type': 'application/json'}
 
 cert_verify=False
-
-def connect_db():
-    """Connect to database.
-
-    Returns
-    -------
-    A Psycopg2 connection object to the default database.
-    """
-
-    db_cfg = config.get_config_context()['database']
-    s_db_cfg = config.get_config_context()['s_database']
-    return psycopg2.connect("host=%s dbname=%s user=%s password=%s" %
-                            (db_cfg['DB_HOST'], db_cfg['DB_NAME'], db_cfg['DB_USER'], s_db_cfg['DB_PASS']))
-
 
 @app.before_request
 def before_request():
@@ -126,7 +107,6 @@ def before_request():
 
     Connects to the database.
     """
-    g.db = connect_db()
 
 
 @app.teardown_request
@@ -201,19 +181,28 @@ def event():
 
     # Any other event
     else:
-        cur = g.db.cursor()
         timestamp = msg_struct['Data']['Time']
         try:
             # If it can cast as a number, save as a number.  If not, save as text
-            value = float(msg_struct['Data']['Value'])
-            cur.execute("INSERT INTO events_with_value(event_code, instrument_id, time, value) VALUES (%s, %s, %s, %s)",
-                        (msg_event_code, msg_struct['Data']['Instrument_Id'], timestamp, value))
-            cur.execute("COMMIT")
+            float_value = float(msg_struct['Data']['Value'])
+            event_wv = EventWithValue()
+            event_wv.event_code_id = msg_event_code
+            event_wv.time = timestamp
+            event_wv.instrument_id = msg_struct['Data']['Instrument_Id']
+            event_wv.value = float_value
+
+            database.db_session.add(event_wv)
+            database.db_session.commit()
             print("Saved Value Event")
         except ValueError:
-            cur.execute("INSERT INTO events_with_text(event_code, instrument_id, time, text) VALUES (%s, %s, %s, %s)",
-                        (msg_event_code, msg_struct['Data']['Instrument_Id'], timestamp, msg_struct['Data']['Value']))
-            cur.execute("COMMIT")
+            event_wt = EventWithText()
+            event_wt.event_code_id = msg_event_code
+            event_wt.time = timestamp
+            event_wt.instrument_id = msg_struct['Data']['Instrument_Id']
+            event_wt.text = msg_struct['Data']['Value']
+
+            database.db_session.add(event_wt)
+            database.db_session.commit()
             print("Saved Text Event")
         # If application is at a site instead of the central facility, passes data on to be saved at central facility
         if not is_central:
@@ -242,7 +231,6 @@ def save_special_prosensing_paf(msg, msg_struct):
 
     """
 
-    cur = g.db.cursor()
     timestamp = msg_struct['Data']['Time']
     sql_query_a = "INSERT INTO prosensing_paf(time, site_id, instrument_id"
     sql_query_b = ") VALUES ('%s', %s, %s" % (timestamp, msg_struct['Data']['Site_Id'], msg_struct['Data']['Instrument_Id'])
@@ -261,8 +249,8 @@ def save_special_prosensing_paf(msg, msg_struct):
                 sql_query_b = ', '.join([sql_query_b, "'%s'" % value])
     sql_query = ''.join([sql_query_a, sql_query_b, ")"])
 
-    cur.execute(sql_query)
-    cur.execute("COMMIT")
+    database.db_session.execute(sql_query)
+    database.db_session.commit()
 
     if not is_central:
         payload = json.loads(msg)
@@ -289,17 +277,16 @@ def save_instrument_log(msg, msg_struct):
 
     """
 
-    cur = g.db.cursor()
-    timestamp = msg_struct['Data']['time']
-    print msg_struct
+    new_log = InstrumentLog()
+    new_log.time = msg_struct['Data']['time']
+    new_log.instrument_id = msg_struct['Data']['instrument_id']
+    new_log.author_id = msg_struct['Data']['author_id']
+    new_log.status = msg_struct['Data']['status']
+    new_log.contents = msg_struct['Data']['contents']
+    new_log.supporting_images = msg_struct['Data']['supporting_images']
 
-    sql_query = ("INSERT INTO instrument_logs(time, instrument_id, author_id, status, contents, supporting_images) "
-                 "VALUES ('%s', %s, %s, %s, '%s', '%s')" % (msg_struct['Data']['time'], msg_struct['Data']['instrument_id'],
-                                                      msg_struct['Data']['author_id'], msg_struct['Data']['status'],
-                                                      msg_struct['Data']['contents'], msg_struct['Data']['supporting_images'],))
-
-    cur.execute(sql_query)
-    cur.execute("COMMIT")
+    database.db_session.add(new_log)
+    database.db_session.commit()
 
     return msg
 
@@ -325,13 +312,13 @@ def save_pulse_capture(msg, msg_struct):
 
     """
 
-    cur = g.db.cursor()
-    timestamp = msg_struct['Data']['Time']
-    sql_query = ("INSERT INTO pulse_captures(time, instrument_id, data)"
-                 " VALUES ('%s', %s, ARRAY%s)") % (timestamp, msg_struct['Data']['Instrument_Id'], msg_struct['Data']['Value'])
+    new_pulse = PulseCapture()
+    new_pulse.time = msg_struct['Data']['Time']
+    new_pulse.instrument_id = msg_struct['Data']['Instrument_Id']
+    new_pulse.data = msg_struct['Data']['Value']
 
-    cur.execute(sql_query)
-    cur.execute("COMMIT")
+    database.db_session.add(new_pulse)
+    database.db_session.commit()
 
     if not is_central:
         payload = json.loads(msg)
@@ -356,35 +343,30 @@ def get_instrument_id(msg, msg_struct):
     -------
     The instrument id or information determined by the function.
 
-    If returned from the central facility, returned in the form of a string structured as
+    Returned in the form of a string structured as
     {"Event_code": *integer event code*, "Data": {"Instrument_Id": *integer instrument id*, "Site_Id":
     *integer site id instrument is at*, "Name_Short": *string instrument abbreviation*, "Name_Long":
     *string full instrument name*, "Type": *string type of instrument*, "Vendor": *string instrument's vendor*,
     "Description": *string description of instrument*, "Frequency_Band":
     *two character frequency band instrument operates at*}}.
 
-    If returned from the non central event manager to the agent, sends a simplified version
-    '{"Instrument_Id: *integer instrument id*}'.
-
     If no instrument was found, the instrument id is passed as -1.
 
     """
-    cur = g.db.cursor()
-    cur.execute('''SELECT * FROM instruments where name_short = %s''', (msg_struct['Data'],))
-    row = cur.fetchone()
+    db_instrument = database.db_session.query(Instrument).filter(Instrument.name_short == msg_struct['Data']).first()
 
     # If there is an instrument with a matching name, returns all info to a site or just the id to an agent.
-    if row:
-        if is_central:
-            print("Found Existing Instrument")
-            return '{"Event_code": %i, "Data": {"Instrument_Id": %s, "Site_Id": %s, "Name_Short": "%s", "Name_Long": "%s", "Type": "%s", "Vendor": "%s", "Description": "%s", "Frequency_Band": "%s"}}' % (utility.INSTRUMENT_ID_REQUEST, row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
-        else:
-            print("Found Existing Instrument")
-            return '{"Instrument_Id": %i, "Data": "%s"}' % (row[0], msg_struct['Data'])
+    if db_instrument:
+        print("Found Existing Instrument")
+        return '{"Event_code": %i, "Data": {"Instrument_Id": %s, "Site_Id": %s, "Name_Short": "%s", "Name_Long": "%s", ' \
+               '"Type": "%s", "Vendor": "%s", "Description": "%s", "Frequency_Band": "%s"}}' \
+               % (utility.INSTRUMENT_ID_REQUEST, db_instrument.id, db_instrument.site_id, db_instrument.name_short,
+                  db_instrument.name_long, db_instrument.type, db_instrument.vendor,
+                  db_instrument.description, db_instrument.frequency_band)
     else:
         # If it does not exist at the central facility, returns an error indicator
         if is_central:
-            return '{"Instrument_Id": -1}'
+            return '{"Data": {"Instrument_Id": -1}}'
         # If it does not exist at a site, requests the site information from the central facility
         else:
             payload = json.loads(msg)
@@ -392,13 +374,25 @@ def get_instrument_id(msg, msg_struct):
             cf_msg = dict(json.loads(response.content))
             cf_data = cf_msg['Data']
             # Need to add handler for if there is a bad return from CF (if clause above)
-            cur.execute('''INSERT INTO instruments(instrument_id, site_id, name_short, name_long, type, vendor, description, frequency_band)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)''',
-                        (cf_data['Instrument_Id'], cf_data['Site_Id'], cf_data['Name_Short'], cf_data['Name_Long'],
-                         cf_data['Type'], cf_data['Vendor'], cf_data['Description'], cf_data['Frequency_Band']))
-            cur.execute("COMMIT")
+            new_instrument = Instrument()
+            new_instrument.id = cf_data['Instrument_Id']
+            new_instrument.site_id = cf_data['Site_Id']
+            new_instrument.name_short = cf_data['Name_Short']
+            new_instrument.name_long = cf_data['Name_Long']
+            new_instrument.type = cf_data['Type']
+            new_instrument.vendor = cf_data['Vendor']
+            new_instrument.description = cf_data['Description']
+            new_instrument.frequency_band = cf_data['Frequency_Band']
+
+            database.db_session.add(new_instrument)
+            database.db_session.commit()
+
             print ("Saved New Instrument")
-            return '{"Instrument_Id": %i}' % cf_data['Instrument_Id']
+            return '{"Event_code": %i, "Data": {"Instrument_Id": %s, "Site_Id": %s, "Name_Short": "%s", "Name_Long": "%s", ' \
+                   '"Type": "%s", "Vendor": "%s", "Description": "%s", "Frequency_Band": "%s"}}' \
+                   % (utility.INSTRUMENT_ID_REQUEST, cf_data['Instrument_Id'], cf_data['Site_Id'], cf_data['Name_Short'],
+                      cf_data['Name_Long'], cf_data['Type'], cf_data['Vendor'], cf_data['Description'], cf_data['Frequency_Band'])
+
 
 
 def get_site_id(msg, msg_struct):
@@ -419,34 +413,31 @@ def get_site_id(msg, msg_struct):
     -------
     The site id or information determined by the function.
 
-    If returned from the central facility, returned in the form of a string structured as
+    Returned in the form of a string structured as
     {"Event_code": *integer event code*, "Data": {"Site_Id": *integer site id*, "Latitude":
     *float latitude coordinate*, "Longitude": *float longitude coordinate*, "Name_Short": *string site abbreviation*, "Name_Long":
     *string full site name*, "Facility": *string facility name*, "Mobile": *boolean true if is a mobile site*,
     "Location Name": *string location name*}}.
-    
-    If returned from the non central event manager to the agent, sends a simplified version
-    '{"Site_Id: *integer site id*}'.
+
 
     If no site was found, the site id is passed as -1.
 
     """
-    cur = g.db.cursor()
-    cur.execute('''SELECT * FROM sites where name_short = %s''', (msg_struct['Data'],))
-    row = cur.fetchone()
+
+    db_site = database.db_session.query(Site).filter(Site.name_short == msg_struct['Data']).first()
 
     # If there is a site with a matching name, returns all info to a site or just the id to an agent.
-    if row:
-        if is_central:
-            print("Found Existing Site")
-            return '{"Event_code": %i, "Data": {"Site_Id": %s, "Name_Short": "%s", "Name_Long": "%s", "Latitude": "%s", "Longitude": "%s", "Facility": "%s", "Mobile": "%s", "Location_Name": "%s"}}' % (utility.SITE_ID_REQUEST, row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
-        else:
-            print("Found Existing Site")
-            return '{"Site_Id": %i, "Data": "%s"}' % (row[0], msg_struct['Data'])
+    if db_site:
+        print("Found Existing Site")
+        return '{"Event_code": %i, "Data": {"Site_Id": %s, "Name_Short": "%s", "Name_Long": "%s", "Latitude": "%s", ' \
+               '"Longitude": "%s", "Facility": "%s", "Mobile": "%s", "Location_Name": "%s"}}' \
+               % (utility.SITE_ID_REQUEST, db_site.id, db_site.name_short, db_site.name_long, db_site.latitude,
+                  db_site.longitude, db_site.facility, db_site.mobile, db_site.location_name)
+
     else:
         # If it does not exist at the central facility, returns an error indicator
         if is_central:
-            return '{"Site_Id": -1}'
+            return '{"Data": {"Site_Id": -1}}'
         # If it does not exist at a site, requests the site information from the central facility
         else:
             payload = json.loads(msg)
@@ -454,13 +445,23 @@ def get_site_id(msg, msg_struct):
             cf_msg = dict(json.loads(response.content))
             cf_data = cf_msg['Data']
             # Need to add handler for if there is a bad return from CF (if clause above)
-            cur.execute('''INSERT INTO sites(site_id, name_short, name_long, latitude, longitude, facility, mobile, location_name)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)''',
-                        (cf_data['Site_Id'], cf_data['Name_Short'], cf_data['Name_Long'], cf_data['Latitude'],
-                         cf_data['Longitude'], cf_data['Facility'], cf_data['Mobile'], cf_data['Location_Name']))
-            cur.execute("COMMIT")
+            new_site = Site()
+            new_site.id = cf_data['Site_Id']
+            new_site.name_short = cf_data['Name_Short']
+            new_site.name_long = cf_data['Name_Long']
+            new_site.latitude = cf_data['Latitude']
+            new_site.longitude = cf_data['Longitude']
+            new_site.facility = cf_data['Facility']
+            new_site.mobile = cf_data['Mobile']
+            new_site.location_name = cf_data['Location_Name']
+
+            database.db_session.add(new_site)
+            database.db_session.commit()
             print ("Saved New Site")
-            return '{"Site_Id": %i}' % cf_data['Site_Id']
+            return '{"Event_code": %i, "Data": {"Site_Id": %s, "Name_Short": "%s", "Name_Long": "%s", "Latitude": "%s", ' \
+               '"Longitude": "%s", "Facility": "%s", "Mobile": "%s", "Location_Name": "%s"}}' \
+               % (utility.SITE_ID_REQUEST, cf_data['Site_Id'], cf_data['Name_Short'], cf_data['Name_Long'],
+                  cf_data['Latitude'], cf_data['Longitude'], cf_data['Facility'], cf_data['Mobile'], cf_data['Location_Name'])
 
 
 def save_instrument_data_reference(msg, msg_struct):
@@ -479,19 +480,22 @@ def save_instrument_data_reference(msg, msg_struct):
         Decoded version of msg, converted to python dictionary.
 
     """
-    print("Message Struct for Data Reference: %s", msg_struct)
-    cur = g.db.cursor()
-    cur.execute('''SELECT * FROM instrument_data_references WHERE instrument_id = %s AND description = %s''', (msg_struct['Data']['instrument_id'], msg_struct['Data']['description']))
-    rows = cur.fetchall()
-    if not rows:
+    db_refs = database.db_session.query(InstrumentDataReference)\
+        .filter(InstrumentDataReference.instrument_id == msg_struct['Data']['instrument_id'])\
+        .filter(InstrumentDataReference.description == msg_struct['Data']['description']).all()
+    if not db_refs:
         special = "false"
-        # "special" indicates whether this particual data description has its own table
-        cur.execute('''SELECT column_name FROM information_schema.columns WHERE table_name = %s''', (msg_struct['Data']['description'],))
-        rows = cur.fetchall()
+        # "special" indicates whether this particular data description has its own table
+        rows = database.db_session.execute('''SELECT column_name FROM information_schema.columns WHERE table_name = :table''', dict(table = msg_struct['Data']['description'])).fetchall()
         if rows:
             special = "true"
-        cur.execute('''INSERT INTO instrument_data_references(instrument_id, description, special) VALUES (%s, %s, %s)''', (msg_struct['Data']['instrument_id'], msg_struct['Data']['description'], special))
-        cur.execute("COMMIT")
+        new_instrument_data_ref = InstrumentDataReference()
+        new_instrument_data_ref.instrument_id = msg_struct['Data']['instrument_id']
+        new_instrument_data_ref.description = msg_struct['Data']['description']
+        new_instrument_data_ref.special = special
+
+        database.db_session.add(new_instrument_data_ref)
+        database.db_session.commit()
         print("Saved new instrument data reference")
 
 
@@ -514,44 +518,55 @@ def get_event_code(msg, msg_struct):
     '{"Site_Id: *site id*}'.
 
     """
-    cur = g.db.cursor()
-    cur.execute('''SELECT event_code FROM event_codes WHERE description = %s''', (msg_struct['Data']['description'],))
-    row = cur.fetchone()
 
+    db_code = database.db_session.query(EventCode).filter(EventCode.description == msg_struct['Data']['description']).first()
     # If the event code defined here, return it downstream
-    if row:
+    if db_code:
         print("Found Existing Event Code")
-        return '{"Event_Code": %i, "Data": {"description": "%s", "instrument_id": %s}}' % (row[0], msg_struct['Data']['description'], msg_struct['Data']['instrument_id'])
+        return '{"Event_Code": %i, "Data": {"description": "%s", "instrument_id": %s}}' % (
+            db_code.event_code, msg_struct['Data']['description'], msg_struct['Data']['instrument_id'])
+
     # If it is not defined at the central facility, inserts a new entry into the table and returns the new code
     elif is_central:
         # Gets the highest current event code number
-        cur.execute('SELECT event_code FROM event_codes ORDER BY event_code DESC LIMIT 1')
-        row = cur.fetchone()
-        max_id = row[0]
+        max_id = database.db_session.query(EventCode.event_code).order_by(EventCode.event_code.desc()).first()[0]
         # Manually sets the new ID to be the next available ID
         insert_id = max_id + 1
         # ID's 1-9999 are reserved for explicitly set event codes, such as 'instrument_id_request'
         # Generated event codes have id's of 10000 or greater
         if insert_id < 10000:
             insert_id = 10000
-        cur.execute('''INSERT INTO event_codes(event_code, description) VALUES (%s, %s)''', (insert_id, msg_struct['Data']['description']))
-        cur.execute("COMMIT")
-        cur.execute("SELECT event_code FROM event_codes WHERE description = %s", (msg_struct['Data']['description'],))
-        row = cur.fetchone()
-        new_event_code = row[0]
+
+        new_ec = EventCode()
+        new_ec.event_code = insert_id
+        new_ec.description = msg_struct['Data']['description']
+
+        database.db_session.add(new_ec)
+        database.db_session.commit()
+
+        new_event_code = database.db_session.query(EventCode.event_code).filter(
+                EventCode.description == msg_struct['Data']['description']).first()[0]
 
         print("Created New Event Code")
-        return '{"Event_Code": %i, "Data": {"description": "%s", "instrument_id": %s}}' % (new_event_code, msg_struct['Data']['description'], msg_struct['Data']['instrument_id'])
+        return '{"Event_Code": %i, "Data": {"description": "%s", "instrument_id": %s}}' % (
+            new_event_code, msg_struct['Data']['description'], msg_struct['Data']['instrument_id'])
+
     # If it is not defined at a site, requests the event code from the central facility
     else:
         payload = json.loads(msg)
         response = requests.post(cf_url, json=payload, headers=headers, verify=cert_verify)
         cf_msg = dict(json.loads(response.content))
-        cur.execute('''INSERT INTO event_codes(event_code, description) VALUES (%s, %s)''',
-                    (cf_msg['Event_Code'], cf_msg['Data']['description']))
-        cur.execute("COMMIT")
+
+        new_ec = EventCode()
+        new_ec.event_code = cf_msg['Event_Code']
+        new_ec.description = cf_msg['Data']['description']
+
+        database.db_session.add(new_ec)
+        database.db_session.commit()
+
         print("Saved Event Code")
-        return '{"Event_Code": %i, "Data": {"description": "%s", "instrument_id": %s}}' % (cf_msg['Event_Code'], cf_msg['Data']['description'], cf_msg['Data']['instrument_id'])
+        return '{"Event_Code": %i, "Data": {"description": "%s", "instrument_id": %s}}' % (
+            cf_msg['Event_Code'], cf_msg['Data']['description'], cf_msg['Data']['instrument_id'])
 
 
 
@@ -564,15 +579,13 @@ def initialize_database():
 
     """
     print("Initialization Function")
-    db = utility.connect_db()
-    cur = db.cursor()
-
     # If it is a test database, first wipe and clean up the database.
     if cfg['database']['test_db']:
-        cur.execute("DROP SCHEMA public CASCADE;")
-        cur.execute("CREATE SCHEMA public;")
-        db.commit()
+        database.db_session.execute("DROP SCHEMA public CASCADE;")
+        database.db_session.execute("CREATE SCHEMA public;")
+        database.db_session.commit()
         # If it is not a test database, first attempt to load database from an existing postgres dumpfile
+
 
 
     utility.upgrade_db()
@@ -580,29 +593,29 @@ def initialize_database():
     # If there there are no users in the database (which any active db should have users) and it is not a test db,
     # attempt to load in a dumpfile.
     if not cfg['database']['test_db']:
-        cur.execute("SELECT * FROM users LIMIT 1")
-        if cur.fetchone() == None:
+        db_user = database.db_session.query(User).first()
+        if db_user == None:
             utility.load_dumpfile()
 
     # If there are still no users, assume the database is empty and populate the basic information
-    cur.execute("SELECT * FROM users LIMIT 1")
-    if cur.fetchone() == None:
+    db_user = database.db_session.query(User).first()
+    if db_user == None:
         print("Populating Users")
-        utility.load_data_into_table("database/schema/users.data", "users", db)
+        utility.load_data_into_table("database/schema/users.data", "users")
     else:
         print("Users in table.")
 
-    cur.execute("SELECT * FROM sites LIMIT 1")
-    if cur.fetchone() == None:
+    db_site = database.db_session.query(Site).first()
+    if db_site == None:
         print("Populating Sites")
-        utility.load_data_into_table("database/schema/sites.data", "sites", db)
+        utility.load_data_into_table("database/schema/sites.data", "sites")
     else:
         print("Sites in table.")
 
-    cur.execute("SELECT * FROM event_codes LIMIT 1")
-    if cur.fetchone() == None:
-        print("Populating Sites")
-        utility.load_data_into_table("database/schema/event_codes.data", "event_codes", db)
+    db_event_code = database.db_session.query(EventCode).first()
+    if db_event_code == None:
+        print("Populating Event Codes")
+        utility.load_data_into_table("database/schema/event_codes.data", "event_codes")
     else:
         print("Event_codes in table.")
 
@@ -620,14 +633,17 @@ def initialize_database():
                        "instrument_data_references"
                    ]
         for table in test_tables:
-            cur.execute("SELECT * FROM %s LIMIT 1" % table)
-            if cur.fetchone() == None:
+            result = database.db_session.execute("SELECT * FROM %s LIMIT 1" % table).fetchone()
+            if result == None:
                 print("Populating %s" % table)
-                utility.load_data_into_table("database/schema/%s.data" % table, table, db)
+                utility.load_data_into_table("database/schema/%s.data" % table, table)
             else:
                 print("%ss in table." % table)
     else:
         print ("Test Database is a falsehood")
+
+    # Without this, the database prevents the server from running properly.
+    database.db_session.remove()
 
 @app.route('/eventmanager')
 def hello_world():
