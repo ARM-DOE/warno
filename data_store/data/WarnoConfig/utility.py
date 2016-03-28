@@ -79,8 +79,18 @@ def signal_handler( signal, frame):
     print("Exiting due to SIGINT")
     sys.exit(0)
 
-
 ### Database ###
+def reset_db_keys():
+    """Runs the 'db_sequence_reset' script in a subprocess to reset the postgres primary keys, and waits for the
+    subprocess to finish. Without this reset, inserts that insert at a certain ID do not properly update the keys, so
+    the next inserts will sometimes attempt to insert on the same id, which fails.  This approach may lead to some gaps
+    in ids, but it will be more fault tolerant than it is currently.
+
+    """
+    p = subprocess.Popen(["bash", "/vagrant/data_store/data/db_sequence_reset.sh"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p.wait()
+
+
 def load_dumpfile():
     """Runs the 'db_load' script in a subprocess to load a postgresql database dump into the database, and waits for the
     subprocess to finish.
@@ -88,6 +98,7 @@ def load_dumpfile():
     """
     p = subprocess.Popen(["bash", "/vagrant/data_store/data/db_load.sh"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     p.wait()
+
 
 def upgrade_db():
     """Runs the 'db_migrate' script in a subprocess to migrate the database using 'alembic'.

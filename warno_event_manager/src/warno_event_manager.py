@@ -386,6 +386,7 @@ def get_instrument_id(msg, msg_struct):
 
             database.db_session.add(new_instrument)
             database.db_session.commit()
+            utility.reset_db_keys()
 
             print ("Saved New Instrument")
             return '{"Event_code": %i, "Data": {"Instrument_Id": %s, "Site_Id": %s, "Name_Short": "%s", "Name_Long": "%s", ' \
@@ -457,6 +458,8 @@ def get_site_id(msg, msg_struct):
 
             database.db_session.add(new_site)
             database.db_session.commit()
+            utility.reset_db_keys()
+
             print ("Saved New Site")
             return '{"Event_code": %i, "Data": {"Site_Id": %s, "Name_Short": "%s", "Name_Long": "%s", "Latitude": "%s", ' \
                '"Longitude": "%s", "Facility": "%s", "Mobile": "%s", "Location_Name": "%s"}}' \
@@ -563,6 +566,7 @@ def get_event_code(msg, msg_struct):
 
         database.db_session.add(new_ec)
         database.db_session.commit()
+        utility.reset_db_keys()
 
         print("Saved Event Code")
         return '{"Event_Code": %i, "Data": {"description": "%s", "instrument_id": %s}}' % (
@@ -596,6 +600,7 @@ def initialize_database():
         db_user = database.db_session.query(User).first()
         if db_user == None:
             utility.load_dumpfile()
+            utility.reset_db_keys()
 
     # If there are still no users, assume the database is empty and populate the basic information
     db_user = database.db_session.query(User).first()
@@ -643,6 +648,7 @@ def initialize_database():
         print ("Test Database is a falsehood")
 
     # Without this, the database prevents the server from running properly.
+    utility.reset_db_keys()
     database.db_session.remove()
 
 @app.route('/eventmanager')
