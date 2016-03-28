@@ -12,7 +12,7 @@ class Site(Base):
     name_long = Column(String)
     latitude = Column(Float)
     longitude = Column(Float)
-    facility = Column(String(8))
+    facility = Column(String(32))
     mobile = Column(Boolean)
     location_name = Column(String)
 
@@ -37,7 +37,7 @@ class Instrument(Base):
 
     id = Column("instrument_id", Integer, primary_key = True)
     site_id = Column(Integer, ForeignKey('sites.site_id'))
-    name_short = Column(String(8))
+    name_short = Column(String(32))
     name_long = Column(String)
     type = Column(String)
     vendor = Column(String)

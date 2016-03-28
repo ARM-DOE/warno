@@ -28,7 +28,7 @@
        <input type="text" id="siteLonBox" name="lon" value="{{site.longitude}}"></input>
      </p>
      <p><label for="facility">Facility:</label>
-       <input type="text" id="siteFacilityBox" name="facility" maxlength="8" value="{{site.facility}}"></input>
+       <input type="text" id="siteFacilityBox" name="facility" maxlength="32" value="{{site.facility}}"></input>
      </p>
      <p><label for="mobile">Mobile:</label>
         <input type="checkbox" name="mobile" {% if site.mobile %}checked{% endif %}>
