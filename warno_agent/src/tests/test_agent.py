@@ -63,7 +63,7 @@ class TestAgent(TestCase):
     def test_request_site_id_from_event_manager_proceses_site_id(self, mock_post):
         post_return = mock.Mock()
         post_return.status_code = requests.codes.ok
-        post_return.content='{"Data": {"Site_Id": 1}}'
+        post_return.content='{"data": {"site_id": 1}}'
 
         mock_post.codes = requests.codes  # Pass Through
 
@@ -83,7 +83,7 @@ class TestAgent(TestCase):
         self.agent.site_id = None
 
         post_return.status_code = requests.codes.ok
-        post_return.content='{"Site_Id": 1}'
+        post_return.content='{"site_id": 1}'
 
         mock_request.codes = requests.codes  # Pass Through
         mock_request.post.return_value = post_return
@@ -103,13 +103,13 @@ class TestAgent(TestCase):
         return3 = mock.Mock()
 
         return1.status_code = requests.codes.ok
-        return1.content = '{"Data": {"Instrument_Id": 2}}'
+        return1.content = '{"data": {"instrument_id": 2}}'
 
         return2.status_code = requests.codes.ok
-        return2.content = '{"Event_Code": 3, "Data": {"description" : "description1"}}'
+        return2.content = '{"event_code": 3, "data": {"description" : "description1"}}'
 
         return3.status_code = requests.codes.ok
-        return3.content = '{"Event_Code": 4, "Data": {"description" : "description2"}}'
+        return3.content = '{"event_code": 4, "data": {"description" : "description2"}}'
 
         mock_post.codes = requests.codes
         mock_post.post.side_effect = iter([return1, return2, return3])
