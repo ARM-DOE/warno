@@ -188,7 +188,7 @@ def event():
             event_wv = EventWithValue()
             event_wv.event_code_id = msg_event_code
             event_wv.time = timestamp
-            event_wv.instrument_id = msg_struct['data']['instrument_d']
+            event_wv.instrument_id = msg_struct['data']['instrument_id']
             event_wv.value = float_value
 
             database.db_session.add(event_wv)
@@ -353,7 +353,7 @@ def get_instrument_id(msg, msg_struct):
     If no instrument was found, the instrument id is passed as -1.
 
     """
-    db_instrument = database.db_session.query(Instrument).filter(Instrument.name_short == msg_struct['data']['instrument_id']).first()
+    db_instrument = database.db_session.query(Instrument).filter(Instrument.name_short == msg_struct['data']).first()
 
     # If there is an instrument with a matching name, returns all info to a site or just the id to an agent.
     if db_instrument:
@@ -389,7 +389,7 @@ def get_instrument_id(msg, msg_struct):
             utility.reset_db_keys()
 
             print ("Saved New Instrument")
-            return '{"event_code": %i, "instrument": {"instrument_id": %s, "site_id": %s, "name_short": "%s", "name_long": "%s", ' \
+            return '{"event_code": %i, "data": {"instrument_id": %s, "site_id": %s, "name_short": "%s", "name_long": "%s", ' \
                    '"type": "%s", "vendor": "%s", "description": "%s", "frequency_band": "%s"}}' \
                    % (utility.INSTRUMENT_ID_REQUEST, cf_data['instrument_id'], cf_data['site_id'], cf_data['name_short'],
                       cf_data['name_long'], cf_data['type'], cf_data['vendor'], cf_data['description'], cf_data['frequency_band'])
@@ -425,12 +425,12 @@ def get_site_id(msg, msg_struct):
 
     """
 
-    db_site = database.db_session.query(Site).filter(Site.name_short == msg_struct['data']['site_id']).first()
+    db_site = database.db_session.query(Site).filter(Site.name_short == msg_struct['data']).first()
 
     # If there is a site with a matching name, returns all info to a site or just the id to an agent.
     if db_site:
         print("Found Existing Site")
-        return '{"event_code": %i, "site": {"site_id": %s, "name_short": "%s", "name_long": "%s", "latitude": "%s", ' \
+        return '{"event_code": %i, "data": {"site_id": %s, "name_short": "%s", "name_long": "%s", "latitude": "%s", ' \
                '"longitude": "%s", "facility": "%s", "mobile": "%s", "location_name": "%s"}}' \
                % (utility.SITE_ID_REQUEST, db_site.id, db_site.name_short, db_site.name_long, db_site.latitude,
                   db_site.longitude, db_site.facility, db_site.mobile, db_site.location_name)
@@ -444,10 +444,10 @@ def get_site_id(msg, msg_struct):
             payload = json.loads(msg)
             response = requests.post(cf_url, json=payload, headers=headers, verify=cert_verify)
             cf_msg = dict(json.loads(response.content))
-            cf_data = cf_msg['site']
+            cf_data = cf_msg['data']
             # Need to add handler for if there is a bad return from CF (if clause above)
             new_site = Site()
-            new_site.id = cf_data['data']
+            new_site.id = cf_data['site_id']
             new_site.name_short = cf_data['name_short']
             new_site.name_long = cf_data['name_long']
             new_site.latitude = cf_data['latitude']
@@ -461,7 +461,7 @@ def get_site_id(msg, msg_struct):
             utility.reset_db_keys()
 
             print ("Saved New Site")
-            return '{"event_code": %i, "site": {"site_id": %s, "name_short": "%s", "name_long": "%s", "latitude": "%s", ' \
+            return '{"event_code": %i, "data": {"site_id": %s, "name_short": "%s", "name_long": "%s", "latitude": "%s", ' \
                '"longitude": "%s", "facility": "%s", "mobile": "%s", "location_name": "%s"}}' \
                % (utility.SITE_ID_REQUEST, cf_data['site_id'], cf_data['name_short'], cf_data['name_long'],
                   cf_data['latitude'], cf_data['longitude'], cf_data['facility'], cf_data['mobile'], cf_data['location_name'])
@@ -526,7 +526,7 @@ def get_event_code(msg, msg_struct):
     # If the event code defined here, return it downstream
     if db_code:
         print("Found Existing Event Code")
-        return '{"event_code": %i, "data": {"description": %s}}' % (
+        return '{"event_code": %i, "data": {"description": "%s"}}' % (
             db_code.event_code, msg_struct['data']['description'])
 
     # If it is not defined at the central facility, inserts a new entry into the table and returns the new code
@@ -600,7 +600,6 @@ def initialize_database():
         db_user = database.db_session.query(User).first()
         if db_user == None:
             utility.load_dumpfile()
-            utility.reset_db_keys()
 
     # If there are still no users, assume the database is empty and populate the basic information
     db_user = database.db_session.query(User).first()
