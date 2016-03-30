@@ -28,7 +28,8 @@ def run(msg_queue, instrument_id):
         try:
             events = pafc.get_all_text_dict()
             events_payload = json.dumps(events)
-            msg_queue.put('{"event": "%s", "data": {"Instrument_Id": %s, "Time": "%s", "Value": %s}}' % ("prosensing_paf", instrument_id, timestamp, events_payload))
+            msg_queue.put('{"event": "%s", "data": {"instrument_id": %s, "time": "%s", "values": %s}}'\
+                          % ("prosensing_paf", instrument_id, timestamp, events_payload))
         except UnicodeDecodeError, e:
             with open(logfile, "a+") as log:
                 log.write("\nUnicodeDecodeError\n")
@@ -43,7 +44,8 @@ def run(msg_queue, instrument_id):
                 traceback.print_exc(limit=5, file=log)
 
         timestamp = get_timestamp()
-        msg_queue.put('{"event": "non_paf_event", "data": {"Instrument_Id": %s, "Time": "%s", "Value": "%s"}}' % (instrument_id, timestamp, i))
+        msg_queue.put('{"event": "non_paf_event", "data": {"instrument_id": %s, "time": "%s", "value": "%s"}}'\
+                      % (instrument_id, timestamp, i))
 
         i = i + 1
 
