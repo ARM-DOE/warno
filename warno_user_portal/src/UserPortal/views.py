@@ -6,6 +6,7 @@ from jinja2 import TemplateNotFound
 import psycopg2
 from sqlalchemy import Float, Boolean, Integer, or_, and_
 from sqlalchemy.orm import aliased
+import math
 
 from werkzeug.contrib.fixers import ProxyFix
 
@@ -84,6 +85,97 @@ def show_dygraph():
     return render_template('instrument_dygraph.html', columns=columns)
 
 
+
+
+
+
+def widget_log_viewer_controller(widget_id):
+    db_instruments = database.db_session.query(Instrument)
+    instruments = [dict(id = inst.id, site = inst.site.name_short, name = inst.name_short) for inst in db_instruments]
+    return render_template('widgets/log_viewer_controller.html', instruments = instruments, id = widget_id)
+
+@app.route('/widget/log_viewer')
+def widget_log_viewer():
+    instrument_id = request.args.get('instrument_id')
+    req_max_logs = request.args.get('max_logs')
+
+    print "instrument_id"
+    print instrument_id
+
+    max_logs = 5
+    try:
+        floor_max_logs = math.floor(float(req_max_logs))
+        if ((floor_max_logs < 100) and (floor_max_logs > 0)):
+            max_logs = floor_max_logs
+    except ValueError:
+        max_logs = 5
+
+    if float(instrument_id) >= 0:
+        print "Wuclear"
+        db_logs = database.db_session.query(InstrumentLog).filter(InstrumentLog.instrument_id == instrument_id).order_by(InstrumentLog.time.desc()).limit(max_logs).all()
+    else:
+        print "Wessels"
+        db_logs = database.db_session.query(InstrumentLog).order_by(InstrumentLog.time.desc()).limit(max_logs).all()
+
+    logs = [dict(time=log.time, contents=log.contents, status=status_code_to_text(log.status),
+                 supporting_images=log.supporting_images,author=log.author.name)
+            for log in db_logs]
+
+    return render_template('widgets/log_viewer.html', logs = logs)
+
+@app.route('/widget/status_plot')
+def widget_status_plot():
+    widget_id = request.args.get('widget_id')
+
+    # Get the most recent log for each instrument to determine its current status
+    status = status_log_for_each_instrument()
+
+    # Assume the instrument status is operational unless the status has changed, handled afterward
+    db_instruments = database.db_session.query(Instrument).join(Instrument.site).all()
+    instruments = [dict( id=instrument.id, name=instrument.name_short, site=instrument.site.name_short, status=1)
+                   for instrument in db_instruments]
+
+    # For each instrument, if there is a corresponding status entry from the query above,
+    # add the status and the last log's author.  If not, status will stay default operational
+    for instrument in instruments:
+        if instrument['id'] in status:
+            instrument['status'] = status[instrument['id']]["status_code"]
+        instrument['status'] = status_code_to_text(instrument['status'])
+
+    instrument_groups = {}
+
+    for instrument in instruments:
+        if instrument['site'] not in instrument_groups.keys():
+            instrument_groups[instrument['site']] = [instrument]
+        else:
+            instrument_groups[instrument['site']].append(instrument)
+
+    return render_template('widgets/status_plot.html', id = widget_id, instrument_groups = instrument_groups)
+
+
+@app.route('/widgetize')
+def widgetize():
+    widget_name = request.args.get('widget_name')
+    widget_id = request.args.get('widget_id')
+    if widget_name == "instrument_dygraph":
+        return render_template('instrument_dygraph.html', columns=['fake_entry', 'fake_value', 'antenna_temperature'], instrument_id = 1)
+    if widget_name == "log_viewer":
+        return widget_log_viewer_controller(widget_id)
+    if widget_name == "status_plot":
+        return redirect(url_for('widget_status_plot', widget_id=widget_id))
+    return render_template('widgets/%s.html' % widget_name)
+
+def instrument_widget(columns, instrument_id):
+
+    return render_template('instrument_dygraph.html', columns=['fake_entry', 'fake_value', 'antenna_temperature'], instrument_id = 1)
+
+
+
+
+
+
+
+
 @app.route('/pulse')
 def show_pulse():
     """Show a pulse from an instrument.
@@ -101,6 +193,9 @@ def show_pulse():
 
     return render_template('show_pulse.html', pulses=pulses)
 
+@app.route('/prototype')
+def sneaky():
+    return render_template('prototype.html')
 
 @app.route('/generate_pulse_graph', methods=['GET', 'POST'])
 def generate_pulse_graph():

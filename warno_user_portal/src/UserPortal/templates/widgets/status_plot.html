@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <link rel=stylesheet type=text/css href="{{ url_for('static', filename='master.css') }}">
+    <script type="text/javascript" src="{{ url_for('static', filename='jquery-2.1.4.js')}}"></script>
+</head>
+
+<body>
+    <div class="operational"style="font-size: 15px; display: inline-block; border: 1px solid black; padding-left: 2px; padding-right: 2px;">
+    OPERATIONAL
+    </div>
+    <div class="not_working"style="font-size: 15px; display: inline-block; border: 1px solid black; padding-left: 2px; padding-right: 2px;">
+    NOT WORKING
+    </div>
+    <div class="testing"style="font-size: 15px; display: inline-block; border: 1px solid black; padding-left: 2px; padding-right: 2px;">
+    TESTING
+    </div>
+    <div class="in_upgrade"style="font-size: 15px; display: inline-block; border: 1px solid black; padding-left: 2px; padding-right: 2px;">
+        UPGRADING
+    </div>
+    <div class="transit"style="font-size: 15px; display: inline-block; center; border: 1px solid black; padding-left: 2px; padding-right: 2px;">
+        IN TRANSIT
+    </div>
+    <button type="button" style="float: right;" onclick="remove_status_plot({{id}})">X</button>
+    <br>
+
+    {% for key in instrument_groups.keys() %}
+        <div style="margin: 3px; background-color: white; border: 1px solid black; padding: 2px;">
+            {{key}}:
+            <br>
+            {% for instrument in instrument_groups[key] %}
+                <div class="{{instrument.status.replace(' ', '_').replace('-', '_').lower()}}" style="width: 125px; display: inline-block; border: 1px solid black; margin-top: 2px;">
+                    {{instrument.name}}
+                    <br>
+                    {{instrument.status}}
+               </div>
+            {% endfor %}
+        </div>
+    {% endfor %}
+</body>
