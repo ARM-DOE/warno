@@ -115,6 +115,8 @@ def event():
         return get_instrument_id(msg, msg_struct)
     elif msg_event_code == utility.PULSE_CAPTURE:
         return save_pulse_capture(msg, msg_struct)
+    elif msg_event_code == utility.INSTRUMENT_LOG:
+        return save_instrument_log(msg, msg_struct)
     # Event is special case: 'prosensing_paf' structure
     elif msg_event_code == utility.PROSENSING_PAF:
         return save_special_prosensing_paf(msg, msg_struct)
@@ -183,12 +185,46 @@ def save_special_prosensing_paf(msg, msg_struct):
 
     cur.execute(sql_query)
     cur.execute("COMMIT")
-    "Saved Special Type: Prosensing PAF"
 
     if not is_central:
         payload = json.loads(msg)
         requests.post(cf_url, json=payload, headers=headers)
     return msg
+
+
+def save_instrument_log(msg, msg_struct):
+    """Inserts the information given in 'msg_struct' into the database 'instrument_logs' table, with all of the values
+    being mapped into columns for the database.
+
+    Parameters
+    ----------
+    msg: JSON
+        JSON message structure, expected format:
+        {Event_Code: *code*, Data: {Time: *ISO DateTime*, Author_Id: *Integer*, Instrument_Id: *Integer*,
+        Status: *Integer status code*, Contents: *Log Message*, Supporting_Images: *Image*}}
+    msg_struct: dictionary
+        Decoded version of msg, converted to python dictionary.
+
+    Returns
+    -------
+    The original message 'msg' passed to it.
+
+    """
+
+    cur = g.db.cursor()
+    timestamp = msg_struct['Data']['time']
+    print msg_struct
+
+    sql_query = ("INSERT INTO instrument_logs(time, instrument_id, author_id, status, contents, supporting_images) "
+                 "VALUES ('%s', %s, %s, %s, '%s', '%s')" % (msg_struct['Data']['time'], msg_struct['Data']['instrument_id'],
+                                                      msg_struct['Data']['author_id'], msg_struct['Data']['status'],
+                                                      msg_struct['Data']['contents'], msg_struct['Data']['supporting_images'],))
+
+    cur.execute(sql_query)
+    cur.execute("COMMIT")
+
+    return msg
+
 
 
 def save_pulse_capture(msg, msg_struct):
@@ -218,7 +254,6 @@ def save_pulse_capture(msg, msg_struct):
 
     cur.execute(sql_query)
     cur.execute("COMMIT")
-    "Saved Pulse Capture"
 
     if not is_central:
         payload = json.loads(msg)
@@ -411,7 +446,17 @@ def get_event_code(msg, msg_struct):
         return '{"Event_Code": %i, "Data": {"description": "%s", "instrument_id": %s}}' % (row[0], msg_struct['Data']['description'], msg_struct['Data']['instrument_id'])
     # If it is not defined at the central facility, inserts a new entry into the table and returns the new code
     elif is_central:
-        cur.execute('''INSERT INTO event_codes(description) VALUES (%s)''', (msg_struct['Data']['description'],))
+        # Gets the highest current event code number
+        cur.execute('SELECT event_code FROM event_codes ORDER BY event_code DESC LIMIT 1')
+        row = cur.fetchone()
+        max_id = row[0]
+        # Manually sets the new ID to be the next available ID
+        insert_id = max_id + 1
+        # ID's 1-9999 are reserved for explicitly set event codes, such as 'instrument_id_request'
+        # Generated event codes have id's of 10000 or greater
+        if insert_id < 10000:
+            insert_id = 10000
+        cur.execute('''INSERT INTO event_codes(event_code, description) VALUES (%s, %s)''', (insert_id, msg_struct['Data']['description']))
         cur.execute("COMMIT")
         cur.execute("SELECT event_code FROM event_codes WHERE description = %s", (msg_struct['Data']['description'],))
         row = cur.fetchone()

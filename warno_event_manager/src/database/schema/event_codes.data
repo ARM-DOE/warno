@@ -1,6 +1,7 @@
-description
-"event_code_request"
-"site_id_request"
-"instrument_id_request"
-"pulse_capture"
-"prosensing_paf"
+event_code,description
+1,"event_code_request"
+2,"site_id_request"
+3,"instrument_id_request"
+4,"pulse_capture"
+5,"instrument_log"
+6,"prosensing_paf"
