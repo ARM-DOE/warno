@@ -4,6 +4,8 @@ from selenium.webdriver.support.ui import Select
 from random import randint
 
 
+import time
+
 class TestIndexFunctionality(TestCase):
     """Tests basic page functionality, such as page existence, redirects
     """
@@ -170,6 +172,67 @@ class TestIndexFunctionality(TestCase):
             if key != 'password':
                 self.assertIn(test_user[key], test_values, 'Missing Value %s' % test_user[key])
 
+    def test_creating_a_user_and_editing_the_name_results_in_a_user_with_the_edited_name_in_the_user_list(self):
+        """
+        Test that editing an user name successfully edits the database entry by showing the edited user
+        in the users list.
+        """
+
+        test_user = {'name': 'TESTNAME%d' % randint(0,100),
+             'email': 'TESTEMAIL@TESTHOST.com',
+             'location': 'TESTLOCATION',
+             'position': 'TESTPOSITION',
+             'password': 'TESTPASSWORD'}
+        new_name = "EDITEDNAME%d" % randint(0,100)
+
+        # Navigate to the new user form
+        self.browser.get(self.warno_url)
+        self.browser.find_element_by_link_text('Users').click()
+        self.browser.find_element_by_id('new-user-redirect-button').click()
+
+        # Fill in the new user form
+        for key in test_user.keys():
+            element = self.browser.find_element_by_name(key)
+            element.send_keys(test_user[key])
+
+        # Should insert user and redirect to users page
+        self.browser.find_element_by_id('submit').click()
+
+        self.assertTrue('users' in self.browser.current_url, 'Did not redirect to users page after user insert')
+
+        # Find the row with the new user
+        table_id = self.browser.find_element_by_id('user-table')
+        rows = table_id.find_elements_by_tag_name('tr')
+        test_row = []
+        for row in rows[1:]:
+            if row.find_elements_by_tag_name("td")[0].text == test_user["name"]:
+                test_row = row
+
+        # In the row with the new user, find the 'Edit' link and click it
+        test_row_tds = test_row.find_elements_by_tag_name('td')
+
+        for td in test_row_tds:
+            if td.text == "Edit":
+                td.click()
+
+        # It should redirect to the proper edit page
+        self.assertTrue('edit' in self.browser.current_url, 'Did not redirect to edit page.')
+
+        # Clear the name box and fill it with the edited name
+        name_field = self.browser.find_element_by_id("userNameBox")
+        name_field.clear()
+        name_field.send_keys(new_name)
+
+        # Submit the form.  Should redirect to the list of users
+        self.browser.find_element_by_id('submit').click()
+
+        self.assertTrue('users' in self.browser.current_url, 'Did not redirect to users page after user update')
+
+        # Make sure that the edited user now displays in the list of users.
+        test_values = [td.text for td in self.browser.find_elements_by_tag_name("td")]
+        self.assertIn(new_name, test_values, "Edited name not in table cells on page.")
+
+
     def test_instrument_add_button_redirects_to_new_instrument_page(self):
         """
         Test that clicking on the new user button redirects to the new user form page.
@@ -222,6 +285,70 @@ class TestIndexFunctionality(TestCase):
             self.assertIn(test_instrument[key], test_values,'Missing Value %s' %test_instrument[key])
 
 
+    def test_creating_an_instrument_and_editing_the_name_results_in_an_instrument_with_the_edited_name_in_the_instrument_list(self):
+        """
+        Test that editing an instrument abbreviation successfully edits the database entry by showing the edited instrument
+        in the instruments list.
+        """
+
+        test_instrument = {'abbv': 'TEST%d' % randint(0,100),
+                           'name': 'SELENIUM TEST INSTRUMENT',
+                           'type': 'TEST_RADAR',
+                           'vendor': 'SELENIUM',
+                           'description': 'Selenium Injected Instrument',
+                           'frequency_band': 'Y'}
+        new_name = "EDIT%d" % randint(0,100)
+
+        # Navigate to the new instrument form
+        self.browser.get(self.warno_url)
+        self.browser.find_element_by_link_text('Instruments').click()
+        self.browser.find_element_by_id('new-instrument-redirect-button').click()
+
+        # Fill in the new instrument form
+        for key in test_instrument.keys():
+            element = self.browser.find_element_by_name(key)
+            element.send_keys(test_instrument[key])
+
+        # Should insert instrument and redirect to instruments page
+        self.browser.find_element_by_id('submit').click()
+
+        self.assertTrue('instruments' in self.browser.current_url,
+                        'Did not redirect to instruments page after instrument insert')
+
+        # Find the row with the new instrument
+        table_id = self.browser.find_element_by_id('instrument-table')
+        rows = table_id.find_elements_by_tag_name('tr')
+        test_row = []
+        for row in rows[1:]:
+            if row.find_elements_by_tag_name("td")[1].text == test_instrument["name"]:
+                test_row = row
+
+        # In the row with the new instrument, find the 'Edit' link and click it
+        test_row_tds = test_row.find_elements_by_tag_name('td')
+
+        for td in test_row_tds:
+            if td.text == "Edit":
+                td.click()
+
+        # It should redirect to the proper edit page
+        self.assertTrue('edit' in self.browser.current_url, 'Did not redirect to edit page.')
+
+        # Clear the name box and fill it with the edited name
+        name_field = self.browser.find_element_by_id("instrumentNameBox")
+        name_field.clear()
+        name_field.send_keys(new_name)
+
+        # Submit the form.  Should redirect to the list of instruments
+        self.browser.find_element_by_id('submit').click()
+
+        self.assertTrue('instruments' in self.browser.current_url,
+                        'Did not redirect to instruments page after instrument update')
+
+        # Make sure that the edited instrument now displays in the list of instruments.
+        test_values = [td.text for td in self.browser.find_elements_by_tag_name("td")]
+        self.assertIn(new_name, test_values, "Edited abbreviation not in table cells on page.")
+
+
     def test_site_add_shows_up_in_table(self):
         test_site = {'abbv': 'TEST%d' % randint(0,100),
                            'name': 'SELENIUM TEST SITE',
@@ -244,7 +371,7 @@ class TestIndexFunctionality(TestCase):
 
         self.browser.find_element_by_id('submit').click()
 
-        self.assertTrue('sites' in self.browser.current_url, 'Did not return to sites page after instrument insert')
+        self.assertTrue('sites' in self.browser.current_url, 'Did not return to sites page after site insert')
 
         table_id = self.browser.find_element_by_id('site-table')
         rows = table_id.find_elements_by_tag_name('tr')
@@ -262,6 +389,67 @@ class TestIndexFunctionality(TestCase):
 
 
 
+    def test_creating_a_site_and_editing_the_name_results_in_a_site_with_the_edited_name_in_the_site_list(self):
+        """
+        Test that editing an site abbreviation successfully edits the database entry by showing the edited site
+        in the sites list.
+        """
 
+        test_site = {'abbv': 'TEST%d' % randint(0,100),
+                           'name': 'SELENIUM TEST SITE',
+                           'lat': '12.3',
+                           'lon': '45.6',
+                           'facility': 'SELENIUM',
+                           'location_name': 'Selenium Injected Site'
+                           }
 
+        new_name = "EDIT%d" % randint(0,100)
 
+        # Navigate to the new site form
+        self.browser.get(self.warno_url)
+        self.browser.find_element_by_link_text('Sites').click()
+        self.browser.find_element_by_id('new-site-redirect-button').click()
+
+        # Fill in the new site form
+        for key in test_site.keys():
+            element = self.browser.find_element_by_name(key)
+            element.send_keys(test_site[key])
+
+        # Should insert site and redirect to sites page
+        self.browser.find_element_by_id('submit').click()
+
+        self.assertTrue('sites' in self.browser.current_url,
+                        'Did not redirect to sites page after site insert')
+
+        # Find the row with the new site
+        table_id = self.browser.find_element_by_id('site-table')
+        rows = table_id.find_elements_by_tag_name('tr')
+        test_row = []
+        for row in rows[1:]:
+            if row.find_elements_by_tag_name("td")[1].text == test_site["name"]:
+                test_row = row
+
+        # In the row with the new site, find the 'Edit' link and click it
+        test_row_tds = test_row.find_elements_by_tag_name('td')
+
+        for td in test_row_tds:
+            if td.text == "Edit":
+                td.click()
+
+        # It should redirect to the proper edit page
+        self.assertTrue('edit' in self.browser.current_url, 'Did not redirect to edit page.')
+
+        # Clear the name box and fill it with the edited name
+        name_field = self.browser.find_element_by_id("siteNameBox")
+        name_field.clear()
+        name_field.send_keys(new_name)
+
+        # Submit the form.  Should redirect to the list of sites
+        self.browser.find_element_by_id('submit').click()
+
+        self.assertTrue('sites' in self.browser.current_url,
+                        'Did not redirect to sites page after site update')
+
+        # Make sure that the edited site now displays in the list of sites.
+        test_values = [td.text for td in self.browser.find_elements_by_tag_name("td")]
+        self.assertIn(new_name, test_values, "Edited abbreviation not in table cells on page.")
