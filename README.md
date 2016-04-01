@@ -49,24 +49,65 @@ sudo firewall-cmd --reload
 ```
 
 <br>
+
+Then, make sure to download the newest VM and Docker images. In the main directory:
+```bash
+bash set_up_images.sh
+```
+
+<br>
 After this, you should have everything set up on the host side.
 
 <br>
 
 ## Start Up Configuration
 
-WARNO Vagrant is run with the event manager as either a "site"  event manager or a "central" event manager.
+WARNO Vagrant is run with the event manager as either a "site"  event manager or a "central" event manager.  
+
+WARNO now runs encrypted by SSL between machines.  On the same VM, however, it communicates internally with standard HTTP requests.
 
 <br>
-The default setting is as a "site" event manager.  In *warno-event-manager/src/config.yml* set "cf_url" to "http://**your_central_event_manager_ip**/eventmanager/event"
+The default setting is as a "site" event manager.  In *data_store/data/config.yml* set "cf_url" to "https://**your_central_event_manager_ip**/eventmanager/event"
+
+If you want to run it as a "central" event manager instead, in *data_store/data/config.yml*, change "central: 0" to "central: 1"
+
+If you want to receive data from the agent running in the virtual machine, set "em_url" in *data_store/data/config.yml* to "https://**your_event_manager_ip**/eventmanager/event" or to "http://eventmanager/event" if it is in the same Vagrant virtual machine.
 
 <br>
-If you want to run it as a "central" event manager instead, there are a few different configuration files to change with the current version:
-- In both *warno-event-manager/src/config.yml* and *warno-user-portal/src/config.yml*, change "central: 0" to "central: 1"
-- In *warno-event-manager/src/database/utility.py* change the db address at the top and in each of the engine calls to "192.168.50.100"
+
+If you have a self signed SSL certificate and private certificate key you would like to use on a machine to encrypt incoming 
+connections, name them *cacert.pem* and *privkey.pem* respectively and place them in *proxy/*
+
+If you would rather generate new ones, run the bash scripts *gen_ca.sh* and then *gen_certs.sh* in the main directory, 
+which will generate and place the files. 
+
+On any machine that would like to communicate with the certified machine, there are three settings for "cert_verify" in 
+*data_store/data/config.yml*:
+- "False"  Means the machine will not try to verify that the certificate is correct, and will blindly trust it (not safe for production).
+- "True"  Means the machine will attempt to verify the certificate with a real certificate authority (CA).
+- "container/path/to/cert"  Will look for a copy of the self signed certificate mentioned above to locally verify the connection.  
+This allows you to manually copy the "rootCA.pem" that was used to generate the certs (either locally if you generated the certs 
+or copied from where the certs came from) into the data directory to allow for fairly confident verification without an outside CA.
+Currently, setting this to "/opt/data/rootCA.pem" (path is due to how docker adds the volume) and copying the *rootCA.pem* from 
+before to *data_store/data/rootCA.pem* allows either the Event Manager or the Agent to access it as needed.
 
 <br>
-If you want to receive data from the agent running in the virtual machine, set "em_url" in *warno-agent/src/config.yml* to "http://**your_event_manager_ip**/eventmanager/event" or to "http://eventmanager/event" if it is in the same Vagrant virtual machine.
+## NFS Permissions
+Because Vagrant uses NFS for file syncing, it requires permission to edit NFS exports.  Although it is possible to enter
+the sudo password every time, one alternative is to add the following to /etc/sudoers (CentOS 7, other solutions in the
+Vagrant documentation for [NFS Permissions](https://www.vagrantup.com/docs/synced-folders/nfs.html)).
+
+```bash
+Cmnd_Alias VAGRANT_EXPORTS_ADD = /usr/bin/tee -a /etc/exports
+Cmnd_Alias VAGRANT_EXPORTS_COPY = /bin/cp /tmp/exports /etc/exports
+Cmnd_Alias VAGRANT_NFSD_CHECK = /etc/init.d/nfs-kernel-server status
+Cmnd_Alias VAGRANT_NFSD_START = /etc/init.d/nfs-kernel-server start
+Cmnd_Alias VAGRANT_NFSD_APPLY = /usr/sbin/exportfs -ar
+Cmnd_Alias VAGRANT_EXPORTS_REMOVE = /bin/sed -r -e * d -ibak /tmp/exports
+%vboxusers ALL=(root) NOPASSWD: VAGRANT_EXPORTS_ADD, VAGRANT_NFSD_CHECK, VAGRANT_NFSD_START, VAGRANT_NFSD_APPLY, VAGRANT_EXPORTS_REMOVE, VAGRANT_EXPORTS_COPY
+```
+
+"vboxusers" can be replaced with any group name you would like to give the permissions to.
 
 <br>
 ## Multiple VM's one one machine
@@ -92,29 +133,33 @@ To start up your Vagrant machine, enter
 vagrant up
 ```
 
-If you have just cloned this repository, it is required to do a 
-```bash
-git submodule update --init --recursive
-```
-to pull in the pyarmret submodule.
-<br>
 
-Note that currently, occasionally the machine will get stuck at "connection timeout. retrying..."
+Note that currently, occasionally the machine will get stuck at "Mounting NFS shared folders...".
 
-If this should happen, reload the machine, either with the gentle
+If this is the case, first attempt:
 ```bash
-vagrant reload
+sudo systemctl restart nfs-server
 ```
 
+If that doesn't work, your firewall may be misconfigured, in which case a quick
+```bash
+sudo systemctl stop firewalld
+```
+followed by a
+```bash
+sudo systemctl start firewalld
+```
+after the VM starts making progress again should remedy the issue.  This is not a permanent solution, however, and you should attempt to remedy the firewall configuration issues.
+
 <br>
 
-Or the more nuclear:
+If you suspect the machine failed in some way to be properly created, you can recreate it by:
 ```bash
 vagrant destroy
 vagrant up
 ```
 
-Note that this will destroy the current virtual machine.
+Note that this will destroy the current virtual machine, and any non-persistant data inside.
 
 <br>
 
@@ -123,15 +168,10 @@ Note that this will destroy the current virtual machine.
 WARNO pre-populates some basic sites and users when it loads up.
 
 <br>
-To demo data with basic information (basic sites, instruments, instrument data, logs, etc.):
-```bash
-vagrant ssh
-cd /vagrant/warno-event-manager/src/database/
-python populate_demo_db.py
-```
+To demo data with basic information (basic sites, instruments, instrument data, logs, etc.), simply set "database":"test_db" to True in *data_store/data/config.yml*
 
 ## User Portal Access
-To access the web server from your browser, just enter "http://**ip_of_host_machine**/radar_status"
+To access the web server from your browser, just enter "https://**ip_of_host_machine**"
 
 <br>
 
@@ -165,27 +205,39 @@ fab <command> -H <host>
 ```
 
 ### Current commands
-- push_config:  pushes a "config.yml" file from the calling directory into WARNO's 
-default location for the file
-- push_keys:  pushes a pair of ssh keys, default "id_rsa" and "id_rsa.pub"
-- push_secrets: pushes "secrets.yml" in the same fashion as push_config
-- push_db_dump: pushes "db_dump.data.gz" in the same fashion as push_config
-- start_application: starts the Vagrant machine (vagrant up)
-- stop_application: stops the Vagrant machine (vagrant halt)
-- reload_application: reloads the Vagrant machine (vagrant reload)
-- destroy_application: destroys the Vagrant machine (vagrant destroy -f)
-- purge_application: destroys the Vagrant machine and forcibly removes the 
-containing folder and all files
-- push_and_replace_database: callse push_db_dump, then calls destroy_application 
+- push_config:  Pushes a "config.yml" file from the calling directory into WARNO's 
+default location for the file.
+- push_keys:  Pushes a pair of ssh keys, default "id_rsa" and "id_rsa.pub".
+- push_secrets: Pushes "secrets.yml" in the same fashion as push_config.
+- push_ssl_ca: Pushes a personal Certificate Authority bundle to the remote host 
+if it exists.
+- push_ssl_certs: Pushes a local ssl certificate and its private key to the 
+remote host, if they exist.
+- push_db_dump: Pushes "db_dump.data.gz" in the same fashion as push_config.
+- start_application: Starts the Vagrant machine (vagrant up).
+- stop_application: Stops the Vagrant machine (vagrant halt).
+- reload_application: Reloads the Vagrant machine (vagrant reload).
+- destroy_application: Destroys the Vagrant machine (vagrant destroy -f).
+- purge_application: Destroys the Vagrant machine and forcibly removes the 
+containing folder and all files.
+- push_and_replace_database: Calls push_db_dump, then calls destroy_application 
 and start_application. This forces the application to reload the database dump 
-file as the database
-- update_application: the heavy hitter.  If the directory for the application 
+file as the database.
+- gen_and_push_ssl_certs: Generates an ssl certificate and its private key from 
+the local custom Certificate Authority (CA) if they are not already present in 
+the host's directory.  Then pushes the cert and key in the host's directory and 
+the local CA file into the remote host.
+- update_application: The heavy hitter.  If the directory for the application 
 does not exist, creates it and moves into it. Then, if the git repository does 
 not already exist, clones the git repository into the directory.  If a Vagrant 
 machine is already running, it then halts the machine to preserve the database.  
 If "config.yml", the ssh keys, or "secrets.yml" exist in the calling directory, 
-they are then pushed into the application directory (push_config, push_keys, push_secrets). 
-After everything is in place, it then starts the application (start application)
+they are then pushed into the application directory (push_config, push_keys, 
+push_secrets). Next it pushes an ssl certificate and its key if they exist, and 
+if they don't, it will attempt to generate and push an ssl certificate and its 
+key from a local Certificate Authority bundle (gen_and_push_ssl_certs, unless 
+certificate generation is explicitly disabled). After everything is in place, 
+it then starts the application (start_application).
 
 ### Default Configuration
 The default configuration is meant to work in tandem with [warno-configuration]

@@ -15,7 +15,84 @@ from WarnoConfig import database
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+
+# Located http://flask.pocoo.org/snippets/35/
+class ReverseProxied(object):
+    '''Wrap the application in this middleware and configure the
+    front-end server to add these headers, to let you quietly bind
+    this to a URL other than / and to an HTTP scheme that is
+    different than what is used locally.
+
+    In nginx:
+    location /myprefix {
+        proxy_pass http://192.168.0.1:5001;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Scheme $scheme;
+        proxy_set_header X-Script-Name /myprefix;
+        }
+
+    :param app: the WSGI application
+    '''
+    def __init__(self, app):
+        self.app = app
+
+    def __call__(self, environ, start_response):
+        script_name = environ.get('HTTP_X_SCRIPT_NAME', '')
+        if script_name:
+            environ['SCRIPT_NAME'] = script_name
+            path_info = environ['PATH_INFO']
+            if path_info.startswith(script_name):
+                environ['PATH_INFO'] = path_info[len(script_name):]
+
+        scheme = environ.get('HTTP_X_SCHEME', '')
+        if scheme:
+            environ['wsgi.url_scheme'] = scheme
+        server = environ.get('HTTP_X_FORWARDED_SERVER', '')
+        if server:
+            environ['HTTP_HOST'] = server
+        return self.app(environ, start_response)
+
+
+# Located http://flask.pocoo.org/snippets/35/
+class ReverseProxied(object):
+    '''Wrap the application in this middleware and configure the
+    front-end server to add these headers, to let you quietly bind
+    this to a URL other than / and to an HTTP scheme that is
+    different than what is used locally.
+
+    In nginx:
+    location /myprefix {
+        proxy_pass http://192.168.0.1:5001;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Scheme $scheme;
+        proxy_set_header X-Script-Name /myprefix;
+        }
+
+    :param app: the WSGI application
+    '''
+    def __init__(self, app):
+        self.app = app
+
+    def __call__(self, environ, start_response):
+        script_name = environ.get('HTTP_X_SCRIPT_NAME', '')
+        if script_name:
+            environ['SCRIPT_NAME'] = script_name
+            path_info = environ['PATH_INFO']
+            if path_info.startswith(script_name):
+                environ['PATH_INFO'] = path_info[len(script_name):]
+
+        scheme = environ.get('HTTP_X_SCHEME', '')
+        if scheme:
+            environ['wsgi.url_scheme'] = scheme
+        server = environ.get('HTTP_X_FORWARDED_SERVER', '')
+        if server:
+            environ['HTTP_HOST'] = server
+        return self.app(environ, start_response)
+
 app = Flask(__name__)
+app.wsgi_app = ReverseProxied(app.wsgi_app)
 
 cfg = None
 ticks = 0
@@ -27,6 +104,7 @@ is_central = 0
 cf_url = ""
 headers = {'Content-Type': 'application/json'}
 
+cert_verify=False
 
 def connect_db():
     """Connect to database.
@@ -140,7 +218,7 @@ def event():
         # If application is at a site instead of the central facility, passes data on to be saved at central facility
         if not is_central:
             payload = json.loads(msg)
-            requests.post(cf_url, json=payload, headers=headers)
+            requests.post(cf_url, json=payload, headers=headers, verify=cert_verify)
         return msg
 
 
@@ -188,7 +266,7 @@ def save_special_prosensing_paf(msg, msg_struct):
 
     if not is_central:
         payload = json.loads(msg)
-        requests.post(cf_url, json=payload, headers=headers)
+        requests.post(cf_url, json=payload, headers=headers, verify=cert_verify)
     return msg
 
 
@@ -257,7 +335,7 @@ def save_pulse_capture(msg, msg_struct):
 
     if not is_central:
         payload = json.loads(msg)
-        requests.post(cf_url, json=payload, headers=headers)
+        requests.post(cf_url, json=payload, headers=headers, verify=cert_verify)
     return msg
 
 def get_instrument_id(msg, msg_struct):
@@ -310,7 +388,7 @@ def get_instrument_id(msg, msg_struct):
         # If it does not exist at a site, requests the site information from the central facility
         else:
             payload = json.loads(msg)
-            response = requests.post(cf_url, json=payload, headers=headers)
+            response = requests.post(cf_url, json=payload, headers=headers, verify=cert_verify)
             cf_msg = dict(json.loads(response.content))
             cf_data = cf_msg['Data']
             # Need to add handler for if there is a bad return from CF (if clause above)
@@ -372,7 +450,7 @@ def get_site_id(msg, msg_struct):
         # If it does not exist at a site, requests the site information from the central facility
         else:
             payload = json.loads(msg)
-            response = requests.post(cf_url, json=payload, headers=headers)
+            response = requests.post(cf_url, json=payload, headers=headers, verify=cert_verify)
             cf_msg = dict(json.loads(response.content))
             cf_data = cf_msg['Data']
             # Need to add handler for if there is a bad return from CF (if clause above)
@@ -467,7 +545,7 @@ def get_event_code(msg, msg_struct):
     # If it is not defined at a site, requests the event code from the central facility
     else:
         payload = json.loads(msg)
-        response = requests.post(cf_url, json=payload, headers=headers)
+        response = requests.post(cf_url, json=payload, headers=headers, verify=cert_verify)
         cf_msg = dict(json.loads(response.content))
         cur.execute('''INSERT INTO event_codes(event_code, description) VALUES (%s, %s)''',
                     (cf_msg['Event_Code'], cf_msg['Data']['description']))
@@ -572,6 +650,7 @@ if __name__ == '__main__':
         is_central = 1
     else:
         cf_url = cfg['setup']['cf_url']
+        cert_verify = cfg['setup']['cert_verify']
 
     initialize_database()
 

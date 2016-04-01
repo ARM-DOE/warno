@@ -150,9 +150,10 @@ class TestAgent(TestCase):
         print(call_args)
 
         self.assertTrue(len(call_args[0]) == 1, 'Wrong number of positional arguments in requests.post call')
-        self.assertTrue(len(call_args[1]) == 2, 'Wrong number of named arguments in requests.post call')
+        self.assertTrue(len(call_args[1]) == 3, 'Wrong number of named arguments in requests.post call')
         self.assertTrue('json' in call_args[1], 'json not passed as arg')
-        self.assertTrue('headers' in call_args[1], 'json not passed as arg')
+        self.assertTrue('headers' in call_args[1], 'headers not passed as arg')
+        self.assertTrue('verify' in call_args[1], 'verify not passed as arg')
 
     @mock.patch.object(Agent, 'requests')
     def test_send_em_message_handles_multiple_data(self, mock_requests):
@@ -167,9 +168,10 @@ class TestAgent(TestCase):
 
 
         self.assertTrue(len(call_args[0]) == 1, 'Wrong number of positional arguments in requests.post call')
-        self.assertTrue(len(call_args[1]) == 2, 'Wrong number of named arguments in requests.post call')
+        self.assertTrue(len(call_args[1]) == 3, 'Wrong number of named arguments in requests.post call')
         self.assertTrue('json' in call_args[1], 'json not passed as arg')
-        self.assertTrue('headers' in call_args[1], 'json not passed as arg')
+        self.assertTrue('headers' in call_args[1], 'headers not passed as arg')
+        self.assertTrue('verify' in call_args[1], 'verify not passed as arg')
 
     @mock.patch.object(Agent, 'requests')
     @mock.patch.object(Agent.Agent, 'startup_plugin')
