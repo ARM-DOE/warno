@@ -5,7 +5,6 @@ from Agent.Plugin import Plugin
 
 class TestPassingPlugin(Plugin):
 
-
     def __init__(self):
         super(TestPassingPlugin, self).__init__()
         self.plugin_name = "TestPassingPlugin"
