@@ -70,6 +70,7 @@ def new_log():
     new_log.contents = request.args.get('contents')
 
     cfg = config.get_config_context()
+    cert_verify = cfg['setup']['cert_verify']
 
     # If there is valid data entered with the get request, insert and redirect to the instrument
     # that the log was placed for
@@ -87,7 +88,7 @@ def new_log():
                                                 status = new_log.status, contents = new_log.contents, supporting_images = None))
                 payload = json.dumps(packet)
                 requests.post(cfg['setup']['cf_url'], data = payload,
-                                      headers = {'Content-Type': 'application/json'})
+                                      headers = {'Content-Type': 'application/json'}, verify=cert_verify)
 
             # Redirect to the instrument page that the log was submitted for.
             return redirect(url_for('instruments.instrument', instrument_id=new_log.instrument_id))

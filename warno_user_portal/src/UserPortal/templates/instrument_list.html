@@ -24,6 +24,7 @@
         <th> Vendor</th>
         <th> Description</th>
         <th> Frequency Band</th>
+        <th></th>
     </tr>
     {%  for instrument in instruments %}
     <tr>
@@ -34,6 +35,7 @@
         <td>{{ instrument.vendor }}</td>
         <td>{{ instrument.description }}</td>
         <td>{{ instrument.frequency_band }}</td>
+        <td><a href= "{{url_for('instruments.edit_instrument', instrument_id=instrument.id)}}">Edit</a></td>
     </tr>
     {% endfor %}
 </table>
