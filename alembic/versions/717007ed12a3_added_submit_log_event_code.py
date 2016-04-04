@@ -25,12 +25,16 @@ def upgrade():
                        )
     connection = op.get_bind()
     # Update the event code 5 that used to be 'prosensing_paf' to 'instrument_log', then insert a new event code 6 'prosensing_paf'
-    connection.execute(event_code_table.update().where(event_code_table.c.event_code == 5).values({'description': op.inline_literal('instrument_log')}))
-    op.bulk_insert(event_code_table, [{'event_code': 6, 'description': 'prosensing_paf'}])
+    # Only runs if the table is not empty (set schema, blank database)
+    result = connection.execute("SELECT event_code FROM event_codes LIMIT 1")
+
+    if result.rowcount > 0:
+        connection.execute(event_code_table.update().where(event_code_table.c.event_code == 5).values({'description': op.inline_literal('instrument_log')}))
+        op.bulk_insert(event_code_table, [{'event_code': 6, 'description': 'prosensing_paf'}])
 
 
 def downgrade():
-    # Creates an ad-hoc table for use with update and insert
+    # Creates an ad-hoc table for use with update and delete
     event_code_table = table('event_codes',
                        column('description', sa.String),
                        column('event_code', sa.Integer)

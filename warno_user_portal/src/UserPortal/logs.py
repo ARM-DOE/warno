@@ -70,6 +70,7 @@ def new_log():
     new_log.contents = request.args.get('contents')
 
     cfg = config.get_config_context()
+    cert_verify = cfg['setup']['cert_verify']
 
     # If there is valid data entered with the get request, insert and redirect to the instrument
     # that the log was placed for
@@ -77,16 +78,17 @@ def new_log():
         # Attempt to insert an item into the database. Try/Except is necessary because
         # the timedate datatype the database expects has to be formatted correctly.
         try:
+
             database.db_session.add(new_log)
             database.db_session.commit()
 
             # If it is not a central facility, pass the log to the central facility
             if not cfg['type']['central_facility']:
-                packet = dict(Event_Code=5, Data = dict(instrument_id=new_log.instrument_id, author_id = new_log.author_id, time = str(new_log.time),
+                packet = dict(event_code=5, data = dict(instrument_id=new_log.instrument_id, author_id = new_log.author_id, time = str(new_log.time),
                                                 status = new_log.status, contents = new_log.contents, supporting_images = None))
                 payload = json.dumps(packet)
                 requests.post(cfg['setup']['cf_url'], data = payload,
-                                      headers = {'Content-Type': 'application/json'})
+                                      headers = {'Content-Type': 'application/json'}, verify=cert_verify)
 
             # Redirect to the instrument page that the log was submitted for.
             return redirect(url_for('instruments.instrument', instrument_id=new_log.instrument_id))

@@ -119,7 +119,7 @@ class Agent(object):
 
         if response.status_code == requests.codes.ok:
             response_dict = dict(json.loads(response.content))
-            site_id = response_dict['Site_Id']
+            site_id = response_dict['data']['site_id']
             self.site_id = site_id
         else:
             response.raise_for_status()
@@ -146,14 +146,14 @@ class Agent(object):
         response = self.send_em_message(utility.INSTRUMENT_ID_REQUEST, instrument_name)
 
         data = dict(json.loads(response.content))
-        self.instrument_ids.append((plugin, data['Instrument_Id']))
+        self.instrument_ids.append((plugin, data['data']['instrument_id']))
 
         for event in response_dict['event_code_names']:
-            data_send = {'description': event, 'instrument_id': data['Instrument_Id']}
+            data_send = {'description': event, 'instrument_id': data['data']['instrument_id']}
             response = self.send_em_message(utility.EVENT_CODE_REQUEST, data_send)
 
             response_dict = dict(json.loads(response.content))
-            self.event_code_dict[response_dict['Data']['description']] = response_dict['Event_Code']
+            self.event_code_dict[response_dict['data']['description']] = response_dict['event_code']
 
     def startup_plugin(self, plugin):
         """
@@ -194,7 +194,7 @@ class Agent(object):
             Response from request.
         """
 
-        msg = '{"Event_Code": %d, "Data": %s}' % (code, json.dumps(data))
+        msg = '{"event_code": %d, "data": %s}' % (code, json.dumps(data))
         payload = json.loads(msg)
         response = requests.post(self.event_manager_url, json=payload, headers=headers, verify=self.cert_verify)
         return response
@@ -258,9 +258,9 @@ class Agent(object):
 
         rec_msg = self.msg_queue.get_nowait()
         event = json.loads(rec_msg)
-        event['data']['Site_Id'] = self.site_id
+        event['data']['site_id'] = self.site_id
         event_code = self.event_code_dict[event['event']]
-        event_msg = '{"Event_Code": %s, "Data": %s}' % (event_code, json.dumps(event['data']))
+        event_msg = '{"event_code": %s, "data": %s}' % (event_code, json.dumps(event['data']))
         payload = json.loads(event_msg)
         response = requests.post(self.em_url, json=payload, headers=headers, verify=self.cert_verify)
         return response

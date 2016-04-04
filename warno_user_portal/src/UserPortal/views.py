@@ -124,7 +124,7 @@ def generate_pulse_graph():
     # Prepares a JSON message, an array of x values and an array of y values, for the graph to plot
     # X is just a placeholder for now, since the x type is not known (time, distance, etc.)
     # TODO Determine 'X' units
-    y = database.db_session.query(PulseCapture).filter_by(pulse_id=pulse_id).first().data
+    y = database.db_session.query(PulseCapture).filter_by(id=pulse_id).first().data
     x = [i for i in range(len(y))]
 
     message = {"x": x, "y": y}

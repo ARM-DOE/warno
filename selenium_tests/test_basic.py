@@ -318,9 +318,9 @@ class TestIndexFunctionality(TestCase):
         # Find the row with the new instrument
         table_id = self.browser.find_element_by_id('instrument-table')
         rows = table_id.find_elements_by_tag_name('tr')
-        test_row = []
+        test_row = None
         for row in rows[1:]:
-            if row.find_elements_by_tag_name("td")[1].text == test_instrument["name"]:
+            if row.find_elements_by_tag_name("td")[1].text == test_instrument["abbv"]:
                 test_row = row
 
         # In the row with the new instrument, find the 'Edit' link and click it
@@ -366,8 +366,6 @@ class TestIndexFunctionality(TestCase):
         for key in test_site.keys():
             element = self.browser.find_element_by_name(key)
             element.send_keys(test_site[key])
-
-
 
         self.browser.find_element_by_id('submit').click()
 
