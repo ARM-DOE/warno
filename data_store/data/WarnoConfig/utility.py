@@ -140,7 +140,7 @@ def table_exists(table_name, curr):
     """
     SQL = "SELECT relname FROM pg_class WHERE relname = %s;"
     curr.execute(SQL, (table_name,))
-    if curr.fetchone() == None:
+    if curr.fetchone() is None:
         return False
     else:
         return True

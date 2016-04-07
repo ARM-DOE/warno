@@ -296,11 +296,12 @@ def status_log_for_each_instrument():
     """
     il_alias_1 = aliased(InstrumentLog, name='il_alias_1')
     il_alias_2 = aliased(InstrumentLog, name='il_alias_2')
-    logs = database.db_session.query(il_alias_1).join(il_alias_1.instrument).join(il_alias_1.author).\
+    logs = database.db_session.query(il_alias_1).join(il_alias_1.instrument).join(il_alias_1.author). \
         outerjoin(il_alias_2, and_(Instrument.id == il_alias_2.instrument_id,
-                                 or_(il_alias_1.time < il_alias_2.time,
-                                     and_(il_alias_1.time == il_alias_2.time, il_alias_1.instrument_id < il_alias_2.instrument_id)))).\
-        filter(il_alias_2.id == None).all()
+                                   or_(il_alias_1.time < il_alias_2.time,
+                                       and_(il_alias_1.time == il_alias_2.time,
+                                            il_alias_1.instrument_id < il_alias_2.instrument_id)))). \
+        filter(il_alias_2.id is None).all()
 
     recent_logs = {log.instrument.id: dict(author=log.author.name, status_code=log.status, contents=log.contents)
                    for log in logs}
@@ -325,8 +326,8 @@ def show_radar_status():
 
     # Assume the instrument status is operational unless the status has changed, handled afterward
     db_instruments = database.db_session.query(Instrument).join(Instrument.site).all()
-    instruments = [dict( id=instrument.id, instrument_name=instrument.name_long, site_id=instrument.site_id,
-                         site=instrument.site.name_short, status=1, author="", contents="")
+    instruments = [dict(id=instrument.id, instrument_name=instrument.name_long, site_id=instrument.site_id,
+                        site=instrument.site.name_short, status=1, author="", contents="")
                    for instrument in db_instruments]
 
     # For each instrument, if there is a corresponding status entry from the query above,

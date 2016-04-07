@@ -37,6 +37,7 @@ def list_users():
 
     return render_template('users_template.html', users=users)
 
+
 @users.route('/users/new', methods=['GET', 'POST'])
 def new_user():
     """Add a new User to WARNO.
@@ -73,6 +74,7 @@ def new_user():
     if request.method == 'GET':
         # Render the new user template
         return render_template('new_user.html')
+
 
 @users.route('/users/<user_id>/edit', methods=['GET', 'POST'])
 def edit_user(user_id):

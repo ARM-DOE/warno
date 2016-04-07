@@ -27,7 +27,7 @@ class PAFPlugin(Plugin):
 
         return {"instrument_name": self.instrument_name, "event_code_names": event_names}
 
-    def get_timestamp():
+    def get_timestamp(self):
         return datetime.datetime.utcnow()
 
     def run(self, msg_queue, instrument_id):

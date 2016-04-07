@@ -8,6 +8,7 @@ from UserPortal import views
 from WarnoConfig import database
 from WarnoConfig.models import User
 
+
 class test_users(TestCase):
 
     def setUp(self):
@@ -22,11 +23,10 @@ class test_users(TestCase):
         views.app.config['TESTING'] = True
         return views.app
 
-
-
-    def test_method_get_on_edit_user_returns_200_ok_and_passes_mock_db_user_as_context_variables_using_correct_template(self):
+    def test_method_get_on_edit_user_returns_200_ok_and_passes_mock_db_user_as_context_variables_using_correct_template(
+            self):
         user_return = mock.Mock()
-        user_return.name= 2
+        user_return.name = 2
         user_return.location = 3
         database.db_session.query().filter().first.return_value = user_return
 

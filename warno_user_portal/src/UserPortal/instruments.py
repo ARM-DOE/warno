@@ -13,7 +13,6 @@ from WarnoConfig import database
 from WarnoConfig.models import Instrument, ProsensingPAF, PulseCapture, InstrumentLog, Site
 from WarnoConfig.models import InstrumentDataReference, EventCode, EventWithValue
 
-
 instruments = Blueprint('instruments', __name__, template_folder='templates')
 
 log_path = os.environ.get("LOG_PATH")
@@ -85,6 +84,7 @@ def new_instrument():
 
         return render_template('new_instrument.html', sites=sites)
 
+
 @instruments.route('/instruments/<instrument_id>/edit', methods=['GET', 'POST'])
 def edit_instrument(instrument_id):
     """Update WARNO instrument.
@@ -122,11 +122,13 @@ def edit_instrument(instrument_id):
         sites = [dict(id=site.id, name=site.name_short) for site in db_sites]
 
         db_instrument = database.db_session.query(Instrument).filter(Instrument.id == instrument_id).first()
-        instrument = dict(name_short=db_instrument.name_short, name_long=db_instrument.name_long, type=db_instrument.type,
+        instrument = dict(name_short=db_instrument.name_short, name_long=db_instrument.name_long,
+                          type=db_instrument.type,
                           vendor=db_instrument.vendor, description=db_instrument.description,
                           frequency_band=db_instrument.frequency_band, site_id=db_instrument.site_id)
 
         return render_template('edit_instrument.html', sites=sites, instrument=instrument)
+
 
 def valid_columns_for_instrument(instrument_id):
     """Returns a list of columns of data for an instrument that is suitable for plotting.
@@ -146,9 +148,10 @@ def valid_columns_for_instrument(instrument_id):
     references = db_get_instrument_references(instrument_id)
     column_list = []
     for reference in references:
-        if reference.special == True:
-            rows = database.db_session.execute("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = :table",
-                                               dict(table= reference.description)).fetchall()
+        if reference.special:
+            rows = database.db_session.execute(
+                    "SELECT column_name, data_type FROM information_schema.columns WHERE table_name = :table",
+                    dict(table=reference.description)).fetchall()
             columns = [row[0] for row in rows if row[1] in ["integer", "boolean", "double precision"]]
         else:
             columns = [reference.description]
@@ -170,7 +173,8 @@ def db_get_instrument_references(instrument_id):
             Each element being the name of the reference and whether or not it is a special reference
             (meaning it references a full table rather than just a certain event type)
     """
-    references = database.db_session.query(InstrumentDataReference).filter(InstrumentDataReference.instrument_id == instrument_id).all()
+    references = database.db_session.query(InstrumentDataReference).filter(
+            InstrumentDataReference.instrument_id == instrument_id).all()
     return references
 
 
@@ -188,9 +192,11 @@ def db_select_instrument(instrument_id):
 
     """
     inst = database.db_session.query(Instrument).filter(Instrument.id == instrument_id).first()
-    return dict(abbv=inst.name_short, name=inst.name_long, type=inst.type, vendor=inst.vendor, description=inst.description,
+    return dict(abbv=inst.name_short, name=inst.name_long, type=inst.type, vendor=inst.vendor,
+                description=inst.description,
                 frequency_band=inst.frequency_band, location=inst.site.name_short, latitude=inst.site.latitude,
                 longitude=inst.site.longitude, site_id=inst.site_id, id=inst.id)
+
 
 def db_delete_instrument(instrument_id):
     """Delete an instrument by its id and delete any references to the instrument by other tables
@@ -201,7 +207,8 @@ def db_delete_instrument(instrument_id):
         Database id of the instrument.
 
     """
-    database.db_session.query(InstrumentDataReference).filter(InstrumentDataReference.instrument_id == instrument_id).delete()
+    database.db_session.query(InstrumentDataReference).filter(
+            InstrumentDataReference.instrument_id == instrument_id).delete()
     database.db_session.query(ProsensingPAF).filter(ProsensingPAF.instrument_id == instrument_id).delete()
     database.db_session.query(InstrumentLog).filter(InstrumentLog.instrument_id == instrument_id).delete()
     database.db_session.query(PulseCapture).filter(PulseCapture.instrument_id == instrument_id).delete()
@@ -250,7 +257,8 @@ def instrument(instrument_id):
         db_delete_instrument(instrument_id)
         return json.dumps({'id': instrument_id}), 200
 
-def db_recent_logs_by_instrument(instrument_id, maximum_number = 5):
+
+def db_recent_logs_by_instrument(instrument_id, maximum_number=5):
     """Get the most recent logs for the specified instrument, up to "maximum_number" logs
 
     Parameters
@@ -267,11 +275,11 @@ def db_recent_logs_by_instrument(instrument_id, maximum_number = 5):
 
     """
     # Creates a list of dictionaries, each dictionary being one of the log entries
-    db_logs = database.db_session.query(InstrumentLog).filter(InstrumentLog.instrument_id == instrument_id)\
-            .order_by(InstrumentLog.time.desc()).limit(maximum_number).all()
+    db_logs = database.db_session.query(InstrumentLog).filter(InstrumentLog.instrument_id == instrument_id) \
+        .order_by(InstrumentLog.time.desc()).limit(maximum_number).all()
 
     return [dict(time=log.time, contents=log.contents, status=log.status,
-                 supporting_images=log.supporting_images,author=log.author.name)
+                 supporting_images=log.supporting_images, author=log.author.name)
             for log in db_logs]
 
 

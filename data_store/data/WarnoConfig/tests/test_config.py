@@ -7,7 +7,7 @@ class TestGet_config_context(TestCase):
     list_required_keys = ['DB_HOST', 'DB_USER', 'DB_NAME']
 
     def test_get_config_context_database_entries(self):
-        '''Test the configuration context'''
+        """Test the configuration context"""
 
         cfg = config.get_config_context()
 

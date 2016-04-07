@@ -7,8 +7,8 @@ from UserPortal import views
 from WarnoConfig import database
 from WarnoConfig.models import Site
 
-class test_sites(TestCase):
 
+class test_sites(TestCase):
     def setUp(self):
         database.db_session = mock.Mock()
         self.log_patch = mock.patch('logging.Logger')
@@ -21,11 +21,10 @@ class test_sites(TestCase):
         views.app.config['TESTING'] = True
         return views.app
 
-
-
-    def test_method_get_on_edit_site_returns_200_ok_and_passes_mock_db_site_as_context_variables_using_correct_template(self):
+    def test_method_get_on_edit_site_returns_200_ok_and_passes_mock_db_site_as_context_variables_using_correct_template(
+            self):
         site_return = mock.Mock()
-        site_return.name_long= 2
+        site_return.name_long = 2
         site_return.name_short = 3
         database.db_session.query().filter().first.return_value = site_return
 

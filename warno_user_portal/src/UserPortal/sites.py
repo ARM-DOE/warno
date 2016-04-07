@@ -83,6 +83,7 @@ def new_site():
         error = request.args.get('error')
         return render_template('new_site.html', error=error)
 
+
 @sites.route('/sites/<site_id>/edit', methods=['GET', 'POST'])
 def edit_site(site_id):
     """Update WARNO site.
@@ -122,8 +123,11 @@ def edit_site(site_id):
         else:
             db_site = database.db_session.query(Site).filter(Site.id == site_id).first()
             site = dict(name_short=db_site.name_short, name_long=db_site.name_long, latitude=db_site.latitude,
-                        longitude=db_site.longitude, facility=db_site.facility, location_name=db_site.location_name, mobile=db_site.mobile)
-            return redirect(url_for("sites.edit_site", site_id=site_id, site=site, error="Latitude and Longitude must be numbers."))
+                        longitude=db_site.longitude, facility=db_site.facility, location_name=db_site.location_name,
+                        mobile=db_site.mobile)
+            return redirect(
+                    url_for("sites.edit_site", site_id=site_id, site=site,
+                            error="Latitude and Longitude must be numbers."))
 
         # Redirect to the updated list of sites
         return redirect(url_for("sites.list_sites"))
@@ -133,9 +137,11 @@ def edit_site(site_id):
         error = request.args.get('error')
         db_site = database.db_session.query(Site).filter(Site.id == site_id).first()
         site = dict(name_short=db_site.name_short, name_long=db_site.name_long, latitude=db_site.latitude,
-                    longitude=db_site.longitude, facility=db_site.facility, location_name=db_site.location_name, mobile=db_site.mobile)
+                    longitude=db_site.longitude, facility=db_site.facility, location_name=db_site.location_name,
+                    mobile=db_site.mobile)
 
         return render_template('edit_site.html', site=site, error=error)
+
 
 @sites.route('/sites')
 def list_sites():
@@ -174,10 +180,10 @@ def show_site(site_id):
     """
     db_site = database.db_session.query(Site).filter(Site.id == site_id).first()
     site = dict(abbv=db_site.name_short, name=db_site.name_long, latitude=db_site.latitude, longitude=db_site.longitude,
-                  facility=db_site.facility, mobile=db_site.mobile, location_name=db_site.location_name, id=db_site.id)
+                facility=db_site.facility, mobile=db_site.mobile, location_name=db_site.location_name, id=db_site.id)
 
     # Get the 5 most recent logs from all instruments at the site to display
-    db_logs = database.db_session.query(InstrumentLog).join(InstrumentLog.instrument).join(Instrument.site).\
+    db_logs = database.db_session.query(InstrumentLog).join(InstrumentLog.instrument).join(Instrument.site). \
         filter(Instrument.site_id == site_id).order_by(desc(InstrumentLog.time)).limit(5).all()
     recent_logs = [dict(time=log.time, contents=log.contents, status=status_code_to_text(log.status),
                         supporting_images=log.supporting_images,
@@ -187,11 +193,13 @@ def show_site(site_id):
     # Get the most recent log for each instrument to determine its current status
     il_alias_1 = aliased(InstrumentLog, name='il_alias_1')
     il_alias_2 = aliased(InstrumentLog, name='il_alias_2')
-    logs = database.db_session.query(il_alias_1).join(il_alias_1.instrument).join(il_alias_1.author).join(Instrument.site).\
+    logs = database.db_session.query(il_alias_1).join(il_alias_1.instrument).join(il_alias_1.author).join(
+            Instrument.site). \
         outerjoin(il_alias_2, and_(Instrument.id == il_alias_2.instrument_id,
-                                 or_(il_alias_1.time < il_alias_2.time,
-                                     and_(il_alias_1.time == il_alias_2.time, il_alias_1.instrument_id < il_alias_2.instrument_id)))).\
-        filter(il_alias_2.id == None).filter(Instrument.site_id == site_id).all()
+                                   or_(il_alias_1.time < il_alias_2.time,
+                                       and_(il_alias_1.time == il_alias_2.time,
+                                            il_alias_1.instrument_id < il_alias_2.instrument_id)))). \
+        filter(il_alias_2.id is None).filter(Instrument.site_id == site_id).all()
     status = {log.instrument.id: dict(last_author=log.author.name, status_code=log.status) for log in logs}
 
     # Assume the instrument status is operational unless the status has changed, handled afterward
@@ -210,7 +218,3 @@ def show_site(site_id):
         instrument['status'] = status_code_to_text(instrument['status'])
 
     return render_template('show_site.html', site=site, instruments=instruments, recent_logs=recent_logs)
-
-
-
-

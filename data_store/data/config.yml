@@ -23,4 +23,3 @@ database:
 
 debug:
     no_gunicorn: 0
-

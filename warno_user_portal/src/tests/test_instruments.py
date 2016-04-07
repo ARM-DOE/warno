@@ -1,4 +1,5 @@
 import mock
+import requests
 import datetime
 
 
@@ -9,8 +10,8 @@ from UserPortal import views
 from WarnoConfig import database
 from WarnoConfig.models import Instrument, InstrumentLog, Site, InstrumentDataReference
 
-class test_instruments(TestCase):
 
+class test_instruments(TestCase):
     render_templates = False
 
     def setUp(self):
@@ -25,8 +26,8 @@ class test_instruments(TestCase):
         views.app.config['TESTING'] = True
         return views.app
 
-
-    def test_list_instruments_returns_200_and_passes_mock_db_instruments_as_context_variable_using_correct_template(self):
+    def test_list_instruments_returns_200_and_passes_mock_db_instruments_as_context_variable_using_correct_template(
+            self):
         # SQLAlchemy turns our previous testing methodology fairly brittle/bulky
         db_return = mock.Mock()
         db_return.id = 0
@@ -55,8 +56,8 @@ class test_instruments(TestCase):
         self.assertTrue(8 in values, "Value '8' is not in the returned dictionary")
         self.assert_template_used('instrument_list.html')
 
-
-    def test_method_get_on_new_instrument_returns_200_ok_and_passes_mock_db_sites_as_context_variable_using_correct_template(self):
+    def test_method_get_on_new_instrument_returns_200_ok_and_passes_mock_db_sites_as_context_variable_using_correct_template(
+            self):
         db_return = mock.Mock()
         db_return.id = 0
         db_return.name_short = 1
@@ -75,13 +76,13 @@ class test_instruments(TestCase):
         self.assertTrue(1 in values, "Value '1' is not in the returned dictionary")
         self.assert_template_used('new_instrument.html')
 
-
-    def test_method_get_on_edit_instrument_returns_200_ok_and_passes_mock_db_sites_and_instrument_as_context_variables_using_correct_template(self):
+    def test_method_get_on_edit_instrument_returns_200_ok_and_passes_mock_db_sites_and_instrument_as_context_variables_using_correct_template(
+            self):
         site_return = mock.Mock()
         site_return.id = 0
         site_return.name_short = 1
         instrument_return = mock.Mock()
-        instrument_return.name_long= 2
+        instrument_return.name_long = 2
         instrument_return.name_short = 3
         database.db_session.query().all.return_value = [site_return]
         database.db_session.query().filter().first.return_value = instrument_return
@@ -111,9 +112,11 @@ class test_instruments(TestCase):
     @mock.patch('psycopg2.connect')
     @mock.patch('UserPortal.instruments.db_recent_logs_by_instrument')
     @mock.patch('UserPortal.instruments.valid_columns_for_instrument')
-    def test_method_get_on_instrument_when_id_is_23_calls_db_with_correct_arguments_and_returns_200(self, valid_columns, recent_logs, connect):
+    def test_method_get_on_instrument_when_id_is_23_calls_db_with_correct_arguments_and_returns_200(self, valid_columns,
+                                                                                                    recent_logs,
+                                                                                                    connect):
         recent_logs.return_value = [dict(time="01/01/2001 01:01:01", contents="contents", status="1",
-                                    supporting_images="supporting_images", author="author")]
+                                         supporting_images="supporting_images", author="author")]
         valid_columns.return_value = ["column"]
         instrument_id = 23
         test_url = "/instruments/%s" % instrument_id
@@ -129,7 +132,6 @@ class test_instruments(TestCase):
         self.assert200(result, "GET return is not '200 OK'")
         self.assert_template_used('show_instrument.html')
 
-
     ### /instruments/instrument_id ###
     def test_method_delete_on_instrument_when_id_is_23_returns_200(self):
         instrument_id = 23
@@ -137,19 +139,18 @@ class test_instruments(TestCase):
         result = self.client.delete(test_url)
         self.assert200(result, "GET return is not '200 OK'")
 
-
     def test_db_delete_instrument_when_id_is_10_calls_db_with_correct_arguments(self):
         instrument_id = 10
         instruments.db_delete_instrument(instrument_id)
 
         calls = database.db_session.query.call_args_list
         self.assertTrue(True in [Instrument in call[0] for call in calls], "'Instrument' class not called in a query")
-        self.assertTrue(True in [InstrumentLog in call[0] for call in calls], "'InstrumentLog' class not called in a query")
+        self.assertTrue(True in [InstrumentLog in call[0] for call in calls],
+                        "'InstrumentLog' class not called in a query")
 
         filter_calls = database.db_session.query().filter.call_args_list
         for index, call in enumerate(filter_calls):
             self.assertTrue("instrument" in str(call[0][0]), "'instrument' nowhere in call %s to query filter" % index)
-
 
     ### Database Helpers ###
     def test_db_get_instrument_references_calls_db_with_correct_arguments_and_returns_mock_db_results(self):
@@ -167,7 +168,6 @@ class test_instruments(TestCase):
         self.assertTrue("instrument" in str(filter_call[0][0]), "'instrument' nowhere in query filter call")
 
         self.assertEqual(db_return, result, "cursor.execute does not return the select result")
-
 
     def test_db_select_instrument_when_id_is_10_calls_db_with_correct_arguments_and_returns_mock_db_results(self):
         db_return = mock.Mock()
@@ -201,8 +201,8 @@ class test_instruments(TestCase):
         self.assertTrue(1 in values, "Value '1' is not in the returned dictionary")
         self.assertTrue(10 in values, "Value '10' is not in the returned dictionary")
 
-
-    def test_db_recent_logs_by_instrument_when_id_is_15_and_maximum_number_is_default_calls_db_with_correct_arguments(self):
+    def test_db_recent_logs_by_instrument_when_id_is_15_and_maximum_number_is_default_calls_db_with_correct_arguments(
+            self):
         log1 = mock.Mock()
         log2 = mock.Mock()
         log1.time = 0
@@ -224,7 +224,8 @@ class test_instruments(TestCase):
         result = instruments.db_recent_logs_by_instrument(instrument_id)
 
         calls = database.db_session.query.call_args_list
-        self.assertTrue(True in [InstrumentLog in call[0] for call in calls], "'InstrumentLog' class not called in a query")
+        self.assertTrue(True in [InstrumentLog in call[0] for call in calls],
+                        "'InstrumentLog' class not called in a query")
 
         filter_calls = database.db_session.query().filter.call_args_list
         # The 'if len(call[0]) > 0'  prevents the generator from accessing the next level index [0][0] if there is no index
@@ -233,14 +234,13 @@ class test_instruments(TestCase):
                         "'log' nowhere in calls to query filter")
 
         limit_calls = database.db_session.query().filter().order_by().limit.call_args_list
-        self.assertTrue(True in [call[0] != None for call in limit_calls],
+        self.assertTrue(True in [call[0] is not None for call in limit_calls],
                         "No default maximum number in calls to query filter")
 
         values = [value for key, value in result[1].iteritems()]
         self.assertTrue(11 in values, "Value '11' is not in the returned dictionary for the second log")
         self.assertTrue(12 in values, "Value '12' is not in the returned dictionary for the second log")
         self.assertTrue(13 in values, "Value '13' is not in the returned dictionary for the second log")
-
 
     def test_db_recent_logs_by_instrument_when_id_is_15_and_maximum_number_is_11_calls_db_with_correct_arguments(self):
         log1 = mock.Mock()
@@ -265,7 +265,8 @@ class test_instruments(TestCase):
         instruments.db_recent_logs_by_instrument(instrument_id, maximum_number)
 
         calls = database.db_session.query.call_args_list
-        self.assertTrue(True in [InstrumentLog in call[0] for call in calls], "'InstrumentLog' class not called in a query")
+        self.assertTrue(True in [InstrumentLog in call[0] for call in calls],
+                        "'InstrumentLog' class not called in a query")
 
         filter_calls = database.db_session.query().filter.call_args_list
         # The 'if len(call[0]) > 0'  prevents the generator from accessing the next level index [0][0] if there is no index
@@ -274,13 +275,13 @@ class test_instruments(TestCase):
                         "'log' nowhere in calls to query filter")
 
         limit_calls = database.db_session.query().filter().order_by().limit.call_args_list
-        self.assertTrue(True  in [maximum_number in call[0] for call in limit_calls],
+        self.assertTrue(True in [maximum_number in call[0] for call in limit_calls],
                         "maximum_number '%s' nowhere in calls to query filter" % maximum_number)
-
 
     ### Helper Functions ###
     @mock.patch('UserPortal.instruments.db_get_instrument_references')
-    def test_valid_columns_for_instrument_calls_db_with_correct_arguments_and_returns_expected_column_list(self, get_refs):
+    def test_valid_columns_for_instrument_calls_db_with_correct_arguments_and_returns_expected_column_list(self,
+                                                                                                           get_refs):
         expected_column_list = ["integer", "not_special_table"]
         # Each reference is a boolean specifying whether it is a 'special' table along with the name of the table
         ref1 = mock.Mock()
@@ -292,7 +293,7 @@ class test_instruments(TestCase):
         references = [ref1, ref2]
         get_refs.return_value = references
         # Datetime should not be a valid data type and should not make it into results
-        special_table_entries = [["integer", "integer"],["datetime", "datetime"]]
+        special_table_entries = [["integer", "integer"], ["datetime", "datetime"]]
         database.db_session.execute().fetchall.return_value = special_table_entries
         instrument_id = 10
         result_column_list = instruments.valid_columns_for_instrument(instrument_id)
