@@ -1,0 +1,228 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>UserPortal.sites &mdash; WARNO 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="WARNO 0.1 documentation" href="../../index.html" />
+    <link rel="up" title="User Portal" href="index.html" />
+    <link rel="next" title="UserPortal.users" href="users.html" />
+    <link rel="prev" title="UserPortal.logs" href="logs.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="userportal-sites">
+<h1><a class="reference internal" href="#module-UserPortal.sites" title="UserPortal.sites"><code class="xref py py-mod docutils literal"><span class="pre">UserPortal.sites</span></code></a><a class="headerlink" href="#userportal-sites" title="Permalink to this headline">¶</a></h1>
+<p>Flask blueprint for reading or managing Sites.</p>
+<span class="target" id="module-UserPortal.sites"></span><dl class="function">
+<dt id="UserPortal.sites.edit_site">
+<code class="descclassname">UserPortal.sites.</code><code class="descname">edit_site</code><span class="sig-paren">(</span><em>site_id</em><span class="sig-paren">)</span><a class="headerlink" href="#UserPortal.sites.edit_site" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update WARNO site.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">new_site.html: HTML document</p>
+<blockquote>
+<div><p>If the request method is &#8216;GET&#8217;, returns a form to update site .</p>
+</div></blockquote>
+<p>list_sites: Flask redirect location</p>
+<blockquote class="last">
+<div><dl class="docutils">
+<dt>If the request method is &#8216;POST&#8217;, returns a Flask redirect location to the</dt>
+<dd><p class="first last">list_sites function, redirecting the site to the list of sites.</p>
+</dd>
+</dl>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="UserPortal.sites.list_sites">
+<code class="descclassname">UserPortal.sites.</code><code class="descname">list_sites</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#UserPortal.sites.list_sites" title="Permalink to this definition">¶</a></dt>
+<dd><p>List  ARM Sites.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">site_list.html: HTML document</p>
+<blockquote class="last">
+<div><p>Returns an HTML document with an argument for a list of sites and their information.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="UserPortal.sites.new_site">
+<code class="descclassname">UserPortal.sites.</code><code class="descname">new_site</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#UserPortal.sites.new_site" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a new ARM Site to WARNO.</p>
+<dl class="docutils">
+<dt>If the request method is &#8216;GET&#8217;, it will just render the form for a new site. However, if</dt>
+<dd>the method is &#8216;POST&#8217;, it checks if the values are valid for insertion. If they are not
+valid, it will render the from for a new site, but with an error message.  If the values
+are valid, the new site is created and the user is redirected to a list of sites.</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>error: optional, integer</strong></p>
+<blockquote>
+<div><dl class="docutils">
+<dt>Passed as an HTML parameter, an error message set if the latitude or longitude are</dt>
+<dd><p class="first last">not floating point numbers</p>
+</dd>
+</dl>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">new_site.html: HTML document</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>If the request method is &#8216;GET&#8217; or the method is &#8216;POST&#8217; but the new site was invalid,</dt>
+<dd><p class="first last">returns an HTML form to create a new site, with an optional argument &#8216;error&#8217; if it
+was a failed &#8216;POST&#8217; request.</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>list_sites: Flask redirect location</p>
+<blockquote class="last">
+<div><dl class="docutils">
+<dt>If the request method is &#8216;POST&#8217; and the new site is valid, returns a Flask redirect</dt>
+<dd><p class="first last">location to the list_sites function, redirecting the user to the list of ARM sites.</p>
+</dd>
+</dl>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="UserPortal.sites.show_site">
+<code class="descclassname">UserPortal.sites.</code><code class="descname">show_site</code><span class="sig-paren">(</span><em>site_id</em><span class="sig-paren">)</span><a class="headerlink" href="#UserPortal.sites.show_site" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Show an individual ARM Site&#8217;s information, instruments at the site, and recent logs</dt>
+<dd>for those instruments.</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>site_id: integer</strong></p>
+<blockquote>
+<div><p>The database id of the site to be shown.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">show_site.html: HTML document</p>
+<blockquote class="last">
+<div><dl class="docutils">
+<dt>Returns an HTML document with arguments including site information, the 5 most</dt>
+<dd><p class="first last">recent logs of all instruments at the site, and a list of the instruments at the site
+along with their information.</p>
+</dd>
+</dl>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Welcome to WARNO&#8217;s documentation!</a><ul>
+  <li><a href="index.html">User Portal</a><ul>
+      <li>Previous: <a href="logs.html" title="previous chapter"><code class="docutils literal"><span class="pre">UserPortal.logs</span></code></a></li>
+      <li>Next: <a href="users.html" title="next chapter"><code class="docutils literal"><span class="pre">UserPortal.users</span></code></a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/WarnoVagrant/UserPortal/sites.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Joseph Hardin.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="../../_sources/WarnoVagrant/UserPortal/sites.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

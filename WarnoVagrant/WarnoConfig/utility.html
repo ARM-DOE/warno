@@ -1,0 +1,368 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>WarnoConfig.utility &mdash; WARNO 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="WARNO 0.1 documentation" href="../../index.html" />
+    <link rel="up" title="WARNO Config" href="index.html" />
+    <link rel="next" title="Agent" href="../Agent/index.html" />
+    <link rel="prev" title="WarnoConfig.config" href="config.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="warnoconfig-utility">
+<h1><a class="reference internal" href="#module-WarnoConfig.utility" title="WarnoConfig.utility"><code class="xref py py-mod docutils literal"><span class="pre">WarnoConfig.utility</span></code></a><a class="headerlink" href="#warnoconfig-utility" title="Permalink to this headline">¶</a></h1>
+<p>This module contains the various utility functions used between other modules.</p>
+<div class="section" id="module-WarnoConfig.utility">
+<span id="module-contents"></span><h2>Module Contents<a class="headerlink" href="#module-WarnoConfig.utility" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="WarnoConfig.utility.connect_db">
+<code class="descclassname">WarnoConfig.utility.</code><code class="descname">connect_db</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#WarnoConfig.utility.connect_db" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connects to the default WARNO database server.
+Returns
+&#8212;&#8212;-
+psychopg2 connection object for the WARNO database server.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="WarnoConfig.utility.create_table_from_file">
+<code class="descclassname">WarnoConfig.utility.</code><code class="descname">create_table_from_file</code><span class="sig-paren">(</span><em>filename</em>, <em>curr</em><span class="sig-paren">)</span><a class="headerlink" href="#WarnoConfig.utility.create_table_from_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads in a data file written in postgresql and executes the contents in the database</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename: string</strong></p>
+<blockquote>
+<div><p>Name of the file to read from.</p>
+</div></blockquote>
+<p class="last"><strong>curr: database cursor</strong></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="WarnoConfig.utility.drop_table">
+<code class="descclassname">WarnoConfig.utility.</code><code class="descname">drop_table</code><span class="sig-paren">(</span><em>table_name</em>, <em>curr</em><span class="sig-paren">)</span><a class="headerlink" href="#WarnoConfig.utility.drop_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Drops the database table with the name &#8216;table_name&#8217;</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>table_name: string</strong></p>
+<blockquote>
+<div><p>Name of table to drop.</p>
+</div></blockquote>
+<p class="last"><strong>curr: database cursor</strong></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="WarnoConfig.utility.dump_table_to_csv">
+<code class="descclassname">WarnoConfig.utility.</code><code class="descname">dump_table_to_csv</code><span class="sig-paren">(</span><em>filename</em>, <em>table</em>, <em>server=None</em><span class="sig-paren">)</span><a class="headerlink" href="#WarnoConfig.utility.dump_table_to_csv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dumps the database table named &#8216;table&#8217; as a comma separated file into &#8216;filename&#8217;, from database server &#8216;server&#8217; if supplied.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename: string</strong></p>
+<blockquote>
+<div><p>Name of the file to be written to.</p>
+</div></blockquote>
+<p><strong>table: string</strong></p>
+<blockquote>
+<div><p>Name of the database table to dump into a file.</p>
+</div></blockquote>
+<p><strong>server: sqlalchemy engine, optional</strong></p>
+<blockquote class="last">
+<div><p>A sqlalchemy engine for whichever database server the data will be read from, defaults to the default WARNO server.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="WarnoConfig.utility.initialize_database">
+<code class="descclassname">WarnoConfig.utility.</code><code class="descname">initialize_database</code><span class="sig-paren">(</span><em>curr</em>, <em>path='schema/'</em><span class="sig-paren">)</span><a class="headerlink" href="#WarnoConfig.utility.initialize_database" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes the database with the schemas in the &#8220;path&#8221; directory. Current tables to be created are:</p>
+<ul class="simple">
+<li>users</li>
+<li>sites</li>
+<li>instruments</li>
+<li>instrument_logs</li>
+<li>usage</li>
+<li>prosensing_paf</li>
+<li>event_codes</li>
+<li>events_with_text</li>
+<li>events_with_value</li>
+<li>pulse_captures</li>
+<li>table_references</li>
+<li>instrument_data_references</li>
+</ul>
+<p>If the table does not already exist, creates it from the file &#8216;path/table_name.schema&#8217;</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>curr: database cursor</strong></p>
+<p><strong>path: string, optional</strong></p>
+<blockquote class="last">
+<div><p>Path that the schema files are expected to be in, defaults to &#8220;schema/&#8221;.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="WarnoConfig.utility.is_number">
+<code class="descclassname">WarnoConfig.utility.</code><code class="descname">is_number</code><span class="sig-paren">(</span><em>s</em><span class="sig-paren">)</span><a class="headerlink" href="#WarnoConfig.utility.is_number" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if a string is a valid floating point number.</p>
+<p>Attempts to convert a string to a floating point number.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>s: string</strong></p>
+<blockquote>
+<div><p>The string to be checked.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">True: Boolean</p>
+<blockquote>
+<div><p>Returns True if the conversion works successfully.</p>
+</div></blockquote>
+<p>False: Boolean</p>
+<blockquote class="last">
+<div><p>Returns False if the conversion throws a &#8216;ValueError&#8217; Exception.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="WarnoConfig.utility.load_data_into_table">
+<code class="descclassname">WarnoConfig.utility.</code><code class="descname">load_data_into_table</code><span class="sig-paren">(</span><em>filename</em>, <em>table</em>, <em>conn</em><span class="sig-paren">)</span><a class="headerlink" href="#WarnoConfig.utility.load_data_into_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads a comma separated (no spaces) file &#8216;filename&#8217; into the database table &#8216;table&#8217;.</p>
+<p>Example data file &#8220;table_name.schema&#8221;:</p>
+<div class="line-block">
+<div class="line">column_name_1,column_name_2</div>
+<div class="line">row_1_column_1_value,row_1_column_2_value</div>
+<div class="line">row_2_column_1_value,row_2_column_2_value</div>
+<div class="line">...</div>
+<div class="line">(etc.)</div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename: string</strong></p>
+<blockquote>
+<div><p>Name of the file to load into the table.</p>
+</div></blockquote>
+<p><strong>table: string</strong></p>
+<blockquote>
+<div><p>Name of the table to load the file into.</p>
+</div></blockquote>
+<p class="last"><strong>conn: database connection</strong></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="WarnoConfig.utility.load_dumpfile">
+<code class="descclassname">WarnoConfig.utility.</code><code class="descname">load_dumpfile</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#WarnoConfig.utility.load_dumpfile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs the &#8216;db_load&#8217; script in a subprocess to load a postgresql database dump into the database, and waits for the
+subprocess to finish.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="WarnoConfig.utility.signal_handler">
+<code class="descclassname">WarnoConfig.utility.</code><code class="descname">signal_handler</code><span class="sig-paren">(</span><em>signal</em>, <em>frame</em><span class="sig-paren">)</span><a class="headerlink" href="#WarnoConfig.utility.signal_handler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set up Ctrl-C Handling</p>
+<p>This function sets up signal interrupt catching, primarily to handle Ctrl-C.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>signal: signal</strong></p>
+<blockquote>
+<div><p>Signal to catch.</p>
+</div></blockquote>
+<p><strong>frame: frame</strong></p>
+<blockquote class="last">
+<div><p>frame</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="WarnoConfig.utility.status_code_to_text">
+<code class="descclassname">WarnoConfig.utility.</code><code class="descname">status_code_to_text</code><span class="sig-paren">(</span><em>status</em><span class="sig-paren">)</span><a class="headerlink" href="#WarnoConfig.utility.status_code_to_text" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert an instrument&#8217;s status code to its text equivalent.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>status: integer</strong></p>
+<blockquote>
+<div><p>The status code to be converted.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">status_text: string</p>
+<blockquote class="last">
+<div><p>Returns a string representation of the status code from the status_text dictionary.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="WarnoConfig.utility.table_exists">
+<code class="descclassname">WarnoConfig.utility.</code><code class="descname">table_exists</code><span class="sig-paren">(</span><em>table_name</em>, <em>curr</em><span class="sig-paren">)</span><a class="headerlink" href="#WarnoConfig.utility.table_exists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks whether a table with name &#8216;table_name&#8217; exists in the database.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>table_name: string</strong></p>
+<blockquote>
+<div><p>Name of the postgresql table to be checked.</p>
+</div></blockquote>
+<p><strong>curr: database cursor</strong></p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">result: boolean</p>
+<blockquote class="last">
+<div><p>Returns True if the table exists, otherwise False.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="WarnoConfig.utility.upgrade_db">
+<code class="descclassname">WarnoConfig.utility.</code><code class="descname">upgrade_db</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#WarnoConfig.utility.upgrade_db" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs the &#8216;db_migrate&#8217; script in a subprocess to migrate the database using &#8216;alembic&#8217;.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#"><code class="docutils literal"><span class="pre">WarnoConfig.utility</span></code></a><ul>
+<li><a class="reference internal" href="#module-WarnoConfig.utility">Module Contents</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Welcome to WARNO&#8217;s documentation!</a><ul>
+  <li><a href="index.html">WARNO Config</a><ul>
+      <li>Previous: <a href="config.html" title="previous chapter"><code class="docutils literal"><span class="pre">WarnoConfig.config</span></code></a></li>
+      <li>Next: <a href="../Agent/index.html" title="next chapter">Agent</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/WarnoVagrant/WarnoConfig/utility.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Joseph Hardin.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="../../_sources/WarnoVagrant/WarnoConfig/utility.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,5 +1,0 @@
-CREATE TABLE "public"."event_codes" (
-    "event_code" serial NOT NULL,
-    "description" TEXT NOT NULL,
-    PRIMARY KEY ("event_code")
-);

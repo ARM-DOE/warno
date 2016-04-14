@@ -1,0 +1,448 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>warno_event_manager &mdash; WARNO 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="WARNO 0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Event Manager" href="index.html" />
+    <link rel="prev" title="Event Manager" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-warno_event_manager">
+<span id="warno-event-manager"></span><h1><a class="reference internal" href="#module-warno_event_manager" title="warno_event_manager"><code class="xref py py-mod docutils literal"><span class="pre">warno_event_manager</span></code></a><a class="headerlink" href="#module-warno_event_manager" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="warno_event_manager.ReverseProxied">
+<em class="property">class </em><code class="descclassname">warno_event_manager.</code><code class="descname">ReverseProxied</code><span class="sig-paren">(</span><em>app</em><span class="sig-paren">)</span><a class="headerlink" href="#warno_event_manager.ReverseProxied" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Wrap the application in this middleware and configure the
+front-end server to add these headers, to let you quietly bind
+this to a URL other than / and to an HTTP scheme that is
+different than what is used locally.</p>
+<p>In nginx:
+location /myprefix {</p>
+<blockquote>
+<div>proxy_pass <a class="reference external" href="http://192.168.0.1:5001">http://192.168.0.1:5001</a>;
+proxy_set_header Host $host;
+proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+proxy_set_header X-Scheme $scheme;
+proxy_set_header X-Script-Name /myprefix;
+}</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>app</strong> &#8211; the WSGI application</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="warno_event_manager.before_request">
+<code class="descclassname">warno_event_manager.</code><code class="descname">before_request</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#warno_event_manager.before_request" title="Permalink to this definition">¶</a></dt>
+<dd><p>Before each Request.</p>
+<p>Connects to the database.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="warno_event_manager.connect_db">
+<code class="descclassname">warno_event_manager.</code><code class="descname">connect_db</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#warno_event_manager.connect_db" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connect to database.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A Psycopg2 connection object to the default database.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="warno_event_manager.event">
+<code class="descclassname">warno_event_manager.</code><code class="descname">event</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#warno_event_manager.event" title="Permalink to this definition">¶</a></dt>
+<dd><p>Event comes as a web request with a JSON packet.  The JSON is loaded into dictionary, and the event code is extracted.
+Dependent on the event code, different functions are called.</p>
+<p>If it is part of a predefined set of special event codes, calls a new function to handle it, depending on the
+event code.  Passes the message in to the call, then returns the return of whichever sub-function was called.</p>
+<p>If it is not a special case, it extracts the information from the packet and saves the event to the database.
+If the &#8216;is_central&#8217; flag is not set, it then forwards the packet on to the &#8216;cf_url&#8217; (both specified in <em>config.yml</em>).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The original message packet if a sub-function was not called, the sub-function&#8217;s return if it was called.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="warno_event_manager.get_event_code">
+<code class="descclassname">warno_event_manager.</code><code class="descname">get_event_code</code><span class="sig-paren">(</span><em>msg</em>, <em>msg_struct</em><span class="sig-paren">)</span><a class="headerlink" href="#warno_event_manager.get_event_code" title="Permalink to this definition">¶</a></dt>
+<dd><p>Searches the database for any event codes where the description matches &#8216;msg_struct[&#8216;data&#8217;]&#8217;.  If the
+&#8216;is_central&#8217; flag is set and there is no event code, creates the event code in the database and returns it. If the
+&#8216;is_central&#8217; flag is not set, it then forwards the packet on to the &#8216;cf_url&#8217; (both specified in <em>config.yml</em>) and
+returns whatever the central facility determines the event code is.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>msg: JSON</strong></p>
+<blockquote>
+<div><p>JSON message structure, expected format: {event_code: <em>code</em>, Data: <em>description</em>}</p>
+</div></blockquote>
+<p><strong>msg_struct: dictionary</strong></p>
+<blockquote>
+<div><p>Decoded version of msg, converted to python dictionary.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The site id determined by the function, in the form of a string structured as</p>
+<p class="last">&#8216;{&#8220;site_id: <em>site id</em>}&#8217;.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="warno_event_manager.get_instrument_id">
+<code class="descclassname">warno_event_manager.</code><code class="descname">get_instrument_id</code><span class="sig-paren">(</span><em>msg</em>, <em>msg_struct</em><span class="sig-paren">)</span><a class="headerlink" href="#warno_event_manager.get_instrument_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Searches the database for any instruments where the instrument abbreviation matches &#8216;msg_struct[&#8216;data&#8217;]&#8217;.  If the
+&#8216;is_central&#8217; flag is set and there is no instrument, returns a -1 to indicate nothing was found, but if it was found,
+returns the instrument&#8217;s information to be saved. If the &#8216;is_central&#8217; flag is not set, it then forwards the
+packet on to the &#8216;cf_url&#8217; (both specified in <em>config.yml</em>) and returns whatever the central facility determines
+the instrument id is, saving the returned site.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>msg: JSON</strong></p>
+<blockquote>
+<div><p>JSON message structure, expected format: {event_code: <em>code</em>, Data: <em>instrument abbreviation</em>}</p>
+</div></blockquote>
+<p><strong>msg_struct: dictionary</strong></p>
+<blockquote>
+<div><p>Decoded version of msg, converted to python dictionary.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The instrument id or information determined by the function.</p>
+<p>If returned from the central facility, returned in the form of a string structured as</p>
+<p>{&#8220;Event_code&#8221;: <em>integer event code</em>, &#8220;data&#8221;: {&#8220;instrument_id&#8221;: <em>integer instrument id</em>, &#8220;site_id&#8221;:</p>
+<p><em>integer site id instrument is at</em>, &#8220;name_short&#8221;: <em>string instrument abbreviation</em>, &#8220;name_long&#8221;:</p>
+<p><em>string full instrument name</em>, &#8220;Type&#8221;: <em>string type of instrument</em>, &#8220;Vendor&#8221;: <em>string instrument&#8217;s vendor</em>,</p>
+<p>&#8220;Description&#8221;: <em>string description of instrument</em>, &#8220;Frequency_Band&#8221;:</p>
+<p><em>two character frequency band instrument operates at</em>}}.</p>
+<p>If returned from the non central event manager to the agent, sends a simplified version</p>
+<p>&#8216;{&#8220;instrument_id: <em>integer instrument id</em>}&#8217;.</p>
+<p class="last">If no instrument was found, the instrument id is passed as -1.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="warno_event_manager.get_site_id">
+<code class="descclassname">warno_event_manager.</code><code class="descname">get_site_id</code><span class="sig-paren">(</span><em>msg</em>, <em>msg_struct</em><span class="sig-paren">)</span><a class="headerlink" href="#warno_event_manager.get_site_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Searches the database for any sites where the site abbreviation matches &#8216;msg_struct[&#8216;data&#8217;]&#8217;.  If the
+&#8216;is_central&#8217; flag is set and there is no site, returns a -1 to indicate nothing was found, but if it was found,
+returns the site&#8217;s information to be saved. If the &#8216;is_central&#8217; flag is not set, it then forwards the packet on
+to the &#8216;cf_url&#8217; (both specified in <em>config.yml</em>) and returns whatever the central facility determines the site
+id is, saving the returned site.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>msg: JSON</strong></p>
+<blockquote>
+<div><p>JSON message structure, expected format: {event_code: <em>code</em>, Data: <em>site abbreviation</em>}</p>
+</div></blockquote>
+<p><strong>msg_struct: dictionary</strong></p>
+<blockquote>
+<div><p>Decoded version of msg, converted to python dictionary.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The site id or information determined by the function.</p>
+<p>If returned from the central facility, returned in the form of a string structured as</p>
+<p>{&#8220;Event_code&#8221;: <em>integer event code</em>, &#8220;data&#8221;: {&#8220;site_id&#8221;: <em>integer site id</em>, &#8220;latitude&#8221;:</p>
+<p><em>float latitude coordinate</em>, &#8220;Longitude&#8221;: <em>float longitude coordinate</em>, &#8220;name_short&#8221;: <em>string site abbreviation</em>, &#8220;name_long&#8221;:</p>
+<p><em>string full site name</em>, &#8220;Facility&#8221;: <em>string facility name</em>, &#8220;Mobile&#8221;: <em>boolean true if is a mobile site</em>,</p>
+<p>&#8220;Location Name&#8221;: <em>string location name</em>}}.</p>
+<p>If returned from the non central event manager to the agent, sends a simplified version</p>
+<p>&#8216;{&#8220;site_id: <em>integer site id</em>}&#8217;.</p>
+<p class="last">If no site was found, the site id is passed as -1.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="warno_event_manager.hello_world">
+<code class="descclassname">warno_event_manager.</code><code class="descname">hello_world</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#warno_event_manager.hello_world" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates very basic information and returns a string with it.  Used to verify that the event manager is
+operational and accessible from the outside.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">String message with basic information such as current CPU usage.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="warno_event_manager.initialize_database">
+<code class="descclassname">warno_event_manager.</code><code class="descname">initialize_database</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#warno_event_manager.initialize_database" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes the database.  If the database is specified in config.yml as a &#8216;test_db&#8217;, the database is wiped when
+at the beginning to ensure a clean load.  If it is not a test database, a utility function is called to attempt to
+load in a postgresql database dumpfile if it exists.  First, the tables are initialized, and then if no basic database
+entries exists (users, sites, event codes), they are created.  Then, if it is designated a test database, any table
+that does not contain any entries will be filled with demo data.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="warno_event_manager.save_instrument_data_reference">
+<code class="descclassname">warno_event_manager.</code><code class="descname">save_instrument_data_reference</code><span class="sig-paren">(</span><em>msg</em>, <em>msg_struct</em><span class="sig-paren">)</span><a class="headerlink" href="#warno_event_manager.save_instrument_data_reference" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks to see if there is already an instrument data reference for this event code, and if there isn&#8217;t, creates
+one. Instrument data references are used to allow the servers to track which events are pertinent to a particular
+instrument (some events are for all instruments, some only for specific instrument types).  If an instrument data
+reference is to be added, this function also determines whether the reference is &#8216;special&#8217; or not.  If there is an
+entire special table devoted to the event (where &#8216;description&#8217; is the table name), then it is classified as &#8216;special&#8217;.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>msg: JSON</strong></p>
+<blockquote>
+<div><p>JSON message structure, expected format:
+{event_code: <em>code</em>, Data: {instrument_id: <em>instrument id</em>, description: <em>event description</em>}}</p>
+</div></blockquote>
+<p><strong>msg_struct: dictionary</strong></p>
+<blockquote class="last">
+<div><p>Decoded version of msg, converted to python dictionary.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="warno_event_manager.save_instrument_log">
+<code class="descclassname">warno_event_manager.</code><code class="descname">save_instrument_log</code><span class="sig-paren">(</span><em>msg</em>, <em>msg_struct</em><span class="sig-paren">)</span><a class="headerlink" href="#warno_event_manager.save_instrument_log" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inserts the information given in &#8216;msg_struct&#8217; into the database &#8216;instrument_logs&#8217; table, with all of the values
+being mapped into columns for the database.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>msg: JSON</strong></p>
+<blockquote>
+<div><p>JSON message structure, expected format:
+{event_code: <em>code</em>, Data: {Time: <em>ISO DateTime</em>, Author_Id: <em>Integer</em>, instrument_id: <em>Integer</em>,
+Status: <em>Integer status code</em>, Contents: <em>Log Message</em>, Supporting_Images: <em>Image</em>}}</p>
+</div></blockquote>
+<p><strong>msg_struct: dictionary</strong></p>
+<blockquote>
+<div><p>Decoded version of msg, converted to python dictionary.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The original message &#8216;msg&#8217; passed to it.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="warno_event_manager.save_pulse_capture">
+<code class="descclassname">warno_event_manager.</code><code class="descname">save_pulse_capture</code><span class="sig-paren">(</span><em>msg</em>, <em>msg_struct</em><span class="sig-paren">)</span><a class="headerlink" href="#warno_event_manager.save_pulse_capture" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inserts the information given in &#8216;msg_struct&#8217; into the database &#8216;pulse_captures&#8217; table, with all of the values
+being mapped into columns for the database.  If the &#8216;is_central&#8217; flag is not set, it then forwards the packet on
+to the &#8216;cf_url&#8217; (both specified in <em>config.yml</em>).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>msg: JSON</strong></p>
+<blockquote>
+<div><p>JSON message structure, expected format:
+{event_code: <em>code</em>, Data: {Time: <em>ISO DateTime</em>, site_id: <em>Integer</em>, instrument_id: <em>Integer</em>,
+Value: <em>Array of Floats</em>}}</p>
+</div></blockquote>
+<p><strong>msg_struct: dictionary</strong></p>
+<blockquote>
+<div><p>Decoded version of msg, converted to python dictionary.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The original message &#8216;msg&#8217; passed to it.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="warno_event_manager.save_special_prosensing_paf">
+<code class="descclassname">warno_event_manager.</code><code class="descname">save_special_prosensing_paf</code><span class="sig-paren">(</span><em>msg</em>, <em>msg_struct</em><span class="sig-paren">)</span><a class="headerlink" href="#warno_event_manager.save_special_prosensing_paf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inserts the information given in &#8216;msg_struct&#8217; into the database, with all of the values being mapped into columns
+for the database.  If the &#8216;is_central&#8217; flag is not set, it then forwards the packet on to the &#8216;cf_url&#8217;
+(both specified in <em>config.yml</em>).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>msg: JSON</strong></p>
+<blockquote>
+<div><p>JSON message structure, expected format:
+{event_code: <em>code</em>, Data: {Time: <em>ISO DateTime</em>, site_id: <em>Integer</em>, instrument_id: <em>Integer</em>,
+Value: <em>Dictionary of database column names mapped to their values</em>}}</p>
+</div></blockquote>
+<p><strong>msg_struct: dictionary</strong></p>
+<blockquote>
+<div><p>Decoded version of msg, converted to python dictionary.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The original message &#8216;msg&#8217; passed to it.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="warno_event_manager.shutdown_session">
+<code class="descclassname">warno_event_manager.</code><code class="descname">shutdown_session</code><span class="sig-paren">(</span><em>exception=None</em><span class="sig-paren">)</span><a class="headerlink" href="#warno_event_manager.shutdown_session" title="Permalink to this definition">¶</a></dt>
+<dd><p>Closes database session on request or application teardown.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>exception: optional, Exception</strong></p>
+<blockquote class="last">
+<div><p>An Exception that may have caused the teardown.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="warno_event_manager.teardown_request">
+<code class="descclassname">warno_event_manager.</code><code class="descname">teardown_request</code><span class="sig-paren">(</span><em>exception</em><span class="sig-paren">)</span><a class="headerlink" href="#warno_event_manager.teardown_request" title="Permalink to this definition">¶</a></dt>
+<dd><p>Teardown for Requests.</p>
+<p>Closes the database connection if connected.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>exception: optional, Exception</strong></p>
+<blockquote class="last">
+<div><p>An Exception that may have caused the teardown.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Welcome to WARNO&#8217;s documentation!</a><ul>
+  <li><a href="index.html">Event Manager</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Event Manager</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/WarnoVagrant/EventManager/warno_event_manager.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Joseph Hardin.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="../../_sources/WarnoVagrant/EventManager/warno_event_manager.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

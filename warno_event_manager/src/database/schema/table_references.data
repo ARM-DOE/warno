@@ -1,3 +1,0 @@
-instrument_id,referenced_tables
-1,"{'prosensing_paf','events_with_text','events_with_value','pulse_captures'}"
-2,"{'events_with_text','pulse_captures'}"
