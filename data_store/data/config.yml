@@ -3,7 +3,7 @@ setup:
     cf_url: "http://130.20.119.70/eventmanager/event"
     em_url: "http://eventmanager/eventmanager/event"
     # Path to default ssl cert location if applicable, false means always trust cert
-    cert_verify: False #Vagrant standard: "/vagrant/data_store/data/rootCA.pem"
+    cert_verify: False #VM standard: "/vagrant/data_store/data/rootCA.pem"
     run_vm_agent: 1
     run_vm_event_manager: 1
     event_manager_port: 80
@@ -23,6 +23,4 @@ database:
 
 debug:
     no_gunicorn: 0
-    # Equivalent of cert_verify for any of the components run outside of the VM
-    # non_vm_cert_verify: "~/warno/git_repos/warno-vagrant/data_store/data/rootCA.pem"
 
