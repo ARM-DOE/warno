@@ -96,7 +96,6 @@ is_central = 0
 cf_url = ""
 cfg = None
 
-config_path = "/opt/data/config.yml"
 headers = {'Content-Type': 'application/json'}
 
 cert_verify=False
@@ -591,7 +590,6 @@ def initialize_database():
         # If it is not a test database, first attempt to load database from an existing postgres dumpfile
 
 
-
     utility.upgrade_db()
 
     # If there there are no users in the database (which any active db should have users) and it is not a test db,
@@ -675,4 +673,4 @@ if __name__ == '__main__':
 
     initialize_database()
 
-    app.run(host='0.0.0.0', port=80, debug=True)
+    app.run(host='0.0.0.0', port=cfg['setup']['event_manager_port'], debug=True)

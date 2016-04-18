@@ -27,7 +27,9 @@ def get_config_context():
         Configuration Dictionary of Key Value Pairs
     """
     base_path = os.getenv("DATA_STORE_PATH")
-    config_filename = base_path + "config.yml"
+    config_filename = os.getenv("ALT_CONFIG")
+    if not config_filename:
+        config_filename = base_path + "config.yml"
     secrets_filename = base_path + "secrets.yml"
 
     # First we load the standard config yaml file.

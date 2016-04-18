@@ -26,8 +26,8 @@ target_metadata = Base.metadata
 # ... etc.
 db_cfg = warno_config.get_config_context()['database']
 s_db_cfg = warno_config.get_config_context()['s_database']
-config.set_main_option('sqlalchemy.url', 'postgresql://%s:%s@%s/%s' %
-                       (db_cfg['DB_USER'], s_db_cfg['DB_PASS'], db_cfg['DB_HOST'], db_cfg['DB_NAME']))
+config.set_main_option('sqlalchemy.url', 'postgresql://%s:%s@%s:%s/%s' %
+                       (db_cfg['DB_USER'], s_db_cfg['DB_PASS'], db_cfg['DB_HOST'], db_cfg['DB_PORT'], db_cfg['DB_NAME']))
 
 
 def run_migrations_offline():

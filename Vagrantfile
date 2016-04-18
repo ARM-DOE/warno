@@ -23,6 +23,7 @@ Vagrant.configure(2) do |config|
   config.vm.hostname = "warno"
   config.vm.network "forwarded_port", guest: 80, host: 8080
   config.vm.network "forwarded_port", guest: 443, host: 8443
+  config.vm.network "forwarded_port", guest: 5432, host: 9432
   config.vm.network "forwarded_port", guest: 22, host: 6302, id: "ssh", auto_correct: true
 
   ## VirtualBox ##

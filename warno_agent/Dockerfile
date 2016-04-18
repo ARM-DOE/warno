@@ -9,7 +9,6 @@ ENV PATH=/opt/data/anaconda/bin:$PATH
 
 EXPOSE 6310
 
-COPY /src /opt/warno_agent/
 COPY entrypoint.sh /
 
 WORKDIR /opt/warno_agent

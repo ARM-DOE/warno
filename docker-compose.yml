@@ -51,7 +51,7 @@ agent:
     ports:
       - "6310:6310"
     volumes:
-        - /vagrant/warno_agent/src:/opt/agent
+        - /vagrant/warno_agent/src:/opt/warno_agent
     volumes_from:
       - datastore
     links:
