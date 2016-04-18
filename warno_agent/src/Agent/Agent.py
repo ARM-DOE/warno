@@ -26,9 +26,7 @@ class Agent(object):
     def __init__(self):
         self.plugin_path = DEFAULT_PLUGIN_PATH
         self.config_ctxt = config.get_config_context()
-        self.event_manager_url = self.config_ctxt['setup']['em_url']
         self.em_url = self.config_ctxt['setup']['em_url']
-        self.is_central = self.config_ctxt['type']['central_facility']
         self.site_id = None
         self.msg_queue = Queue()
         self.event_code_dict = {}
@@ -36,7 +34,7 @@ class Agent(object):
         self.running_plugin_list = []
         self.plugin_module_list = []
         self.main_loop_boolean = True
-        self.cert_verify = self.config_ctxt['setup']['cert_verify']
+        self.cert_verify =  self.config_ctxt['setup']['cert_verify']
 
     def set_plugin_path(self, path=None):
         """
@@ -196,7 +194,7 @@ class Agent(object):
 
         msg = '{"event_code": %d, "data": %s}' % (code, json.dumps(data))
         payload = json.loads(msg)
-        response = requests.post(self.event_manager_url, json=payload, headers=headers, verify=self.cert_verify)
+        response = requests.post(self.em_url, json=payload, headers=headers, verify=self.cert_verify)
         return response
 
     def main(self):
@@ -206,10 +204,6 @@ class Agent(object):
         -------
         """
         print("Starting Agent Main Loop:")
-        if self.is_central:
-            print("Agent is disabled.")
-            exit(0)
-
 
         self.plugin_module_list = self.list_plugins()
         print("Starting up the following plugins:", self.plugin_module_list)
@@ -221,7 +215,7 @@ class Agent(object):
                 self.site_id = self.request_site_id_from_event_manager()
                 break
             except Exception as e:
-                print("Error Connecting. Connection Attempt {0}. Sleeping for 5 seconds.".format(conn_attempt))
+                print("Error Connecting. Connection Attempt {0}. Sleeping for {1} seconds.".format(conn_attempt, CONN_RETRY_TIME))
                 print(e)
                 sleep(CONN_RETRY_TIME)
 

@@ -5,7 +5,6 @@ EXPOSE 80
 
 ENV PATH /vagrant/data_store/data/anaconda/bin:$PATH
 
-COPY /src /opt/warno_event_manager/
 COPY entrypoint.sh /
 
 WORKDIR /opt/warno_event_manager
