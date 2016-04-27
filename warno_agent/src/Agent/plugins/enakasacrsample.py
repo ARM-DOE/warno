@@ -6,7 +6,7 @@ import datetime
 from pyarmret.io.PAFClient import PAFClient
 
 
-logfile = "/vagrant/data_store/data/agent_exceptions.log"
+logfile = "/vagrant/logs/agent_exceptions.log"
 
 def register(msg_queue):
     event_names = ["prosensing_paf", "non_paf_event"]

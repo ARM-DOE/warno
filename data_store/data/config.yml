@@ -1,14 +1,14 @@
 setup:
     site: ENA
     cf_url: "http://130.20.119.70/eventmanager/event"
-    em_url: "http://eventmanager/eventmanager/event"
+    em_url: "http://localhost:8001/eventmanager/event"
     # Path to default ssl cert location if applicable, false means always trust cert
     cert_verify: False #VM standard: "/vagrant/data_store/data/rootCA.pem"
     run_vm_agent: 1
     run_vm_event_manager: 1
-    event_manager_port: 80
+    event_manager_port: 8001
     run_vm_user_portal: 1
-    user_portal_port: 80
+    user_portal_port: 8002
 
 
 type:

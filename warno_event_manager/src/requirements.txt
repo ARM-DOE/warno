@@ -1,4 +1,0 @@
-Flask
-psutil
-pyyaml
-requests

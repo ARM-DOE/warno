@@ -8,3 +8,4 @@ warno-docker-image
 *.swp
 *.gz
 *.box
+logs/*.log
