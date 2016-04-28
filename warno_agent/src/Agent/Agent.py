@@ -1,24 +1,49 @@
-import multiprocessing
-import importlib
-import requests
-import logging
-import signal
 import json
+import importlib
 import glob
-import os
+import multiprocessing
+import signal
+import requests
+import wsgiref.simple_server
+import threading
+import sys
+import logging
 
 from multiprocessing import Queue
 from time import sleep
+from flask import Flask, g, render_template, request, redirect, url_for
+from jinja2 import TemplateNotFound
 
-from WarnoConfig import config
-from WarnoConfig import utility
 
+from WarnoConfig import config, utility
+
+
+global agent
+global remote_server
 
 headers = {'Content-Type': 'application/json'}
 
 DEFAULT_PLUGIN_PATH = 'Agent/plugins/'
-MAX_CONN_ATTEMPTS = 10
+MAX_CONN_ATTEMPTS = 20
 CONN_RETRY_TIME = 10
+AGENT_DASHBOARD_PORT = 6309
+
+
+
+ctx = config.get_config_context()
+if ctx['agent']['local_debug']:
+    AGENT_DASHBOARD_PORT = int(ctx['agent']['dev_port'])
+
+
+app = Flask(__name__)
+
+
+logfile = "/vagrant/data_store/data/agent_exceptions.log"
+
+
+@app.route('/agent')
+def serve_dashboard():
+    return render_template('index.html', plugin_list = ({'path': 'testpath'}, {'path': 'testpath2'}))
 
 
 class Agent(object):
@@ -113,20 +138,24 @@ class Agent(object):
         plugin_module_list = []
         potential_plugin_list = glob.glob(plugin_path+'*.py')
         potential_plugin_list.sort()
+        print(potential_plugin_list)
 
         for plugin in potential_plugin_list:
             try:
                 module_name = plugin[:-3].replace('/', '.')
+                print(module_name)
                 module_name = module_name.replace('Agent.','')
                 module_top = importlib.import_module(module_name[0:])
+                print(module_top)
                 if hasattr(module_top, 'get_plugin'):
                     candidate_plugin = module_top.get_plugin()
+                    print("candidate_plugin", candidate_plugin)
                     candidate_plugin.path = plugin
                     if hasattr(candidate_plugin, 'register') and hasattr(candidate_plugin, 'run'):
                         self.plugin_manager.add_plugin(candidate_plugin)
             except Exception, e:
-                self.agent_logger.debug("Potential plugin search exception: %s", e)
-                pass  # Just ignore, there will be a lot of hits on this
+                print(e)
+                # logging.warning(e)
 
         return self.plugin_manager.get_plugin_list()
 
@@ -166,6 +195,7 @@ class Agent(object):
         -------
 
         """
+        print("Registering Plugin", plugin)
         response_dict = plugin.get_registration_info()
 
         # Get the instrument Id for each ****TODO Rework this later.
@@ -173,11 +203,11 @@ class Agent(object):
         instrument_name = response_dict['instrument_name']
         response = self.send_em_message(utility.INSTRUMENT_ID_REQUEST, instrument_name)
 
-        data = dict(json.loads(response.content))
-        self.instrument_ids.append((plugin, data['data']['instrument_id']))
+        data = dict(json.loads(response.content))['data']
+        self.instrument_ids.append((plugin, data['instrument_id']))
 
         for event in response_dict['event_code_names']:
-            data_send = {'description': event, 'instrument_id': data['data']['instrument_id']}
+            data_send = {'description': event, 'instrument_id': data['instrument_id']}
             response = self.send_em_message(utility.EVENT_CODE_REQUEST, data_send)
 
             response_dict = dict(json.loads(response.content))
@@ -234,7 +264,22 @@ class Agent(object):
         Returns
         -------
         """
-        self.agent_logger.info("Starting Agent Main Loop:")
+        remote_server = wsgiref.simple_server.make_server('0.0.0.0', AGENT_DASHBOARD_PORT, app)
+        remote_server.timeout = 0
+        print("Starting up dashboard.")
+        thread = threading.Thread(target=remote_server.serve_forever)
+        thread.setdaemon = True
+        try:
+            thread.start()
+        except KeyboardInterrupt:
+            remote_server.shutdown()
+            sys.exit()
+
+        print("Starting Agent Main Loop:")
+        # if self.is_central:
+        #     print("Site is Central so Agent is disabled.")
+        #     while true:
+        #         sleep(5)
 
         self.plugin_module_list = self.list_plugins()
         self.agent_logger.info("Starting up the following plugins: %s", self.plugin_module_list)

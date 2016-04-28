@@ -1,0 +1,23 @@
+##+TITLE: WARNO Roadmap
+
+* TODO WARNO Roadmap
+This is a plan for the features needed for each major release.
+
+| Task                              | Date | Revision | Tag | Priority |
+|-----------------------------------+------+----------+-----+----------|
+| Plugin System                     |      | Alpha    |     |        1 |
+| Communications Protocol Finalized |      | Alpha    |     |        1 |
+| Dashboard Support                 |      | Alpha    |     |          |
+| Rest API                          |      | Alpha    |     |          |
+| Plugin Dashboard                  |      | Alpha    |     |        2 |
+| Warn-On-Alarm                     |      | Beta     |     |        1 |
+| Analytics Engine                  |      | Beta     |     |          |
+| XSAPR1                            |      | Beta     |     |          |
+| CSAPR1                            |      | Beta     |     |          |
+| User Support                      |      | Beta     |     |          |
+| Database Saving/Aging             |      | Beta     |     |          |
+| Wrapper for Non-Python plugins    |      | Beta     |     |          |
+| Cookbook of Examples              |      | Beta     |     |          |
+| OSS Integration                   |      | Gamma    |     |          |
+| XSAPR2/CSAPR2                     |      | Gamma    |     |          |
+|                                   |      |          |     |          |

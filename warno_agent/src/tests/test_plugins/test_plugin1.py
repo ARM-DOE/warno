@@ -1,4 +1,3 @@
-from pyarmret.io.PAFClient import PAFClient
 
 from Agent.Plugin import Plugin
 
