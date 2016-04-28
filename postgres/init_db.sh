@@ -13,8 +13,8 @@ DB_PASS=$s_database__DB_PASS
 echo "host all all 0.0.0.0/0 trust" >> /var/lib/pgsql/9.3/data/pg_hba.conf
 echo "listen_addresses='*'" >> /var/lib/pgsql/9.3/data/postgresql.conf
 
-sudo -u postgres PGDATA=/var/lib/pgsql/9.3/data /usr/pgsql-9.3/bin/pg_ctl start >> /vagrant/logs/postgres_init.log 2>&1 &
-sudo -u postgres sleep 5
-sudo -u postgres psql --command "CREATE USER root WITH SUPERUSER PASSWORD 'password';"
-sudo -u postgres psql --command "CREATE USER $USERNAME WITH SUPERUSER PASSWORD '$DB_PASS';"
-sudo -u postgres psql --command "CREATE DATABASE $DB_NAME;"
+PGDATA=/var/lib/pgsql/9.3/data /usr/pgsql-9.3/bin/pg_ctl start >> /vagrant/logs/postgres_init.log 2>&1 &
+sleep 5
+psql -U postgres --command "CREATE USER root WITH SUPERUSER PASSWORD 'password';"
+psql -U postgres --command "CREATE USER $USERNAME WITH SUPERUSER PASSWORD '$DB_PASS';"
+psql -U postgres --command "CREATE DATABASE $DB_NAME;"
