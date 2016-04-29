@@ -27,3 +27,6 @@ debug:
 agent:
     local_debug: 1
     dev_port: 6306
+    instrument_list:
+      - TEST
+

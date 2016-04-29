@@ -121,21 +121,6 @@ class TestAgent(TestCase):
         self.assertDictContainsSubset(dict_to_be_contained, self.agent.event_code_dict,
                                       'Event Codes did not contain expected items')
 
-    @mock.patch.object(Agent, 'multiprocessing')
-    def test_startup_plugin_runs_process(self, mock_process):
-
-        return_process = mock.create_autospec(Process)
-
-        mock_process.Process.return_value = return_process
-        test_plugin = importlib.import_module(PLUGIN_ROOT+'test_plugin1').get_plugin()
-
-        self.agent.instrument_ids.append((test_plugin, 6))
-        self.agent.startup_plugin(test_plugin)
-
-        self.assertTrue(mock_process.Process.called, "Process was not called")
-
-        self.assertTrue(return_process.start.called, "Process.run was not called")
-
 
     @mock.patch.object(Agent, 'requests')
     def test_send_em_message_request_site_id_works(self, mock_requests):
@@ -173,46 +158,16 @@ class TestAgent(TestCase):
         self.assertTrue('headers' in call_args[1], 'headers not passed as arg')
         self.assertTrue('verify' in call_args[1], 'verify not passed as arg')
 
-    @mock.patch.object(Agent, 'requests')
-    @mock.patch.object(Agent.PluginManager, 'get_plugin_list')
-    @mock.patch.object(Agent.Agent, 'startup_plugin')
-    @mock.patch.object(Agent.Agent, 'register_plugin')
-    @mock.patch.object(Agent.Agent, 'request_site_id_from_event_manager')
-    @mock.patch.object(Agent.Agent, 'list_plugins')
-    def test_main_loop_when_not_central(self, mock_list_plugins, mock_request_id, mock_register, mock_startup, mock_manager, mock_requests):
-        mock_list_plugins.return_value = ['test1', 'test2']
-        mock_request_id.return_value = 123
 
-        self.agent.main_loop_boolean=False
-        self.agent.is_central=0
-
-        mock_manager.return_value = ['test1', 'test2']
-
-        self.agent.main()
-
-        self.assertTrue(mock_list_plugins.called,'Plugins were never listed')
-        self.assertTrue(mock_request_id.called, 'ID Never Requested')
-        self.assertTrue(mock_register.called, 'Plugins never registered')
-        self.assertTrue(mock_startup.called, 'Plugin Startup Never Called')
 
     @mock.patch.object(Agent, 'requests')
     @mock.patch.object(Agent.PluginManager, 'get_plugin_list')
-    @mock.patch.object(Agent.Agent, 'startup_plugin')
-    @mock.patch.object(Agent.Agent, 'register_plugin')
-    @mock.patch.object(Agent.Agent, 'request_site_id_from_event_manager')
-    @mock.patch.object(Agent.Agent, 'list_plugins')
-    def test_main_loop_exits_when_central(self, mock_list_plugins, mock_request_id, mock_register, mock_startup, mock_manager, mock_requests):
-        mock_list_plugins.return_value = ['test1', 'test2']
-        mock_request_id.return_value = 123
-        mock_manager.return_value = ['test1', 'test2']
+    def test_main_loop_exits_when_configured_off(self,  mock_list_plugins, mock_requests):
 
-        self.agent.main_loop_boolean=False
-        self.agent.is_central=1
+        self.agent.continue_processing_events=False
+        self.agent.config_ctxt['setup']['run_vm_agent'] = False
         with self.assertRaises(SystemExit) as e:
             self.agent.main()
         self.assertEqual(e.exception.code, 0, "Main loop did not exit with the correct code")
 
         self.assertFalse(mock_list_plugins.called,'Plugins were listed')
-        self.assertFalse(mock_request_id.called, 'ID Requested')
-        self.assertFalse(mock_register.called, 'Plugins registered')
-        self.assertFalse(mock_startup.called, 'Plugin Startup Called')

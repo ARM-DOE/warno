@@ -24,6 +24,8 @@ Vagrant.configure(2) do |config|
   config.vm.network "forwarded_port", guest: 80, host: 8080
   config.vm.network "forwarded_port", guest: 443, host: 8443
   config.vm.network "forwarded_port", guest: 5432, host: 8432
+  config.vm.network "forwarded_port", guest: 6304, host: 6304
+  config.vm.network "forwarded_port", guest: 6306, host: 6306
   config.vm.network "forwarded_port", guest: 22, host: 8022, id: "ssh", auto_correct: true
 
   ## VirtualBox ##

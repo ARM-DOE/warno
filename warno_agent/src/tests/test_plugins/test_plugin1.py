@@ -1,5 +1,5 @@
 
-from Agent.Plugin import Plugin
+from Agent.plugins.Plugin import Plugin
 
 
 class TestPassingPlugin(Plugin):
