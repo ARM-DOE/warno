@@ -1,11 +1,12 @@
-import flask
+#import requests
+#import flask
 import mock
-import requests
+
+
 from flask.ext.testing import TestCase
 
 from UserPortal import instruments
 from UserPortal import views
-
 from WarnoConfig import database
 from WarnoConfig.models import Instrument, InstrumentLog, Site, InstrumentDataReference
 
@@ -15,11 +16,15 @@ class test_instruments(TestCase):
 
     def setUp(self):
         database.db_session = mock.Mock()
+        self.log_patch = mock.patch('logging.Logger')
+        self.mock_log = self.log_patch.start()
+
+    def tearDown(self):
+        self.log_patch.stop()
 
     def create_app(self):
         views.app.config['TESTING'] = True
         return views.app
-
 
 
     def test_list_instruments_returns_200_and_passes_mock_db_instruments_as_context_variable_using_correct_template(self):

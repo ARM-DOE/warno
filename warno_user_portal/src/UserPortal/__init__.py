@@ -1,3 +1,6 @@
+import logging
+import os
+
 from flask import Flask
 
 from . import users
@@ -41,6 +44,21 @@ class ReverseProxied(object):
         if server:
             environ['HTTP_HOST'] = server
         return self.app(environ, start_response)
+
+
+log_path = os.environ.get("LOG_PATH")
+if log_path is None:
+    log_path = "/vagrant/logs/"
+# Logs to the main log
+logging.basicConfig( format='%(levelname)s:%(asctime)s:%(module)s:%(lineno)d:  %(message)s',
+                     filename='%scombined.log' % log_path,
+                     filemode='a', level=logging.DEBUG)
+
+# Logs to the user portal log
+up_handler = logging.FileHandler("%suser_portal_server.log" % log_path, mode="a")
+up_handler.setFormatter(logging.Formatter('%(levelname)s:%(asctime)s:%(module)s:%(lineno)d:  %(message)s'))
+# Add user portal handler to the main werkzeug logger
+logging.getLogger("werkzeug").addHandler(up_handler)
 
 
 app = Flask(__name__)
