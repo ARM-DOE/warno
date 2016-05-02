@@ -40,4 +40,4 @@ python setup.py install
 cd ..
 
 # install coverage modules
-source set_env_for_testing.sh
+source utility_setup_scripts/set_env_for_testing.sh
