@@ -42,10 +42,6 @@ cd ..
 # install coverage modules
 # set up testing environment variables
 echo pwd
-echo "ls ."
-ls .
-echo "ls .."
-ls ..
-echo "ls ../.."
-echo ls ../..
-source ../utility_setup_scripts/set_env_for_testing.sh
+echo "ls utility_setup_scripts"
+ls utility_setup_scripts
+source utility_setup_scripts/set_env_for_testing.sh
