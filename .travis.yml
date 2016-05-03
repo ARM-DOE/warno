@@ -18,7 +18,7 @@ before_install:
 
 install: source continuous_integration/install.sh
 
-before_script: source set_env_for_testing.sh
+before_script: source utility_setup_scripts/set_env_for_testing.sh
 
 script:
     - nosetests --exclude-dir=selenium_tests --with-xunit
