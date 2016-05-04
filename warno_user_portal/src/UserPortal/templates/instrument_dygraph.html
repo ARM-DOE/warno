@@ -3,23 +3,10 @@
     <head>
         <script type="text/javascript" src="{{ url_for('static', filename='dygraph-combined-dev.js')}}"></script>
         <script type="text/javascript" src="{{ url_for('static', filename='jquery-2.1.4.js')}}"></script>
-        <script type="text/javascript" src="{{ url_for('static', filename='instrument_graph_0_1.js')}}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='instrument_graph_0_2.js')}}"></script>
     </head>
     <body>
         <div>
-
-            <div style=" vertical-align: top;">
-                Add a Graph By Attribute
-                <br>
-
-                <select id="keySelect" name="Data">
-                    {% for column in columns %}
-                    <option value="{{column}}">{{column}}</option>
-                    {% endfor %}
-                </select>
-
-                <button type="button" onclick="add_graph()">Add</button>
-            </div>
 
             <div style=" vertical-align: top;">
 
@@ -36,6 +23,22 @@
                     {% endif %}
                 </p>
 
+                Graph By Attributes:
+                <button type="button" onclick="add_graph()">Graph</button>
+                <button type="button" onclick="add_attr()">Add Attribute</button>
+
+                <br>
+                <div id="attr_div">
+                    <div>
+                        <button type="button" onclick="remove_attr(this)">X</button>
+                        <select class="attrSelect">
+                            {% for column in columns %}
+                            <option value="{{column}}">{{column}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
 		    </div>
 
 		</div>
@@ -45,10 +48,25 @@
 
             gm = new GraphManager();
 
+            function add_attr() {
+                var div = document.createElement('div');
+                div.innerHTML = '<div><button type="button" onclick="remove_attr(this)">X</button> <select class="attrSelect">{% for column in columns %}<option value="{{column}}">{{column}}</option>{% endfor %}</select></div>';
+                parent_div = document.getElementById('attr_div')
+                parent_div.appendChild(div)
+            }
+
+            function remove_attr(e) {
+                elem = e.closest('div');
+                elem.parentNode.removeChild(elem);
+            }
+
             function add_graph()
                 {
-
-                    key = document.getElementById('keySelect').value;
+                    key_elems = document.getElementsByClassName('attrSelect');
+                    var keys = [];
+                    for (var i = 0; i < key_elems.length; i++) {
+                        keys.push(key_elems[i].value);
+                    }
 
                     start_str = document.getElementById("datetime-input-start").value;
                     start = new Date(start_str + " UTC");
@@ -58,7 +76,7 @@
 
                     master_div = document.getElementById('master-graphdiv');
 
-                    gm.add_graph(key, {{instrument_id}}, "{{url_for('instruments.generate_instrument_graph')}}", start, end, master_div);
+                    gm.add_graph(keys, {{instrument_id}}, "{{url_for('instruments.generate_instrument_graph')}}", start, end, master_div);
 
                 };
         </script>
