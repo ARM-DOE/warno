@@ -65,7 +65,6 @@ Graph.prototype.update_with_values = function(values) {
                 rangeSelectorPlotStrokeColor: 'darkred',
                 rangeSelectorPlotFillColor: 'lightgreen',
 
-                title: this.keys,
                 labelsUTC: true,
                 labels: ["Time"].concat(this.keys),
                 axes: {
