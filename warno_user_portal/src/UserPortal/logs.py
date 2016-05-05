@@ -1,18 +1,29 @@
-import json
-
-from flask import g, render_template, request, redirect, url_for, request
-from flask import Blueprint
-from jinja2 import TemplateNotFound
 import psycopg2
-import sqlalchemy
 import requests
+import logging
+import json
+import os
 
-from WarnoConfig import config
+from flask import render_template, redirect, url_for, request
+from flask import Blueprint
+
 from WarnoConfig.utility import status_code_to_text, status_text
-from WarnoConfig import database
 from WarnoConfig.models import InstrumentLog, User, Instrument
+from WarnoConfig import config
+from WarnoConfig import database
+
 
 logs = Blueprint('logs', __name__, template_folder='templates')
+
+log_path = os.environ.get("LOG_PATH")
+if log_path is None:
+    log_path = "/vagrant/logs/"
+
+# Logs to the user portal log
+up_logger = logging.getLogger(__name__)
+up_handler = logging.FileHandler("%suser_portal_server.log" % log_path, mode="a")
+up_handler.setFormatter(logging.Formatter('%(levelname)s:%(asctime)s:%(module)s:%(lineno)d:  %(message)s'))
+up_logger.addHandler(up_handler)
 
 @logs.route('/submit_log')
 def new_log():
@@ -77,25 +88,29 @@ def new_log():
     if new_log.author_id and new_log.instrument_id and new_log.status and new_log.time:
         # Attempt to insert an item into the database. Try/Except is necessary because
         # the timedate datatype the database expects has to be formatted correctly.
-        try:
-
-            database.db_session.add(new_log)
-            database.db_session.commit()
-
-            # If it is not a central facility, pass the log to the central facility
-            if not cfg['type']['central_facility']:
-                packet = dict(event_code=5, data = dict(instrument_id=new_log.instrument_id, author_id = new_log.author_id, time = str(new_log.time),
-                                                status = new_log.status, contents = new_log.contents, supporting_images = None))
-                payload = json.dumps(packet)
-                requests.post(cfg['setup']['cf_url'], data = payload,
-                                      headers = {'Content-Type': 'application/json'}, verify=cert_verify)
-
-            # Redirect to the instrument page that the log was submitted for.
-            return redirect(url_for('instruments.instrument', instrument_id=new_log.instrument_id))
-        except sqlalchemy.exc.DataError:
-            # If the timedate object expected by the database was incorrectly formatted, error is set
-            # for when the page is rendered again
+        if new_log.time == 'Invalid Date':
             error = "Invalid Date/Time Format"
+            up_logger.error("Invalid Date/Time format for new log entry. 'Invalid Date' passed from JavaScript parser in template")
+        else:
+            try:
+                database.db_session.add(new_log)
+                database.db_session.commit()
+
+                # If it is not a central facility, pass the log to the central facility
+                if not cfg['type']['central_facility']:
+                    packet = dict(event_code=5, data = dict(instrument_id=new_log.instrument_id, author_id = new_log.author_id, time = str(new_log.time),
+                                                    status = new_log.status, contents = new_log.contents, supporting_images = None))
+                    payload = json.dumps(packet)
+                    requests.post(cfg['setup']['cf_url'], data = payload,
+                                          headers = {'Content-Type': 'application/json'}, verify=cert_verify)
+
+                # Redirect to the instrument page that the log was submitted for.
+                return redirect(url_for('instruments.instrument', instrument_id=new_log.instrument_id))
+            except psycopg2.DataError:
+                # If the timedate object expected by the database was incorrectly formatted, error is set
+                # for when the page is rendered again
+                error = "Invalid Date/Time Format"
+                up_logger.error("Invalid Date/Time format for new log entry.  Value: %s", new_log.time)
 
     # If there was no valid insert, render form normally
 

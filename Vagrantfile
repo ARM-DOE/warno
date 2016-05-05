@@ -23,13 +23,12 @@ Vagrant.configure(2) do |config|
   config.vm.hostname = "warno"
   config.vm.network "forwarded_port", guest: 80, host: 8080
   config.vm.network "forwarded_port", guest: 443, host: 8443
-  config.vm.network "forwarded_port", guest: 22, host: 6302, id: "ssh", auto_correct: true
+  config.vm.network "forwarded_port", guest: 5432, host: 8432
+  config.vm.network "forwarded_port", guest: 22, host: 8022, id: "ssh", auto_correct: true
 
   ## VirtualBox ##
   config.vm.provider "virtualbox" do |v|
     v.name = "warno"
-    # CentOS needs more memory than the default, otherwise docker containers
-    # may be killed by the kernel
     v.memory = 1024
   end
 
@@ -39,12 +38,11 @@ Vagrant.configure(2) do |config|
   config.vm.synced_folder ".", "/home/vagrant/sync", disabled: true
   config.vm.synced_folder "./", "/vagrant/", type: "nfs"
 
-  # Without this,SELinux on CentOS blocks docker containers from 
-  # accessing the NFS shared folders
+  # Disable SELinux
   config.vm.provision :shell, inline: "setenforce 0", run: "always"
 
   ## Load Keys ##
-  config.vm.provision :shell, path: "load_keys.sh", privileged: false, run: "always"
+  config.vm.provision :shell, path: "utility_setup_scripts/load_keys.sh", privileged: false, run: "always"
 
   ## Git Submodule ##
   config.vm.provision :shell, inline: "yum install -y git"
@@ -55,21 +53,26 @@ Vagrant.configure(2) do |config|
     run "vagrant ssh -c 'bash /vagrant/data_store/data/db_save.sh'"
   end
 
-  ## Local install ##
-  config.vm.provision :shell, inline: "docker load -i /vagrant/warno-docker-image"
-
   ## Final Provisioning ##
-  # Docker and Docker compose are installed in the custom vagrant box
   # Must be unprivileged so Anaconda paths install for the vagrant user
-  config.vm.provision :shell, path: "bootstrap.sh", privileged: false
+  config.vm.provision :shell, path: "utility_setup_scripts/bootstrap.sh", privileged: false
+  # Pip installations must be run in a separate bootstrap script, reason unknown
+  config.vm.provision :shell, path: "utility_setup_scripts/pip_bootstrap.sh", privileged: false
   
   # Add crontab for regular database backup (currently once daily)
   config.vm.provision :shell, inline: "(crontab -l; echo '0 22 * * * bash /vagrant/data_store/data/db_save.sh') | crontab -"
 
-  # Because we could not use the docker-compose provisioner, 
-  # we instead write the three equivalent commands
-  config.vm.provision :shell, inline: "docker-compose -f /vagrant/docker-compose.yml rm", run: "always"
-  config.vm.provision :shell, inline: "docker-compose -f /vagrant/docker-compose.yml build", run: "always"
-  config.vm.provision :shell, inline: "docker-compose -f /vagrant/docker-compose.yml up -d --timeout 20", run: "always"
+  # Add hosts to /etc/hosts
+  config.vm.provision :shell, path: "utility_setup_scripts/add_hosts.sh"
+
+  # Set up and run database
+  config.vm.provision :shell, path: "postgres/init_db.sh"
+  config.vm.provision :shell, path: "postgres/start_postgres.sh", run: "always"
+
+  # Start proxy server
+  config.vm.provision :shell, path: "proxy/start_proxy.sh", run: "always"
+
+  # Need to call a script to run all the servers.
+  config.vm.provision :shell, path: "utility_setup_scripts/start_all_servers.sh", privileged: false, run: "always"
 
 end

@@ -1,4 +1,5 @@
 import sys
+import os
 import psycopg2
 import numpy as np
 import pandas
@@ -87,7 +88,12 @@ def reset_db_keys():
     in ids, but it will be more fault tolerant than it is currently.
 
     """
-    p = subprocess.Popen(["bash", "/vagrant/data_store/data/db_sequence_reset.sh"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if os.environ["DATA_STORE_PATH"]:
+        script = os.environ["DATA_STORE_PATH"] + "db_sequence_reset.sh"
+    else:
+        script = "/vagrant/data_store/data/db_upgrade.sh"
+
+    p = subprocess.Popen(["bash", script], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     p.wait()
 
 
@@ -96,7 +102,12 @@ def load_dumpfile():
     subprocess to finish.
 
     """
-    p = subprocess.Popen(["bash", "/vagrant/data_store/data/db_load.sh"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if os.environ["DATA_STORE_PATH"]:
+        script = os.environ["DATA_STORE_PATH"] + "db_load.sh"
+    else:
+        script = "/vagrant/data_store/data/db_upgrade.sh"
+
+    p = subprocess.Popen(["bash", script], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     p.wait()
 
 
@@ -104,7 +115,12 @@ def upgrade_db():
     """Runs the 'db_migrate' script in a subprocess to migrate the database using 'alembic'.
 
     """
-    p = subprocess.Popen(["bash", "/vagrant/data_store/data/db_upgrade.sh"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if os.environ["DATA_STORE_PATH"]:
+        script = os.environ["DATA_STORE_PATH"] + "db_upgrade.sh"
+    else:
+        script = "/vagrant/data_store/data/db_upgrade.sh"
+
+    p = subprocess.Popen(["bash", script], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     p.wait()
 
 def table_exists(table_name, curr):
@@ -243,8 +259,8 @@ def load_data_into_table(filename, table):
     df = pandas.read_csv(filename)
     db_cfg = config.get_config_context()['database']
     s_db_cfg = config.get_config_context()['s_database']
-    engine = create_engine('postgresql://%s:%s@%s:5432/%s' %
-                           (db_cfg['DB_USER'], s_db_cfg['DB_PASS'], db_cfg['DB_HOST'], db_cfg['DB_NAME']))
+    engine = create_engine('postgresql://%s:%s@%s:%s/%s' %
+                           (db_cfg['DB_USER'], s_db_cfg['DB_PASS'], db_cfg['DB_HOST'], db_cfg['DB_PORT'], db_cfg['DB_NAME']))
     df.to_sql(table, engine, if_exists='append', index=False, chunksize=900)
 
 
@@ -264,8 +280,8 @@ def dump_table_to_csv(filename, table, server=None):
     if server is None:
         db_cfg = config.get_config_context()['database']
         s_db_cfg = config.get_config_context()['s_database']
-        server = create_engine('postgresql://%s:%s@%s:5432/%s' %
-                               (db_cfg['DB_USER'], s_db_cfg['DB_PASS'], db_cfg['DB_HOST'], db_cfg['DB_NAME']))
+        engine = create_engine('postgresql://%s:%s@%s:%s/%s' %
+                           (db_cfg['DB_USER'], s_db_cfg['DB_PASS'], db_cfg['DB_HOST'], db_cfg['DB_PORT'], db_cfg['DB_NAME']))
     else:
         server = create_engine(server)
 
@@ -282,6 +298,6 @@ def connect_db():
     """
     db_cfg = config.get_config_context()['database']
     s_db_cfg = config.get_config_context()['s_database']
-    return psycopg2.connect("host=%s dbname=%s user=%s password=%s" %
-                            (db_cfg['DB_HOST'], db_cfg['DB_NAME'], db_cfg['DB_USER'], s_db_cfg['DB_PASS']))
+    engine = create_engine('postgresql://%s:%s@%s:%s/%s' %
+                           (db_cfg['DB_USER'], s_db_cfg['DB_PASS'], db_cfg['DB_HOST'], db_cfg['DB_PORT'], db_cfg['DB_NAME']))
 

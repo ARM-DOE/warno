@@ -1,6 +1,6 @@
 server {
-   listen 80;
-   return 301 https://$host:8443$request_uri;
+    listen 80;
+    return 301 https://$host:8443$request_uri;
 }
 server {
     listen 443 ssl;
@@ -12,7 +12,7 @@ server {
     ssl_prefer_server_ciphers on;
 
     location / {
-        proxy_pass http://userportal:80;
+        proxy_pass http://localhost:8002;
         proxy_redirect off;
         proxy_set_header Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -21,7 +21,7 @@ server {
     }
 
     location /eventmanager {
-        proxy_pass http://eventmanager:80;
+        proxy_pass http://localhost:8001;
         proxy_redirect off;
         proxy_set_header Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;

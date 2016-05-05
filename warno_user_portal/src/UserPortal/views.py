@@ -1,14 +1,13 @@
+import logging
 import json
+import os
 
 from flask import g, render_template, request, redirect, url_for
-from flask import Blueprint
-from jinja2 import TemplateNotFound
-import psycopg2
+from werkzeug.contrib.fixers import ProxyFix
 from sqlalchemy import Float, Boolean, Integer, or_, and_
+from sqlalchemy.exc import ProgrammingError as SAProgrammingError
 from sqlalchemy.orm import aliased
 import math
-
-from werkzeug.contrib.fixers import ProxyFix
 
 from UserPortal import app
 from WarnoConfig import config
@@ -26,6 +25,18 @@ status_text = {1: "OPERATIONAL",
                3: "TESTING",
                4: "IN-UPGRADE",
                5: "TRANSIT"}
+
+log_path = os.environ.get("LOG_PATH")
+if log_path is None:
+    log_path = "/vagrant/logs/"
+
+# Logs to the user portal log
+up_logger = logging.getLogger(__name__)
+up_handler = logging.FileHandler("%suser_portal_server.log" % log_path, mode="a")
+up_handler.setFormatter(logging.Formatter('%(levelname)s:%(asctime)s:%(module)s:%(lineno)d:  %(message)s'))
+up_logger.addHandler(up_handler)
+
+up_logger.info("Starting User Portal")
 
 
 @app.before_request
@@ -261,6 +272,7 @@ def show_radar_status():
     """
 
     # Get the most recent log for each instrument to determine its current status
+
     status = status_log_for_each_instrument()
 
     # Assume the instrument status is operational unless the status has changed, handled afterward
@@ -301,8 +313,9 @@ def query():
         try:
             data = database.db_session.execute(query).fetchall()
             database.db_session.execute('COMMIT')
-        except psycopg2.ProgrammingError, e:
+        except SAProgrammingError, e:
             data = "Invalid Query.  Error: %s" % e
+            up_logger.warn("Invalid Query.  Error: %s", e)
 
     if request.method == 'GET':
         pass

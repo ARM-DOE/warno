@@ -1,11 +1,21 @@
-from unittest import TestCase
+import mock
 import os
+
+from unittest import TestCase
 
 from .. import UserPortal
 from WarnoConfig import config
 
 
 class TestGet_config_context(TestCase):
+
+    def setUp(self):
+        self.log_patch = mock.patch('logging.Logger')
+        self.mock_log = self.log_patch.start()
+
+    def tearDown(self):
+        self.log_patch.stop()
+
     list_required_keys = ['DB_HOST', 'DB_USER', 'DB_NAME']
 
     def test_data_store_path_defined(self):

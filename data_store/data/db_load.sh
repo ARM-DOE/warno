@@ -9,6 +9,7 @@ eval $(parse_yaml $DIR/secrets.yml)
 USERNAME=$database__DB_USER
 DB_ADDRESS=$database__DB_HOST
 DB_NAME=$database__DB_NAME
+DB_PORT=$database__DB_PORT
 
 ZIPFILE=$DIR/db_dump.data.gz
 DUMPFILE=$DIR/db_dump.data
@@ -23,7 +24,7 @@ if [[ -f $ZIPFILE ]]; then
     mv tmp.zip $ZIPFILE
     echo "Waiting for database to be ready to load data."
     while [ $ready -lt 1 ]; do
-      PGPASSWORD=$s_database__DB_PASS psql -h $DB_ADDRESS --username=$USERNAME $DB_NAME -t -c "select now()" postgres &> /dev/null
+      PGPASSWORD=$s_database__DB_PASS psql -h $DB_ADDRESS --username=$USERNAME $DB_NAME -p $DB_PORT -t -c "select now()" postgres &> /dev/null
 
       if [ $? == 0 ]; then
         ready=1
