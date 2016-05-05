@@ -348,11 +348,29 @@ def generate_instrument_graph():
                     return json.dumps("[]")
 
     result = synchronize_sort(keys)
+    map(iso_first_element, result)
+
     message = json.dumps(result)
 
     # Send out the JSON message
     return message
 
+def iso_first_element(input):
+    """Update first element of input list from a python datetime object into an ISO formatted time.
+    (Used as map function).
+
+    Parameters
+    ----------
+    input: list
+        First element of 'input' is a python datetime object.
+
+    Returns
+    -------
+    No actual return, but updates list in place.
+
+    """
+
+    input[0] = input[0].isoformat()
 
 def synchronize_sort(dataset_dict):
     """Sorts a dictionary of data sets to be consistent in time.  Each iteration, it checks the earliest time of each
@@ -387,7 +405,7 @@ def synchronize_sort(dataset_dict):
 
     Returns
     -------
-    Sorted list, of form [2015-05-11 01:00, 15, None, 12, ...], [2015-05-11 02:00, None, 30, None, ...],
+    Sorted list, of form [**Datetime** 2015-05-11 01:00, 15, None, 12, ...], [2015-05-11 02:00, None, 30, None, ...],
         ...[Final Datetime, Dataset0 Value, Dataset1 Value, Dataset2 Value, ... AttributeN Value]]
     """
     results = []
@@ -407,7 +425,7 @@ def synchronize_sort(dataset_dict):
         # for, the value is put into the element according to the set's attribute number.  For example, if there are 3
         # data sets and the first elements of each are (1:00, 15), (2:00, 30) and (1:00, 20), the result element would
         # be [1:00, 15, None, 20].
-        values_at_time = [min_time.isoformat()] + [None] * length
+        values_at_time = [min_time] + [None] * length
         for set_number, value in dataset_dict.iteritems():
             # Any data sets that have elements and have a time equal to the time for this point puts that data
             # in for that point and removes that element from its list.  Updates the index of the data point
