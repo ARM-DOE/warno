@@ -9,12 +9,12 @@
 </head>
 
 <body>
-{% with title='Prototype' %}
+{% with title='Dashboard' %}
 {% include 'partials/header_template.html' %}
 {% endwith %}
 
 <div class="content" >
-    <div style="padding: 10px" id="choosamajig">
+    <div style="padding: 10px" id="widget_picker_div">
         <h3>Widgets</h3>
         <select id="select-widget" name="select-widget">
             <option value="status_plot">Status Plot</option>
@@ -46,7 +46,7 @@
 
         elem.insertBefore(widget_div, elem.firstChild);
 
-        ajax_load_url(widget_div, '{{url_for("widgetize")}}?widget_name=' + choice + '&widget_id=' + widget_index);
+        ajax_load_url(widget_div, '{{url_for("gen_widget")}}?widget_name=' + choice + '&widget_id=' + widget_index);
 
         widget_index += 1;
     }

@@ -10,14 +10,15 @@
 	<a href="http://www.arm.gov"><img src="{{url_for('static', filename='arm_logo.png')}}" id="arm-logo" alt="Atmospheric Radiation Measurement Climate Research Facility"></img></a>
 
 	<div class="head-title" align="center" >
-		<h1><a href="{{url_for('sneaky')}}">WARNO</a></h1>
+		<h1>WARNO</h1>
 		<ul class="nav-buttons">
-			<a href="{{url_for('show_radar_status')}}"><li>Status</li></a>
-			<a href="{{url_for('sites.list_sites')}}"><li>Sites</li></a>
-			<a href="{{url_for('instruments.list_instruments')}}"><li>Instruments</li></a>
-			<a href="{{url_for('show_pulse')}}"><li>Pulses</li></a>
-			<a href="{{url_for('users.list_users')}}"><li>Users</li></a>
-			<a href="{{url_for('logs.new_log')}}"><li>Submit Log</li></a>
+			<a href="{{url_for('show_radar_status')}}"  ><li {% if title == "Home" %} class="selected" {% endif %}>Status</li></a>
+			<a href="{{url_for('sites.list_sites')}}"><li {% if title == "Sites" %} class="selected" {% endif %}>Sites</li></a>
+			<a href="{{url_for('instruments.list_instruments')}}"><li {% if title == "Instruments" %} class="selected" {% endif %}>Instruments</li></a>
+			<a href="{{url_for('show_pulse')}}"><li {% if title == "Pulses" %} class="selected" {% endif %}>Pulses</li></a>
+			<a href="{{url_for('users.list_users')}}"><li {% if title == "Users" %} class="selected" {% endif %}>Users</li></a>
+			<a href="{{url_for('logs.new_log')}}"><li {% if title == "Submit Log" %} class="selected" {% endif %}>Submit Log</li></a>
+			<a href="{{url_for('dashboard')}}"><li {% if title == "Dashboard" %} class="selected" {% endif %}>Dashboard</li></a>
 		</ul>
 	</div>
 </div>

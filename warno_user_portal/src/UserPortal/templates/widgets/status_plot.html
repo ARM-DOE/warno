@@ -27,12 +27,12 @@
     <br>
 
     {% for key in instrument_groups.keys() %}
-        <div style="margin: 3px; background-color: white; border: 1px solid black; padding: 2px;">
-            {{key}}:
+        <div class="status_widget">
+            <a href="{{url_for('sites.show_site', site_id=instrument_groups[key][0].site_id)}}">{{ key }}</a>
             <br>
             {% for instrument in instrument_groups[key] %}
                 <div class="{{instrument.status.replace(' ', '_').replace('-', '_').lower()}}" style="width: 125px; display: inline-block; border: 1px solid black; margin-top: 2px;">
-                    {{instrument.name}}
+                    <a href="{{url_for('instruments.instrument', instrument_id= instrument.id)}}">{{  instrument.name }}</a>
                     <br>
                     {{instrument.status}}
                </div>

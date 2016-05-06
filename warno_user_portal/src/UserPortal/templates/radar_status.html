@@ -11,27 +11,118 @@
 {% with title='Home' %}
 {% include 'partials/header_template.html' %}
 {% endwith %}
-<div class="content">
-    <table class="listing-table sortable">
-        <tr>
-            <th> Site</th>
-            <th> Instrument Name</th>
-            <th> Log Contents</th>
-            <th> Log Author </th>
-            <th> Instrument Status</th>
-        </tr>
+    <div class="content">
+        <!--<table class="listing-table sortable">-->
+            <!--<tr>-->
+                <!--<th> Site</th>-->
+                <!--<th> Instrument Name</th>-->
+                <!--<th> Log Contents</th>-->
+                <!--<th> Log Author </th>-->
+                <!--<th> Instrument Status</th>-->
+            <!--</tr>-->
 
 
-    {%  for instrument in instruments %}
-        <tr>
-        <td><a href="{{url_for('sites.show_site', site_id= instrument.site_id)}}">{{   instrument.site }}</a></td>
-        <td><a href="{{url_for('instruments.instrument', instrument_id= instrument.id)}}">{{  instrument.instrument_name }}</a></td>
-        <td>{{   instrument.contents }}</td>
-        <td>{{  instrument.author }}</td>
-        <td> {{  instrument.status }}</td>
-        </tr>
+            <!--{%  for instrument in instruments %}-->
+            <!--<tr>-->
+                <!--<td><a href="{{url_for('sites.show_site', site_id= instrument.site_id)}}">{{   instrument.site }}</a></td>-->
+                <!--<td><a href="{{url_for('instruments.instrument', instrument_id= instrument.id)}}">{{  instrument.instrument_name }}</a></td>-->
+                <!--<td>{{   instrument.contents }}</td>-->
+                <!--<td>{{  instrument.author }}</td>-->
+                <!--<td> {{  instrument.status }}</td>-->
+            <!--</tr>-->
+            <!--{% endfor %}-->
 
-    {% endfor %}
-</div>
+        <!--</table>-->
+
+        Status Legend:
+        <br>
+        <div class="operational"style="font-size: 15px; display: inline-block; border: 1px solid black; padding-left: 2px; padding-right: 2px;">
+            OPERATIONAL
+        </div>
+
+        <div class="not_working"style="font-size: 15px; display: inline-block; border: 1px solid black; padding-left: 2px; padding-right: 2px;">
+            NOT WORKING
+        </div>
+        <div class="testing"style="font-size: 15px; display: inline-block; border: 1px solid black; padding-left: 2px; padding-right: 2px;">
+            TESTING
+        </div>
+        <div class="in_upgrade"style="font-size: 15px; display: inline-block; border: 1px solid black; padding-left: 2px; padding-right: 2px;">
+            IN UPGRADE
+        </div>
+        <div class="transit"style="font-size: 15px; display: inline-block; center; border: 1px solid black; padding-left: 2px; padding-right: 2px;">
+            TRANSIT
+        </div>
+        <br>
+        <p style="font-size: .8em;">
+            NOTE: Status and plots are not to be taken as a reflection on the quality of the data in the ARM Archive.
+            Please pay attention to Data Quality Reports (DQRs) that come with the data. If you have questions,
+            contact one of the radar instrument mentors!!!
+
+            <br>
+            <br>
+
+            Click on a status box to expand it, or on an instrument or site name to visit the details page for that item.
+        </p>
+
+        {% for site, site_id in sites.iteritems() %}
+        <div class='status_page'>
+            <a href="{{url_for('sites.show_site', site_id=site_id)}}">{{ site }}</a>
+            <hr>
+            {% for instrument in instruments %}
+            {% if instrument.site == site %}
+            <div class="{{instrument.status.replace(' ', '_').replace('-', '_').lower()}}" onclick="toggleShowLogs(this)"
+                 style="display: inline-block; border: 1px solid black; margin-top: 2px;">
+                <a href="{{url_for('instruments.instrument', instrument_id= instrument.id)}}">{{  instrument.instrument_name }}</a>
+                <br>
+                {{instrument.status}}
+                <br>
+                <div class="log_div" hidden>
+                    Last Author: {{ instrument.author }}
+                    <br>
+                    Last Log: {{ instrument.contents }}
+                </div>
+           </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+
 </body>
+
+<script>
+    function toggleShowLogs(element) {
+
+    hidden_div = element.getElementsByClassName('log_div')[0];
+
+    site_div = element.parentNode;
+
+    if (element.style['display'] == "inline-block"){
+        element.style['display'] = "block";
+        element.style['text-align'] = "left"
+        hidden_div.hidden = false;
+    }
+    else {
+        element.style['display'] = "inline-block";
+        element.style['text-align'] = "center";
+        hidden_div.hidden = true;
+    }
+
+    all_hidden = true;
+    hidden_children = site_div.getElementsByClassName("log_div");
+    for (i = 0; i < hidden_children.length; i++) {
+        if (hidden_children[i].hidden == false){
+            all_hidden = false;
+        }
+    }
+    if (all_hidden) {
+        site_div.style['display'] = "inline-block";
+    }
+    else {
+        site_div.style['display'] = "block";
+    }
+
+    }
+
+</script>
 </html>
