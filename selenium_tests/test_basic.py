@@ -42,6 +42,11 @@ class TestIndexFunctionality(TestCase):
         self.browser.find_element_by_link_text("Users").click()
         self.assertTrue('User' in self.browser.title, 'Users did not have "User" in title')
 
+    def test_dashboard_has_dashboard_in_title(self):
+        self.browser.get(self.warno_url)
+        self.browser.find_element_by_link_text("Dashboard").click()
+        self.assertTrue('Dashboard' in self.browser.title, 'Dashboard did not have "Dashboard" in title')
+
     def test_submit_log_has_submit_log_in_title(self):
         self.browser.get(self.warno_url)
         self.browser.find_element_by_link_text("Submit Log").click()
