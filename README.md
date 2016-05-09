@@ -1,7 +1,7 @@
 # ARM WARNO Vagrant
 Multi service development environment designed to modularize and generalize the WARNO software architecture for use on any platform.
 <br><br>
-A Vagrant virtual machine containing multiple Docker containers, with each container providing a specific service: Database, Proxy Server, SSH Daemon, Agent, Event Manager, User Portal.
+A Vagrant virtual machine containing multiple servers, with each server providing a specific service: Database, Proxy Server, Agent, Event Manager, User Portal.
 <br><br>
 - **Agent**: Runs plugins to interface directly with the instruments and process the data before sending it to the site's Event Manager.
 
@@ -9,8 +9,6 @@ A Vagrant virtual machine containing multiple Docker containers, with each conta
 
 - **User Portal**: Flask web application that provides a user interface to process and display the information saved by the main Event Manager.
 
-## Companion Blog Post
-[http://devbandit.com/2015/05/29/vagrant-and-docker.html](http://devbandit.com/2015/05/29/vagrant-and-docker.html)
 
 ## Installation
 
@@ -20,9 +18,8 @@ https://www.vagrantup.com/
 
 https://www.virtualbox.org/wiki/Downloads
 <br><br>
-Then, install the [vagrant-docker-compose](https://github.com/leighmcculloch/vagrant-docker-compose) and [vagrant-triggers](https://github.com/emyl/vagrant-triggers) plugins (may require superuser privileges).
+Then, install the [vagrant-triggers](https://github.com/emyl/vagrant-triggers) plugin (may require superuser privileges).
 ```bash
-vagrant plugin install vagrant-docker-compose
 vagrant plugin install vagrant-triggers
 ```
 
@@ -50,9 +47,9 @@ sudo firewall-cmd --reload
 
 <br>
 
-Then, make sure to download the newest VM and Docker images. In the main directory:
+Then, make sure to download the newest VM image. In the main directory:
 ```bash
-bash set_up_images.sh
+bash utility_setup_scripts/set_up_images.sh
 ```
 
 <br>
@@ -78,6 +75,8 @@ If you want to receive data from the agent running in the virtual machine, set "
 If you have a self signed SSL certificate and private certificate key you would like to use on a machine to encrypt incoming 
 connections, name them *cacert.pem* and *privkey.pem* respectively and place them in *proxy/*
 
+WARNO comes with some basic starter certificates, but these sample certificates will only work properly for communicating to "localhost".
+
 If you would rather generate new ones, run the bash scripts *gen_ca.sh* and then *gen_certs.sh* in the main directory, 
 which will generate and place the files. 
 
@@ -85,10 +84,10 @@ On any machine that would like to communicate with the certified machine, there 
 *data_store/data/config.yml*:
 - "False"  Means the machine will not try to verify that the certificate is correct, and will blindly trust it (not safe for production).
 - "True"  Means the machine will attempt to verify the certificate with a real certificate authority (CA).
-- "container/path/to/cert"  Will look for a copy of the self signed certificate mentioned above to locally verify the connection.  
+- "path/to/cert"  Will look for a copy of the self signed certificate mentioned above to locally verify the connection.  
 This allows you to manually copy the "rootCA.pem" that was used to generate the certs (either locally if you generated the certs 
 or copied from where the certs came from) into the data directory to allow for fairly confident verification without an outside CA.
-Currently, setting this to "/opt/data/rootCA.pem" (path is due to how docker adds the volume) and copying the *rootCA.pem* from 
+Currently, setting this to "/vagrant/data_store/data/rootCA.pem" and copying the *rootCA.pem* from 
 before to *data_store/data/rootCA.pem* allows either the Event Manager or the Agent to access it as needed.
 
 <br>
@@ -117,12 +116,10 @@ For the second machine, create a copy of the warno-vagrant directory somewhere e
 
 Vagrantfile:
 - Change the ip to 192.168.50.99
+- Change the forwarded ports (host to VM) to unused ports
 - Change the vm hostname and virtualbox name away from "warno"
       
 data_store/data/config.yml:
-- Change 192.168.50.100 to 192.168.50.99
-
-data_store/data/db_save.sh:
 - Change 192.168.50.100 to 192.168.50.99
 
 <br>

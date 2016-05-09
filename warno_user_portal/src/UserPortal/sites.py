@@ -1,18 +1,26 @@
-import json
+import logging
+import os
 
-from flask import g, render_template, request, redirect, url_for, request
+from flask import render_template, redirect, url_for, request
 from flask import Blueprint
-from jinja2 import TemplateNotFound
+from sqlalchemy import desc, and_, or_
+from sqlalchemy.orm import aliased
 
 from WarnoConfig.utility import status_code_to_text, is_number
 from WarnoConfig.models import InstrumentLog, User, Instrument, Site
 from WarnoConfig import database
-from sqlalchemy import desc, and_, or_
-from sqlalchemy.orm import aliased
 
 sites = Blueprint('sites', __name__, template_folder='templates')
 
+log_path = os.environ.get("LOG_PATH")
+if log_path is None:
+    log_path = "/vagrant/logs/"
 
+# Logs to the user portal log
+up_logger = logging.getLogger(__name__)
+up_handler = logging.FileHandler("%suser_portal_server.log" % log_path, mode="a")
+up_handler.setFormatter(logging.Formatter('%(levelname)s:%(asctime)s:%(module)s:%(lineno)d:  %(message)s'))
+up_logger.addHandler(up_handler)
 
 @sites.route('/sites/new', methods=['GET', 'POST'])
 def new_site():
@@ -39,6 +47,7 @@ def new_site():
         If the request method is 'POST' and the new site is valid, returns a Flask redirect
             location to the list_sites function, redirecting the user to the list of ARM sites.
     """
+
 
     # If the method is post, the user has submitted the information in the form.
     # Try to insert the new site into the database, if the values are incorrect redirect

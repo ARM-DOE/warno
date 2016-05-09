@@ -1,12 +1,19 @@
-import flask
 import mock
-import requests
+
 from unittest import TestCase
+
 from UserPortal import views
 from WarnoConfig import database
 from WarnoConfig.models import InstrumentLog
 
 class test_views(TestCase):
+
+    def setUp(self):
+        self.log_patch = mock.patch('logging.Logger')
+        self.mock_log = self.log_patch.start()
+
+    def tearDown(self):
+        self.log_patch.stop()
 
     def test_status_log_for_each_instrument(self):
         first_log = mock.Mock()

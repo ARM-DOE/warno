@@ -1,5 +1,6 @@
 import psycopg2
 import requests
+import logging
 import psutil
 import json
 import os
@@ -12,6 +13,24 @@ from WarnoConfig import database
 from WarnoConfig.models import EventWithValue, EventWithText, ProsensingPAF, InstrumentDataReference, User
 from WarnoConfig.models import Instrument, Site, InstrumentLog, PulseCapture, EventCode
 
+
+#Set up logging
+log_path = os.environ.get("LOG_PATH")
+if log_path is None:
+    log_path = "/vagrant/logs/"
+
+# Logs to the main log
+logging.basicConfig( format='%(levelname)s:%(asctime)s:%(module)s:%(lineno)d:  %(message)s',
+                     filename='%scombined.log' % log_path,
+                     filemode='a', level=logging.DEBUG)
+
+# Logs to the event manager log
+em_logger = logging.getLogger(__name__)
+em_handler = logging.FileHandler("%sevent_manager_server.log" % log_path, mode="a")
+em_handler.setFormatter(logging.Formatter('%(levelname)s:%(asctime)s:%(module)s:%(lineno)d:  %(message)s'))
+em_logger.addHandler(em_handler)
+# Add event manager handler to the main werkzeug logger
+logging.getLogger("werkzeug").addHandler(em_handler)
 
 
 # Located http://flask.pocoo.org/snippets/35/
@@ -107,7 +126,6 @@ def before_request():
     Connects to the database.
     """
 
-
 @app.teardown_request
 def teardown_request(exception):
     """Teardown for Requests.
@@ -192,7 +210,7 @@ def event():
 
             database.db_session.add(event_wv)
             database.db_session.commit()
-            print("Saved Value Event")
+            em_logger.info("Saved Value Event")
         except ValueError:
             event_wt = EventWithText()
             event_wt.event_code_id = msg_event_code
@@ -202,7 +220,7 @@ def event():
 
             database.db_session.add(event_wt)
             database.db_session.commit()
-            print("Saved Text Event")
+            em_logger.info("Saved Text Event")
         # If application is at a site instead of the central facility, passes data on to be saved at central facility
         if not is_central:
             payload = json.loads(msg)
@@ -356,7 +374,7 @@ def get_instrument_id(msg, msg_struct):
 
     # If there is an instrument with a matching name, returns all info to a site or just the id to an agent.
     if db_instrument:
-        print("Found Existing Instrument")
+        em_logger.info("Found Existing Instrument")
         return '{"event_code": %i, "data": {"instrument_id": %s, "site_id": %s, "name_short": "%s", "name_long": "%s", ' \
                '"type": "%s", "vendor": "%s", "description": "%s", "frequency_band": "%s"}}' \
                % (utility.INSTRUMENT_ID_REQUEST, db_instrument.id, db_instrument.site_id, db_instrument.name_short,
@@ -365,6 +383,7 @@ def get_instrument_id(msg, msg_struct):
     else:
         # If it does not exist at the central facility, returns an error indicator
         if is_central:
+            em_logger.error("Instrument could not be found at central facility")
             return '{"data": {"instrument_id": -1}}'
         # If it does not exist at a site, requests the site information from the central facility
         else:
@@ -387,7 +406,7 @@ def get_instrument_id(msg, msg_struct):
             database.db_session.commit()
             utility.reset_db_keys()
 
-            print ("Saved New Instrument")
+            em_logger.info("Saved New Instrument")
             return '{"event_code": %i, "data": {"instrument_id": %s, "site_id": %s, "name_short": "%s", "name_long": "%s", ' \
                    '"type": "%s", "vendor": "%s", "description": "%s", "frequency_band": "%s"}}' \
                    % (utility.INSTRUMENT_ID_REQUEST, cf_data['instrument_id'], cf_data['site_id'], cf_data['name_short'],
@@ -428,7 +447,7 @@ def get_site_id(msg, msg_struct):
 
     # If there is a site with a matching name, returns all info to a site or just the id to an agent.
     if db_site:
-        print("Found Existing Site")
+        em_logger.info("Found Existing Site")
         return '{"event_code": %i, "data": {"site_id": %s, "name_short": "%s", "name_long": "%s", "latitude": "%s", ' \
                '"longitude": "%s", "facility": "%s", "mobile": "%s", "location_name": "%s"}}' \
                % (utility.SITE_ID_REQUEST, db_site.id, db_site.name_short, db_site.name_long, db_site.latitude,
@@ -437,6 +456,7 @@ def get_site_id(msg, msg_struct):
     else:
         # If it does not exist at the central facility, returns an error indicator
         if is_central:
+            em_logger.error("Site could not be found at central facility")
             return '{"data": {"site_id": -1}}'
         # If it does not exist at a site, requests the site information from the central facility
         else:
@@ -459,7 +479,7 @@ def get_site_id(msg, msg_struct):
             database.db_session.commit()
             utility.reset_db_keys()
 
-            print ("Saved New Site")
+            em_logger.info("Saved New Site")
             return '{"event_code": %i, "data": {"site_id": %s, "name_short": "%s", "name_long": "%s", "latitude": "%s", ' \
                '"longitude": "%s", "facility": "%s", "mobile": "%s", "location_name": "%s"}}' \
                % (utility.SITE_ID_REQUEST, cf_data['site_id'], cf_data['name_short'], cf_data['name_long'],
@@ -498,7 +518,7 @@ def save_instrument_data_reference(msg, msg_struct):
 
         database.db_session.add(new_instrument_data_ref)
         database.db_session.commit()
-        print("Saved new instrument data reference")
+        em_logger.info("Saved new instrument data reference")
 
 
 def get_event_code(msg, msg_struct):
@@ -524,7 +544,7 @@ def get_event_code(msg, msg_struct):
     db_code = database.db_session.query(EventCode).filter(EventCode.description == msg_struct['data']['description']).first()
     # If the event code defined here, return it downstream
     if db_code:
-        print("Found Existing Event Code")
+        em_logger.info("Found Existing Event Code")
         return '{"event_code": %i, "data": {"description": "%s"}}' % (
             db_code.event_code, msg_struct['data']['description'])
 
@@ -549,7 +569,7 @@ def get_event_code(msg, msg_struct):
         new_event_code = database.db_session.query(EventCode.event_code).filter(
                 EventCode.description == msg_struct['data']['description']).first()[0]
 
-        print("Created New Event Code")
+        em_logger.info("Created New Event Code")
         return '{"event_code": %i, "data": {"description": "%s"}}' % (
             new_event_code, msg_struct['data']['description'])
 
@@ -567,7 +587,7 @@ def get_event_code(msg, msg_struct):
         database.db_session.commit()
         utility.reset_db_keys()
 
-        print("Saved Event Code")
+        em_logger.info("Saved Event Code")
         return '{"event_code": %i, "data": {"description": "%s"}}' % (
             cf_msg['event_code'], cf_msg['data']['description'])
 
@@ -581,9 +601,10 @@ def initialize_database():
     that does not contain any entries will be filled with demo data.
 
     """
-    print("Initialization Function")
+    em_logger.info("Database initializing")
     # If it is a test database, first wipe and clean up the database.
     if cfg['database']['test_db']:
+        em_logger.debug("Test database enabled.  Clearing database")
         database.db_session.execute("DROP SCHEMA public CASCADE;")
         database.db_session.execute("CREATE SCHEMA public;")
         database.db_session.commit()
@@ -602,28 +623,28 @@ def initialize_database():
     # If there are still no users, assume the database is empty and populate the basic information
     db_user = database.db_session.query(User).first()
     if db_user == None:
-        print("Populating Users")
+        em_logger.info("Populating Users")
         utility.load_data_into_table("database/schema/users.data", "users")
     else:
-        print("Users in table.")
+        em_logger.info("Users in table.")
 
     db_site = database.db_session.query(Site).first()
     if db_site == None:
-        print("Populating Sites")
+        em_logger.info("Populating Sites")
         utility.load_data_into_table("database/schema/sites.data", "sites")
     else:
-        print("Sites in table.")
+        em_logger.info("Sites in table.")
 
     db_event_code = database.db_session.query(EventCode).first()
     if db_event_code == None:
-        print("Populating Event Codes")
+        em_logger.info("Populating Event Codes")
         utility.load_data_into_table("database/schema/event_codes.data", "event_codes")
     else:
-        print("Event_codes in table.")
+        em_logger.info("Event_codes in table.")
 
     # If it is set to be a test database, populate extra information.
     if cfg['database']['test_db']:
-        print ("Test Database Triggered")
+        em_logger.info("Test database demo data loading")
         test_tables = [
                        "instruments",
                        "instrument_logs",
@@ -637,12 +658,12 @@ def initialize_database():
         for table in test_tables:
             result = database.db_session.execute("SELECT * FROM %s LIMIT 1" % table).fetchone()
             if result == None:
-                print("Populating %s" % table)
+                em_logger.info("Populating %s", table)
                 utility.load_data_into_table("database/schema/%s.data" % table, table)
             else:
-                print("%ss in table." % table)
+                em_logger.info("%ss in table.", table)
     else:
-        print ("Test Database is a falsehood")
+        em_logger.info("Test database demo data disabled")
 
     # Without this, the database prevents the server from running properly.
     utility.reset_db_keys()
@@ -673,4 +694,5 @@ if __name__ == '__main__':
 
     initialize_database()
 
+    em_logger.info("Starting Event Manager")
     app.run(host='0.0.0.0', port=cfg['setup']['event_manager_port'], debug=True)

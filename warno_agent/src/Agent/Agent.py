@@ -1,13 +1,18 @@
-import json
-import importlib
-import glob
 import multiprocessing
-import signal
+import importlib
 import requests
+import logging
+import signal
+import json
+import glob
+import os
+
+from multiprocessing import Queue
+from time import sleep
+
 from WarnoConfig import config
 from WarnoConfig import utility
-from time import sleep
-from multiprocessing import Queue
+
 
 headers = {'Content-Type': 'application/json'}
 
@@ -35,6 +40,24 @@ class Agent(object):
         self.plugin_module_list = []
         self.main_loop_boolean = True
         self.cert_verify =  self.config_ctxt['setup']['cert_verify']
+
+        #Set up logging
+        log_path = os.environ.get("LOG_PATH")
+        if log_path is None:
+            log_path = "/vagrant/logs/"
+
+        # Logs to the main log
+        logging.basicConfig( format='%(levelname)s:%(asctime)s:%(module)s:%(lineno)d:  %(message)s',
+                             filename='%scombined.log' % log_path,
+                             filemode='a', level=logging.DEBUG)
+
+        # Logs to the agent log
+        self.agent_logger = logging.getLogger(__name__)
+        agent_handler = logging.FileHandler("%sevent_manager_server.log" % log_path, mode="a")
+        agent_handler.setFormatter(logging.Formatter('%(levelname)s:%(asctime)s:%(module)s:%(lineno)d:  %(message)s'))
+        self.agent_logger.addHandler(agent_handler)
+        # Add agent handler to the main werkzeug logger
+        logging.getLogger("werkzeug").addHandler(agent_handler)
 
     def set_plugin_path(self, path=None):
         """
@@ -96,7 +119,7 @@ class Agent(object):
                 if hasattr(module_top, 'run') and hasattr(module_top, 'register'):
                     plugin_module_list.append(module_top)
             except Exception, e:
-                print(e)
+                self.agent_logger.debug("Potential plugin search exception: %s", e)
                 pass  # Just ignore, there will be a lot of hits on this
 
         return plugin_module_list
@@ -203,10 +226,10 @@ class Agent(object):
         Returns
         -------
         """
-        print("Starting Agent Main Loop:")
+        self.agent_logger.info("Starting Agent Main Loop:")
 
         self.plugin_module_list = self.list_plugins()
-        print("Starting up the following plugins:", self.plugin_module_list)
+        self.agent_logger.info("Starting up the following plugins: %s", self.plugin_module_list)
 
         conn_attempt = 0
         while conn_attempt < MAX_CONN_ATTEMPTS:
@@ -215,17 +238,17 @@ class Agent(object):
                 self.site_id = self.request_site_id_from_event_manager()
                 break
             except Exception as e:
-                print("Error Connecting. Connection Attempt {0}. Sleeping for {1} seconds.".format(conn_attempt, CONN_RETRY_TIME))
-                print(e)
+                self.agent_logger.warn("Error Connecting. Connection Attempt %d. Sleeping for %d seconds.", conn_attempt, CONN_RETRY_TIME)
+                self.agent_logger.warn(e)
                 sleep(CONN_RETRY_TIME)
 
 
 
-        print("Registering Plugins.")
+        self.agent_logger.info("Registering Plugins.")
         for plugin in self.plugin_module_list:
             self.register_plugin(plugin)
 
-        print("Starting up Plugins.")
+        self.agent_logger.info("Starting up Plugins.")
         for plugin in self.plugin_module_list:
             self.startup_plugin(plugin)
 

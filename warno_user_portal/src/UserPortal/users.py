@@ -1,15 +1,25 @@
-import json
+import logging
+import os
 
-from flask import g, render_template, request, redirect, url_for, request
+from flask import render_template, redirect, url_for, request
 from flask import Blueprint
-from jinja2 import TemplateNotFound
 
 from WarnoConfig import config
 from WarnoConfig import database
 from WarnoConfig.models import User
 
+
 users = Blueprint('users', __name__, template_folder='templates')
 
+log_path = os.environ.get("LOG_PATH")
+if log_path is None:
+    log_path = "/vagrant/logs/"
+
+# Logs to the user portal log
+up_logger = logging.getLogger(__name__)
+up_handler = logging.FileHandler("%suser_portal_server.log" % log_path, mode="a")
+up_handler.setFormatter(logging.Formatter('%(levelname)s:%(asctime)s:%(module)s:%(lineno)d:  %(message)s'))
+up_logger.addHandler(up_handler)
 
 @users.route('/users')
 def list_users():

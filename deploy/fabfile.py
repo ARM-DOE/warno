@@ -9,7 +9,7 @@ PREFIX_PATH = os.environ.get('DEPLOY_CONFIG_PATH')
 WARNO_REPO = "git@overwatch.pnl.gov:hard505/warno-vagrant.git"
 
 DEFAULT_HOME = "~/warno/"
-IMAGE_SCRIPT = "set_up_images.sh"
+IMAGE_SCRIPT = "utility_setup_scripts/set_up_images.sh"
 
 PRIVATE_KEY = "id_rsa"
 PUBLIC_KEY = "id_rsa.pub"
@@ -290,4 +290,3 @@ def update_application(dir=DEFAULT_HOME, local_prefix=PREFIX_PATH,
 
 
             start_application(new_dir)
-            print("\n\n\nREMEMBER TO REMOVE TEST CHECKOUT OF BRANCH\n\n\n")
