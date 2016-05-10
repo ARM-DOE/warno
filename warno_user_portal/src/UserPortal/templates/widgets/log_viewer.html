@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <link rel=stylesheet type=text/css href="{{ url_for('static', filename='master.css') }}">
+    <script type="text/javascript" src="{{ url_for('static', filename='jquery-2.1.4.js')}}"></script>
+</head>
+
+<body>
+    <div class="log_widget">
+        {% if not logs %}
+            <b>No logs for instrument</b>
+        {% endif %}
+        {% for log in logs %}
+            <b>Logged By</b>: {{log.author}}
+            <br>
+            <b>Time</b>: {{log.time}}   <b>Status</b>: {{log.status}}
+            <br>
+            <b>Comments</b>: {{log.contents}}
+            <hr>
+        {% endfor %}
+
+    </div>
+</body>
