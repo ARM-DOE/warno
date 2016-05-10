@@ -279,15 +279,15 @@ def db_recent_logs_by_instrument(instrument_id, maximum_number = 5):
 def generate_instrument_graph():
     """Generate graph data for a Dygraph for an instrument.
 
-    Uses the supplied key and instrument_id to get all data from the 'time' and
+    Uses the supplied keys and instrument_id to get all data from the 'time' and
         specified 'key' column for the instrument with 'instrument_id', passing them
-        as 'x' and 'y' values to be graphed together.  Limits range to those with
+        into a sorting function to get the values at each point in time.  Limits range to those with
         timestamps between 'start' and 'end' time
 
     Parameters
     ----------
-    key: string
-        Passed as an HTML query parameter, the name of the database column
+    keys: comma separated string
+        Passed as an HTML query parameter, the names of the database columns
             to plot against time.
 
     instrument_id: integer
@@ -303,45 +303,140 @@ def generate_instrument_graph():
     Returns
     -------
     message: JSON object
-        Returns a JSON object with a list of 'x' values corresponding to a list of 'y' values.
+        Returns a JSON object as a list of attribute values at points in time, of the form:
+        [[Time0, Attribute0, Attribute1, ... AttributeN], [T1, A0, A1, ...AN], ... [TN, A0, A1, ... AN]]
     """
 
-    key = request.args.get("key")
+    arg_keys = request.args.get("keys")
+    arg_keys = arg_keys.split(',')
+
     instrument_id = request.args.get("instrument_id")
     start = request.args.get("start")
     end = request.args.get("end")
 
-    if key not in valid_columns_for_instrument(instrument_id):
-        return json.dumps({"x": [], "y": []})
-    references = db_get_instrument_references(instrument_id)
-    # Build the SQL query for the given key.  If the key is a part of a special table, build a query based on the key and containing table
-    for reference in references:
-        if reference.description == key:
-            event_code = database.db_session.execute('SELECT event_code FROM event_codes WHERE description = :key',
-                                                     {'key': key}).fetchone()
-            sql_query = ('SELECT time, value FROM events_with_value WHERE instrument_id = :id '
-                         'AND time >= :start AND time <= :end AND event_code = %s') % event_code[0]
-            break
-        elif reference.special == True:
-            rows = database.db_session.execute("SELECT column_name FROM information_schema.columns WHERE table_name = :table",
-                                               {'table': reference.description}).fetchall()
-            columns = [row[0] for row in rows]
-            if key in columns:
-                sql_query = 'SELECT time, %s FROM %s WHERE instrument_id = :id AND time >= :start AND time <= :end' % (
-                key, reference.description)
-    # Selects the time and the "key" column from the data table with time between 'start' and 'end'
-    try:
-        rows = database.db_session.execute(sql_query, dict(id = instrument_id, start= start, end= end)).fetchall()
-    except Exception, e:
-        print(e)
-        return json.dumps({"x": [], "y": []})
+    keys = {index: dict(key=a_key, data=[]) for index, a_key in enumerate(arg_keys)}
 
-    # Prepares a JSON message, an array of x values and an array of y values, for the graph to plot
-    # TODO Determine: Is iso format timezone ambiguous?
-    x = [row[0].isoformat() for row in rows]
-    y = [row[1] for row in rows]
-    message = {"x": x, "y": y}
-    message = json.dumps(message)
+    # If any key is invalid, sends a blank response
+    for key, value in keys.iteritems():
+        if value["key"] not in valid_columns_for_instrument(instrument_id):
+            up_logger.debug("key %s not in valid columns for instrument id %s", value["key"], instrument_id)
+            return json.dumps("[]")
+    references = db_get_instrument_references(instrument_id)
+    # Build the SQL query for the given key.  If the key is a part of a special table,
+    # build a query based on the key and containing table
+    for reference in references:
+        for key, value in keys.iteritems():
+            sql_query = None
+            if reference.description == value["key"]:
+                event_code = database.db_session.execute('SELECT event_code FROM event_codes WHERE description = :key',
+                                                         {'key': value["key"]}).fetchone()
+                sql_query = ('SELECT time, value FROM events_with_value WHERE instrument_id = :id '
+                             'AND time >= :start AND time <= :end AND event_code = %s ORDER BY time') % event_code[0]
+            elif reference.special is True:
+                rows = database.db_session.execute("SELECT column_name FROM information_schema.columns WHERE table_name = :table",
+                                                   {'table': reference.description}).fetchall()
+                columns = [row[0] for row in rows]
+                if value["key"] in columns:
+                    sql_query = 'SELECT time, %s FROM %s WHERE instrument_id = :id AND time >= :start AND time <= :end ORDER BY time' % (
+                        value["key"], reference.description)
+            # Selects the time and the "key" column from the data table with time between 'start' and 'end'
+            if sql_query:
+                try:
+                    value["data"] = database.db_session.execute(sql_query, dict(id=instrument_id, start=start, end=end)).fetchall()
+                except Exception, e:
+                    print(e)
+                    return json.dumps("[]")
+
+    result = synchronize_sort(keys)
+    map(iso_first_element, result)
+
+    message = json.dumps(result)
 
     # Send out the JSON message
     return message
+
+def iso_first_element(input):
+    """Update first element of input list from a python datetime object into an ISO formatted time.
+    (Used as map function).
+
+    Parameters
+    ----------
+    input: list
+        First element of 'input' is a python datetime object.
+
+    Returns
+    -------
+    No actual return, but updates list in place.
+
+    """
+
+    input[0] = input[0].isoformat()
+
+def synchronize_sort(dataset_dict):
+    """Sorts a dictionary of data sets to be consistent in time.  Each iteration, it checks the earliest time of each
+    data set, gets the earliest time from among them, then sets that as the time for the next return element.  It then
+    checks the earliest element of each data set to see which data set elements match, removing matching elements and
+    placing their values in the set's place in the resulting element.  The process iterates until all data sets are
+    empty, and then returns the list of the merged time/value sets.
+
+    Starts with data sets:
+
+    *Set 0*                 *Set 1*                   *Set 2*
+    [                       [                       [
+    (2015-05-11 01:00, 01), (2015-05-11 02:00, 11), (2015-05-11 01:00, 21),
+    (2015-05-11 01:30, 02), (2015-05-11 02:30, 12), (2015-05-11 02:00, 22),
+    (2015-05-11 02:00, 03)] (2015-05-11 03:00, 13)] (2015-05-11 02:30, 23)]
+
+    Ends with a sorted list:
+    [
+    [2015-05-11 01:00,   01, None,   21],
+    [2015-05-11 01:30,   02, None, None],
+    [2015-05-11 02:00,   03,   11,   22],
+    [2015-05-11 02:30, None,   12,   23],
+    [2015-05-11 03:00, None,   13, None]]
+
+    Parameters
+    ----------
+    dataset_dict: dictionary to be sorted
+    Dictionary for the algorithm to sort.  Of the form {**integer** set number: {'data':
+        [(**Datetime** time1, **float/int** value1), (time2, value2) ... (timeN, valueN)]}}
+    The set numbers must increment as integers from 1 to N, but can be in any order (dictionaries are unsorted).
+    Each data set should be sorted from earliest to latest time.
+
+    Returns
+    -------
+    Sorted list, of form [**Datetime** 2015-05-11 01:00, 15, None, 12, ...], [2015-05-11 02:00, None, 30, None, ...],
+        ...[Final Datetime, Dataset0 Value, Dataset1 Value, Dataset2 Value, ... AttributeN Value]]
+    """
+    results = []
+    length = len(dataset_dict)
+
+    # This sums the lengths of the data sets being sorted.
+    while sum([len(value["data"]) for _, value in dataset_dict.iteritems()]) > 0:
+
+        # Gets a list of the times containing the first element of each data set (therefore, the most earliest time for
+        # the set), but only if the set is not empty.
+        first_elem_times = [value["data"][0][0] for _, value in dataset_dict.iteritems() if len(value["data"]) > 0]
+        # Gets the earliest of the times of the data sets
+        min_time = min(first_elem_times)
+
+        # Creates an element to be pushed into the return list.  The first is the time for that particular element, the
+        # rest are initialized to none.  If the next value of a data set occurs at the time that this list is designated
+        # for, the value is put into the element according to the set's attribute number.  For example, if there are 3
+        # data sets and the first elements of each are (1:00, 15), (2:00, 30) and (1:00, 20), the result element would
+        # be [1:00, 15, None, 20].
+        values_at_time = [min_time] + [None] * length
+        for set_number, value in dataset_dict.iteritems():
+            # Any data sets that have elements and have a time equal to the time for this point puts that data
+            # in for that point and removes that element from its list.  Updates the index of the data point
+            # that corresponds to the list's dictionary value.  This assures that each element of the packet
+            # stays in the same order as the list.  If there is no valid value, stays None
+            if len(value["data"]) > 0 and value["data"][0][0] == min_time:
+                # 'set_number + 1' is necessary because the first element [0] is for the time.
+                values_at_time[set_number + 1] = value["data"][0][1]
+                del value["data"][0]
+
+        # Add point in time to result list
+        results.append(values_at_time)
+
+    return results

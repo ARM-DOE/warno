@@ -1,6 +1,5 @@
-#import requests
-#import flask
 import mock
+import datetime
 
 
 from flask.ext.testing import TestCase
@@ -310,3 +309,36 @@ class test_instruments(TestCase):
                         "cursor.execute never accesses 'information_schema.columns'")
         self.assertTrue("special_table" in str(executed_calls[1][0][1]),
                         "cursor.execute not called with 'special_table' table name")
+
+    def test_synchronize_sort_correctly_sorts_3_simple_data_sets_into_expected_output_format(self):
+        dataset_0 = dict(data=[(datetime.datetime.strptime("2015-05-11 01:00", "%Y-%m-%d %H:%M"), 01),
+                               (datetime.datetime.strptime("2015-05-11 01:30", "%Y-%m-%d %H:%M"), 02),
+                               (datetime.datetime.strptime("2015-05-11 02:00", "%Y-%m-%d %H:%M"), 03)])
+        dataset_1 = dict(data=[(datetime.datetime.strptime("2015-05-11 02:00", "%Y-%m-%d %H:%M"), 11),
+                               (datetime.datetime.strptime("2015-05-11 02:30", "%Y-%m-%d %H:%M"), 12),
+                               (datetime.datetime.strptime("2015-05-11 03:00", "%Y-%m-%d %H:%M"), 13)])
+        dataset_2 = dict(data=[(datetime.datetime.strptime("2015-05-11 01:00", "%Y-%m-%d %H:%M"), 21),
+                               (datetime.datetime.strptime("2015-05-11 02:00", "%Y-%m-%d %H:%M"), 22),
+                               (datetime.datetime.strptime("2015-05-11 02:30", "%Y-%m-%d %H:%M"), 23)])
+
+        expected_result = [[datetime.datetime.strptime("2015-05-11 01:00", "%Y-%m-%d %H:%M"),   01, None,   21],
+                           [datetime.datetime.strptime("2015-05-11 01:30", "%Y-%m-%d %H:%M"),   02, None, None],
+                           [datetime.datetime.strptime("2015-05-11 02:00", "%Y-%m-%d %H:%M"),   03,   11,   22],
+                           [datetime.datetime.strptime("2015-05-11 02:30", "%Y-%m-%d %H:%M"), None,   12,   23],
+                           [datetime.datetime.strptime("2015-05-11 03:00", "%Y-%m-%d %H:%M"), None,   13, None]]
+
+        input_dictionary = {0: dataset_0, 1: dataset_1, 2: dataset_2}
+
+        result_list = instruments.synchronize_sort(input_dictionary)
+
+        self.assertListEqual(result_list, expected_result, "The expected result list of synchronize_sort and the actual"
+                                                           " list returned do not match.")
+
+    def test_iso_first_elements_changes_the_datetime_object_first_element_of_a_list_to_iso_format(self):
+        input_list = [datetime.datetime.strptime("2015-01-01 01:30:30", "%Y-%m-%d %H:%M:%S"), 0, 1, 2]
+        expected_list = ['2015-01-01T01:30:30', 0, 1, 2]
+
+        # Should update input list in place
+        instruments.iso_first_element(input_list)
+
+        self.assertListEqual(input_list, expected_list, "The updated input list and the expected list do not match.")

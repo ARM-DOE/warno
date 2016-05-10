@@ -13,8 +13,8 @@ GraphManager.prototype.tick = function(){
     }
 };
 
-GraphManager.prototype.add_graph = function(key, instrument_id, base_url, beginning_time, end_time, master_div) {
-    this.graphs.push(new Graph(this, this.graph_index, key, instrument_id, base_url, beginning_time, end_time, master_div));
+GraphManager.prototype.add_graph = function(keys, instrument_id, base_url, beginning_time, end_time, master_div) {
+    this.graphs.push(new Graph(this, this.graph_index, keys, instrument_id, base_url, beginning_time, end_time, master_div));
     this.graph_index += 1;
 };
 
@@ -24,10 +24,10 @@ GraphManager.prototype.get_count = function() {
 
 
 
-function Graph(manager, id, key, instrument_id, base_url, beginning_time, end_time, master_div) {
+function Graph(manager, id, keys, instrument_id, base_url, beginning_time, end_time, master_div) {
     this.manager = manager
     this.id = id;
-    this.key = key;
+    this.keys = keys;
     this.instrument_id = instrument_id;
     this.base_url = base_url;
     this.beginning_time = beginning_time;
@@ -43,11 +43,15 @@ function Graph(manager, id, key, instrument_id, base_url, beginning_time, end_ti
 
     this.dygraph = "";
 
-    this.request_values(key, beginning_time, end_time);
+    this.request_values(keys, beginning_time, end_time);
 };
 
 Graph.prototype.update_with_values = function(values) {
     if (this.graph_data.length <= 0) {
+        console.log(this.keys)
+        console.log(["Time"].concat(this.keys))
+        console.log("Values")
+        console.log(values)
         if (values.length > 0){
             this.graph_data = this.graph_data.concat(values)
             this.dygraph = new Dygraph(
@@ -61,9 +65,8 @@ Graph.prototype.update_with_values = function(values) {
                 rangeSelectorPlotStrokeColor: 'darkred',
                 rangeSelectorPlotFillColor: 'lightgreen',
 
-                title: this.key,
                 labelsUTC: true,
-                labels: ["Time", ""],
+                labels: ["Time"].concat(this.keys),
                 axes: {
                     ticker: function (a, b, pixels, opts, dygraph, vals) {
                                 return Dygraph.getDateAxis(a, b, Dygraph.ANNUAL, opts, dygraph);
@@ -93,11 +96,11 @@ Graph.prototype.update_with_values = function(values) {
 Graph.prototype.tick = function(){
     //Only update if the last update finished before the specified end time
     if (this.beginning_time <= this.end_time) {
-        this.request_values(this.key, this.beginning_time, this.end_time);
+        this.request_values(this.keys, this.beginning_time, this.end_time);
     }
 };
 
-Graph.prototype.request_values = function(key, beginning_time, end_time) {
+Graph.prototype.request_values = function(keys, beginning_time, end_time) {
     graph_data = "";
     var this_graph = this;
     var xmlhttp = new XMLHttpRequest();
@@ -107,18 +110,14 @@ Graph.prototype.request_values = function(key, beginning_time, end_time) {
         {
             //Pull out the response text from the request
             var rec_message = JSON.parse(xmlhttp.responseText);
-            var values = []
-            if (rec_message["x"].length > 0)
+            console.log(rec_message);
+            for (i = 0; i < rec_message.length; i ++)
             {
-                for (i = 0; i < rec_message["x"].length; i ++)
-                {
-
-                    if (!(rec_message["y"][i] === null))
-                        values.push([new Date(rec_message["x"][i] + "Z"), rec_message["y"][i]]);
-                }
+                // Have add a Z to the given UTC time to convert in JavaScript
+                rec_message[i][0] = new Date(rec_message[i][0] + "Z");
             }
 
-            this_graph.update_with_values(values);
+            this_graph.update_with_values(rec_message);
         }
     };
     //Send JSON POST XMLHTTPRequest to generator controller.
@@ -128,7 +127,7 @@ Graph.prototype.request_values = function(key, beginning_time, end_time) {
     var start_utc = beginning_time.toUTCString();
     var end_utc = end_time.toUTCString();
 
-    var url = this.base_url + "?key=" + key + "&instrument_id=" + this.instrument_id + "&start=" + start_utc + "&end=" + end_utc;
+    var url = this.base_url + "?keys=" + keys + "&instrument_id=" + this.instrument_id + "&start=" + start_utc + "&end=" + end_utc;
     xmlhttp.open("POST", url, true);
 
     //Send out the request
