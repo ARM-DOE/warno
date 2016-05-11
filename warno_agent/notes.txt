@@ -83,3 +83,23 @@ Plugin Initialization.
 Finished Running Todolist:
 --------------------------
 Plugin converted to class object
+
+
+
+1) Create Plugin manager
+1) Get a list of plugins into plugin manager
+2) Register plugins
+3) Start Plugins
+4) Process Plugins
+
+
+* Plugin Manager:
+** Todo
+1. Register Plugins
+   1. Handle Register events
+   2. Handle Control Queue
+
+** Completed 
+1. Be generated with instrument and site name. 
+2. Take Directory of plugins and generate a list of all valid plugins.
+

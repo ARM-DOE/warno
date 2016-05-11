@@ -1,20 +1,20 @@
-import json
-import importlib
 import glob
+import importlib
+import json
+import logging
 import multiprocessing
 import signal
-import requests
-import wsgiref.simple_server
-import threading
 import sys
-import logging
-
+import threading
+import wsgiref.simple_server
 from multiprocessing import Queue
 from time import sleep
-from flask import Flask, g, render_template, request, redirect, url_for
-from jinja2 import TemplateNotFound
 
+import requests
 from WarnoConfig import config, utility
+from flask import Flask, render_template
+
+from warno_agent.src.Agent.PluginManager import PluginManager
 
 global agent
 global remote_server
@@ -49,6 +49,7 @@ class Agent(object):
     """
 
     def __init__(self):
+
         self.plugin_path = DEFAULT_PLUGIN_PATH
         self.config_ctxt = config.get_config_context()
         self.event_manager_url = self.config_ctxt['setup']['em_url']
@@ -62,8 +63,10 @@ class Agent(object):
         self.plugin_module_list = []
         self.continue_processing_events = True
         self.cert_verify = self.config_ctxt['setup']['cert_verify']
-        self.plugin_manager = PluginManager(self.msg_queue)
-        self.info = {}
+        self.info = {'site': self.config_ctxt['setup']['site'],
+                     'instrument': self.config_ctxt['agent']['instrument_list'][0]}
+        self.plugin_manager = PluginManager(self.info)
+        print(self.info)
 
         #Set up logging
         log_path = os.environ.get("LOG_PATH")
@@ -117,7 +120,7 @@ class Agent(object):
 
         return self.plugin_path
 
-    def list_plugins(self):
+    def enumerate_plugins(self):
         """List the plugins in the plugins directory as modules.
 
         Return a list of module top levels that correspond to plugins. All plugins in the list
@@ -131,29 +134,25 @@ class Agent(object):
 
         plugin_path = self.get_plugin_path()
 
-        plugin_module_list = []
         potential_plugin_list = glob.glob(plugin_path + '*.py')
         potential_plugin_list.sort()
-        print(potential_plugin_list)
+        logging.info(potential_plugin_list)
 
         for plugin in potential_plugin_list:
             try:
                 module_name = plugin[:-3].replace('/', '.')
-                print(module_name)
                 module_name = module_name.replace('Agent.', '')
                 module_top = importlib.import_module(module_name[0:])
-                print(module_top)
                 if hasattr(module_top, 'get_plugin'):
                     candidate_plugin = module_top.get_plugin()
                     print("candidate_plugin", candidate_plugin)
                     candidate_plugin.path = plugin
-                    if hasattr(candidate_plugin, 'register') and hasattr(candidate_plugin, 'run'):
+                    if hasattr(candidate_plugin, 'get_registration_info') and hasattr(candidate_plugin, 'run'):
                         self.plugin_manager.add_plugin(candidate_plugin)
             except Exception, e:
-                print(e)
-                # logging.warning(e)
+                logging.warning(e)
 
-        return self.plugin_manager.get_plugin_list()
+        return self.plugin_manager.get_plugin_handle_list()
 
     def request_site_id_from_event_manager(self):
         """Request site id from manager.
@@ -167,7 +166,8 @@ class Agent(object):
             Site identification number.
 
         """
-        response = self.send_em_message(utility.SITE_ID_REQUEST, self.config_ctxt['setup']['site'])
+        response = self.send_em_message(
+            utility.SITE_ID_REQUEST, self.config_ctxt['setup']['site'])
 
         if response.status_code == requests.codes.ok:
             response_dict = dict(json.loads(response.content))
@@ -191,47 +191,20 @@ class Agent(object):
         -------
 
         """
-        print("Registering Plugin", plugin)
-        response_dict = plugin.get_registration_info()
+        print("Registering Plugin", plugin['plugin_handle'])
+        self.plugin_manager.register_plugin_events(plugin)
 
-        # Get the instrument Id for each ****TODO Rework this later.
+        for event in plugin['event_codes']:
+            data_send = {'description': event,
+                         'instrument_id': self.info['instrument_id']}
 
-        instrument_name = response_dict['instrument_name']
-        response = self.send_em_message(utility.INSTRUMENT_ID_REQUEST, instrument_name)
-
-        data = dict(json.loads(response.content))['data']
-        self.instrument_ids.append((plugin, data['instrument_id']))
-
-        for event in response_dict['event_code_names']:
-            data_send = {'description': event, 'instrument_id': data['instrument_id']}
-            response = self.send_em_message(utility.EVENT_CODE_REQUEST, data_send)
+            response = self.send_em_message(
+                utility.EVENT_CODE_REQUEST, data_send)
 
             response_dict = dict(json.loads(response.content))
-            self.event_code_dict[response_dict['data']['description']] = response_dict['event_code']
+            self.plugin_manager.event_code_dict[response_dict['data'][
+                'description']] = response_dict['event_code']
 
-    # def startup_plugin(self, plugin):
-    #     """
-    #     Start up the listed plugin in a new thread and add it to the list of running plugins.
-    #
-    #     Parameters
-    #     ----------
-    #     plugin: module
-    #         Plugin to start
-    #
-    #     Returns
-    #     -------
-    #     p: Process
-    #         Running process.
-    #
-    #     """
-    #
-    #     plugin_instrument_id = [instrument_id for plugin_name, instrument_id in self.instrument_ids if plugin_name == plugin][0]
-    #     p = multiprocessing.Process(target=plugin.run, args=(self.msg_queue, plugin_instrument_id))
-    #
-    #     p.start()
-    #
-    #     self.running_plugin_list.append(p)
-    #     return p
 
     def send_em_message(self, code, data):
         """ Send event code message to event manager.
@@ -267,13 +240,15 @@ class Agent(object):
 
         """
 
-        rec_msg = self.msg_queue.get_nowait()
+        rec_msg = self.plugin_manager.msg_queue.get_nowait()
         event = json.loads(rec_msg)
         event['data']['site_id'] = self.site_id
-        event_code = self.event_code_dict[event['event']]
-        event_msg = '{"event_code": %s, "data": %s}' % (event_code, json.dumps(event['data']))
+        event_code = self.plugin_manager.event_code_dict[event['event']]
+        event_msg = '{"event_code": %s, "data": %s}' % (
+            event_code, json.dumps(event['data']))
         payload = json.loads(event_msg)
-        response = requests.post(self.em_url, json=payload, headers=headers, verify=self.cert_verify)
+        response = requests.post(
+            self.em_url, json=payload, headers=headers, verify=self.cert_verify)
         return response
 
     def main(self):
@@ -286,9 +261,12 @@ class Agent(object):
         if not self.config_ctxt['setup']['run_vm_agent']:
             sys.exit(0)
 
-        remote_server = wsgiref.simple_server.make_server('0.0.0.0', AGENT_DASHBOARD_PORT, app)
+        remote_server = wsgiref.simple_server.make_server(
+            '0.0.0.0', AGENT_DASHBOARD_PORT, app)
         remote_server.timeout = 0
-        print("Starting up dashboard.")
+
+        logging.info("Starting up dashboard.")
+
         thread = threading.Thread(target=remote_server.serve_forever)
         thread.setdaemon = True
         try:
@@ -297,19 +275,9 @@ class Agent(object):
             remote_server.shutdown()
             sys.exit()
 
-        print("Starting Agent Main Loop:")
-        # if self.is_central:
-        #     print("Site is Central so Agent is disabled.")
-        #     while true:
-        #         sleep(5)
+        logging.info("Starting Agent Main Loop:")
 
         # Let's start by figuring out who we are.
-        self.info['site_name'] = self.cfg_ctxt['setup']['site']
-
-
-        self.plugin_module_list = self.list_plugins()
-        self.agent_logger.info("Starting up the following plugins: %s", self.plugin_module_list)
-
         conn_attempt = 0
         while conn_attempt < MAX_CONN_ATTEMPTS:
             try:
@@ -321,45 +289,31 @@ class Agent(object):
                 self.agent_logger.warn(e)
                 sleep(CONN_RETRY_TIME)
 
+        id_response = self.send_em_message(
+            utility.INSTRUMENT_ID_REQUEST, self.info['instrument'])
+
+        data = dict(json.loads(id_response.content))['data']
+        self.info['instrument_id'] = data['instrument_id']
+        self.plugin_manager.info['instrument_id'] = self.info['instrument_id']
+
+        self.plugin_module_list = self.enumerate_plugins()
+
+        logging.info("Found the following plugins:",
+                     self.plugin_module_list)
+
         print("Registering Plugins.")
         for plugin in self.plugin_manager.get_plugin_list():
-            print(plugin)
+            logging.debug(plugin)
             self.register_plugin(plugin)
 
         print("Starting up Plugins.")
-        for plugin in self.plugin_manager.get_plugin_list():
-            self.startup_plugin(plugin)
+        self.plugin_manager.start_all_plugins()
 
         while self.continue_processing_events:
-            if not self.msg_queue.empty():
+            if not self.plugin_manager.msg_queue.empty():
                 response = self.process_plugin_event()
             else:
                 sleep(0.1)
-
-
-class PluginManager(object):
-    def __init__(self, msg_queue):
-        self.plugin_list = []
-        self.msg_queue = msg_queue
-
-    def add_plugin(self, plugin):  # TODO: Switch this to be a dictionary of dictionaries. keys to iter
-        self.plugin_list.append({'plugin_handle': plugin,
-                                 'status': 'NotStarted',
-                                 'thread': None,
-                                 'ctrl_queue': Queue(),
-                                 'plugin_metadata': None})
-
-    def get_plugin_list(self):
-        return [plugin['plugin_handle'] for plugin in self.plugin_list]
-
-    def start_plugin(self, i):
-        plugin_instrument_id = self.plugin_list[i].get_registration_info()['instrument_id']
-        p = multiprocessing.Process(target=plugin.run, args=(self.msg_queue, plugin_instrument_id))
-
-        p.start()
-        self.plugin_list[i]['thread'] = p
-
-        return p
 
 
 if __name__ == "__main__":

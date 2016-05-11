@@ -38,7 +38,7 @@ class TestAgent(TestCase):
     def test_list_plugins_base_test(self):
 
         self.agent.set_plugin_path(TEST_PLUGIN_PATH)
-        plugin_list = self.agent.list_plugins()
+        plugin_list = self.agent.enumerate_plugins()
         print("Plugin List",plugin_list)
         print("Plugin Path:", TEST_PLUGIN_PATH)
 
