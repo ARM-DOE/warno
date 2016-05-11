@@ -1,3 +1,5 @@
+import threading
+
 class Plugin(object):
     """Plugin base object to be used to derive plugins from.
     """
@@ -9,6 +11,7 @@ class Plugin(object):
         self.plugin_description = "Base plugin class"
         self.event_code_names = []
         self.instrument_name = None
+        self.stop_flag = False
 
     def run(self, msg_queue, control_queue):
         pass
@@ -42,3 +45,10 @@ class Plugin(object):
 
     def initialize(self, config_data):
         self.config_data = config_data
+
+    def stop(self):
+        self.stop_flag = True
+
+    def end_of_loop(self):
+        if self.stop_flag:
+            threading.exit()

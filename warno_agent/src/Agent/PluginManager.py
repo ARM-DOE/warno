@@ -5,6 +5,8 @@ from multiprocessing import Queue
 
 class PluginManager(object):
 
+    white_list = '*'
+
     def __init__(self, config ):
         self.plugin_list = []
         self.msg_queue = Queue()

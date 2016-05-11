@@ -95,11 +95,17 @@ Plugin converted to class object
 
 * Plugin Manager:
 ** Todo
-1. Register Plugins
-   1. Handle Register events
    2. Handle Control Queue
-
+   1. Multiple Plugin Managers
+   2. Allow for Config Data in Plugins
+   4. Stop/Restart a Plugin
+   5. Convert Existing Plugins 
+   
 ** Completed 
+   
 1. Be generated with instrument and site name. 
 2. Take Directory of plugins and generate a list of all valid plugins.
+1. Register Plugins
+   1. Handle Register events
+
 
