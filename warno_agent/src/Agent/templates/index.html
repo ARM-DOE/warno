@@ -97,18 +97,18 @@
                   <th>Name</th>
                   <th>Path</th>
                   <th>Status</th>
+                   <th>Event Codes</th>
                   <th>Enable/Disable</th>
-                  <th>Info</th>
                 </tr>
               </thead>
               <tbody>
               {% for plugin in plugin_list  %}
                   <tr>
+                      <td>{{  plugin.plugin_name }}</td>
                   <td>{{  plugin.plugin_handle }}</td>
                       <td>{{  plugin.status }}</td>
                       <td>{{  plugin.event_codes }}</td>
-                      <td>{{  plugin.status }}</td>
-                      <td>{{  plugin.status }}</td>
+                      <td>[Enable][Disable]</td>
                   </tr>
               {% endfor %}
 

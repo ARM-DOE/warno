@@ -67,4 +67,6 @@ class PluginManager(object):
         for event in registration_info['event_code_names']:
             plugin['event_codes'].append(event)
 
+        plugin['plugin_name'] = registration_info['plugin_name']
+
         logging.debug("Event Codes List", plugin['event_codes'])
