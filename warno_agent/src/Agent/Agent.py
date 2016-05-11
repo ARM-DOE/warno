@@ -37,7 +37,7 @@ logfile = "/vagrant/data_store/data/agent_exceptions.log"
 
 @app.route('/agent')
 def serve_dashboard():
-    return render_template('index.html', plugin_list=({'path': 'testpath'}, {'path': 'testpath2'}))
+    return render_template('index.html', plugin_list=(agent.plugin_manager.get_plugin_list()))
 
 
 class Agent(object):

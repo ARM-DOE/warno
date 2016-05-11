@@ -96,30 +96,6 @@ class TestAgent(TestCase):
         self.assertIsNone(self.agent.site_id)
         self.agent.site_id = previous_agent_value
 
-    @mock.patch.object(Agent, 'requests')
-    def test_register_plugin_executes_calls_and_puts_in_event_code(self, mock_post):
-        return1 = mock.Mock()
-        return2 = mock.Mock()
-        return3 = mock.Mock()
-
-        return1.status_code = requests.codes.ok
-        return1.content = '{"data": {"instrument_id": 2}}'
-
-        return2.status_code = requests.codes.ok
-        return2.content = '{"event_code": 3, "data": {"description" : "description1"}}'
-
-        return3.status_code = requests.codes.ok
-        return3.content = '{"event_code": 4, "data": {"description" : "description2"}}'
-
-        mock_post.codes = requests.codes
-        mock_post.post.side_effect = iter([return1, return2, return3])
-
-        test_plugin = importlib.import_module(PLUGIN_ROOT+'test_plugin1')
-        self.agent.register_plugin(test_plugin.get_plugin())
-        dict_to_be_contained = {'description1': 3, 'description2': 4}
-
-        self.assertDictContainsSubset(dict_to_be_contained, self.agent.event_code_dict,
-                                      'Event Codes did not contain expected items')
 
 
     @mock.patch.object(Agent, 'requests')
