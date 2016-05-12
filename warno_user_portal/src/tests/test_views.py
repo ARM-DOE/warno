@@ -1,10 +1,12 @@
 import mock
 
 from unittest import TestCase
+import flask_sqlalchemy
 
 from UserPortal import views
 from WarnoConfig import database
 from WarnoConfig.models import InstrumentLog
+
 
 class test_views(TestCase):
 

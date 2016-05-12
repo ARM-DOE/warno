@@ -53,7 +53,7 @@ class Agent(object):
 
         # Logs to the agent log
         self.agent_logger = logging.getLogger(__name__)
-        agent_handler = logging.FileHandler("%sevent_manager_server.log" % log_path, mode="a")
+        agent_handler = logging.FileHandler("%sagent_server.log" % log_path, mode="a")
         agent_handler.setFormatter(logging.Formatter('%(levelname)s:%(asctime)s:%(module)s:%(lineno)d:  %(message)s'))
         self.agent_logger.addHandler(agent_handler)
         # Add agent handler to the main werkzeug logger
