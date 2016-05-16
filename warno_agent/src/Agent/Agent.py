@@ -38,6 +38,13 @@ logfile = "/vagrant/data_store/data/agent_exceptions.log"
 
 @app.route('/agent')
 def serve_dashboard():
+    """ Anchor point to serve the agent dashboard.
+    Returns
+    -------
+    template: index.html
+        Main dashboard page for agent.
+
+    """
     cpu = psutil.cpu_percent()
     mem = psutil.virtual_memory().percent
     threads = len(psutil.pids())
@@ -54,11 +61,35 @@ def serve_dashboard():
 
 @app.route('/agent/<plugin_name>/stop')
 def serve_stop_plugin(plugin_name):
+    """ Anchor point to stop a plugin by name.
+    Parameters
+    ----------
+    plugin_name: str
+        Name of plugin to stop
+
+    Returns
+    -------
+    url_for(serve_dashboard): url
+        Redirect to the dashboard front page.
+
+    """
     agent.plugin_manager.stop_plugin_by_name(plugin_name)
     return redirect(url_for("serve_dashboard"))
 
 @app.route('/agent/<plugin_name>/start')
 def serve_start_plugin(plugin_name):
+    """ Anchor point to start a plugin by name.
+    Parameters
+    ----------
+    plugin_name: str
+        Name of plugin to start
+
+    Returns
+    -------
+    url_for(serve_dashboard): url
+        Redirect to the dashboard front page.
+
+    """
     agent.plugin_manager.start_plugin_by_name(plugin_name)
     return redirect(url_for("serve_dashboard"))
 

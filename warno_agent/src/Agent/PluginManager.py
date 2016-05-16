@@ -11,6 +11,18 @@ class PluginManager(object):
     white_list = '*'
 
     def __init__(self, config ):
+        """ Initializer for Plugin Manager
+
+        Parameters
+        ----------
+        config: Plugin Manager configuration.
+
+        Returns
+        -------
+        PluginManager: class
+            Plugin Manager object.
+
+        """
         self.plugin_list = []
         self.msg_queue = Queue()
         self.info = config
