@@ -39,6 +39,12 @@ logfile = "/vagrant/data_store/data/agent_exceptions.log"
 def serve_dashboard():
     return render_template('index.html', plugin_list=(agent.plugin_manager.get_plugin_list()))
 
+@app.route('/agent/<plugin_name>/stop')
+def serve_start_plugin(plugin_name):
+    agent.plugin_manager.stop_plugin_by_name(plugin_name)
+    return "Success"
+
+
 
 class Agent(object):
     """ Class representing a radar agent to be run at each radar.

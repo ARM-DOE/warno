@@ -24,7 +24,8 @@ class PluginManager(object):
                                  'thread': None,
                                  'ctrl_queue': Queue(),
                                  'plugin_metadata': None,
-                                 'event_codes': []})
+                                 'event_codes': []},
+                                )
 
     def get_plugin_handle_list(self):
         return [plugin['plugin_handle'] for plugin in self.plugin_list]
