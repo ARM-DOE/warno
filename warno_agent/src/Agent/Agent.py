@@ -41,7 +41,9 @@ def serve_dashboard():
     cpu = psutil.cpu_percent()
     mem = psutil.virtual_memory().percent
     threads = len(psutil.pids())
-    sys_stats = {"cpu": cpu, "mem": mem, "threads": threads/10.0}
+    disk_usage = psutil.disk_usage('/').percent
+
+    sys_stats = {"cpu": cpu, "mem": mem, "threads": threads/10.0, "disk_usage": disk_usage}
     print(sys_stats)
 
 

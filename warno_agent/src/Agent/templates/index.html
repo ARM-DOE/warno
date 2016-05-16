@@ -69,20 +69,20 @@
           <h1 class="page-header">Agent Dashboard</h1>
 
           <div class="row placeholders">
-            <div class="col-xs-6 col-sm-5 placeholder" id="systemstats">
+            <div class="col-xs-6 col-sm-6 " id="systemstats">
 {#              <h4>Label</h4>#}
 {#              <span class="text-muted">Something else</span>#}
             </div>
-            <div class="col-xs-6 col-sm-3 placeholder">
-              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" width="200" height="200" class="img-fluid" alt="Generic placeholder thumbnail">
-              <h4>Label</h4>
-              <span class="text-muted">Something else</span>
-            </div>
-            <div class="col-xs-6 col-sm-3 placeholder">
-              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" width="200" height="200" class="img-fluid" alt="Generic placeholder thumbnail">
-              <h4>Label</h4>
-              <span class="text-muted">Something else</span>
-            </div>
+{#            <div class="col-xs-6 col-sm-3 placeholder">#}
+{#              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" width="200" height="200" class="img-fluid" alt="Generic placeholder thumbnail">#}
+{#              <h4>Label</h4>#}
+{#              <span class="text-muted">Something else</span>#}
+{#            </div>#}
+{#            <div class="col-xs-6 col-sm-3 placeholder">#}
+{#              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" width="200" height="200" class="img-fluid" alt="Generic placeholder thumbnail">#}
+{#              <h4>Label</h4>#}
+{#              <span class="text-muted">Something else</span>#}
+{#            </div>#}
           </div>
 
           <h2>Plugins</h2>
@@ -118,8 +118,8 @@
 
     <script>
     var trace1 = {
-    r: [{{ sys_stats.cpu }}, {{ sys_stats.mem }}, {{ sys_stats.threads }} , 0],
-    t: ['CPU', 'Virtual Memory', 'DeciThreads', 'Spare'],
+    r: [{{ sys_stats.cpu }}, {{ sys_stats.mem }}, {{ sys_stats.threads }} ,{{ sys_stats.disk_usage }} ],
+    t: ['CPU', 'Virtual Mem', 'DeciThreads', 'Disk Usage'],
     name: 'percent',
     marker: {color: 'rgb(106,81,163)'},
     type: 'area'
@@ -133,7 +133,10 @@ var layout = {
   legend: {font: {size: 16}},
   radialaxis: {ticksuffix: '%'},
   orientation: 270,
-    showlegend: false
+  showlegend: false,
+    autosize: true,
+    width: 480,
+    height: 300
 };
 
 Plotly.newPlot('systemstats', data, layout);
