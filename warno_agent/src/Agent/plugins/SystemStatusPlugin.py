@@ -13,8 +13,8 @@ logfile = "/vagrant/data_store/data/agent_exceptions.log"
 
 
 class SystemStatusPlugin(Plugin):
-    ''' Plugin to monitor basic system health on the agent system.
-    '''
+    """ Plugin to monitor basic system health on the agent system.
+    """
 
     def __init__(self):
         super(SystemStatusPlugin, self).__init__()
@@ -28,13 +28,14 @@ class SystemStatusPlugin(Plugin):
         return {"event_code_names": self.event_code_names,
                 "plugin_name": self.plugin_name}
 
-    def run(self, msg_queue, config):
-        for x in range(10):
+    def run(self, msg_queue, config, ctrl_queue):
+        self.ctrl_queue = ctrl_queue
+        while self.run_flag:
             timestamp = datetime.datetime.utcnow()
             msg_queue.put('{"event": "%s", "data": {"instrument_id": %s, "time": "%s", "value": %s}}' %
             ("cpu_usage", config['instrument_id'], timestamp, psutil.cpu_percent()))
             logging.info("Log Made", psutil.cpu_percent())
-            self.end_of_loop()
+            self.process_ctrl_queue()
             sleep(2)
 
 

@@ -67,6 +67,7 @@ class Agent(object):
                      'instrument': self.config_ctxt['agent']['instrument_list'][0]}
         self.plugin_manager = PluginManager(self.info)
         print(self.info)
+        self.stop_pl = 0
 
         #Set up logging
         log_path = os.environ.get("LOG_PATH")
@@ -204,7 +205,6 @@ class Agent(object):
             response_dict = dict(json.loads(response.content))
             self.plugin_manager.event_code_dict[response_dict['data'][
                 'description']] = response_dict['event_code']
-
 
     def send_em_message(self, code, data):
         """ Send event code message to event manager.

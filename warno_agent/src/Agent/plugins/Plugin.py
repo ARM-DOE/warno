@@ -1,4 +1,5 @@
-import threading
+import thread
+
 
 class Plugin(object):
     """Plugin base object to be used to derive plugins from.
@@ -11,10 +12,12 @@ class Plugin(object):
         self.plugin_description = "Base plugin class"
         self.event_code_names = []
         self.instrument_name = None
-        self.stop_flag = False
+        self.run_flag = True
+        self.ctrl_queue = None
 
-    def run(self, msg_queue, control_queue):
-        pass
+    def run(self, msg_queue, config, ctrl_queue):
+        self.msg_queue = msg_queue
+        self.ctrl_queue = crtl_queue
 
     def get_registration_info(self):
         """  Returns registration information for plugin. This is a dictionary with the following entries:
@@ -46,9 +49,12 @@ class Plugin(object):
     def initialize(self, config_data):
         self.config_data = config_data
 
-    def stop(self):
-        self.stop_flag = True
+    def process_ctrl_queue(self):
+        if not self.ctrl_queue.empty():
+            ctrl_msg = self.ctrl_queue.get_nowait()
+            if ctrl_msg['command'] == 'shutdown':
+                self.run_flag = False
 
-    def end_of_loop(self):
-        if self.stop_flag:
-            threading.exit()
+
+
+

@@ -4,6 +4,9 @@ from multiprocessing import Queue
 
 
 class PluginManager(object):
+    ''' Plugin manager for the various WARNO plugins
+
+    '''
 
     white_list = '*'
 
@@ -30,15 +33,21 @@ class PluginManager(object):
         return self.plugin_list
 
     def start_plugin(self, plugin):
-        ''' Starts a plugin.
+        """ Starts a plugin.
+
+        Parameters
+        ----------
+        plugin: plugin dict object
+            Plugin to be started.
+
         Returns
         -------
-        p: thread_handle
+        plugin: thread_handle
             Running thread for the plugin.
 
-        '''
+        """
         p = multiprocessing.Process(target=plugin['plugin_handle'].run, args=(
-            self.msg_queue, self.info))
+            self.msg_queue, self.info, plugin['ctrl_queue']))
 
         p.start()
         plugin['thread'] = p
@@ -46,9 +55,63 @@ class PluginManager(object):
 
         return p
 
+    def start_plugin_by_name(self, name):
+        """ Start a plugin with name given by `name`.
+
+        Parameters
+        ----------
+        name: str
+            Name of plugin to be started
+
+        Returns
+        -------
+        None
+        """
+
+        for plugin in self.get_plugin_list():
+            if plugin['plugin_name'] == name:
+                self.start_plugin(plugin)
+
+    def stop_plugin_by_name(self, name):
+        """ Stop plugin with name given by `name`
+
+        Parameters
+        ----------
+        name: str
+            Plugin Name to stop.
+
+        Returns
+        -------
+        None
+        """
+        for plugin in self.get_plugin_list():
+            if plugin['plugin_name'] == name:
+                self.stop_plugin(plugin)
+
     def start_all_plugins(self):
+        """ Start all plugins
+
+        Returns
+        -------
+
+        """
         for plugin in self.plugin_list:
             self.start_plugin(plugin)
+
+    def stop_plugin(self, plugin):
+        """ Stop plugin.
+
+        Parameters
+        ----------
+        plugin: dict
+            Plugin dict object.
+
+        Returns
+        -------
+
+        """
+        plugin['ctrl_queue'].put({"command":"shutdown"})
+        plugin['status'] = 'stopped'
 
     def register_plugin_events(self, plugin):
         """
