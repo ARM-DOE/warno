@@ -17,7 +17,7 @@ class Plugin(object):
 
     def run(self, msg_queue, config, ctrl_queue):
         self.msg_queue = msg_queue
-        self.ctrl_queue = crtl_queue
+        self.ctrl_queue = ctrl_queue
 
     def get_registration_info(self):
         """  Returns registration information for plugin. This is a dictionary with the following entries:

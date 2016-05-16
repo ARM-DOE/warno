@@ -47,8 +47,8 @@ class PluginManager(object):
 
         """
         p = multiprocessing.Process(target=plugin['plugin_handle'].run, args=(
-            self.msg_queue, self.info, plugin['ctrl_queue']))
-
+            self.msg_queue, self.info, plugin['ctrl_queue']) )
+        p.daemon = True
         p.start()
         plugin['thread'] = p
         plugin['status'] = 'started'
@@ -56,7 +56,7 @@ class PluginManager(object):
         return p
 
     def start_plugin_by_name(self, name):
-        """ Start a plugin with name given by `name`.
+        """ Start a plugin with name given by `name`. It must already exist in plugin list.
 
         Parameters
         ----------
