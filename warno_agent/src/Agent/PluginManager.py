@@ -48,7 +48,7 @@ class PluginManager(object):
 
         """
         p = multiprocessing.Process(target=plugin['plugin_handle'].run, args=(
-            self.msg_queue, self.info, plugin['ctrl_queue']) )
+            self.msg_queue, self.info, plugin['ctrl_queue']))
         p.daemon = True
         p.start()
         plugin['thread'] = p

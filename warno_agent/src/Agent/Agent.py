@@ -12,7 +12,7 @@ from time import sleep
 
 import requests
 from WarnoConfig import config, utility
-from flask import Flask, render_template
+from flask import Flask, render_template, redirect, url_for, request
 
 from warno_agent.src.Agent.PluginManager import PluginManager
 
@@ -39,11 +39,16 @@ logfile = "/vagrant/data_store/data/agent_exceptions.log"
 def serve_dashboard():
     return render_template('index.html', plugin_list=(agent.plugin_manager.get_plugin_list()))
 
-@app.route('/agent/<plugin_name>/stop')
-def serve_start_plugin(plugin_name):
-    agent.plugin_manager.stop_plugin_by_name(plugin_name)
-    return "Success"
 
+@app.route('/agent/<plugin_name>/stop')
+def serve_stop_plugin(plugin_name):
+    agent.plugin_manager.stop_plugin_by_name(plugin_name)
+    return redirect(url_for("serve_dashboard"))
+
+@app.route('/agent/<plugin_name>/start')
+def serve_start_plugin(plugin_name):
+    agent.plugin_manager.start_plugin_by_name(plugin_name)
+    return redirect(url_for("serve_dashboard"))
 
 
 class Agent(object):
