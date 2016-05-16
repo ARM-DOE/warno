@@ -9,6 +9,7 @@ import threading
 import wsgiref.simple_server
 from multiprocessing import Queue
 from time import sleep
+import psutil
 
 import requests
 from WarnoConfig import config, utility
@@ -37,7 +38,16 @@ logfile = "/vagrant/data_store/data/agent_exceptions.log"
 
 @app.route('/agent')
 def serve_dashboard():
-    return render_template('index.html', plugin_list=(agent.plugin_manager.get_plugin_list()))
+    cpu = psutil.cpu_percent()
+    mem = psutil.virtual_memory().percent
+    threads = len(psutil.pids())
+    sys_stats = {"cpu": cpu, "mem": mem, "threads": threads/10.0}
+    print(sys_stats)
+
+
+    return render_template('index.html',
+                           plugin_list=(agent.plugin_manager.get_plugin_list()),
+                           sys_stats=sys_stats)
 
 
 @app.route('/agent/<plugin_name>/stop')

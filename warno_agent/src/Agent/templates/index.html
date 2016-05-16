@@ -16,6 +16,8 @@
 
     <!-- Custom styles for this template -->
     <link href="static/dashboard.css" rel="stylesheet">
+        <script src="http://cdnjs.cloudflare.com/ajax/libs/numeric/1.2.6/numeric.min.js"></script>
+        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   </head>
 
   <body>
@@ -67,15 +69,9 @@
           <h1 class="page-header">Agent Dashboard</h1>
 
           <div class="row placeholders">
-            <div class="col-xs-6 col-sm-3 placeholder">
-              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" width="200" height="200" class="img-fluid" alt="Generic placeholder thumbnail">
-              <h4>Label</h4>
-              <span class="text-muted">Something else</span>
-            </div>
-            <div class="col-xs-6 col-sm-3 placeholder">
-              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" width="200" height="200" class="img-fluid" alt="Generic placeholder thumbnail">
-              <h4>Label</h4>
-              <span class="text-muted">Something else</span>
+            <div class="col-xs-6 col-sm-5 placeholder" id="systemstats">
+{#              <h4>Label</h4>#}
+{#              <span class="text-muted">Something else</span>#}
             </div>
             <div class="col-xs-6 col-sm-3 placeholder">
               <img src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" width="200" height="200" class="img-fluid" alt="Generic placeholder thumbnail">
@@ -119,6 +115,32 @@
         </div>
       </div>
     </div>
+
+    <script>
+    var trace1 = {
+    r: [{{ sys_stats.cpu }}, {{ sys_stats.mem }}, {{ sys_stats.threads }} , 0],
+    t: ['CPU', 'Virtual Memory', 'DeciThreads', 'Spare'],
+    name: 'percent',
+    marker: {color: 'rgb(106,81,163)'},
+    type: 'area'
+    };
+        var data = [trace1];
+
+
+var layout = {
+  title: 'Agent System Stats',
+  font: {size: 16},
+  legend: {font: {size: 16}},
+  radialaxis: {ticksuffix: '%'},
+  orientation: 270,
+    showlegend: false
+};
+
+Plotly.newPlot('systemstats', data, layout);
+
+
+    </script>
+
 
     <!-- Bootstrap core JavaScript
     ================================================== -->
