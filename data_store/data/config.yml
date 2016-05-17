@@ -28,8 +28,8 @@ agent:
     local_debug: 1
     dev_port: 6306
     instrument_list:
-      TEST:
-        name: "TEST"
+#      TEST:
+#        name: "TEST"
       KAZR2:
         name: "KAZR"
         base_url: "192.148.95.5"

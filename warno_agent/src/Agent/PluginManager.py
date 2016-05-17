@@ -153,4 +153,4 @@ class PluginManager(object):
 
         plugin['plugin_name'] = registration_info['plugin_name']
 
-        logging.debug("Event Codes List", plugin['event_codes'])
+        logging.debug("Event Codes List: %s", plugin['event_codes'])

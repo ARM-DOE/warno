@@ -31,7 +31,6 @@ class SystemStatusPlugin(Plugin):
             timestamp = datetime.datetime.utcnow()
             msg_queue.put('{"event": "%s", "data": {"instrument_id": %s, "time": "%s", "value": %s}}' %
             ("cpu_usage", config['instrument_id'], timestamp, psutil.cpu_percent()))
-            logging.info("Log Made", psutil.cpu_percent())
             self.process_ctrl_queue()
             sleep(2)
 
