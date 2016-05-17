@@ -13,7 +13,7 @@ logfile = "/vagrant/logs/agent_exceptions.log"
 
 
 
-white_list = ['KAZR-OLI','SACR', 'KAZR', 'WSACR', 'KASACR'] # We need to generalize this.
+white_list = ['KAZR-OLI','SACR', 'KAZR', 'WSACR', 'KASACR', 'KASACRO','WSACRO'] # We need to generalize this.
 
 
 class ProSensingPAFPlugin(Plugin):

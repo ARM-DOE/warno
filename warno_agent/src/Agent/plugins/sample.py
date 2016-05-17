@@ -76,8 +76,6 @@ class PAFPlugin(Plugin):
             time.sleep(self.sampling_interval)
 
 
-# def get_plugin():
-    # return PAFPlugin()
 
 def get_timestamp():
     return datetime.datetime.utcnow()

@@ -1,7 +1,7 @@
 import logging
 import multiprocessing
 from multiprocessing import Queue
-from WarnoConfig import utility
+
 
 class PluginManager(object):
     ''' Plugin manager for the various WARNO plugins
@@ -30,7 +30,6 @@ class PluginManager(object):
         self.instrument = instrument
         self.instrument_name = instrument['name']
         self.config_id = info['config_id']
-
 
         self.event_code_dict = {}
 

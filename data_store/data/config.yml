@@ -1,5 +1,5 @@
 setup:
-    site: OLI
+    site: ENA
     cf_url: "http://130.20.119.70/eventmanager/event"
     em_url: "http://localhost:8001/eventmanager/event"
     # Path to default ssl cert location if applicable, false means always trust cert
@@ -31,8 +31,20 @@ agent:
       TEST:
         name: "TEST"
       KAZR2:
-        name: "KAZR-OLI"
-        base_url: "amf3-kazr"
+        name: "KAZR"
+        base_url: "192.148.95.5"
         base_port: 3000
-        sampling_interval: 5
+        sampling_interval: 10
+      KaSACR2:
+        name: "KASACR"
+        base_url: "192.148.95.7"
+        base_port: 3000
+        sampling_interval: 10
+      WSACR2:
+        name: "WSACR"
+        base_url: "192.148.95.7"
+        base_port: 3001
+        sampling_interval: 10
+
+
 
