@@ -112,15 +112,12 @@ class Agent(object):
         self.msg_queue = Queue()
         self.event_code_dict = {}
         self.instrument_ids = []
-        self.running_plugin_list = []
-        self.plugin_module_list = []
         self.continue_processing_events = True
         self.cert_verify = self.config_ctxt['setup']['cert_verify']
         self.info = {'site': self.config_ctxt['setup']['site'],
                      'instrument': self.config_ctxt['agent']['instrument_list'][0]}
         self.plugin_manager = PluginManager(self.info)
         print(self.info)
-        self.stop_pl = 0
 
         #Set up logging
         log_path = os.environ.get("LOG_PATH")
@@ -152,7 +149,6 @@ class Agent(object):
         Returns
         -------
             Returns new plugin directory path.
-
         """
 
         if path is None:
@@ -174,7 +170,7 @@ class Agent(object):
 
         return self.plugin_path
 
-    def enumerate_plugins(self):
+    def enumerate_plugins(self, plugin_manager):
         """List the plugins in the plugins directory as modules.
 
         Return a list of module top levels that correspond to plugins. All plugins in the list
@@ -202,11 +198,11 @@ class Agent(object):
                     print("candidate_plugin", candidate_plugin)
                     candidate_plugin.path = plugin
                     if hasattr(candidate_plugin, 'get_registration_info') and hasattr(candidate_plugin, 'run'):
-                        self.plugin_manager.add_plugin(candidate_plugin)
+                        plugin_manager.add_plugin(candidate_plugin)
             except Exception, e:
                 logging.warning(e)
 
-        return self.plugin_manager.get_plugin_handle_list()
+        return plugin_manager.get_plugin_handle_list()
 
     def request_site_id_from_event_manager(self):
         """Request site id from manager.
@@ -232,7 +228,7 @@ class Agent(object):
 
         return self.site_id
 
-    def register_plugin(self, plugin):
+    def register_plugin(self, plugin, plugin_manager):
         """
         Register a plugin.
 
@@ -240,13 +236,15 @@ class Agent(object):
         ----------
         plugin: module
             Plugin to be registered.
+        plugin_manager: PluginManager
+            Plugin manager for this plugin.
 
         Returns
         -------
 
         """
         print("Registering Plugin", plugin['plugin_handle'])
-        self.plugin_manager.register_plugin_events(plugin)
+        plugin_manager.register_plugin_events(plugin)
 
         for event in plugin['event_codes']:
             data_send = {'description': event,
@@ -256,7 +254,7 @@ class Agent(object):
                 utility.EVENT_CODE_REQUEST, data_send)
 
             response_dict = dict(json.loads(response.content))
-            self.plugin_manager.event_code_dict[response_dict['data'][
+            plugin_manager.event_code_dict[response_dict['data'][
                 'description']] = response_dict['event_code']
 
     def send_em_message(self, code, data):
@@ -349,15 +347,15 @@ class Agent(object):
         self.info['instrument_id'] = data['instrument_id']
         self.plugin_manager.info['instrument_id'] = self.info['instrument_id']
 
-        self.plugin_module_list = self.enumerate_plugins()
+        self.enumerate_plugins(self.plugin_manager)
 
         logging.info("Found the following plugins:",
-                     self.plugin_module_list)
+                     self.plugin_manager.get_plugin_list())
 
         print("Registering Plugins.")
         for plugin in self.plugin_manager.get_plugin_list():
             logging.debug(plugin)
-            self.register_plugin(plugin)
+            self.register_plugin(plugin, self.plugin_manager)
 
         print("Starting up Plugins.")
         self.plugin_manager.start_all_plugins()

@@ -28,13 +28,5 @@ agent:
     local_debug: 1
     dev_port: 6306
     instrument_list:
-      TEST:
-        base_path:"127.0.0.1"
-        base_port:22
-        type:"SACR1"
-      TEST2:
-        base_path:"127.0.0.1"
-        base_port:22
-        type:"SACR1"
-
+      - TEST
 
