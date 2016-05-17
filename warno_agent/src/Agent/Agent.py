@@ -2,7 +2,6 @@ import glob
 import importlib
 import json
 import logging
-import multiprocessing
 import signal
 import sys
 import threading
@@ -359,31 +358,13 @@ class Agent(object):
             data = dict(json.loads(id_response.content))['data']
             manager.info['instrument_id'] = data['instrument_id']
 
-# TCandidate for deletion
-#         id_response = self.send_em_message(
-#             utility.INSTRUMENT_ID_REQUEST, self.info['instrument'])
-#
-#         data = dict(json.loads(id_response.content))['data']
-#         self.info['instrument_id'] = data['instrument_id']
-#         self.plugin_manager.info['instrument_id'] = self.info['instrument_id']
-#
-#
-#         self.enumerate_plugins(self.plugin_manager)
-
-# Candidate for deletion
-
         for manager in self.plugin_managers:
             self.enumerate_plugins(manager)
 
             logging.info("Found the following plugins:",
                 manager.get_plugin_list())
 
-# TCandidate for deletion
-#         print("Registering Plugins.")
-#         for plugin in self.plugin_manager.get_plugin_list():
-#             logging.debug(plugin)
-#             self.register_plugin(plugin, self.plugin_manager)
-# Candidate for deletion
+
 
 
         print("Registering Plugins with multiple managers.")
@@ -395,10 +376,6 @@ class Agent(object):
         for manager in self.plugin_managers:
             manager.start_all_plugins()
 
-# TCandidate for deletion
-#         print("Starting up Plugins.")
-#         self.plugin_manager.start_all_plugins()
-# Candidate for deletion
 
         while self.continue_processing_events:
             event_processed=0

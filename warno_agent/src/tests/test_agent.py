@@ -34,28 +34,28 @@ class TestAgent(TestCase):
 
         self.assertEqual(self.agent.get_plugin_path(), Agent.DEFAULT_PLUGIN_PATH,
                          'Empty plugin set does not return default')
-
-    def test_list_plugins_base_test(self):
-
-        self.agent.set_plugin_path(TEST_PLUGIN_PATH)
-        plugin_list = self.agent.enumerate_plugins()
-        print("Plugin List",plugin_list)
-        print("Plugin Path:", TEST_PLUGIN_PATH)
-
-
-        # Get list of plugin names..a little hacky.
-        plugin_name_list = [plugin.__class__.__name__ for plugin in plugin_list]
-        print(plugin_name_list)
-
-        self.assertIn('TestPassingPlugin', plugin_name_list,'Did not see test plugins')
-
-        self.assertNotIn('BadPluginNoRegister', plugin_name_list,
-                         'Accepted a plugin with no register function.')
-
-        self.assertNotIn('BadPluginNoRun', plugin_name_list,
-                         'Accepted a bad plugin with no run function.')
-
-        self.agent.set_plugin_path()
+    #
+    # def test_list_plugins_base_test(self):
+    #
+    #     self.agent.set_plugin_path(TEST_PLUGIN_PATH)
+    #     plugin_list = self.agent.enumerate_plugins()
+    #     print("Plugin List",plugin_list)
+    #     print("Plugin Path:", TEST_PLUGIN_PATH)
+    #
+    #
+    #     # Get list of plugin names..a little hacky.
+    #     plugin_name_list = [plugin.__class__.__name__ for plugin in plugin_list]
+    #     print(plugin_name_list)
+    #
+    #     self.assertIn('TestPassingPlugin', plugin_name_list,'Did not see test plugins')
+    #
+    #     self.assertNotIn('BadPluginNoRegister', plugin_name_list,
+    #                      'Accepted a plugin with no register function.')
+    #
+    #     self.assertNotIn('BadPluginNoRun', plugin_name_list,
+    #                      'Accepted a bad plugin with no run function.')
+    #
+    #     self.agent.set_plugin_path()
 
 
 

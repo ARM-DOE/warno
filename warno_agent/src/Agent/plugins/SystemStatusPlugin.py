@@ -24,11 +24,6 @@ class SystemStatusPlugin(Plugin):
         self.plugin_description = 'test'
         self.add_event_code("cpu_usage")
         self.white_list = white_list
-        # self.instrument_id = 1
-
-    def get_registration_info(self):
-        return {"event_code_names": self.event_code_names,
-                "plugin_name": self.plugin_name}
 
     def run(self, msg_queue, config, ctrl_queue):
         self.ctrl_queue = ctrl_queue
