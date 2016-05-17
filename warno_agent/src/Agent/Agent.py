@@ -107,7 +107,6 @@ class Agent(object):
         self.plugin_path = DEFAULT_PLUGIN_PATH
         self.config_ctxt = config.get_config_context()
         self.event_manager_url = self.config_ctxt['setup']['em_url']
-        self.em_url = self.config_ctxt['setup']['em_url']
         self.is_central = self.config_ctxt['type']['central_facility']
         self.site_id = None
         self.msg_queue = Queue()
@@ -302,7 +301,7 @@ class Agent(object):
             event_code, json.dumps(event['data']))
         payload = json.loads(event_msg)
         response = requests.post(
-            self.em_url, json=payload, headers=headers, verify=self.cert_verify)
+            self.event_manager_url, json=payload, headers=headers, verify=self.cert_verify)
         return response
 
     def main(self):
