@@ -32,7 +32,7 @@ source activate testenv
 # Install dependencies
 conda install --yes numpy nose netcdf4 psycopg2 pandas
 
-pip install pyyaml Flask requests selenium nose-cov nose-exclude mock sqlalchemy flask-testing blinker
+pip install pyyaml Flask requests selenium nose-cov nose-exclude mock sqlalchemy flask-testing blinker flask-sqlalchemy flask-migrate flask-fixtures
 
 git clone http://overwatch.pnl.gov/hard505/pypro-aflib.git
 cd pypro-aflib

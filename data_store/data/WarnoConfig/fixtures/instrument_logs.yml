@@ -1,0 +1,23 @@
+- model: WarnoConfig.models.InstrumentLog
+  records:
+    - id: 1
+      author_id: 1
+      instrument_id: 1
+      status: 2
+      supporting_images: null
+      contents: "Log 1 Contents"
+      time: "2001-01-01 01:01:01"
+    - id: 2
+      author_id: 2
+      instrument_id: 1
+      status: 1
+      supporting_images: null
+      contents: "Log 2 Contents"
+      time: "2002-02-02 02:02:02"
+    - id: 3
+      author_id: 2
+      instrument_id: 2
+      status: 1
+      supporting_images: null
+      contents: "Log 3 Contents"
+      time: "2003-03-03 03:03:03"

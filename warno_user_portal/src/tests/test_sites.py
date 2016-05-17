@@ -1,44 +1,55 @@
 import mock
+import os
 
 from flask.ext.testing import TestCase
+from flask.ext.fixtures import FixturesMixin
 
 from UserPortal import views
-#from UserPortal import sites
-from WarnoConfig import database
-from WarnoConfig.models import Site
+from WarnoConfig import config
+from WarnoConfig.models import db
 
-class test_sites(TestCase):
+@mock.patch('logging.Logger')
+class TestSites(TestCase, FixturesMixin):
+
+    render_templates = False
+    db_cfg = config.get_config_context()['database']
+    s_db_cfg = config.get_config_context()['s_database']
+    TESTING = True
+
+    # Fixtures are usually in warno-vagrant/data_store/data/WarnoConfig/fixtures
+    fixtures = ['sites.yml']
 
     def setUp(self):
-        database.db_session = mock.Mock()
-        self.log_patch = mock.patch('logging.Logger')
-        self.mock_log = self.log_patch.start()
+        db.create_all()
 
     def tearDown(self):
-        self.log_patch.stop()
+        db.session.remove()
+        db.drop_all()
 
     def create_app(self):
         views.app.config['TESTING'] = True
+        views.app.config['FIXTURES_DIRS'] = [os.environ.get('FIXTURES_DIR')]
+        views.app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://%s:%s@%s:%s/%s' % (self.db_cfg['DB_USER'],
+                                                                                       self.s_db_cfg['DB_PASS'],
+                                                                                       self.db_cfg['DB_HOST'],
+                                                                                       self.db_cfg['DB_PORT'],
+                                                                                       self.db_cfg['TEST_DB_NAME'])
+
+        FixturesMixin.init_app(views.app, db)
+
         return views.app
 
+    def test_method_get_on_edit_site_returns_200_ok_and_passes_fixture_site_as_context_variable_using_correct_template(self, logger):
 
-
-    def test_method_get_on_edit_site_returns_200_ok_and_passes_mock_db_site_as_context_variables_using_correct_template(self):
-        site_return = mock.Mock()
-        site_return.name_long= 2
-        site_return.name_short = 3
-        database.db_session.query().filter().first.return_value = site_return
-
-        result = self.client.get('/sites/10/edit')
+        result = self.client.get('/sites/2/edit')
         self.assert200(result)
 
-        calls = database.db_session.query.call_args_list
-        self.assertTrue(True in [Site in call[0] for call in calls], "'Site' class not called in a query")
-
-        # Accessing context variable by name feels brittle, but it seems to be the only way
         context_site = self.get_context_variable('site')
-        values = [value for key, value in context_site.iteritems()]
-        self.assertTrue(2 in values, "Value '2' is not in the returned site dictionary")
-        self.assertTrue(3 in values, "Value '3' is not in the returned site dictionary")
+        print context_site
+
+        self.assertEqual(context_site['name_short'], 'TESTSIT2',
+                         "'TESTSIT2' is not in the 'name_short' field for the context variable site.")
+        self.assertEqual(context_site['location_name'], 'Test Location 2',
+                         "'Test Location 2' is not in the 'location_name' field for the context variable site.")
 
         self.assert_template_used('edit_site.html')

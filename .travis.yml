@@ -9,7 +9,7 @@ matrix:
       - python: "2.7"
         env:
         - PYTHON_VERSION="2.7"
-        - NOSE_ARGS="-v --no-skip --exclude-dir=selenium_tests"
+        - NOSE_ARGS="-v --no-skip --exclude-dir=selenium_tests --exclude-dir warno_user_portal/src/tests"
         - COVERALLS="true"
 
 before_install:

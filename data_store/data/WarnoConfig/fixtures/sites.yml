@@ -1,0 +1,18 @@
+- model: WarnoConfig.models.Site
+  records:
+    - id: 1
+      name_short: "TESTSIT1"
+      name_long: "Test Site 1"
+      latitude: 11.11
+      longitude: 11.11
+      facility: "Test Facility 1"
+      mobile: false
+      location_name: "Test Location 1"
+    - id: 2
+      name_short: "TESTSIT2"
+      name_long: "Test Site 2"
+      latitude: "22.22"
+      longitude: "22.22"
+      facility: "Test Facility 2"
+      mobile: true
+      location_name: "Test Location 2"

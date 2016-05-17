@@ -1,0 +1,6 @@
+- model: WarnoConfig.models.EventCode
+  records:
+    - event_code: 1
+      description: "Test Event Code 1"
+    - event_code: 2
+      description: "Test Event Code 2"

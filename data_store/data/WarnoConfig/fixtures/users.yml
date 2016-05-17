@@ -1,0 +1,12 @@
+- model: WarnoConfig.models.User
+  records:
+    - id: 1
+      name: "Test User 1"
+      email: "test1@fixture.com"
+      location: "Test Location 1"
+      position: "Test Position 1"
+    - id: 2
+      name: "Test User 2"
+      email: "test2@fixture.com"
+      location: "Test Location 2"
+      position: "Test Position 2"
