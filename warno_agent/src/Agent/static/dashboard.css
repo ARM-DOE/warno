@@ -17,6 +17,11 @@ body {
   border-bottom: 1px solid #eee;
 }
 
+.table-sep{
+  background-color: #60add5;
+  height: 2px;
+  max-height: 2px;
+}
 /*
  * Top navigation
  * Hide default border to remove 1px line.

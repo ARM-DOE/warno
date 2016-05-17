@@ -14,6 +14,7 @@ class Plugin(object):
         self.instrument_name = None
         self.run_flag = True
         self.ctrl_queue = None
+        self.white_list = ['*',]
 
     def run(self, msg_queue, config, ctrl_queue):
         self.msg_queue = msg_queue

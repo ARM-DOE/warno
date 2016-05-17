@@ -10,7 +10,7 @@ class PluginManager(object):
 
     white_list = '*'
 
-    def __init__(self, config ):
+    def __init__(self, config, instrument=None ):
         """ Initializer for Plugin Manager
 
         Parameters
@@ -28,10 +28,14 @@ class PluginManager(object):
         self.info = config
         self.site = config['site']
         self.instrument = config['instrument']
+        if instrument:
+            self.instrument = instrument
+
         self.event_code_dict = {}
 
     def add_plugin(self, plugin):
-        self.plugin_list.append({'plugin_handle': plugin,
+        if plugin.white_list[0] == '*' or self.instrument in plugin.white_list:
+            self.plugin_list.append({'plugin_handle': plugin,
                                  'status': 'notstarted',
                                  'thread': None,
                                  'ctrl_queue': Queue(),

@@ -28,5 +28,8 @@ agent:
     local_debug: 1
     dev_port: 6306
     instrument_list:
-      - TEST
+      TEST:
+        name: "TEST"
+      TEST2:
+        name: "TEST2"
 

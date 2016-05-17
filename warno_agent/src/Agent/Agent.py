@@ -53,14 +53,18 @@ def serve_dashboard():
     sys_stats = {"cpu": cpu, "mem": mem, "threads": threads/10.0, "disk_usage": disk_usage}
     print(sys_stats)
 
+    instrument_list = []
+    for manager in agent.plugin_managers:
+        instrument_list.append({'instrument': manager.instrument,
+                            'plugin_list': manager.get_plugin_list()})
 
     return render_template('index.html',
-                           plugin_list=(agent.plugin_manager.get_plugin_list()),
+                           instrument_list=instrument_list,
                            sys_stats=sys_stats)
 
 
-@app.route('/agent/<plugin_name>/stop')
-def serve_stop_plugin(plugin_name):
+@app.route('/agent/<instrument>/<plugin_name>/stop')
+def serve_stop_plugin(instrument, plugin_name):
     """ Anchor point to stop a plugin by name.
     Parameters
     ----------
@@ -73,11 +77,14 @@ def serve_stop_plugin(plugin_name):
         Redirect to the dashboard front page.
 
     """
-    agent.plugin_manager.stop_plugin_by_name(plugin_name)
+    for manager in agent.plugin_managers:
+        if manager.instrument == instrument:
+            manager.stop_plugin_by_name(plugin_name)
     return redirect(url_for("serve_dashboard"))
 
-@app.route('/agent/<plugin_name>/start')
-def serve_start_plugin(plugin_name):
+
+@app.route('/agent/<instrument>/<plugin_name>/start')
+def serve_start_plugin(instrument, plugin_name):
     """ Anchor point to start a plugin by name.
     Parameters
     ----------
@@ -90,7 +97,9 @@ def serve_start_plugin(plugin_name):
         Redirect to the dashboard front page.
 
     """
-    agent.plugin_manager.start_plugin_by_name(plugin_name)
+    for manager in agent.plugin_managers:
+        if manager.instrument == instrument:
+            manager.start_plugin_by_name(plugin_name)
     return redirect(url_for("serve_dashboard"))
 
 
@@ -115,8 +124,11 @@ class Agent(object):
         self.continue_processing_events = True
         self.cert_verify = self.config_ctxt['setup']['cert_verify']
         self.info = {'site': self.config_ctxt['setup']['site'],
-                     'instrument': self.config_ctxt['agent']['instrument_list'][0]}
-        self.plugin_manager = PluginManager(self.info)
+                     'instrument': self.config_ctxt['agent']['instrument_list']['TEST']['name']}
+        self.plugin_managers = [PluginManager(self.info, instrument['name'])
+                                for instrument_name, instrument
+                                in self.config_ctxt['agent']['instrument_list'].iteritems()]
+        # self.plugin_manager = PluginManager(self.info)
         print(self.info)
 
         #Set up logging
@@ -278,7 +290,7 @@ class Agent(object):
         response = requests.post(self.event_manager_url, json=payload, headers=headers, verify=self.cert_verify)
         return response
 
-    def process_plugin_event(self):
+    def process_plugin_event(self, manager):
         """ Process message from a plugin.
 
         Parameters
@@ -291,10 +303,10 @@ class Agent(object):
 
         """
 
-        rec_msg = self.plugin_manager.msg_queue.get_nowait()
+        rec_msg = manager.msg_queue.get_nowait()
         event = json.loads(rec_msg)
         event['data']['site_id'] = self.site_id
-        event_code = self.plugin_manager.event_code_dict[event['event']]
+        event_code = manager.event_code_dict[event['event']]
         event_msg = '{"event_code": %s, "data": %s}' % (
             event_code, json.dumps(event['data']))
         payload = json.loads(event_msg)
@@ -340,30 +352,61 @@ class Agent(object):
                 self.agent_logger.warn(e)
                 sleep(CONN_RETRY_TIME)
 
-        id_response = self.send_em_message(
-            utility.INSTRUMENT_ID_REQUEST, self.info['instrument'])
+        for manager in self.plugin_managers:
+            id_response = self.send_em_message(
+                utility.INSTRUMENT_ID_REQUEST, manager.instrument)
 
-        data = dict(json.loads(id_response.content))['data']
-        self.info['instrument_id'] = data['instrument_id']
-        self.plugin_manager.info['instrument_id'] = self.info['instrument_id']
+            data = dict(json.loads(id_response.content))['data']
+            manager.info['instrument_id'] = data['instrument_id']
 
-        self.enumerate_plugins(self.plugin_manager)
+# TCandidate for deletion
+#         id_response = self.send_em_message(
+#             utility.INSTRUMENT_ID_REQUEST, self.info['instrument'])
+#
+#         data = dict(json.loads(id_response.content))['data']
+#         self.info['instrument_id'] = data['instrument_id']
+#         self.plugin_manager.info['instrument_id'] = self.info['instrument_id']
+#
+#
+#         self.enumerate_plugins(self.plugin_manager)
 
-        logging.info("Found the following plugins:",
-                     self.plugin_manager.get_plugin_list())
+# Candidate for deletion
 
-        print("Registering Plugins.")
-        for plugin in self.plugin_manager.get_plugin_list():
-            logging.debug(plugin)
-            self.register_plugin(plugin, self.plugin_manager)
+        for manager in self.plugin_managers:
+            self.enumerate_plugins(manager)
 
-        print("Starting up Plugins.")
-        self.plugin_manager.start_all_plugins()
+            logging.info("Found the following plugins:",
+                manager.get_plugin_list())
+
+# TCandidate for deletion
+#         print("Registering Plugins.")
+#         for plugin in self.plugin_manager.get_plugin_list():
+#             logging.debug(plugin)
+#             self.register_plugin(plugin, self.plugin_manager)
+# Candidate for deletion
+
+
+        print("Registering Plugins with multiple managers.")
+        for manager in self.plugin_managers:
+            for plugin in manager.get_plugin_list():
+                logging.debug(plugin)
+                self.register_plugin(plugin, manager)
+
+        for manager in self.plugin_managers:
+            manager.start_all_plugins()
+
+# TCandidate for deletion
+#         print("Starting up Plugins.")
+#         self.plugin_manager.start_all_plugins()
+# Candidate for deletion
 
         while self.continue_processing_events:
-            if not self.plugin_manager.msg_queue.empty():
-                response = self.process_plugin_event()
-            else:
+            event_processed=0
+            for manager in self.plugin_managers:
+                if not manager.msg_queue.empty():
+                    response = self.process_plugin_event(manager)
+                    event_processed += 1
+            if event_processed == 0:
                 sleep(0.1)
 
 

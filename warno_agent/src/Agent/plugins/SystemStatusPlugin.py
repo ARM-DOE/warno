@@ -11,6 +11,7 @@ from Plugin import Plugin as Plugin
 
 logfile = "/vagrant/data_store/data/agent_exceptions.log"
 
+white_list = ['*',]
 
 class SystemStatusPlugin(Plugin):
     """ Plugin to monitor basic system health on the agent system.
@@ -22,6 +23,7 @@ class SystemStatusPlugin(Plugin):
         self.plugin_name = 'System Status Plugin'
         self.plugin_description = 'test'
         self.add_event_code("cpu_usage")
+        self.white_list = white_list
         # self.instrument_id = 1
 
     def get_registration_info(self):

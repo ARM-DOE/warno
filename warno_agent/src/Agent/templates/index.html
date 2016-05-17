@@ -90,6 +90,7 @@
             <table class="table table-striped">
               <thead>
                 <tr>
+                  <th>Instrument</th>
                   <th>Name</th>
                   <th>Path</th>
                   <th>Status</th>
@@ -98,14 +99,18 @@
                 </tr>
               </thead>
               <tbody>
-              {% for plugin in plugin_list  %}
+              {% for instrument in instrument_list  %}
+                  {% for plugin in instrument['plugin_list'] %}
                   <tr>
+                      <td>{{ instrument.instrument }}</td>
                       <td>{{  plugin.plugin_name }}</td>
-                  <td>{{  plugin.plugin_handle }}</td>
+                      <td>{{  plugin.plugin_handle }}</td>
                       <td>{{  plugin.status }}</td>
                       <td>{{  plugin.event_codes }}</td>
-                      <td><a href="agent/{{ plugin.plugin_name}}/start" >[Enable]</a><a href="agent/{{ plugin.plugin_name}}/stop" >[Disable]</a></td>
+                      <td><a href="agent/{{ instrument.instrument }}/{{ plugin.plugin_name}}/start" >[Enable]</a><a href="agent/{{ instrument.instrument }}/{{ plugin.plugin_name}}/stop" >[Disable]</a></td>
                   </tr>
+              {% endfor %}
+                  <tr class="table-sep"><td></td><td></td> <td></td> <td></td> <td></td> <td></td> </tr>
               {% endfor %}
 
 
