@@ -40,7 +40,7 @@ class Plugin(object):
                 'plugin_description': self.plugin_description,
                 'event_code_names': self.event_code_names,
                 'path': self.path,
-                'instrument_name': self.instrument_name}
+                'instrument_name': self.instrument['name']}
 
     def add_event_code(self, event_code_name):
         """ Add an event code. Does not need to be changed in inherited class.

@@ -54,7 +54,7 @@ def serve_dashboard():
 
     instrument_list = []
     for manager in agent.plugin_managers:
-        instrument_list.append({'instrument': manager.instrument,
+        instrument_list.append({'instrument': manager.instrument['name'],
                             'plugin_list': manager.get_plugin_list()})
 
     return render_template('index.html',
@@ -77,7 +77,7 @@ def serve_stop_plugin(instrument, plugin_name):
 
     """
     for manager in agent.plugin_managers:
-        if manager.instrument == instrument:
+        if manager.instrument['name'] == instrument:
             manager.stop_plugin_by_name(plugin_name)
     return redirect(url_for("serve_dashboard"))
 
@@ -97,7 +97,7 @@ def serve_start_plugin(instrument, plugin_name):
 
     """
     for manager in agent.plugin_managers:
-        if manager.instrument == instrument:
+        if manager.instrument['name'] == instrument:
             manager.start_plugin_by_name(plugin_name)
     return redirect(url_for("serve_dashboard"))
 
@@ -122,12 +122,13 @@ class Agent(object):
         self.instrument_ids = []
         self.continue_processing_events = True
         self.cert_verify = self.config_ctxt['setup']['cert_verify']
-        self.info = {'site': self.config_ctxt['setup']['site'],
-                     'instrument': self.config_ctxt['agent']['instrument_list']['TEST']['name']}
-        self.plugin_managers = [PluginManager(self.info, instrument['name'])
+        self.info = {'site': self.config_ctxt['setup']['site']}
+        self.plugin_managers = [PluginManager({
+                                    'site': self.config_ctxt['setup']['site'],
+                                    'config_id': instrument_name
+                                    }, instrument)
                                 for instrument_name, instrument
                                 in self.config_ctxt['agent']['instrument_list'].iteritems()]
-        # self.plugin_manager = PluginManager(self.info)
         print(self.info)
 
         #Set up logging
@@ -259,7 +260,7 @@ class Agent(object):
 
         for event in plugin['event_codes']:
             data_send = {'description': event,
-                         'instrument_id': self.info['instrument_id']}
+                         'instrument_id': plugin_manager.info['instrument_id']}
 
             response = self.send_em_message(
                 utility.EVENT_CODE_REQUEST, data_send)
@@ -353,7 +354,7 @@ class Agent(object):
 
         for manager in self.plugin_managers:
             id_response = self.send_em_message(
-                utility.INSTRUMENT_ID_REQUEST, manager.instrument)
+                utility.INSTRUMENT_ID_REQUEST, manager.instrument_name)
 
             data = dict(json.loads(id_response.content))['data']
             manager.info['instrument_id'] = data['instrument_id']
@@ -365,8 +366,6 @@ class Agent(object):
                 manager.get_plugin_list())
 
 
-
-
         print("Registering Plugins with multiple managers.")
         for manager in self.plugin_managers:
             for plugin in manager.get_plugin_list():
@@ -376,7 +375,6 @@ class Agent(object):
         for manager in self.plugin_managers:
             manager.start_all_plugins()
 
-
         while self.continue_processing_events:
             event_processed=0
             for manager in self.plugin_managers:
@@ -385,7 +383,6 @@ class Agent(object):
                     event_processed += 1
             if event_processed == 0:
                 sleep(0.1)
-
 
 if __name__ == "__main__":
     agent = Agent()

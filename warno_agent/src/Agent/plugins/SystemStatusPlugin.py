@@ -13,13 +13,13 @@ logfile = "/vagrant/data_store/data/agent_exceptions.log"
 
 white_list = ['*',]
 
+
 class SystemStatusPlugin(Plugin):
     """ Plugin to monitor basic system health on the agent system.
     """
 
     def __init__(self):
         super(SystemStatusPlugin, self).__init__()
-        self.instrument_name = 'TEST'
         self.plugin_name = 'System Status Plugin'
         self.plugin_description = 'test'
         self.add_event_code("cpu_usage")

@@ -1,7 +1,7 @@
 import logging
 import multiprocessing
 from multiprocessing import Queue
-
+from WarnoConfig import utility
 
 class PluginManager(object):
     ''' Plugin manager for the various WARNO plugins
@@ -10,7 +10,7 @@ class PluginManager(object):
 
     white_list = '*'
 
-    def __init__(self, config, instrument=None ):
+    def __init__(self, info, instrument=None ):
         """ Initializer for Plugin Manager
 
         Parameters
@@ -25,16 +25,19 @@ class PluginManager(object):
         """
         self.plugin_list = []
         self.msg_queue = Queue()
-        self.info = config
-        self.site = config['site']
-        self.instrument = config['instrument']
-        if instrument:
-            self.instrument = instrument
+        self.info = info
+        self.site = info['site']
+        self.instrument = instrument
+        self.instrument_name = instrument['name']
+        self.config_id = info['config_id']
+
 
         self.event_code_dict = {}
 
     def add_plugin(self, plugin):
-        if plugin.white_list[0] == '*' or self.instrument in plugin.white_list:
+        plugin.config_id= self.config_id
+        plugin.instrument = self.instrument
+        if plugin.white_list[0] == '*' or self.instrument_name in plugin.white_list:
             self.plugin_list.append({'plugin_handle': plugin,
                                  'status': 'notstarted',
                                  'thread': None,
