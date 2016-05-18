@@ -35,7 +35,8 @@ class ProSensingPAFPlugin(Plugin):
         self.ctrl_queue= ctrl_queue
         base_url = self.config_ctxt['agent']['instrument_list'][self.config_id]['base_url']
         base_port = self.config_ctxt['agent']['instrument_list'][self.config_id]['base_port']
-        pafc = PAFClient(base_url, base_port)
+        fmt = self.config_ctxt['agent']['instrument_list'][self.config_id]['pstype']
+        pafc = PAFClient(base_url, base_port, fmt=fmt)
         pafc.connect()
         i = 1
         while True:

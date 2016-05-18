@@ -15,7 +15,7 @@ import requests
 from WarnoConfig import config, utility
 from flask import Flask, render_template, redirect, url_for, request
 
-from warno_agent.src.Agent.PluginManager import PluginManager
+from PluginManager import PluginManager
 
 global agent
 global remote_server
