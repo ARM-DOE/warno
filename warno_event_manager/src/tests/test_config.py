@@ -12,7 +12,7 @@ class TestGet_config_context(TestCase):
         self.assertIsNotNone(os.getenv('DATA_STORE_PATH'), 'DATA_STORE_PATH not set')
 
     def test_get_config_context_database_entries(self):
-        '''Test the configuration context'''
+        """Test the configuration context"""
 
         cfg = config.get_config_context()
 

@@ -1,0 +1,29 @@
+setup:
+    site: ENA
+    cf_url: "http://130.20.119.70/eventmanager/event"
+    em_url: "https://localhost:8443/eventmanager/event"
+    # Path to default ssl cert location if applicable, false means always trust cert
+    cert_verify: False #VM standard: "/vagrant/data_store/data/rootCA.pem"
+    run_vm_agent: 0
+    run_vm_event_manager: 1
+    event_manager_port: 80
+    run_vm_user_portal: 1
+    user_portal_port: 80
+
+
+type:
+    central_facility: 1
+
+database:
+    test_db : true
+    DB_HOST : "192.168.50.100"
+    DB_NAME : "warno"
+    DB_USER : "warno"
+    DB_PORT : "5432"
+
+debug:
+    no_gunicorn: 0
+
+agent:
+    local_debug: 1
+    dev_port: 6306

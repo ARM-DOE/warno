@@ -9,3 +9,4 @@ warno-docker-image
 *.gz
 *.box
 logs/*.log
+doc/srv/_build/*

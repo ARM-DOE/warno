@@ -8,6 +8,7 @@ from UserPortal import views
 from WarnoConfig import config
 from WarnoConfig.models import db
 
+
 @mock.patch('logging.Logger')
 class TestSites(TestCase, FixturesMixin):
 

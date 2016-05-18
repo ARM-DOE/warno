@@ -30,7 +30,7 @@
 
           div_id = "graphdiv" + id;
           div = document.createElement('div');
-          div.innerHTML = '<div id = "' + div_id + '-parent"><div id="' + div_id + '" style="width: 400px; height: 250px;"></div><button type="button" onclick="remove_graph(this)">Remove Graph</button></div>'
+          div.innerHTML = '<div id = "' + div_id + '-parent"><div id="' + div_id + '" style="width: 400px; height: 250px;"></div><button type="button" onclick="remove_graph(this)">Remove Graph</button></div>';
           master_div = document.getElementById('master-graphdiv');
           master_div.insertBefore(div, master_div.firstChild);
 
@@ -44,7 +44,7 @@
               //console.log(rec_message);
               if (rec_message["x"].length > 0)
               {
-                graph_data = "x,y\n"
+                graph_data = "x,y\n";
                 for (i = 0; i < rec_message["x"].length; i ++)
                 {
                   graph_data += rec_message["x"][i] + "," + rec_message["y"][i] + "\n";
@@ -79,7 +79,7 @@
               }
 
             }
-          }
+          };
 
           //Send JSON POST XMLHTTPRequest to generator controller.
           //Also include keys for the generated graph

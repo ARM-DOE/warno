@@ -61,7 +61,7 @@
   $(function() {$('#log-submit-form').submit(function()
   {
     str = document.getElementById("datetime-input").value;
-    date = new Date(str)
+    date = new Date(str);
     document.getElementById("datetime-input").value = date.toUTCString();
     });
     });

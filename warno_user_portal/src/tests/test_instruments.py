@@ -1,3 +1,4 @@
+import datetime
 import mock
 import os
 
@@ -10,10 +11,8 @@ from WarnoConfig import config
 from WarnoConfig.models import db
 from WarnoConfig.models import Instrument, InstrumentLog, Site, InstrumentDataReference
 
-
 @mock.patch("logging.Logger")
 class TestInstruments(TestCase, FixturesMixin):
-
     render_templates = False
     db_cfg = config.get_config_context()['database']
     s_db_cfg = config.get_config_context()['s_database']
@@ -60,7 +59,6 @@ class TestInstruments(TestCase, FixturesMixin):
                         "'TESTSIT2' is not in the 'location' field for the second instrument.")
         self.assert_template_used('instrument_list.html')
 
-
     def test_method_get_on_new_instrument_returns_200_ok_and_passes_fixture_sites_as_context_variable_using_correct_template(self, logger):
         result = self.client.get('/instruments/new')
         self.assert200(result)
@@ -75,9 +73,9 @@ class TestInstruments(TestCase, FixturesMixin):
                         "'TESTSIT2' is not in the 'name' field for the second context variable site.")
         self.assert_template_used('new_instrument.html')
 
-
     def test_method_get_on_edit_instrument_with_id_2_returns_200_ok_and_passes_fixture_sites_and_second_instrument_as_context_variables_using_correct_template(self, logger):
         result = self.client.get('/instruments/2/edit')
+
         self.assert200(result)
 
         # Accessing context variable by name feels brittle, but it seems to be the only way
@@ -107,6 +105,7 @@ class TestInstruments(TestCase, FixturesMixin):
         valid_columns_return = ["column"]
         valid_columns.return_value = valid_columns_return
         instrument_id = 2
+
         test_url = "/instruments/%s" % instrument_id
         result = self.client.get(test_url)
 
@@ -176,6 +175,7 @@ class TestInstruments(TestCase, FixturesMixin):
                          "The function result's 'id' field does not match the id it was called with.")
 
     def test_db_recent_logs_by_instrument_when_id_is_1_returns_logs_in_the_correct_order(self, logger):
+
         # The parameters for the instrument id integer seem to be passed in a strange way for the 'filter' part
         # of a query, and I cannot find a way to access it from the tests.
         instrument_id = 1
@@ -216,3 +216,36 @@ class TestInstruments(TestCase, FixturesMixin):
         self.assertIn("packet_id", result_column_list, "prosensing_paf 'packet_id' not in returned column list.")
         self.assertIn("antenna_humidity", result_column_list,
                       "prosensing_paf 'antenna_humidity' not in returned column list.")
+
+    def test_synchronize_sort_correctly_sorts_3_simple_data_sets_into_expected_output_format(self, logger):
+        dataset_0 = dict(data=[(datetime.datetime.strptime("2015-05-11 01:00", "%Y-%m-%d %H:%M"), 01),
+                               (datetime.datetime.strptime("2015-05-11 01:30", "%Y-%m-%d %H:%M"), 02),
+                               (datetime.datetime.strptime("2015-05-11 02:00", "%Y-%m-%d %H:%M"), 03)])
+        dataset_1 = dict(data=[(datetime.datetime.strptime("2015-05-11 02:00", "%Y-%m-%d %H:%M"), 11),
+                               (datetime.datetime.strptime("2015-05-11 02:30", "%Y-%m-%d %H:%M"), 12),
+                               (datetime.datetime.strptime("2015-05-11 03:00", "%Y-%m-%d %H:%M"), 13)])
+        dataset_2 = dict(data=[(datetime.datetime.strptime("2015-05-11 01:00", "%Y-%m-%d %H:%M"), 21),
+                               (datetime.datetime.strptime("2015-05-11 02:00", "%Y-%m-%d %H:%M"), 22),
+                               (datetime.datetime.strptime("2015-05-11 02:30", "%Y-%m-%d %H:%M"), 23)])
+
+        expected_result = [[datetime.datetime.strptime("2015-05-11 01:00", "%Y-%m-%d %H:%M"),   01, None,   21],
+                           [datetime.datetime.strptime("2015-05-11 01:30", "%Y-%m-%d %H:%M"),   02, None, None],
+                           [datetime.datetime.strptime("2015-05-11 02:00", "%Y-%m-%d %H:%M"),   03,   11,   22],
+                           [datetime.datetime.strptime("2015-05-11 02:30", "%Y-%m-%d %H:%M"), None,   12,   23],
+                           [datetime.datetime.strptime("2015-05-11 03:00", "%Y-%m-%d %H:%M"), None,   13, None]]
+
+        input_dictionary = {0: dataset_0, 1: dataset_1, 2: dataset_2}
+
+        result_list = instruments.synchronize_sort(input_dictionary)
+
+        self.assertListEqual(result_list, expected_result, "The expected result list of synchronize_sort and the actual"
+                                                           " list returned do not match.")
+
+    def test_iso_first_elements_changes_the_datetime_object_first_element_of_a_list_to_iso_format(self, logger):
+        input_list = [datetime.datetime.strptime("2015-01-01 01:30:30", "%Y-%m-%d %H:%M:%S"), 0, 1, 2]
+        expected_list = ['2015-01-01T01:30:30', 0, 1, 2]
+
+        # Should update input list in place
+        instruments.iso_first_element(input_list)
+
+        self.assertListEqual(input_list, expected_list, "The updated input list and the expected list do not match.")

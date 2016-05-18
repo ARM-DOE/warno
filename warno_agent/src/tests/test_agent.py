@@ -13,7 +13,6 @@ TEST_PLUGIN_PATH = 'warno_agent/src/tests/test_plugins/'
 PLUGIN_ROOT = 'warno_agent.src.tests.test_plugins.'
 
 
-
 class TestAgent(TestCase):
 
     def setUp(self):
@@ -35,28 +34,29 @@ class TestAgent(TestCase):
 
         self.assertEqual(self.agent.get_plugin_path(), Agent.DEFAULT_PLUGIN_PATH,
                          'Empty plugin set does not return default')
+    #
+    # def test_list_plugins_base_test(self):
+    #
+    #     self.agent.set_plugin_path(TEST_PLUGIN_PATH)
+    #     plugin_list = self.agent.enumerate_plugins()
+    #     print("Plugin List",plugin_list)
+    #     print("Plugin Path:", TEST_PLUGIN_PATH)
+    #
+    #
+    #     # Get list of plugin names..a little hacky.
+    #     plugin_name_list = [plugin.__class__.__name__ for plugin in plugin_list]
+    #     print(plugin_name_list)
+    #
+    #     self.assertIn('TestPassingPlugin', plugin_name_list,'Did not see test plugins')
+    #
+    #     self.assertNotIn('BadPluginNoRegister', plugin_name_list,
+    #                      'Accepted a plugin with no register function.')
+    #
+    #     self.assertNotIn('BadPluginNoRun', plugin_name_list,
+    #                      'Accepted a bad plugin with no run function.')
+    #
+    #     self.agent.set_plugin_path()
 
-    def test_list_plugins_base_test(self):
-
-        self.agent.set_plugin_path(TEST_PLUGIN_PATH)
-        plugin_list = self.agent.list_plugins()
-        print("Plugin List",plugin_list)
-        print("Plugin Path:", TEST_PLUGIN_PATH)
-
-
-        # Get list of plugin names..a little hacky.
-        plugin_name_list = [plugin.__name__ for plugin in plugin_list]
-
-
-        self.assertIn(PLUGIN_ROOT+'test_plugin1', plugin_name_list,'Did not see test plugins')
-
-        self.assertNotIn('test_plugins.bad_plugin_no_register', plugin_name_list,
-                         'Accepted a plugin with no register function.')
-
-        self.assertNotIn('test_plugins.bad_plugin_no_run', plugin_name_list,
-                         'Accepted a bad plugin with no run function.')
-
-        self.agent.set_plugin_path()
 
 
     @mock.patch.object(Agent, 'requests')
@@ -96,45 +96,6 @@ class TestAgent(TestCase):
         self.assertIsNone(self.agent.site_id)
         self.agent.site_id = previous_agent_value
 
-    @mock.patch.object(Agent, 'requests')
-    def test_register_plugin_executes_calls_and_puts_in_event_code(self, mock_post):
-        return1 = mock.Mock()
-        return2 = mock.Mock()
-        return3 = mock.Mock()
-
-        return1.status_code = requests.codes.ok
-        return1.content = '{"data": {"instrument_id": 2}}'
-
-        return2.status_code = requests.codes.ok
-        return2.content = '{"event_code": 3, "data": {"description" : "description1"}}'
-
-        return3.status_code = requests.codes.ok
-        return3.content = '{"event_code": 4, "data": {"description" : "description2"}}'
-
-        mock_post.codes = requests.codes
-        mock_post.post.side_effect = iter([return1, return2, return3])
-
-        test_plugin = importlib.import_module(PLUGIN_ROOT+'test_plugin1')
-        self.agent.register_plugin(test_plugin)
-        dict_to_be_contained = {'description1': 3, 'description2': 4}
-
-        self.assertDictContainsSubset(dict_to_be_contained, self.agent.event_code_dict,
-                                      'Event Codes did not contain expected items')
-
-    @mock.patch.object(Agent, 'multiprocessing')
-    def test_startup_plugin_runs_process(self, mock_process):
-
-        return_process = mock.create_autospec(Process)
-
-        mock_process.Process.return_value = return_process
-        test_plugin = importlib.import_module(PLUGIN_ROOT+'test_plugin1')
-
-        self.agent.instrument_ids.append((test_plugin, 6))
-        self.agent.startup_plugin(test_plugin)
-
-        self.assertTrue(mock_process.Process.called, "Process was not called")
-
-        self.assertTrue(return_process.start.called, "Process.run was not called")
 
 
     @mock.patch.object(Agent, 'requests')
@@ -173,21 +134,16 @@ class TestAgent(TestCase):
         self.assertTrue('headers' in call_args[1], 'headers not passed as arg')
         self.assertTrue('verify' in call_args[1], 'verify not passed as arg')
 
+
+
     @mock.patch.object(Agent, 'requests')
-    @mock.patch.object(Agent.Agent, 'startup_plugin')
-    @mock.patch.object(Agent.Agent, 'register_plugin')
-    @mock.patch.object(Agent.Agent, 'request_site_id_from_event_manager')
-    @mock.patch.object(Agent.Agent, 'list_plugins')
-    def test_main_loop_when_not_central(self, mock_list_plugins, mock_request_id, mock_register, mock_startup, mock_requests):
-        mock_list_plugins.return_value = ['test1', 'test2']
-        mock_request_id.return_value = 123
+    @mock.patch.object(Agent.PluginManager, 'get_plugin_list')
+    def test_main_loop_exits_when_configured_off(self,  mock_list_plugins, mock_requests):
 
-        self.agent.main_loop_boolean=False
-        self.agent.is_central=0
-        self.agent.main()
+        self.agent.continue_processing_events=False
+        self.agent.config_ctxt['setup']['run_vm_agent'] = False
+        with self.assertRaises(SystemExit) as e:
+            self.agent.main()
+        self.assertEqual(e.exception.code, 0, "Main loop did not exit with the correct code")
 
-        self.assertTrue(mock_list_plugins.called,'Plugins were never listed')
-        self.assertTrue(mock_request_id.called, 'ID Never Requested')
-        self.assertTrue(mock_register.called, 'Plugins never registered')
-        self.assertTrue(mock_startup.called, 'Plugin Startup Never Called')
-
+        self.assertFalse(mock_list_plugins.called,'Plugins were listed')

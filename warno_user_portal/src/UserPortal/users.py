@@ -38,6 +38,7 @@ def list_users():
     return render_template('users_template.html', users=users_dict)
 
 
+
 @users.route('/users/new', methods=['GET', 'POST'])
 def new_user():
     """Add a new User to WARNO.

@@ -153,7 +153,7 @@ def push_ssl_certs(local_cert=CERT_LOCAL, target_cert=CERT_REMOTE,
     -------
 
     """
-    if (os.path.isfile(local_prefix + env.host + "/" + local_cert) and os.path.isfile(local_prefix + env.host + "/" + local_cert_key)):
+    if os.path.isfile(local_prefix + env.host + "/" + local_cert) and os.path.isfile(local_prefix + env.host + "/" + local_cert_key):
         put(local_prefix + env.host + "/" + local_cert, target_cert)
         put(local_prefix + env.host + "/" + local_cert_key, target_cert_key)
     else:
@@ -278,14 +278,14 @@ def update_application(dir=DEFAULT_HOME, local_prefix=PREFIX_PATH,
             push_config(config, config_target, local_prefix)
             push_keys(public, private, new_dir, local_prefix)
             push_secrets(secrets, secrets_target, local_prefix)
-            if(generate_missing_certs):
+            if generate_missing_certs:
                 gen_and_push_ssl_certs(generated_cert, generated_cert_key,
                                        local_cert, target_cert,
                                        local_cert_key, target_cert_key,
                                        local_ca, target_ca, cert_gen_script, local_prefix)
             else:
                 push_ssl_certs(local_cert, target_cert, local_cert_key, target_cert_key, local_prefix)
-                if(push_ca):
+                if push_ca:
                     push_ssl_CA(local_ca, target_ca, local_prefix)
 
 

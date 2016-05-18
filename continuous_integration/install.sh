@@ -30,7 +30,7 @@ source activate testenv
 
 
 # Install dependencies
-conda install --yes numpy nose netcdf4 psycopg2 pandas
+conda install --yes numpy nose psutil netcdf4 psycopg2 pandas
 
 pip install pyyaml Flask requests selenium nose-cov nose-exclude mock sqlalchemy flask-testing blinker flask-sqlalchemy flask-migrate flask-fixtures
 
