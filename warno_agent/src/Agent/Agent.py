@@ -363,9 +363,8 @@ class Agent(object):
         for manager in self.plugin_managers:
             self.enumerate_plugins(manager)
 
-            logging.info("Found the following plugins:",
+            logging.info("Found the following plugins:%s",
                 manager.get_plugin_list())
-
 
         print("Registering Plugins with multiple managers.")
         for manager in self.plugin_managers:
