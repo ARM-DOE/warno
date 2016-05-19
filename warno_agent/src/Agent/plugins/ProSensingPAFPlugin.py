@@ -10,7 +10,8 @@ from WarnoConfig import config
 
 logfile = "/vagrant/logs/agent_exceptions.log"
 
-
+import pyarmret
+pt = pyarmret.__file__
 
 
 white_list = ['KAZR-OLI','SACR', 'KAZR', 'WSACR', 'KASACR', 'KASACRO','WSACRO'] # We need to generalize this.
@@ -32,10 +33,12 @@ class ProSensingPAFPlugin(Plugin):
         self.config_id = None
 
     def run(self, msg_queue, config, ctrl_queue):
+
         self.ctrl_queue= ctrl_queue
         base_url = self.config_ctxt['agent']['instrument_list'][self.config_id]['base_url']
         base_port = self.config_ctxt['agent']['instrument_list'][self.config_id]['base_port']
-        pafc = PAFClient(base_url, base_port)
+        fmt = self.config_ctxt['agent']['instrument_list'][self.config_id]['ps_type']
+        pafc = PAFClient(base_url, base_port, fmt=fmt)
         pafc.connect()
         i = 1
         while True:
