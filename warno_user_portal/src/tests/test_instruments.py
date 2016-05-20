@@ -1,317 +1,223 @@
-import mock
-import requests
 import datetime
-
+import mock
+import os
 
 from flask.ext.testing import TestCase
+from flask.ext.fixtures import FixturesMixin
 
 from UserPortal import instruments
 from UserPortal import views
-from WarnoConfig import database
+from WarnoConfig import config
+from WarnoConfig.models import db
 from WarnoConfig.models import Instrument, InstrumentLog, Site, InstrumentDataReference
 
-
-class test_instruments(TestCase):
+@mock.patch("logging.Logger")
+class TestInstruments(TestCase, FixturesMixin):
     render_templates = False
+    db_cfg = config.get_config_context()['database']
+    s_db_cfg = config.get_config_context()['s_database']
+    TESTING = True
+
+    # Fixtures are usually in warno-vagrant/data_store/data/WarnoConfig/fixtures
+    fixtures = ['sites.yml', 'users.yml', 'instruments.yml', 'instrument_data_references.yml', 'instrument_logs.yml']
 
     def setUp(self):
-        database.db_session = mock.Mock()
-        self.log_patch = mock.patch('logging.Logger')
-        self.mock_log = self.log_patch.start()
+        db.create_all()
 
     def tearDown(self):
-        self.log_patch.stop()
+        db.session.remove()
+        db.drop_all()
 
     def create_app(self):
         views.app.config['TESTING'] = True
+        views.app.config['FIXTURES_DIRS'] = [os.environ.get('FIXTURES_DIR')]
+        views.app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://%s:%s@%s:%s/%s' % (self.db_cfg['DB_USER'],
+                                                                                       self.s_db_cfg['DB_PASS'],
+                                                                                       self.db_cfg['DB_HOST'],
+                                                                                       self.db_cfg['DB_PORT'],
+                                                                                       self.db_cfg['TEST_DB_NAME'])
+
+        FixturesMixin.init_app(views.app, db)
+
         return views.app
 
-    def test_list_instruments_returns_200_and_passes_mock_db_instruments_as_context_variable_using_correct_template(
-            self):
-        # SQLAlchemy turns our previous testing methodology fairly brittle/bulky
-        db_return = mock.Mock()
-        db_return.id = 0
-        db_return.name_short = 1
-        db_return.name_long = 2
-        db_return.type = 3
-        db_return.vendor = 4
-        db_return.description = 5
-        db_return.frequency_band = 6
-        db_return.site.site_id = 7
-        db_return.site.name_short = 8
-        database.db_session.query().order_by().all.return_value = [db_return]
-
+    def test_list_instruments_returns_200_and_passes_fixture_instruments_as_context_variable_using_correct_template(self, logger):
         result = self.client.get('/instruments')
         self.assert200(result, "GET return is not '200 OK'")
 
-        calls = database.db_session.query.call_args_list
-        self.assertTrue(True in [Instrument in call[0] for call in calls], "'Instrument' class not called in a query")
-
         # Accessing context variable by name feels brittle, but it seems to be the only way
+        # Check that test fixture data is passed by context as expected
         context_instruments = self.get_context_variable('instruments')
-        values = [value for key, value in context_instruments[0].iteritems()]
-        self.assertTrue(0 in values, "Value '0' is not in the returned dictionary")
-        self.assertTrue(1 in values, "Value '1' is not in the returned dictionary")
-        self.assertTrue(2 in values, "Value '2' is not in the returned dictionary")
-        self.assertTrue(8 in values, "Value '8' is not in the returned dictionary")
+
+        self.assertTrue('Test Vendor 1' in context_instruments[0]['vendor'],
+                        "'Test Vendor 1' is not in the 'vendor' field for the first instrument.")
+        self.assertTrue('TESTSIT1' in context_instruments[0]['location'],
+                        "'TESTSIT1' is not in the 'location' field for the first instrument.")
+        self.assertTrue('Test Vendor 2' in context_instruments[1]['vendor'],
+                        "'Test Vendor 2' is not in the 'vendor' field for the second instrument.")
+        self.assertTrue('TESTSIT2' in context_instruments[1]['location'],
+                        "'TESTSIT2' is not in the 'location' field for the second instrument.")
         self.assert_template_used('instrument_list.html')
 
-    def test_method_get_on_new_instrument_returns_200_ok_and_passes_mock_db_sites_as_context_variable_using_correct_template(
-            self):
-        db_return = mock.Mock()
-        db_return.id = 0
-        db_return.name_short = 1
-        database.db_session.query().all.return_value = [db_return]
-
+    def test_method_get_on_new_instrument_returns_200_ok_and_passes_fixture_sites_as_context_variable_using_correct_template(self, logger):
         result = self.client.get('/instruments/new')
         self.assert200(result)
 
-        calls = database.db_session.query.call_args_list
-        self.assertTrue(True in [Site in call[0] for call in calls], "'Site' class not called in a query")
-
         # Accessing context variable by name feels brittle, but it seems to be the only way
+        # Fixture sites should be passed as expected
         context_sites = self.get_context_variable('sites')
-        values = [value for key, value in context_sites[0].iteritems()]
-        self.assertTrue(0 in values, "Value '0' is not in the returned dictionary")
-        self.assertTrue(1 in values, "Value '1' is not in the returned dictionary")
+        self.assertTrue('TESTSIT1' in context_sites[0]['name'],
+                        "'TESTSIT1' is not in the 'name' field for the first context variable site.")
+        self.assertEqual(1, context_sites[0]['id'], "First context variable site does not have the correct id of '1'")
+        self.assertTrue('TESTSIT2' in context_sites[1]['name'],
+                        "'TESTSIT2' is not in the 'name' field for the second context variable site.")
         self.assert_template_used('new_instrument.html')
 
-    def test_method_get_on_edit_instrument_returns_200_ok_and_passes_mock_db_sites_and_instrument_as_context_variables_using_correct_template(
-            self):
-        site_return = mock.Mock()
-        site_return.id = 0
-        site_return.name_short = 1
-        instrument_return = mock.Mock()
-        instrument_return.name_long = 2
-        instrument_return.name_short = 3
-        database.db_session.query().all.return_value = [site_return]
-        database.db_session.query().filter().first.return_value = instrument_return
+    def test_method_get_on_edit_instrument_with_id_2_returns_200_ok_and_passes_fixture_sites_and_second_instrument_as_context_variables_using_correct_template(self, logger):
+        result = self.client.get('/instruments/2/edit')
 
-        result = self.client.get('/instruments/10/edit')
         self.assert200(result)
 
-        calls = database.db_session.query.call_args_list
-        self.assertTrue(True in [Site in call[0] for call in calls], "'Site' class not called in a query")
-        self.assertTrue(True in [Instrument in call[0] for call in calls], "'Instrument' class not called in a query")
-
         # Accessing context variable by name feels brittle, but it seems to be the only way
+        # Fixture sites should be passed as expected
         context_sites = self.get_context_variable('sites')
-        values = [value for key, value in context_sites[0].iteritems()]
-        self.assertTrue(0 in values, "Value '0' is not in the returned sites dictionary")
-        self.assertTrue(1 in values, "Value '1' is not in the returned sites dictionary")
+        self.assertTrue("TESTSIT1" in context_sites[0]['name'],
+                        "'TESTSIT1' is not in the first context variable site.")
+        self.assertTrue("TESTSIT2" in context_sites[1]['name'],
+                        "'TESTSIT1' is not in the second context variable site.")
 
+        # Second fixture instrument should be passed
         context_instrument = self.get_context_variable('instrument')
-        values = [value for key, value in context_instrument.iteritems()]
-        self.assertTrue(2 in values, "Value '2' is not in the returned instrument dictionary")
-        self.assertTrue(3 in values, "Value '3' is not in the returned instrument dictionary")
+        self.assertTrue('TESTINS2' in context_instrument['name_short'],
+                        "'TESTINS2' is not in the 'name_short' field for the context variable instrument.")
+        self.assertTrue('Test Description 2' in context_instrument['description'],
+                        "'Test Description 2' is not in the 'description' field for the context variable instrument.")
 
         self.assert_template_used('edit_instrument.html')
 
     # TODO method post new instrument, post edit instrument
     # TODO method get generate_instrument_dygraph arguments?
-    @mock.patch('psycopg2.connect')
     @mock.patch('UserPortal.instruments.db_recent_logs_by_instrument')
     @mock.patch('UserPortal.instruments.valid_columns_for_instrument')
-    def test_method_get_on_instrument_when_id_is_23_calls_db_with_correct_arguments_and_returns_200(self, valid_columns,
-                                                                                                    recent_logs,
-                                                                                                    connect):
+    def test_method_get_on_instrument_when_id_is_2_calls_db_with_correct_arguments_and_returns_200(self, valid_columns, recent_logs, logger):
         recent_logs.return_value = [dict(time="01/01/2001 01:01:01", contents="contents", status="1",
-                                         supporting_images="supporting_images", author="author")]
-        valid_columns.return_value = ["column"]
-        instrument_id = 23
+                                    supporting_images="supporting_images", author="author")]
+        valid_columns_return = ["column"]
+        valid_columns.return_value = valid_columns_return
+        instrument_id = 2
+
         test_url = "/instruments/%s" % instrument_id
         result = self.client.get(test_url)
 
-        calls = database.db_session.query.call_args_list
-        self.assertTrue(True in [Instrument in call[0] for call in calls], "'Instrument' class not called in a query")
+        context_instrument = self.get_context_variable('instrument')
+        context_recent_logs = self.get_context_variable('recent_logs')
+        context_status = self.get_context_variable('status')
+        context_columns = self.get_context_variable('columns')
 
-        filter_calls = database.db_session.query().filter.call_args_list
-        for index, call in enumerate(filter_calls):
-            self.assertTrue("instrument" in str(call[0][0]), "'instrument' nowhere in call %s to query filter" % index)
+        # Second fixture instrument should be acquired and passed back as a context variable
+        self.assertTrue('TESTINS2' in context_instrument['abbv'],
+                        "'TESTINS2' is not in the 'abbv' field for the context variable instrument.")
+        self.assertTrue('Test Description 2' in context_instrument['description'],
+                        "'Test Description 2' is not in the 'description' field for the context variable instrument.")
+
+        # Confirm that the status for the returned log has been converted from code to text
+        self.assertEqual('OPERATIONAL', context_recent_logs[0]['status'],
+                         "'status' field for the most recent log was not properly changed from 1 to 'OPERATIONAL'.")
+        # Status context variable should also be set to 'OPERATIONAL'
+        self.assertEqual('OPERATIONAL', context_status, "'status' context variable was not 'OPERATIONAL'")
+
+        self.assertListEqual(valid_columns_return, context_columns,
+                             "Valid columns were not passed properly as a context variable")
 
         self.assert200(result, "GET return is not '200 OK'")
         self.assert_template_used('show_instrument.html')
 
-    ### /instruments/instrument_id ###
-    def test_method_delete_on_instrument_when_id_is_23_returns_200(self):
-        instrument_id = 23
+    # /instruments/instrument_id
+    def test_method_delete_on_instrument_when_id_is_2_returns_200_and_reduces_count_by_1(self, logger):
+        instrument_id = 2
         test_url = "/instruments/%s" % instrument_id
+
+        count_before = db.session.query(Instrument).count()
         result = self.client.delete(test_url)
         self.assert200(result, "GET return is not '200 OK'")
+        count_after = db.session.query(Instrument).count()
 
-    def test_db_delete_instrument_when_id_is_10_calls_db_with_correct_arguments(self):
-        instrument_id = 10
+        self.assertEqual(count_before - 1, count_after, "The count of instruments was not decremented by exactly one.")
+
+    def test_db_delete_instrument_when_id_is_2_removes_the_entry_with_id_of_2(self, logger):
+        instrument_id = 2
         instruments.db_delete_instrument(instrument_id)
 
-        calls = database.db_session.query.call_args_list
-        self.assertTrue(True in [Instrument in call[0] for call in calls], "'Instrument' class not called in a query")
-        self.assertTrue(True in [InstrumentLog in call[0] for call in calls],
-                        "'InstrumentLog' class not called in a query")
+        count = db.session.query(Instrument).filter(Instrument.id==instrument_id).count()
+        self.assertEqual(count, 0, "The Instrument with id %s was not deleted." % instrument_id)
 
-        filter_calls = database.db_session.query().filter.call_args_list
-        for index, call in enumerate(filter_calls):
-            self.assertTrue("instrument" in str(call[0][0]), "'instrument' nowhere in call %s to query filter" % index)
+    # Database Helpers
+    def test_db_get_instrument_references_returns_the_instrument_data_references_for_the_correct_instrument(self, logger):
+        instrument_id = 1
+        function_result = instruments.db_get_instrument_references(instrument_id)
+        db_result = db.session.query(InstrumentDataReference).filter(InstrumentDataReference.instrument_id ==
+                                                                     instrument_id).all()
 
-    ### Database Helpers ###
-    def test_db_get_instrument_references_calls_db_with_correct_arguments_and_returns_mock_db_results(self):
-        db_return = ["return"]
-        database.db_session.query().filter().all.return_value = db_return
+        self.assertListEqual(function_result, db_result,
+                             "Returned InstrumentDataReferences do not match database query.")
+        print function_result[0].description
+        self.assertEqual(function_result[0].description, "prosensing_paf",
+                         "First reference's 'description' does not match the fixture.")
 
-        instrument_id = 5
-        result = instruments.db_get_instrument_references(instrument_id)
+    def test_db_select_instrument_when_id_is_2_returns_the_correct_instrument_dictionary(self, logger):
+        instrument_id = 2
+        func_result = instruments.db_select_instrument(instrument_id)
+        db_result = db.session.query(Instrument).filter(Instrument.id==instrument_id).first()
 
-        query_calls = database.db_session.query.call_args_list
-        self.assertTrue(True in [InstrumentDataReference in call[0] for call in query_calls],
-                        "'InstrumentDataReference' class not called in a query")
+        self.assertEqual(db_result.name_short, func_result['abbv'],
+                         "The function result's 'abbv' field does not match 'name_short' of the instrument with id 2.")
+        self.assertEqual(func_result['id'], instrument_id,
+                         "The function result's 'id' field does not match the id it was called with.")
 
-        filter_call = database.db_session.query().filter.call_args
-        self.assertTrue("instrument" in str(filter_call[0][0]), "'instrument' nowhere in query filter call")
-
-        self.assertEqual(db_return, result, "cursor.execute does not return the select result")
-
-    def test_db_select_instrument_when_id_is_10_calls_db_with_correct_arguments_and_returns_mock_db_results(self):
-        db_return = mock.Mock()
-        db_return.id = 0
-        db_return.name_short = 1
-        db_return.name_long = 2
-        db_return.type = 3
-        db_return.vendor = 4
-        db_return.description = 5
-        db_return.frequency_band = 6
-        db_return.site.site_id = 7
-        db_return.site.name_short = 8
-        db_return.site.latitude = 9
-        db_return.site.longitude = 10
-
-        database.db_session.query().filter().first.return_value = db_return
-        instrument_id = 10
-        result = instruments.db_select_instrument(instrument_id)
-
-        calls = database.db_session.query.call_args_list
-        self.assertTrue(True in [Instrument in call[0] for call in calls], "'Instrument' class not called in a query")
-
-        filter_calls = database.db_session.query().filter.call_args_list
-        # The 'if len(call[0]) > 0'  prevents the generator from accessing the next level index [0][0] if there is no index
-        # The 'True in [list]' means that this will be true if it is true for any call (decoupling call order/number)
-        self.assertTrue(True in ["instrument" in str(call[0][0]) for call in filter_calls if len(call[0]) > 0],
-                        "'instrument' nowhere in calls to query filter")
-
-        values = [value for key, value in result.iteritems()]
-        self.assertTrue(0 in values, "Value '0' is not in the returned dictionary")
-        self.assertTrue(1 in values, "Value '1' is not in the returned dictionary")
-        self.assertTrue(10 in values, "Value '10' is not in the returned dictionary")
-
-    def test_db_recent_logs_by_instrument_when_id_is_15_and_maximum_number_is_default_calls_db_with_correct_arguments(
-            self):
-        log1 = mock.Mock()
-        log2 = mock.Mock()
-        log1.time = 0
-        log1.contents = 1
-        log1.status = 2
-        log1.supporting_images = 3
-        log1.author.name = 4
-        log2.time = 10
-        log2.contents = 11
-        log2.status = 12
-        log2.supporting_images = 13
-        log2.author.name = 14
-        db_return = [log1, log2]
-        database.db_session.query().filter().order_by().limit().all.return_value = db_return
+    def test_db_recent_logs_by_instrument_when_id_is_1_returns_logs_in_the_correct_order(self, logger):
 
         # The parameters for the instrument id integer seem to be passed in a strange way for the 'filter' part
         # of a query, and I cannot find a way to access it from the tests.
-        instrument_id = 15
+        instrument_id = 1
         result = instruments.db_recent_logs_by_instrument(instrument_id)
 
-        calls = database.db_session.query.call_args_list
-        self.assertTrue(True in [InstrumentLog in call[0] for call in calls],
-                        "'InstrumentLog' class not called in a query")
+        # Assert the logs are in the correct order (later time first)
+        self.assertTrue(result[0]['time'] > result[1]['time'], "First log's time is not more recent than the second.")
+        self.assertEqual(result[0]['contents'], "Log 2 Contents",
+                         "Most recent log's 'contents' are not the expected 'Log 2 Contents'")
 
-        filter_calls = database.db_session.query().filter.call_args_list
-        # The 'if len(call[0]) > 0'  prevents the generator from accessing the next level index [0][0] if there is no index
-        # The 'True in [list]' means that this will be true if it is true for any call (decoupling call order/number)
-        self.assertTrue(True in ["log" in str(call[0][0]) for call in filter_calls if len(call[0]) > 0],
-                        "'log' nowhere in calls to query filter")
+    def test_db_recent_logs_by_instrument_when_id_is_1_and_maximum_number_is_1_limits_count_of_returned_logs_to_1(self, logger):
+        instrument_id = 1
+        maximum_number = 1
+        result = instruments.db_recent_logs_by_instrument(instrument_id, maximum_number)
 
-        limit_calls = database.db_session.query().filter().order_by().limit.call_args_list
-        self.assertTrue(True in [call[0] is not None for call in limit_calls],
-                        "No default maximum number in calls to query filter")
+        self.assertEqual(len(result), maximum_number,
+                         "Number of logs returned does not match 'maximum_number' parameter.")
 
-        values = [value for key, value in result[1].iteritems()]
-        self.assertTrue(11 in values, "Value '11' is not in the returned dictionary for the second log")
-        self.assertTrue(12 in values, "Value '12' is not in the returned dictionary for the second log")
-        self.assertTrue(13 in values, "Value '13' is not in the returned dictionary for the second log")
-
-    def test_db_recent_logs_by_instrument_when_id_is_15_and_maximum_number_is_11_calls_db_with_correct_arguments(self):
-        log1 = mock.Mock()
-        log2 = mock.Mock()
-        log1.time = 0
-        log1.contents = 1
-        log1.status = 2
-        log1.supporting_images = 3
-        log1.author.name = 4
-        log2.time = 10
-        log2.contents = 11
-        log2.status = 12
-        log2.supporting_images = 13
-        log2.author.name = 14
-        db_return = [log1, log2]
-        database.db_session.query().filter().order_by().limit().all.return_value = db_return
-
-        # The parameters for the instrument id integer seem to be passed in a strange way for the 'filter' part
-        # of a query, and I cannot find a way to access it from the tests.
-        instrument_id = 15
-        maximum_number = 11
-        instruments.db_recent_logs_by_instrument(instrument_id, maximum_number)
-
-        calls = database.db_session.query.call_args_list
-        self.assertTrue(True in [InstrumentLog in call[0] for call in calls],
-                        "'InstrumentLog' class not called in a query")
-
-        filter_calls = database.db_session.query().filter.call_args_list
-        # The 'if len(call[0]) > 0'  prevents the generator from accessing the next level index [0][0] if there is no index
-        # The 'True in [list]' means that this will be true if it is true for any call (decoupling call order/number)
-        self.assertTrue(True in ["log" in str(call[0][0]) for call in filter_calls if len(call[0]) > 0],
-                        "'log' nowhere in calls to query filter")
-
-        limit_calls = database.db_session.query().filter().order_by().limit.call_args_list
-        self.assertTrue(True in [maximum_number in call[0] for call in limit_calls],
-                        "maximum_number '%s' nowhere in calls to query filter" % maximum_number)
-
-    ### Helper Functions ###
+    # Helper Functions
     @mock.patch('UserPortal.instruments.db_get_instrument_references')
-    def test_valid_columns_for_instrument_calls_db_with_correct_arguments_and_returns_expected_column_list(self,
-                                                                                                           get_refs):
+    def test_valid_columns_for_instrument_returns_expected_column_list_for_both_special_and_non_special_references(self, get_refs, logger):
         expected_column_list = ["integer", "not_special_table"]
         # Each reference is a boolean specifying whether it is a 'special' table along with the name of the table
         ref1 = mock.Mock()
         ref2 = mock.Mock()
         ref1.special = True
-        ref1.description = "special_table"
+        ref1.description = "prosensing_paf"
         ref2.special = False
-        ref2.description = "not_special_table"
+        ref2.description = "not_special"
         references = [ref1, ref2]
         get_refs.return_value = references
-        # Datetime should not be a valid data type and should not make it into results
-        special_table_entries = [["integer", "integer"], ["datetime", "datetime"]]
-        database.db_session.execute().fetchall.return_value = special_table_entries
-        instrument_id = 10
+
+        instrument_id = 1
         result_column_list = instruments.valid_columns_for_instrument(instrument_id)
-        executed_calls = database.db_session.execute.call_args_list
 
-        self.assertTrue(expected_column_list[0] in result_column_list,
-                        "First valid column string '%s' not returned in columns" % expected_column_list[0])
-        self.assertTrue(expected_column_list[1] in result_column_list,
-                        "Second valid column string '%s' not returned in columns" % expected_column_list[1])
-        self.assertTrue("datetime" not in result_column_list, "Invalid column string 'datetime' in returned columns")
+        # Check that column list contains the non_special entry as well as some prosensing_paf specific entries
+        self.assertIn("not_special", result_column_list, "'not_special' reference is not in returned column list.")
+        self.assertIn("packet_id", result_column_list, "prosensing_paf 'packet_id' not in returned column list.")
+        self.assertIn("antenna_humidity", result_column_list,
+                      "prosensing_paf 'antenna_humidity' not in returned column list.")
 
-        # Second database execute expected to be performed on a 'special' table only
-        self.assertTrue("FROM information_schema.columns" in executed_calls[1][0][0],
-                        "cursor.execute never accesses 'information_schema.columns'")
-        self.assertTrue("special_table" in str(executed_calls[1][0][1]),
-                        "cursor.execute not called with 'special_table' table name")
-
-    def test_synchronize_sort_correctly_sorts_3_simple_data_sets_into_expected_output_format(self):
+    def test_synchronize_sort_correctly_sorts_3_simple_data_sets_into_expected_output_format(self, logger):
         dataset_0 = dict(data=[(datetime.datetime.strptime("2015-05-11 01:00", "%Y-%m-%d %H:%M"), 01),
                                (datetime.datetime.strptime("2015-05-11 01:30", "%Y-%m-%d %H:%M"), 02),
                                (datetime.datetime.strptime("2015-05-11 02:00", "%Y-%m-%d %H:%M"), 03)])
@@ -335,7 +241,7 @@ class test_instruments(TestCase):
         self.assertListEqual(result_list, expected_result, "The expected result list of synchronize_sort and the actual"
                                                            " list returned do not match.")
 
-    def test_iso_first_elements_changes_the_datetime_object_first_element_of_a_list_to_iso_format(self):
+    def test_iso_first_elements_changes_the_datetime_object_first_element_of_a_list_to_iso_format(self, logger):
         input_list = [datetime.datetime.strptime("2015-01-01 01:30:30", "%Y-%m-%d %H:%M:%S"), 0, 1, 2]
         expected_list = ['2015-01-01T01:30:30', 0, 1, 2]
 

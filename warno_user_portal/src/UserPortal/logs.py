@@ -9,8 +9,8 @@ from flask import Blueprint
 
 from WarnoConfig.utility import status_code_to_text, status_text
 from WarnoConfig.models import InstrumentLog, User, Instrument
+from WarnoConfig.models import db
 from WarnoConfig import config
-from WarnoConfig import database
 
 
 logs = Blueprint('logs', __name__, template_folder='templates')
@@ -24,6 +24,7 @@ up_logger = logging.getLogger(__name__)
 up_handler = logging.FileHandler("%suser_portal_server.log" % log_path, mode="a")
 up_handler.setFormatter(logging.Formatter('%(levelname)s:%(asctime)s:%(module)s:%(lineno)d:  %(message)s'))
 up_logger.addHandler(up_handler)
+
 
 @logs.route('/submit_log')
 def new_log():
@@ -73,54 +74,57 @@ def new_log():
     # Default error message will not show on template when its the empty string
     error = ""
 
-    new_log = InstrumentLog()
-    new_log.author_id = request.args.get('user-id')
-    new_log.instrument_id = request.args.get('instrument')
-    new_log.time = request.args.get('time')
-    new_log.status = request.args.get('status')
-    new_log.contents = request.args.get('contents')
+    new_db_log = InstrumentLog()
+    new_db_log.author_id = request.args.get('user-id')
+    new_db_log.instrument_id = request.args.get('instrument')
+    new_db_log.time = request.args.get('time')
+    new_db_log.status = request.args.get('status')
+    new_db_log.contents = request.args.get('contents')
 
     cfg = config.get_config_context()
     cert_verify = cfg['setup']['cert_verify']
 
     # If there is valid data entered with the get request, insert and redirect to the instrument
     # that the log was placed for
-    if new_log.author_id and new_log.instrument_id and new_log.status and new_log.time:
+    if new_db_log.author_id and new_db_log.instrument_id and new_db_log.status and new_db_log.time:
         # Attempt to insert an item into the database. Try/Except is necessary because
         # the timedate datatype the database expects has to be formatted correctly.
-        if new_log.time == 'Invalid Date':
+        if new_db_log.time == 'Invalid Date':
             error = "Invalid Date/Time Format"
-            up_logger.error("Invalid Date/Time format for new log entry. 'Invalid Date' passed from JavaScript parser in template")
+            up_logger.error("Invalid Date/Time format for new log entry. "
+                            "'Invalid Date' passed from JavaScript parser in template")
         else:
             try:
-                database.db_session.add(new_log)
-                database.db_session.commit()
+                db.session.add(new_db_log)
+                db.session.commit()
 
                 # If it is not a central facility, pass the log to the central facility
                 if not cfg['type']['central_facility']:
-                    packet = dict(event_code=5, data = dict(instrument_id=new_log.instrument_id, author_id = new_log.author_id, time = str(new_log.time),
-                                                    status = new_log.status, contents = new_log.contents, supporting_images = None))
+                    packet = dict(event_code=5,
+                                  data=dict(instrument_id=new_db_log.instrument_id, author_id=new_db_log.author_id,
+                                            time=str(new_db_log.time), status=new_db_log.status,
+                                            contents=new_db_log.contents, supporting_images=None))
                     payload = json.dumps(packet)
-                    requests.post(cfg['setup']['cf_url'], data = payload,
-                                          headers = {'Content-Type': 'application/json'}, verify=cert_verify)
+                    requests.post(cfg['setup']['cf_url'], data=payload,
+                                  headers={'Content-Type': 'application/json'}, verify=cert_verify)
 
                 # Redirect to the instrument page that the log was submitted for.
-                return redirect(url_for('instruments.instrument', instrument_id=new_log.instrument_id))
+                return redirect(url_for('instruments.instrument', instrument_id=new_db_log.instrument_id))
             except psycopg2.DataError:
                 # If the timedate object expected by the database was incorrectly formatted, error is set
                 # for when the page is rendered again
                 error = "Invalid Date/Time Format"
-                up_logger.error("Invalid Date/Time format for new log entry.  Value: %s", new_log.time)
+                up_logger.error("Invalid Date/Time format for new log entry.  Value: %s", new_db_log.time)
 
     # If there was no valid insert, render form normally
 
     # Format the instrument names to be more descriptive
-    db_instruments = database.db_session.query(Instrument).all()
+    db_instruments = db.session.query(Instrument).all()
     instruments = [dict(id=instrument.id, name=instrument.site.name_short + ":" + instrument.name_short)
                    for instrument in db_instruments]
 
     # Get a list of users so the user can choose who submitted the log.
-    db_users = database.db_session.query(User).all()
+    db_users = db.session.query(User).all()
     users = [dict(id=user.id, name=user.name) for user in db_users]
 
     return render_template('new_log.html', users=users, instruments=instruments, status=status_text, error=error)

@@ -64,7 +64,8 @@ def is_number(s):
     except ValueError:
         return False
 
-def signal_handler( signal, frame):
+
+def signal_handler(signal, frame):
     """ Set up Ctrl-C Handling
 
     This function sets up signal interrupt catching, primarily to handle Ctrl-C.
@@ -80,7 +81,8 @@ def signal_handler( signal, frame):
     print("Exiting due to SIGINT")
     sys.exit(0)
 
-### Database ###
+
+# Database
 def reset_db_keys():
     """Runs the 'db_sequence_reset' script in a subprocess to reset the postgres primary keys, and waits for the
     subprocess to finish. Without this reset, inserts that insert at a certain ID do not properly update the keys, so
@@ -111,18 +113,6 @@ def load_dumpfile():
     p.wait()
 
 
-def upgrade_db():
-    """Runs the 'db_migrate' script in a subprocess to migrate the database using 'alembic'.
-
-    """
-    if os.environ["DATA_STORE_PATH"]:
-        script = os.environ["DATA_STORE_PATH"] + "db_upgrade.sh"
-    else:
-        script = "/vagrant/data_store/data/db_upgrade.sh"
-
-    p = subprocess.Popen(["bash", script], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    p.wait()
-
 def table_exists(table_name, curr):
     """Checks whether a table with name 'table_name' exists in the database.
 
@@ -138,8 +128,8 @@ def table_exists(table_name, curr):
         Returns True if the table exists, otherwise False.
 
     """
-    SQL = "SELECT relname FROM pg_class WHERE relname = %s;"
-    curr.execute(SQL, (table_name,))
+    sql = "SELECT relname FROM pg_class WHERE relname = %s;"
+    curr.execute(sql, (table_name,))
     if curr.fetchone() is None:
         return False
     else:
@@ -156,9 +146,9 @@ def drop_table(table_name, curr):
     curr: database cursor
 
     """
-    SQL = "DROP TABLE IF EXISTS %s;"
+    sql = "DROP TABLE IF EXISTS %s;"
     try:
-        curr.execute(SQL, (table_name,))
+        curr.execute(sql, (table_name,))
     except Exception, e:
         print(e)
 
@@ -253,19 +243,20 @@ def load_data_into_table(filename, table):
         Name of the file to load into the table.
     table: string
         Name of the table to load the file into.
-    conn: database connection
 
     """
     df = pandas.read_csv(filename)
     db_cfg = config.get_config_context()['database']
     s_db_cfg = config.get_config_context()['s_database']
     engine = create_engine('postgresql://%s:%s@%s:%s/%s' %
-                           (db_cfg['DB_USER'], s_db_cfg['DB_PASS'], db_cfg['DB_HOST'], db_cfg['DB_PORT'], db_cfg['DB_NAME']))
+                           (db_cfg['DB_USER'], s_db_cfg['DB_PASS'], db_cfg['DB_HOST'],
+                            db_cfg['DB_PORT'], db_cfg['DB_NAME']))
     df.to_sql(table, engine, if_exists='append', index=False, chunksize=900)
 
 
 def dump_table_to_csv(filename, table, server=None):
-    """Dumps the database table named 'table' as a comma separated file into 'filename', from database server 'server' if supplied.
+    """Dumps the database table named 'table' as a comma separated file into 'filename',
+    from database server 'server' if supplied.
 
     Parameters
     ----------
@@ -274,14 +265,16 @@ def dump_table_to_csv(filename, table, server=None):
     table: string
         Name of the database table to dump into a file.
     server: sqlalchemy engine, optional
-        A sqlalchemy engine for whichever database server the data will be read from, defaults to the default WARNO server.
+        A sqlalchemy engine for whichever database server the data will be read from,
+        defaults to the default WARNO server.
 
     """
     if server is None:
         db_cfg = config.get_config_context()['database']
         s_db_cfg = config.get_config_context()['s_database']
         engine = create_engine('postgresql://%s:%s@%s:%s/%s' %
-                           (db_cfg['DB_USER'], s_db_cfg['DB_PASS'], db_cfg['DB_HOST'], db_cfg['DB_PORT'], db_cfg['DB_NAME']))
+                           (db_cfg['DB_USER'], s_db_cfg['DB_PASS'], db_cfg['DB_HOST'],
+                            db_cfg['DB_PORT'], db_cfg['DB_NAME']))
     else:
         server = create_engine(server)
 
@@ -293,11 +286,12 @@ def connect_db():
     """ Connects to the default WARNO database server.
     Returns
     -------
-    psychopg2 connection object for the WARNO database server.
+    psycopg2 connection object for the WARNO database server.
 
     """
     db_cfg = config.get_config_context()['database']
     s_db_cfg = config.get_config_context()['s_database']
     engine = create_engine('postgresql://%s:%s@%s:%s/%s' %
-                           (db_cfg['DB_USER'], s_db_cfg['DB_PASS'], db_cfg['DB_HOST'], db_cfg['DB_PORT'], db_cfg['DB_NAME']))
+                           (db_cfg['DB_USER'], s_db_cfg['DB_PASS'], db_cfg['DB_HOST'],
+                            db_cfg['DB_PORT'], db_cfg['DB_NAME']))
 

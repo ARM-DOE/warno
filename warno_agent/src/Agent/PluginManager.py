@@ -145,7 +145,7 @@ class PluginManager(object):
         -------
         """
 
-        logging.info("Registering Plugin", plugin)
+        logging.info("Registering Plugin %s", plugin)
         registration_info = plugin['plugin_handle'].get_registration_info()
 
         for event in registration_info['event_code_names']:

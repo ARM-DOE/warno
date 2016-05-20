@@ -2,14 +2,12 @@ import logging
 import json
 import os
 
-
 from flask import render_template, redirect, url_for, request
 from flask import Blueprint
 from sqlalchemy import asc
 
-from WarnoConfig import config
 from WarnoConfig.utility import status_code_to_text
-from WarnoConfig import database
+from WarnoConfig.models import db
 from WarnoConfig.models import Instrument, ProsensingPAF, PulseCapture, InstrumentLog, Site
 from WarnoConfig.models import InstrumentDataReference, EventCode, EventWithValue
 
@@ -25,6 +23,7 @@ up_handler = logging.FileHandler("%suser_portal_server.log" % log_path, mode="a"
 up_handler.setFormatter(logging.Formatter('%(levelname)s:%(asctime)s:%(module)s:%(lineno)d:  %(message)s'))
 up_logger.addHandler(up_handler)
 
+
 @instruments.route('/instruments')
 def list_instruments():
     """List  ARM Instruments.
@@ -34,7 +33,7 @@ def list_instruments():
     instrument_list.html: HTML document
         Returns an HTML document with an argument for a list of instruments and their information.
     """
-    db_instruments = database.db_session.query(Instrument).order_by(asc(Instrument.id)).all()
+    db_instruments = db.session.query(Instrument).order_by(asc(Instrument.id)).all()
     instrument_list = [dict(abbv=inst.name_short, name=inst.name_long, type=inst.type, vendor=inst.vendor,
                             description=inst.description, frequency_band=inst.frequency_band,
                             location=inst.site.name_short, site_id=inst.site_id, id=inst.id)
@@ -60,18 +59,18 @@ def new_instrument():
     if request.method == 'POST':
         # Get the instrument information from the request
         # Field lengths limited in the views
-        new_instrument = Instrument()
-        new_instrument.name_short = request.form.get('abbv')
-        new_instrument.name_long = request.form.get('name')
-        new_instrument.type = request.form.get('type')
-        new_instrument.vendor = request.form.get('vendor')
-        new_instrument.description = request.form.get('description')
-        new_instrument.frequency_band = request.form.get('frequency_band')
-        new_instrument.site_id = request.form.get('site')
+        new_db_instrument = Instrument()
+        new_db_instrument.name_short = request.form.get('abbv')
+        new_db_instrument.name_long = request.form.get('name')
+        new_db_instrument.type = request.form.get('type')
+        new_db_instrument.vendor = request.form.get('vendor')
+        new_db_instrument.description = request.form.get('description')
+        new_db_instrument.frequency_band = request.form.get('frequency_band')
+        new_db_instrument.site_id = request.form.get('site')
 
         # Insert a new instrument into the database
-        database.db_session.add(new_instrument)
-        database.db_session.commit()
+        db.session.add(new_db_instrument)
+        db.session.commit()
 
         # Redirect to the updated list of instruments
         return redirect(url_for("instruments.list_instruments"))
@@ -79,7 +78,7 @@ def new_instrument():
     # If the request is to get the form, get a list of sites and their ids for the dropdown in the add user form
     if request.method == 'GET':
         #
-        db_sites = database.db_session.query(Site).all()
+        db_sites = db.session.query(Site).all()
         sites = [dict(id=site.id, name=site.name_short) for site in db_sites]
 
         return render_template('new_instrument.html', sites=sites)
@@ -88,6 +87,11 @@ def new_instrument():
 @instruments.route('/instruments/<instrument_id>/edit', methods=['GET', 'POST'])
 def edit_instrument(instrument_id):
     """Update WARNO instrument.
+
+    Parameters
+    ----------
+    instrument_id: integer
+        Database id for the instrument entry to be updated.
 
     Returns
     -------
@@ -98,10 +102,11 @@ def edit_instrument(instrument_id):
         If the request method is 'POST', returns a Flask redirect location to the
             list_instruments function, redirecting the site to the list of instruments.
     """
+
     if request.method == 'POST':
         # Get the instrument information from the request
         # Field lengths limited in the views
-        updated_instrument = database.db_session.query(Instrument).filter(Instrument.id == instrument_id).first()
+        updated_instrument = db.session.query(Instrument).filter(Instrument.id == instrument_id).first()
         updated_instrument.name_short = request.form.get('abbv')
         updated_instrument.name_long = request.form.get('name')
         updated_instrument.type = request.form.get('type')
@@ -111,23 +116,24 @@ def edit_instrument(instrument_id):
         updated_instrument.site_id = request.form.get('site')
 
         # Update instrument in the database
-        database.db_session.commit()
+        db.session.commit()
 
         # Redirect to the updated list of instruments
         return redirect(url_for("instruments.list_instruments"))
 
-    # If the request is to get the form, get a list of sites and their ids for the dropdown in the update instrument form
+    # If the request is to get the form, get a list of sites and their ids for the dropdown
+    # in the update instrument form
     if request.method == 'GET':
-        db_sites = database.db_session.query(Site).all()
+        db_sites = db.session.query(Site).all()
         sites = [dict(id=site.id, name=site.name_short) for site in db_sites]
 
-        db_instrument = database.db_session.query(Instrument).filter(Instrument.id == instrument_id).first()
-        instrument = dict(name_short=db_instrument.name_short, name_long=db_instrument.name_long,
-                          type=db_instrument.type,
-                          vendor=db_instrument.vendor, description=db_instrument.description,
-                          frequency_band=db_instrument.frequency_band, site_id=db_instrument.site_id)
+        db_instrument = db.session.query(Instrument).filter(Instrument.id == instrument_id).first()
+        instrument_dict = dict(name_short=db_instrument.name_short, name_long=db_instrument.name_long,
+                               type=db_instrument.type, vendor=db_instrument.vendor,
+                               description=db_instrument.description, frequency_band=db_instrument.frequency_band,
+                               site_id=db_instrument.site_id)
 
-        return render_template('edit_instrument.html', sites=sites, instrument=instrument)
+        return render_template('edit_instrument.html', sites=sites, instrument=instrument_dict)
 
 
 def valid_columns_for_instrument(instrument_id):
@@ -148,10 +154,10 @@ def valid_columns_for_instrument(instrument_id):
     references = db_get_instrument_references(instrument_id)
     column_list = []
     for reference in references:
-        if reference.special:
-            rows = database.db_session.execute(
-                    "SELECT column_name, data_type FROM information_schema.columns WHERE table_name = :table",
-                    dict(table=reference.description)).fetchall()
+        if reference.special is True:
+            rows = db.session.execute("SELECT column_name, data_type FROM information_schema.columns"
+                                      " WHERE table_name = :table",
+                                      dict(table=reference.description)).fetchall()
             columns = [row[0] for row in rows if row[1] in ["integer", "boolean", "double precision"]]
         else:
             columns = [reference.description]
@@ -173,8 +179,8 @@ def db_get_instrument_references(instrument_id):
             Each element being the name of the reference and whether or not it is a special reference
             (meaning it references a full table rather than just a certain event type)
     """
-    references = database.db_session.query(InstrumentDataReference).filter(
-            InstrumentDataReference.instrument_id == instrument_id).all()
+    references = db.session.query(InstrumentDataReference)\
+        .filter(InstrumentDataReference.instrument_id == instrument_id).all()
     return references
 
 
@@ -191,11 +197,10 @@ def db_select_instrument(instrument_id):
     Dictionary containing the instrument information.
 
     """
-    inst = database.db_session.query(Instrument).filter(Instrument.id == instrument_id).first()
+    inst = db.session.query(Instrument).filter(Instrument.id == instrument_id).first()
     return dict(abbv=inst.name_short, name=inst.name_long, type=inst.type, vendor=inst.vendor,
-                description=inst.description,
-                frequency_band=inst.frequency_band, location=inst.site.name_short, latitude=inst.site.latitude,
-                longitude=inst.site.longitude, site_id=inst.site_id, id=inst.id)
+                description=inst.description, frequency_band=inst.frequency_band, location=inst.site.name_short,
+                latitude=inst.site.latitude, longitude=inst.site.longitude, site_id=inst.site_id, id=inst.id)
 
 
 def db_delete_instrument(instrument_id):
@@ -207,13 +212,12 @@ def db_delete_instrument(instrument_id):
         Database id of the instrument.
 
     """
-    database.db_session.query(InstrumentDataReference).filter(
-            InstrumentDataReference.instrument_id == instrument_id).delete()
-    database.db_session.query(ProsensingPAF).filter(ProsensingPAF.instrument_id == instrument_id).delete()
-    database.db_session.query(InstrumentLog).filter(InstrumentLog.instrument_id == instrument_id).delete()
-    database.db_session.query(PulseCapture).filter(PulseCapture.instrument_id == instrument_id).delete()
-    database.db_session.query(Instrument).filter(Instrument.id == instrument_id).delete()
-    database.db_session.commit()
+    db.session.query(InstrumentDataReference).filter(InstrumentDataReference.instrument_id == instrument_id).delete()
+    db.session.query(ProsensingPAF).filter(ProsensingPAF.instrument_id == instrument_id).delete()
+    db.session.query(InstrumentLog).filter(InstrumentLog.instrument_id == instrument_id).delete()
+    db.session.query(PulseCapture).filter(PulseCapture.instrument_id == instrument_id).delete()
+    db.session.query(Instrument).filter(Instrument.id == instrument_id).delete()
+    db.session.commit()
 
 
 @instruments.route('/instruments/<instrument_id>', methods=['GET', 'DELETE'])
@@ -237,7 +241,7 @@ def instrument(instrument_id):
         and the list of columns for available data to plot on graphs.
     """
     if request.method == "GET":
-        instrument = db_select_instrument(instrument_id)
+        db_instrument = db_select_instrument(instrument_id)
         recent_logs = db_recent_logs_by_instrument(instrument_id)
         # If there are any logs, the most recent log (the first of the list) has the current status
         if recent_logs:
@@ -250,7 +254,7 @@ def instrument(instrument_id):
             status = "OPERATIONAL"
 
         column_list = valid_columns_for_instrument(instrument_id)
-        return render_template('show_instrument.html', instrument=instrument,
+        return render_template('show_instrument.html', instrument=db_instrument,
                                recent_logs=recent_logs, status=status, columns=sorted(column_list))
 
     elif request.method == "DELETE":
@@ -275,7 +279,7 @@ def db_recent_logs_by_instrument(instrument_id, maximum_number=5):
 
     """
     # Creates a list of dictionaries, each dictionary being one of the log entries
-    db_logs = database.db_session.query(InstrumentLog).filter(InstrumentLog.instrument_id == instrument_id) \
+    db_logs = db.session.query(InstrumentLog).filter(InstrumentLog.instrument_id == instrument_id)\
         .order_by(InstrumentLog.time.desc()).limit(maximum_number).all()
 
     return [dict(time=log.time, contents=log.contents, status=log.status,
@@ -330,18 +334,19 @@ def generate_instrument_graph():
             up_logger.debug("key %s not in valid columns for instrument id %s", value["key"], instrument_id)
             return json.dumps("[]")
     references = db_get_instrument_references(instrument_id)
+
     # Build the SQL query for the given key.  If the key is a part of a special table,
     # build a query based on the key and containing table
     for reference in references:
         for key, value in keys.iteritems():
             sql_query = None
             if reference.description == value["key"]:
-                event_code = database.db_session.execute('SELECT event_code FROM event_codes WHERE description = :key',
+                event_code = db.session.execute('SELECT event_code FROM event_codes WHERE description = :key',
                                                          {'key': value["key"]}).fetchone()
                 sql_query = ('SELECT time, value FROM events_with_value WHERE instrument_id = :id '
                              'AND time >= :start AND time <= :end AND event_code = %s ORDER BY time') % event_code[0]
             elif reference.special is True:
-                rows = database.db_session.execute("SELECT column_name FROM information_schema.columns WHERE table_name = :table",
+                rows = db.session.execute("SELECT column_name FROM information_schema.columns WHERE table_name = :table",
                                                    {'table': reference.description}).fetchall()
                 columns = [row[0] for row in rows]
                 if value["key"] in columns:
@@ -350,7 +355,7 @@ def generate_instrument_graph():
             # Selects the time and the "key" column from the data table with time between 'start' and 'end'
             if sql_query:
                 try:
-                    value["data"] = database.db_session.execute(sql_query, dict(id=instrument_id, start=start, end=end)).fetchall()
+                    value["data"] = db.session.execute(sql_query, dict(id=instrument_id, start=start, end=end)).fetchall()
                 except Exception, e:
                     print(e)
                     return json.dumps("[]")

@@ -1,43 +1,56 @@
 import mock
+import os
 
-from unittest import TestCase
+from flask.ext.testing import TestCase
+from flask.ext.fixtures import FixturesMixin
 
 from UserPortal import views
-from WarnoConfig import database
-from WarnoConfig.models import InstrumentLog
+from WarnoConfig import config
+from WarnoConfig.models import db
 
 
-class test_views(TestCase):
-    def test_status_log_for_each_instrument(self):
-        first_log = mock.Mock()
-        first_log.instrument.id = 2
-        first_log.author.name = "first_author"
-        first_log.contents = "first_contents"
-        first_log.status = 5
+@mock.patch('logging.Logger')
+class TestViews(TestCase, FixturesMixin):
 
-        second_log = mock.Mock()
-        second_log.instrument.id = 4
-        second_log.author.name = "second_author"
-        second_log.contents = "second_contents"
-        second_log.status = 1
+    render_templates = False
+    db_cfg = config.get_config_context()['database']
+    s_db_cfg = config.get_config_context()['s_database']
+    TESTING = True
 
-        # Quite ugly, but only way to mock a complex sqlalchemy call
-        database.db_session.query().join().join().outerjoin().filter().all.return_value = [first_log, second_log]
+    # Fixtures are usually in warno-vagrant/data_store/data/WarnoConfig/fixtures
+    fixtures = ['sites.yml', 'users.yml', 'instruments.yml', 'instrument_logs.yml']
+
+    def setUp(self):
+        db.create_all()
+
+    def tearDown(self):
+        db.session.remove()
+        db.drop_all()
+
+    def create_app(self):
+        views.app.config['TESTING'] = True
+        views.app.config['FIXTURES_DIRS'] = [os.environ.get('FIXTURES_DIR')]
+        views.app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://%s:%s@%s:%s/%s' % (self.db_cfg['DB_USER'],
+                                                                                       self.s_db_cfg['DB_PASS'],
+                                                                                       self.db_cfg['DB_HOST'],
+                                                                                       self.db_cfg['DB_PORT'],
+                                                                                       self.db_cfg['TEST_DB_NAME'])
+
+        FixturesMixin.init_app(views.app, db)
+
+        return views.app
+
+    def test_status_log_for_each_instrument_returns_expected_logs(self, logger):
+
         result = views.status_log_for_each_instrument()
+        print result
+        # Instrument id 1 has two logs, the most recent having contents 'Log 2 Contents'
+        # Instrument id 2 has one log, having contents 'Log 3 Contents'
 
-        self.assertEquals(result[first_log.instrument.id]["author"], first_log.author.name,
-                          "First instrument's author is not '%s'" % first_log.author.name)
-        self.assertEquals(result[first_log.instrument.id]["status_code"], first_log.status,
-                          "First instrument's status_code is not '%s'" % first_log.status)
-        self.assertEquals(result[first_log.instrument.id]["contents"], first_log.contents,
-                          "First instrument's contents are not '%s'" % first_log.contents)
+        self.assertEqual(result[1]['contents'], 'Log 2 Contents',
+                         "Instrument with id 1's most recent log did not have contents 'Log 2 Contents'")
+        self.assertEqual(result[2]['contents'], 'Log 3 Contents',
+                         "Instrument with id 2's most recent log did not have contents 'Log 3 Contents'")
 
-        self.assertEquals(result[second_log.instrument.id]["author"], second_log.author.name,
-                          "Second instrument's author is not '%s'" % second_log.author.name)
-        self.assertEquals(result[second_log.instrument.id]["status_code"], second_log.status,
-                          "Second instrument's status_code is not '%s'" % second_log.status)
-        self.assertEquals(result[second_log.instrument.id]["contents"], second_log.contents,
-                          "Second instrument's contents are not '%s'" % second_log.contents)
-
-    def test_two(self):
+    def test_two(self, logger):
         self.assertTrue(True)

@@ -1,45 +1,52 @@
 import mock
+import os
 
-from unittest import TestCase
 from flask.ext.testing import TestCase
+from flask.ext.fixtures import FixturesMixin
 
 from UserPortal import views
-#from UserPortal import users
-from WarnoConfig import database
-from WarnoConfig.models import User
+from WarnoConfig import config
+from WarnoConfig.models import db
 
 
-class test_users(TestCase):
+@mock.patch('logging.Logger')
+class TestUsers(TestCase, FixturesMixin):
+
+    render_templates = False
+    db_cfg = config.get_config_context()['database']
+    s_db_cfg = config.get_config_context()['s_database']
+    TESTING = True
+
+    # Fixtures are usually in warno-vagrant/data_store/data/WarnoConfig/fixtures
+    fixtures = ['users.yml']
 
     def setUp(self):
-        database.db_session = mock.Mock()
-        self.log_patch = mock.patch('logging.Logger')
-        self.mock_log = self.log_patch.start()
+        db.create_all()
 
     def tearDown(self):
-        self.log_patch.stop()
+        db.session.remove()
+        db.drop_all()
 
     def create_app(self):
         views.app.config['TESTING'] = True
+        views.app.config['FIXTURES_DIRS'] = [os.environ.get('FIXTURES_DIR')]
+        views.app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://%s:%s@%s:%s/%s' % (self.db_cfg['DB_USER'],
+                                                                                       self.s_db_cfg['DB_PASS'],
+                                                                                       self.db_cfg['DB_HOST'],
+                                                                                       self.db_cfg['DB_PORT'],
+                                                                                       self.db_cfg['TEST_DB_NAME'])
+
+        FixturesMixin.init_app(views.app, db)
+
         return views.app
 
-    def test_method_get_on_edit_user_returns_200_ok_and_passes_mock_db_user_as_context_variables_using_correct_template(
-            self):
-        user_return = mock.Mock()
-        user_return.name = 2
-        user_return.location = 3
-        database.db_session.query().filter().first.return_value = user_return
-
-        result = self.client.get('/users/10/edit')
+    def test_method_get_on_edit_user_returns_200_ok_and_passes_fixture_user_as_context_variables_using_correct_template(self, logger):
+        result = self.client.get('/users/2/edit')
         self.assert200(result)
 
-        calls = database.db_session.query.call_args_list
-        self.assertTrue(True in [User in call[0] for call in calls], "'User' class not called in a query")
-
-        # Accessing context variable by name feels brittle, but it seems to be the only way
         context_user = self.get_context_variable('user')
-        values = [value for key, value in context_user.iteritems()]
-        self.assertTrue(2 in values, "Value '2' is not in the returned user dictionary")
-        self.assertTrue(3 in values, "Value '3' is not in the returned user dictionary")
+
+        self.assertEqual(context_user['name'], 'Test User 2',
+                         "'Test User 2' is not in the 'name' field for the context variable user.")
 
         self.assert_template_used('edit_user.html')

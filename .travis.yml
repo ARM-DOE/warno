@@ -9,7 +9,7 @@ matrix:
       - python: "2.7"
         env:
         - PYTHON_VERSION="2.7"
-        - NOSE_ARGS="-v --no-skip --exclude-dir=selenium_tests"
+        - NOSE_ARGS="-v --no-skip --exclude-dir=selenium_tests --exclude-dir=warno_user_portal/src/tests"
         - COVERALLS="true"
 
 before_install:
@@ -21,4 +21,4 @@ install: source continuous_integration/install.sh
 before_script: source utility_setup_scripts/set_env_for_testing.sh
 
 script:
-    - nosetests --exclude-dir=selenium_tests --with-xunit
+    - nosetests --exclude-dir=selenium_tests --exclude-dir=warno_user_portal/src/tests --with-xunit

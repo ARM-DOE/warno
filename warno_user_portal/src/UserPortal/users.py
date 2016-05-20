@@ -4,8 +4,7 @@ import os
 from flask import render_template, redirect, url_for, request
 from flask import Blueprint
 
-from WarnoConfig import config
-from WarnoConfig import database
+from WarnoConfig.models import db
 from WarnoConfig.models import User
 
 
@@ -21,6 +20,7 @@ up_handler = logging.FileHandler("%suser_portal_server.log" % log_path, mode="a"
 up_handler.setFormatter(logging.Formatter('%(levelname)s:%(asctime)s:%(module)s:%(lineno)d:  %(message)s'))
 up_logger.addHandler(up_handler)
 
+
 @users.route('/users')
 def list_users():
     """List WARNO Users.
@@ -31,11 +31,12 @@ def list_users():
         Returns an HTML document with an argument for the list of users and their information.
     """
 
-    db_users = database.db_session.query(User).all()
-    users = [dict(name=user.name, email=user.email, location=user.location, position=user.position, id=user.id)
-             for user in db_users]
+    db_users = db.session.query(User).all()
+    users_dict = [dict(name=user.name, email=user.email, location=user.location, position=user.position, id=user.id)
+                  for user in db_users]
 
-    return render_template('users_template.html', users=users)
+    return render_template('users_template.html', users=users_dict)
+
 
 
 @users.route('/users/new', methods=['GET', 'POST'])
@@ -56,16 +57,16 @@ def new_user():
         # Get the information for the insert from the submitted form arguments
         # Lengths validated in views
         # TODO Email may need validation
-        new_user = User()
-        new_user.name = request.form.get('name')
-        new_user.email = request.form.get('email')
-        new_user.location = request.form.get('location')
-        new_user.position = request.form.get('position')
-        new_user.password = request.form.get('password')
+        new_db_user = User()
+        new_db_user.name = request.form.get('name')
+        new_db_user.email = request.form.get('email')
+        new_db_user.location = request.form.get('location')
+        new_db_user.position = request.form.get('position')
+        new_db_user.password = request.form.get('password')
 
         # Insert the new user into the database
-        database.db_session.add(new_user)
-        database.db_session.commit()
+        db.session.add(new_db_user)
+        db.session.commit()
 
         # Redirect to the updated list of users
         return redirect(url_for("users.list_users"))
@@ -80,6 +81,11 @@ def new_user():
 def edit_user(user_id):
     """Update WARNO user.
 
+    Parameters
+    ----------
+    user_id: integer
+        Database user id of the user entry being updated.
+
     Returns
     -------
     new_user.html: HTML document
@@ -92,7 +98,7 @@ def edit_user(user_id):
     # If the form information has been received, update the user in the database
     if request.method == 'POST':
         # Get the user information from the request
-        updated_user = database.db_session.query(User).filter(User.id == user_id).first()
+        updated_user = db.session.query(User).filter(User.id == user_id).first()
         updated_user.name = request.form.get('name')
         updated_user.email = request.form.get('email')
         updated_user.location = request.form.get('location')
@@ -100,14 +106,14 @@ def edit_user(user_id):
         updated_user.password = request.form.get('password')
 
         # Update user in the database
-        database.db_session.commit()
+        db.session.commit()
 
         # Redirect to the updated list of users
         return redirect(url_for("users.list_users"))
 
     # If the request is to get the form, get the user and pass it to fill default values.
     if request.method == 'GET':
-        db_user = database.db_session.query(User).filter(User.id == user_id).first()
+        db_user = db.session.query(User).filter(User.id == user_id).first()
         user = dict(name=db_user.name, email=db_user.email, location=db_user.location, position=db_user.position)
 
         return render_template('edit_user.html', user=user)

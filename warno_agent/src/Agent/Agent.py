@@ -130,7 +130,6 @@ class Agent(object):
                                     }, instrument)
                                 for instrument_name, instrument
                                 in self.config_ctxt['agent']['instrument_list'].iteritems()]
-        print(self.info)
 
         #Set up logging
         log_path = os.environ.get("LOG_PATH")
@@ -144,11 +143,13 @@ class Agent(object):
 
         # Logs to the agent log
         self.agent_logger = logging.getLogger(__name__)
-        agent_handler = logging.FileHandler("%sevent_manager_server.log" % log_path, mode="a")
+        agent_handler = logging.FileHandler("%sagent_server.log" % log_path, mode="a")
         agent_handler.setFormatter(logging.Formatter('%(levelname)s:%(asctime)s:%(module)s:%(lineno)d:  %(message)s'))
         self.agent_logger.addHandler(agent_handler)
         # Add agent handler to the main werkzeug logger
         logging.getLogger("werkzeug").addHandler(agent_handler)
+
+        self.agent_logger.info(self.info)
 
     def set_plugin_path(self, path=None):
         """
@@ -208,7 +209,7 @@ class Agent(object):
                 module_top = importlib.import_module(module_name[0:])
                 if hasattr(module_top, 'get_plugin'):
                     candidate_plugin = module_top.get_plugin()
-                    print("candidate_plugin", candidate_plugin)
+                    self.agent_logger.debug("candidate_plugin %s", candidate_plugin)
                     candidate_plugin.path = plugin
                     if hasattr(candidate_plugin, 'get_registration_info') and hasattr(candidate_plugin, 'run'):
                         plugin_manager.add_plugin(candidate_plugin)
@@ -256,7 +257,7 @@ class Agent(object):
         -------
 
         """
-        print("Registering Plugin", plugin['plugin_handle'])
+        self.agent_logger.info("Registering Plugin %s", plugin['plugin_handle'])
         plugin_manager.register_plugin_events(plugin)
 
         for event in plugin['event_codes']:
@@ -363,10 +364,10 @@ class Agent(object):
         for manager in self.plugin_managers:
             self.enumerate_plugins(manager)
 
-            logging.info("Found the following plugins:%s",
+            logging.info("Found the following plugins: %s",
                 manager.get_plugin_list())
 
-        print("Registering Plugins with multiple managers.")
+        self.agent_logger.info("Registering Plugins with multiple managers.")
         for manager in self.plugin_managers:
             for plugin in manager.get_plugin_list():
                 logging.debug(plugin)

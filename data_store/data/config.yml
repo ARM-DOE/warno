@@ -15,11 +15,12 @@ type:
     central_facility: 1
 
 database:
-    test_db : true
-    DB_HOST : "192.168.50.100"
-    DB_NAME : "warno"
-    DB_USER : "warno"
-    DB_PORT : "5432"
+    test_db      : true
+    DB_HOST      : "192.168.50.100"
+    DB_NAME      : "warno"
+    DB_USER      : "warno"
+    DB_PORT      : "5432"
+    TEST_DB_NAME : "nosetests"
 
 debug:
     no_gunicorn: 0

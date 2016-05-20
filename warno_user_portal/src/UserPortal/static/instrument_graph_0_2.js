@@ -48,10 +48,6 @@ function Graph(manager, id, keys, instrument_id, base_url, beginning_time, end_t
 
 Graph.prototype.update_with_values = function(values) {
     if (this.graph_data.length <= 0) {
-        console.log(this.keys)
-        console.log(["Time"].concat(this.keys))
-        console.log("Values")
-        console.log(values)
         if (values.length > 0){
             this.graph_data = this.graph_data.concat(values)
             this.dygraph = new Dygraph(
@@ -110,7 +106,6 @@ Graph.prototype.request_values = function(keys, beginning_time, end_time) {
         {
             //Pull out the response text from the request
             var rec_message = JSON.parse(xmlhttp.responseText);
-            console.log(rec_message);
             for (i = 0; i < rec_message.length; i ++)
             {
                 // Have add a Z to the given UTC time to convert in JavaScript

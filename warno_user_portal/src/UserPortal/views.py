@@ -11,14 +11,11 @@ import math
 
 from UserPortal import app
 from WarnoConfig import config
-from WarnoConfig import database
+from WarnoConfig.models import db
 from WarnoConfig.models import PulseCapture, ProsensingPAF, Instrument, InstrumentLog, Site, User
 from WarnoConfig.utility import status_code_to_text
 
 is_central = 0
-
-app.config.from_object(__name__)
-app.wsgi_app = ProxyFix(app.wsgi_app)
 
 status_text = {1: "OPERATIONAL",
                2: "NOT WORKING",
@@ -26,6 +23,20 @@ status_text = {1: "OPERATIONAL",
                4: "IN-UPGRADE",
                5: "TRANSIT"}
 
+# Set Up app
+app.config.from_object(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app)
+
+# Database Setup
+db_cfg = config.get_config_context()['database']
+s_db_cfg = config.get_config_context()['s_database']
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://%s:%s@%s:%s/%s' % (db_cfg['DB_USER'], s_db_cfg['DB_PASS'],
+                                                                         db_cfg['DB_HOST'], db_cfg['DB_PORT'],
+                                                                         db_cfg['DB_NAME'])
+db.init_app(app)
+
+
+# Logging Setup
 log_path = os.environ.get("LOG_PATH")
 if log_path is None:
     log_path = "/vagrant/logs/"
@@ -39,44 +50,8 @@ up_logger.addHandler(up_handler)
 up_logger.info("Starting User Portal")
 
 
-@app.before_request
-def before_request():
-    """Before each Request.
-    """
-
-
-@app.teardown_request
-def teardown_request(exception):
-    """Teardown for Requests.
-
-    Closes the database connection if connected.
-
-    Parameters
-    ----------
-    exception: optional, Exception
-        An Exception that may have caused the teardown.
-    """
-
-    db = getattr(g, 'db', None)
-    if db is not None:
-        db.close()
-
-
-@app.teardown_appcontext
-def shutdown_session(exception=None):
-    """Closes database session on request or application teardown.
-
-    Parameters
-    ----------
-    exception: optional, Exception
-        An Exception that may have caused the teardown.
-
-    """
-    database.db_session.remove()
-
-
 @app.route('/')
-def hello_world():
+def landing_page():
     # Temporary home page
     return redirect(url_for('show_radar_status'))
 
@@ -116,7 +91,7 @@ def widget_log_viewer_controller(widget_id):
 
     """
 
-    db_instruments = database.db_session.query(Instrument)
+    db_instruments = db.session.query(Instrument)
     instruments = [dict(id=inst.id, site=inst.site.name_short, name=inst.name_short) for inst in db_instruments]
     return render_template('widgets/log_viewer_controller.html', instruments=instruments, id=widget_id)
 
@@ -146,9 +121,9 @@ def widget_log_viewer():
         max_logs = 5
 
     if float(instrument_id) >= 0:
-        db_logs = database.db_session.query(InstrumentLog).filter(InstrumentLog.instrument_id == instrument_id).order_by(InstrumentLog.time.desc()).limit(max_logs).all()
+        db_logs = db.session.query(InstrumentLog).filter(InstrumentLog.instrument_id == instrument_id).order_by(InstrumentLog.time.desc()).limit(max_logs).all()
     else:
-        db_logs = database.db_session.query(InstrumentLog).order_by(InstrumentLog.time.desc()).limit(max_logs).all()
+        db_logs = db.session.query(InstrumentLog).order_by(InstrumentLog.time.desc()).limit(max_logs).all()
 
     logs = [dict(time=log.time, contents=log.contents, status=status_code_to_text(log.status),
                  supporting_images=log.supporting_images, author=log.author.name)
@@ -176,7 +151,7 @@ def widget_status_plot():
     status = status_log_for_each_instrument()
 
     # Assume the instrument status is operational unless the status has changed, handled afterward
-    db_instruments = database.db_session.query(Instrument).join(Instrument.site).all()
+    db_instruments = db.session.query(Instrument).join(Instrument.site).all()
     instruments = [dict(id=instrument.id, name=instrument.name_short, site_id=instrument.site.id,
                         site=instrument.site.name_short, status=1)
                    for instrument in db_instruments]
@@ -242,7 +217,7 @@ def show_pulse():
         for deciding which pulse's series to plot.
     """
 
-    db_pulses = database.db_session.query(PulseCapture).join(PulseCapture.instrument).all()
+    db_pulses = db.session.query(PulseCapture).join(PulseCapture.instrument).all()
     pulses = [(pulse.id, pulse.instrument.name_short, pulse.time)
               for pulse in db_pulses]
 
@@ -276,7 +251,7 @@ def generate_pulse_graph():
     # Prepares a JSON message, an array of x values and an array of y values, for the graph to plot
     # X is just a placeholder for now, since the x type is not known (time, distance, etc.)
     # TODO Determine 'X' units
-    y = database.db_session.query(PulseCapture).filter_by(id=pulse_id).first().data
+    y = db.session.query(PulseCapture).filter_by(id=pulse_id).first().data
     x = [i for i in range(len(y))]
 
     message = {"x": x, "y": y}
@@ -296,12 +271,12 @@ def status_log_for_each_instrument():
     """
     il_alias_1 = aliased(InstrumentLog, name='il_alias_1')
     il_alias_2 = aliased(InstrumentLog, name='il_alias_2')
-    logs = database.db_session.query(il_alias_1).join(il_alias_1.instrument).join(il_alias_1.author). \
+    logs = db.session.query(il_alias_1).join(il_alias_1.instrument).join(il_alias_1.author).\
         outerjoin(il_alias_2, and_(Instrument.id == il_alias_2.instrument_id,
                                    or_(il_alias_1.time < il_alias_2.time,
                                        and_(il_alias_1.time == il_alias_2.time,
-                                            il_alias_1.instrument_id < il_alias_2.instrument_id)))). \
-        filter(il_alias_2.id is None).all()
+                                            il_alias_1.instrument_id < il_alias_2.instrument_id)))).\
+        filter(il_alias_2.id == None).all()
 
     recent_logs = {log.instrument.id: dict(author=log.author.name, status_code=log.status, contents=log.contents)
                    for log in logs}
@@ -325,14 +300,13 @@ def show_radar_status():
     status = status_log_for_each_instrument()
 
     # Assume the instrument status is operational unless the status has changed, handled afterward
-    db_instruments = database.db_session.query(Instrument).join(Instrument.site).all()
+    db_instruments = db.session.query(Instrument).join(Instrument.site).all()
     instruments = [dict(id=instrument.id, instrument_name=instrument.name_long, site_id=instrument.site_id,
                         site=instrument.site.name_short, status=1, author="", contents="")
                    for instrument in db_instruments]
 
     # For each instrument, if there is a corresponding status entry from the query above,
     # add the status and the last log's author.  If not, status will stay default operational
-    sites = {}
     for instrument in instruments:
         if instrument['id'] in status:
             instrument['status'] = status[instrument['id']]["status_code"]
@@ -361,10 +335,10 @@ def query():
     """
     data = ""
     if request.method == 'POST':
-        query = request.form.get("query")
+        query_arg = request.form.get("query")
         try:
-            data = database.db_session.execute(query).fetchall()
-            database.db_session.execute('COMMIT')
+            data = db.session.execute(query_arg).fetchall()
+            db.session.execute('COMMIT')
         except SAProgrammingError, e:
             data = "Invalid Query.  Error: %s" % e
             up_logger.warn("Invalid Query.  Error: %s", e)

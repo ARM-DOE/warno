@@ -1,0 +1,10 @@
+- model: WarnoConfig.models.InstrumentDataReference
+  records:
+    - id: 1
+      instrument_id: 1
+      special: true
+      description: "prosensing_paf"
+    - id: 2
+      instrument_id: 1
+      special: false
+      description: "not special"
