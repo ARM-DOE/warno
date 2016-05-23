@@ -310,7 +310,8 @@ def get_instrument_id(msg, msg_struct):
     If no instrument was found, the instrument id is passed as -1.
 
     """
-    db_instrument = db.session.query(Instrument).filter(Instrument.name_short == msg_struct['data']).first()
+    db_instrument = db.session.query(Instrument).filter(Instrument.name_short == msg_struct['data']['name']).\
+        filter(Instrument.site_id == msg_struct['data']['site_id']).first()
 
     # If there is an instrument with a matching name, returns all info to a site or just the id to an agent.
     if db_instrument:

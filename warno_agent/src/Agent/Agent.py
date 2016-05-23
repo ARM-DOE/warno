@@ -356,7 +356,7 @@ class Agent(object):
 
         for manager in self.plugin_managers:
             id_response = self.send_em_message(
-                utility.INSTRUMENT_ID_REQUEST, manager.instrument_name)
+                utility.INSTRUMENT_ID_REQUEST, dict(name=manager.instrument_name, site_id=self.site_id))
 
             data = dict(json.loads(id_response.content))['data']
             manager.info['instrument_id'] = data['instrument_id']
