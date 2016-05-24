@@ -158,7 +158,12 @@ def valid_columns_for_instrument(instrument_id):
             rows = db.session.execute("SELECT column_name, data_type FROM information_schema.columns"
                                       " WHERE table_name = :table",
                                       dict(table=reference.description)).fetchall()
-            columns = [row[0] for row in rows if row[1] in ["integer", "boolean", "double precision"]]
+            possible_columns = [row[0] for row in rows if row[1] in ["integer", "boolean", "double precision"]]
+            sum_string = ", ".join(["sum(%s)" % column for column in possible_columns])
+            sql = "SELECT %s FROM %s WHERE instrument_id = %s" % (sum_string, reference.description, instrument_id)
+            row = db.session.execute(sql).first()
+            zipper = zip(possible_columns, row)
+            columns = [column[0] for column in zipper if column[1] is not None]
         else:
             columns = [reference.description]
         column_list.extend(columns)
@@ -347,7 +352,7 @@ def generate_instrument_graph():
                              'AND time >= :start AND time <= :end AND event_code = %s ORDER BY time') % event_code[0]
             elif reference.special is True:
                 rows = db.session.execute("SELECT column_name FROM information_schema.columns WHERE table_name = :table",
-                                                   {'table': reference.description}).fetchall()
+                                          {'table': reference.description}).fetchall()
                 columns = [row[0] for row in rows]
                 if value["key"] in columns:
                     sql_query = 'SELECT time, %s FROM %s WHERE instrument_id = :id AND time >= :start AND time <= :end ORDER BY time' % (
