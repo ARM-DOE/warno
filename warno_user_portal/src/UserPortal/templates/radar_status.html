@@ -14,22 +14,14 @@
 
         Status Legend:
         <br>
-        <div class="operational"style="font-size: 15px; display: inline-block; border: 1px solid black; padding-left: 2px; padding-right: 2px;">
-            OPERATIONAL
-        </div>
+        <table class="legend">
+            <td class="operational ">OPERATIONAL</td>
+            <td class="not_working ">NOT WORKING</td>
+            <td class="testing ">TESTING</td>
+            <td class="in_upgrade ">IN UPGRADE</td>
+            <td class="transit ">TRANSIT</td>
+        </table>
 
-        <div class="not_working"style="font-size: 15px; display: inline-block; border: 1px solid black; padding-left: 2px; padding-right: 2px;">
-            NOT WORKING
-        </div>
-        <div class="testing"style="font-size: 15px; display: inline-block; border: 1px solid black; padding-left: 2px; padding-right: 2px;">
-            TESTING
-        </div>
-        <div class="in_upgrade"style="font-size: 15px; display: inline-block; border: 1px solid black; padding-left: 2px; padding-right: 2px;">
-            IN UPGRADE
-        </div>
-        <div class="transit"style="font-size: 15px; display: inline-block; center; border: 1px solid black; padding-left: 2px; padding-right: 2px;">
-            TRANSIT
-        </div>
         <br>
         <p style="font-size: .8em;">
             NOTE: Status and plots are not to be taken as a reflection on the quality of the data in the ARM Archive.
@@ -43,25 +35,37 @@
         </p>
 
         {% for site, site_id in sites.iteritems() %}
-        <div class='status_page'>
-            <a href="{{url_for('sites.show_site', site_id=site_id)}}">{{ site }}</a>
-            <hr>
-            {% for instrument in instruments %}
-            {% if instrument.site == site %}
-            <div class="{{instrument.status.replace(' ', '_').replace('-', '_').lower()}}" onclick="toggleShowLogs(this)"
-                 style="display: inline-block; border: 1px solid black; margin-top: 2px;">
-                <a href="{{url_for('instruments.instrument', instrument_id= instrument.id)}}">{{  instrument.instrument_name }}</a>
-                <br>
-                {{instrument.status}}
-                <br>
-                <div class="log_div" hidden>
-                    Last Author: {{ instrument.author }}
+        <div class="status_block">
+            <table class='status_plot'>
+                <th colspan="2">
+                <button type="button" class="site_toggle" onclick="toggleLogsForSite(this)">+</button>
+                <a href="{{url_for('sites.show_site', site_id=site_id)}}">{{ site }}</a>
+                </th>
+                {% set blarg = 0 %}
+                {% for instrument in instruments %}
+                {% if instrument.site == site %}
+                {% set blarg = blarg + 1 %}
+                {% if blarg % 2 == 1 %}
+                <tr>
+                {% endif %}
+                <td class="inst_status_td" style="float: left;">
+                    <a href="{{url_for('instruments.instrument', instrument_id= instrument.id)}}">{{  instrument.instrument_name }}</a>
                     <br>
-                    Last Log: {{ instrument.contents }}
-                </div>
-           </div>
-            {% endif %}
-            {% endfor %}
+                    <div class="inst_status_div round {{instrument.status.replace(' ', '_').replace('-', '_').lower()}}" onclick="toggleShowLogs(this)">
+                        <div class="log_div" hidden>
+                        Last Author: {{ instrument.author }}
+                        <br>
+                        Last Log: {{ instrument.contents }}
+                    </div>
+                    </div>
+                    <br>
+                </td>
+                {% if blarg % 2 == 0 %}
+                </tr>
+                {% endif %}
+                {% endif %}
+                {% endfor %}
+            </table>
         </div>
         {% endfor %}
     </div>
@@ -69,35 +73,118 @@
 </body>
 
 <script>
+    function toggleLogsForSite(element) {
+        console.log("Toggled");
+        status_table = element.parentNode.parentNode.parentNode.parentNode;
+        status_div = status_table.parentNode
+
+        inst_status_tds = status_table.getElementsByClassName("inst_status_td");
+        inst_status_divs = status_table.getElementsByClassName("inst_status_div");
+        log_divs = status_table.getElementsByClassName("log_div");
+
+        console.log(inst_status_tds);
+
+        // This function assumes inst_status_tds, inst_status_divs, and log_divs are of equal length
+        // If this ever becomes untrue, each one will need its own loop
+        if (element.innerHTML == "+"){
+            element.innerHTML = "-";
+
+            status_table.classList.add("expanded")
+            status_div.classList.add("expanded")
+
+            for (i = 0; i < log_divs.length; i ++) {
+                element.parentNode.style['text-align'] = "left";
+                element.parentNode.style['padding-left'] = "10px";
+
+                inst_status_tds[i].classList.add("expanded");
+                inst_status_tds[i].style['text-align'] = "left";
+
+                inst_status_divs[i].classList.add("rect");
+                inst_status_divs[i].classList.add("expanded");
+                inst_status_divs[i].classList.remove("round");
+                inst_status_divs[i].style['text-align'] = "left";
+
+                log_divs[i].hidden=false;
+            }
+
+        }
+        else {
+            element.innerHTML = "+";
+
+            status_table.classList.remove("expanded");
+            status_div.classList.remove("expanded");
+
+            for (i = 0; i < log_divs.length; i ++) {
+                element.parentNode.style['text-align'] = "center";
+                element.parentNode.style['padding-left'] = "0px";
+
+                inst_status_tds[i].classList.remove("expanded");
+                inst_status_tds[i].style['text-align'] = "center";
+
+                inst_status_divs[i].classList.remove("rect");
+                inst_status_divs[i].classList.remove("expanded");
+                inst_status_divs[i].classList.add("round");
+                inst_status_divs[i].style['text-align'] = "center";
+
+                log_divs[i].hidden=true;
+            }
+        }
+    }
+
     function toggleShowLogs(element) {
 
+    //Get the first log containing div for the clicked element (should only be one per toggle element)
     hidden_div = element.getElementsByClassName('log_div')[0];
 
-    site_div = element.parentNode;
+    //Table cell containing the clicked element
+    inst_td = element.parentNode;
 
-    if (element.style['display'] == "inline-block"){
-        element.style['display'] = "block";
-        element.style['text-align'] = "left"
+    //Status table containing the clicked element and its containing div
+    status_table = element.parentNode.parentNode.parentNode.parentNode;
+    status_div = status_table.parentNode;
+
+    if (hidden_div.hidden == true){
+        status_table.classList.add("expanded");
+        status_div.classList.add("expanded");
+
+        inst_td.parentNode.classList.add("expanded");
+        inst_td.classList.add("expanded");
+
+        element.classList.remove("round");
+        element.classList.add("rect");
+        element.classList.add("expanded");
+
+        inst_td.style['text-align'] = "left";
+        element.style['text-align'] = "left";
+
         hidden_div.hidden = false;
     }
     else {
-        element.style['display'] = "inline-block";
+        inst_td.parentNode.classList.remove("expanded");
+        inst_td.classList.remove("expanded");
+
+        element.classList.remove("rect")
+        element.classList.add("round");
+
+        inst_td.style['text-align'] = "center";
         element.style['text-align'] = "center";
+
         hidden_div.hidden = true;
     }
 
     all_hidden = true;
-    hidden_children = site_div.getElementsByClassName("log_div");
+    hidden_children = status_table.getElementsByClassName("log_div");
     for (i = 0; i < hidden_children.length; i++) {
         if (hidden_children[i].hidden == false){
+            console.log("found something unhidden... darkness");
             all_hidden = false;
         }
     }
+
+    //If all logs for a particular table are hidden, the table should no longer be expanded to display them
     if (all_hidden) {
-        site_div.style['display'] = "inline-block";
-    }
-    else {
-        site_div.style['display'] = "block";
+        status_table.classList.remove("expanded");
+        status_div.classList.remove("expanded");
     }
 
     }
