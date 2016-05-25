@@ -33,11 +33,12 @@
         </select>
     </p>
     <p><label for="time">Date/Time:</label>
-         <input type="datetime" id="datetime-input" name="time" placeholder="01/01/1970 12:27:31">
-            Local Time (MM/DD/YYYY HH:MM:SS)
-         {% if error %}
-         <div id="new-log-error" style="color: red">{{error}}</div>
-         {% endif %}
+        <input type="datetime" id="datetime-input" name="time">
+        UTC Time (YYYY-MM-DD HH:MM:SS)
+        {% if error %}
+        <div id="new-log-error" style="color: red">{{error}}</div>
+        {% endif %}
+
     </p>
 
     <p> <label for="status">Log Status</label>
@@ -57,14 +58,29 @@
 </div>
 
 <script>
-  //Catch the date as it's submitted and convert to UTC for the database.
-  $(function() {$('#log-submit-form').submit(function()
-  {
-    str = document.getElementById("datetime-input").value;
-    date = new Date(str);
-    document.getElementById("datetime-input").value = date.toUTCString();
+    //Catch the date as it's submitted and convert to UTC for the database.
+    $(function() {$('#log-submit-form').submit(function()
+    {
+        str = document.getElementById("datetime-input").value;
+
+        //Reduce lengths of spaces to one space, then trim outside spaces
+        var clean_str = str.replace(/\s{2,}/g, ' ').trim();
+
+        //Now add a 'T' between the date and time, and a 'Z' on the end.  Makes it a proper ISO format string.
+        var iso_str = clean_str.split(' ').join('T') + 'Z'
+
+        //Now parse the string into a date
+        date = new Date(Date.parse(iso_str));
+
+        document.getElementById("datetime-input").value = date.toUTCString();
     });
     });
+
+    //Get the current time and convert it from format "yyyy-mm-ddTHH:MM:SSZ" to the more readable "yyyy-mm-dd HH:MM:SS"
+    var current_time = new Date().toISOString().split('.')[0].split('T').join(' ')
+
+    document.getElementById('datetime-input').value = current_time;
+    document.getElementById('datetime-input').placeholder = current_time;
 </script>
 
 </body>

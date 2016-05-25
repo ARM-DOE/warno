@@ -82,7 +82,7 @@ class TestIndexFunctionality(TestCase):
         test_log = {'user': 'John J. Technician',
                     'instrument': 'ENA:KAZR',
                     'instrument_name_only': 'KAZR',
-                    'date': '01/01/2016 22:22:22',
+                    'date': '2016-01-01 22:22:22',
                     'status': 'NOT WORKING',
                     'contents': 'TESTLOGCONTENTS'}
         # Navigate to the Submit Log page
@@ -97,6 +97,7 @@ class TestIndexFunctionality(TestCase):
         instrument_select.select_by_visible_text(test_log['instrument'])
 
         date_element = self.browser.find_element_by_id("datetime-input")
+        date_element.clear()
         date_element.send_keys(test_log['date'])
 
         status_select = Select(self.browser.find_element_by_name('status'))
