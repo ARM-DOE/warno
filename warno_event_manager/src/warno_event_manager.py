@@ -193,10 +193,8 @@ def save_special_prosensing_paf(msg, msg_struct):
     for key, value in msg_struct['data']['values'].iteritems():
         sql_query_a = ', '.join([sql_query_a, key])
         # Converts inf and -inf to Postgresql equivalents
-        if "-inf" in str(value):
-            sql_query_b = ', '.join([sql_query_b, "'-Infinity'"])
-        elif "inf" in str(value):
-            sql_query_b = ', '.join([sql_query_b, "'Infinity'"])
+        if "-inf" in str(value) or "inf" in str(value):
+            sql_query_b = ', '.join([sql_query_b, "NULL"])
         else:
             try:
                 float(value)
