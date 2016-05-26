@@ -93,9 +93,6 @@
             status_div.classList.add("expanded")
 
             for (i = 0; i < log_divs.length; i ++) {
-                element.parentNode.style['text-align'] = "left";
-                element.parentNode.style['padding-left'] = "10px";
-
                 inst_status_tds[i].classList.add("expanded");
                 inst_status_tds[i].style['text-align'] = "left";
 
@@ -115,9 +112,6 @@
             status_div.classList.remove("expanded");
 
             for (i = 0; i < log_divs.length; i ++) {
-                element.parentNode.style['text-align'] = "center";
-                element.parentNode.style['padding-left'] = "0px";
-
                 inst_status_tds[i].classList.remove("expanded");
                 inst_status_tds[i].style['text-align'] = "center";
 
