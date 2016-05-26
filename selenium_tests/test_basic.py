@@ -218,7 +218,7 @@ class TestIndexFunctionality(TestCase):
 
         for td in test_row_tds:
             if td.text == "Edit":
-                td.click()
+                td.find_elements_by_tag_name('a')[0].click()
 
         # It should redirect to the proper edit page
         self.assertTrue('edit' in self.browser.current_url, 'Did not redirect to edit page.')
@@ -333,7 +333,7 @@ class TestIndexFunctionality(TestCase):
 
         for td in test_row_tds:
             if td.text == "Edit":
-                td.click()
+                td.find_elements_by_tag_name('a')[0].click()
 
         # It should redirect to the proper edit page
         self.assertTrue('edit' in self.browser.current_url, 'Did not redirect to edit page.')
@@ -426,11 +426,10 @@ class TestIndexFunctionality(TestCase):
 
         # Find the row with the new site
         table_id = self.browser.find_element_by_id('site-table')
-        time.sleep(2)
         rows = table_id.find_elements_by_tag_name('tr')
         test_row = []
         for row in rows[1:]:
-            if row.find_elements_by_tag_name("td")[1].text == test_site["name"]:
+            if row.find_elements_by_tag_name("td")[0].text == test_site["abbv"]:
                 test_row = row
 
         # In the row with the new site, find the 'Edit' link and click it
@@ -438,12 +437,9 @@ class TestIndexFunctionality(TestCase):
 
         for td in test_row_tds:
             if td.text == "Edit":
-                print "THE CLICKENING"
-                td.click()
-                print "THE AFTERCLICK"
+                td.find_elements_by_tag_name('a')[0].click()
 
         # It should redirect to the proper edit page
-        print self.browser.current_url
         self.assertTrue('edit' in self.browser.current_url, 'Did not redirect to edit page.')
 
         # Clear the name box and fill it with the edited name
