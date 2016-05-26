@@ -426,6 +426,7 @@ class TestIndexFunctionality(TestCase):
 
         # Find the row with the new site
         table_id = self.browser.find_element_by_id('site-table')
+        time.sleep(2)
         rows = table_id.find_elements_by_tag_name('tr')
         test_row = []
         for row in rows[1:]:
@@ -437,9 +438,12 @@ class TestIndexFunctionality(TestCase):
 
         for td in test_row_tds:
             if td.text == "Edit":
+                print "THE CLICKENING"
                 td.click()
+                print "THE AFTERCLICK"
 
         # It should redirect to the proper edit page
+        print self.browser.current_url
         self.assertTrue('edit' in self.browser.current_url, 'Did not redirect to edit page.')
 
         # Clear the name box and fill it with the edited name
