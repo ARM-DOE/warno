@@ -4,12 +4,13 @@ import os
 
 from flask import render_template, redirect, url_for, request
 from flask import Blueprint
+from sqlalchemy.sql import func
 from sqlalchemy import asc
 
 from WarnoConfig.utility import status_code_to_text
 from WarnoConfig.models import db
 from WarnoConfig.models import Instrument, ProsensingPAF, PulseCapture, InstrumentLog, Site
-from WarnoConfig.models import InstrumentDataReference, EventCode, EventWithValue
+from WarnoConfig.models import InstrumentDataReference, EventCode, EventWithValue, ValidColumn
 
 instruments = Blueprint('instruments', __name__, template_folder='templates')
 
@@ -151,22 +152,8 @@ def valid_columns_for_instrument(instrument_id):
             data value for the instrument that is suitable for plotting.
 
     """
-    references = db_get_instrument_references(instrument_id)
-    column_list = []
-    for reference in references:
-        if reference.special is True:
-            rows = db.session.execute("SELECT column_name, data_type FROM information_schema.columns"
-                                      " WHERE table_name = :table",
-                                      dict(table=reference.description)).fetchall()
-            possible_columns = [row[0] for row in rows if row[1] in ["integer", "boolean", "double precision"]]
-            sum_string = ", ".join(["sum(%s)" % column for column in possible_columns])
-            sql = "SELECT %s FROM %s WHERE instrument_id = %s" % (sum_string, reference.description, instrument_id)
-            row = db.session.execute(sql).first()
-            zipper = zip(possible_columns, row)
-            columns = [column[0] for column in zipper if column[1] is not None]
-        else:
-            columns = [reference.description]
-        column_list.extend(columns)
+    db_valid_columns = db.session.query(ValidColumn).filter(ValidColumn.instrument_id == instrument_id).all()
+    column_list = [column.column_name for column in db_valid_columns]
     return column_list
 
 
@@ -373,14 +360,15 @@ def generate_instrument_graph():
     # Send out the JSON message
     return message
 
-def iso_first_element(input):
+
+def iso_first_element(input_list):
     """Update first element of input list from a python datetime object into an ISO formatted time.
     (Used as map function).
 
     Parameters
     ----------
-    input: list
-        First element of 'input' is a python datetime object.
+    input_list: list
+        First element of 'input_list' is a python datetime object.
 
     Returns
     -------
@@ -388,7 +376,107 @@ def iso_first_element(input):
 
     """
 
-    input[0] = input[0].isoformat()
+    input_list[0] = input_list[0].isoformat()
+
+
+@instruments.route("/valid_columns")
+def update_all_valid_columns():
+    """Updates the 'valid_columns' table for each instrument with all data attributes that are no longer exclusively null
+
+    Returns
+    -------
+    HTML displaying how many entries have been updated per instrument.
+
+    """
+    message = "Adding data attributes that are no longer all null to list of valid columns:<hr>"
+    db_instruments = db.session.query(Instrument).all()
+    for inst in db_instruments:
+        message += "<h3>Instrument " + str(inst.id) + " " + inst.name_long + "</h3><br>"
+        message += update_valid_columns_for_instrument(inst.id)
+        message += "<hr>"
+    return message
+
+
+def update_valid_columns_for_instrument(instrument_id):
+    """Updates the 'valid_columns' table for the instrument matching 'instrument_id'.  Checks through all references for
+    the instrument, filtering out the attributes that are already represented in the 'valid_columns' table.  All entries
+    left are entries that need to be checked.  For the check, the attribute's column in its respective table is summed,
+    and if that sum is no longer NULL (e.g. there is at least one valid data entry in that column) that attribute is
+    added to the 'valid_columns' table for the instrument.
+
+    Parameters
+    ----------
+    instrument_id: integer
+        Database id of the instrument whose attributes are to be checked.
+
+    Returns
+    -------
+    HTML displaying how many entries have been updated for this instrument.
+
+    """
+    message = ""
+    current_references = db.session.query(InstrumentDataReference).filter(InstrumentDataReference.instrument_id == instrument_id).all()
+
+    special_refs = []
+    non_special_refs = []
+    for ref in current_references:
+        if ref.special:
+            special_refs.append(ref)
+        else:
+            non_special_refs.append(ref)
+
+    db_non_special_valid_columns = db.session.query(ValidColumn).filter(ValidColumn.instrument_id == instrument_id)\
+        .filter(ValidColumn.table_name == "events_with_value").all()
+    non_special_valid_columns = [column.column_name for column in db_non_special_valid_columns]
+
+    excluded_refs = [ref for ref in non_special_refs if ref.description not in non_special_valid_columns]
+
+    for ref in excluded_refs:
+        db_sum = db.session.query(func.sum(EventWithValue.value)).first()
+        if db_sum[0] is not None:
+            new_valid_column = ValidColumn()
+            new_valid_column.table_name = "events_with_value"
+            new_valid_column.column_name = ref.description
+            new_valid_column.instrument_id = instrument_id
+            db.session.add(new_valid_column)
+            db.session.commit()
+            message += " -- Added previously null 'events_with_value' column '" + str(ref.description) + "'<br>"
+
+    for ref in special_refs:
+        db_special_valid_columns = db.session.query(ValidColumn).filter(ValidColumn.instrument_id == instrument_id)\
+            .filter(ValidColumn.table_name == ref.description).all()
+        special_valid_columns = [column.column_name for column in db_special_valid_columns]
+
+        db_table_columns = db.session.execute("SELECT column_name, data_type from information_schema.columns WHERE table_name = :table", dict(table=ref.description))
+        table_columns = [row[0] for row in db_table_columns if row[1] in ["integer", "boolean", "double precision"]]
+
+        # These columns are viable columns that are not already in the Valid Columns table.
+        # These are the columns that need to be checked to determine if they are now valid columns
+        # (e.g., this instrument has received data in the column).
+        excluded_columns = [column for column in table_columns if column not in special_valid_columns]
+
+        sum_string = ", ".join(["sum(%s)" % column for column in excluded_columns])
+        sql = "SELECT %s FROM %s WHERE instrument_id = %s" % (sum_string, ref.description, instrument_id)
+        column_sums = db.session.execute(sql).first()
+        zipper = zip(excluded_columns, column_sums)
+        # Only add each column if the sum associated with it is not 'None', meaning there is a valid value
+        # somewhere in the column.
+        added_columns = [column[0] for column in zipper if column[1] is not None]
+
+        for column in added_columns:
+            new_valid_column = ValidColumn()
+            new_valid_column.table_name = ref.description
+            new_valid_column.column_name = column
+            new_valid_column.instrument_id = instrument_id
+            db.session.add(new_valid_column)
+        db.session.commit()
+
+        # Small message to give the caller an idea of how many rows successfully updated.
+        message += " -- Added " + str(len(added_columns)) + " of " + str(len(excluded_columns)) + \
+                   " previously null columns.<br>"
+
+    return message
+
 
 def synchronize_sort(dataset_dict):
     """Sorts a dictionary of data sets to be consistent in time.  Each iteration, it checks the earliest time of each

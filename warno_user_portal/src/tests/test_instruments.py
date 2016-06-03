@@ -9,7 +9,7 @@ from UserPortal import instruments
 from UserPortal import views
 from WarnoConfig import config
 from WarnoConfig.models import db
-from WarnoConfig.models import Instrument, InstrumentLog, Site, InstrumentDataReference
+from WarnoConfig.models import Instrument, InstrumentLog, Site, InstrumentDataReference, ValidColumn
 
 @mock.patch("logging.Logger")
 class TestInstruments(TestCase, FixturesMixin):
@@ -19,7 +19,8 @@ class TestInstruments(TestCase, FixturesMixin):
     TESTING = True
 
     # Fixtures are usually in warno-vagrant/data_store/data/WarnoConfig/fixtures
-    fixtures = ['sites.yml', 'users.yml', 'instruments.yml', 'instrument_data_references.yml', 'instrument_logs.yml']
+    fixtures = ['sites.yml', 'users.yml', 'instruments.yml', 'instrument_data_references.yml', 'event_codes.yml',
+                'instrument_logs.yml', 'valid_columns.yml', 'prosensing_paf.yml', 'events_with_value.yml']
 
     def setUp(self):
         db.create_all()
@@ -195,19 +196,7 @@ class TestInstruments(TestCase, FixturesMixin):
                          "Number of logs returned does not match 'maximum_number' parameter.")
 
     # Helper Functions
-    @mock.patch('UserPortal.instruments.db_get_instrument_references')
-    def test_valid_columns_for_instrument_returns_expected_column_list_for_both_special_and_non_special_references(self, get_refs, logger):
-        expected_column_list = ["integer", "not_special_table"]
-        # Each reference is a boolean specifying whether it is a 'special' table along with the name of the table
-        ref1 = mock.Mock()
-        ref2 = mock.Mock()
-        ref1.special = True
-        ref1.description = "prosensing_paf"
-        ref2.special = False
-        ref2.description = "not_special"
-        references = [ref1, ref2]
-        get_refs.return_value = references
-
+    def test_valid_columns_for_instrument_returns_expected_column_list_for_both_special_and_non_special_references(self, logger):
         instrument_id = 1
         result_column_list = instruments.valid_columns_for_instrument(instrument_id)
 
@@ -216,6 +205,23 @@ class TestInstruments(TestCase, FixturesMixin):
         self.assertIn("packet_id", result_column_list, "prosensing_paf 'packet_id' not in returned column list.")
         self.assertIn("antenna_humidity", result_column_list,
                       "prosensing_paf 'antenna_humidity' not in returned column list.")
+
+    def test_update_valid_columns_for_instrument_successfully_adds_expected_entries(self, logger):
+        instrument_id = 1
+        pre_count = db.session.query(ValidColumn).count()
+        result = instruments.update_valid_columns_for_instrument(instrument_id)
+        post_count = db.session.query(ValidColumn).count()
+
+        db_valid_columns = db.session.query(ValidColumn).filter(ValidColumn.instrument_id == instrument_id).all()
+        result_column_list = [column.column_name for column in db_valid_columns]
+
+        self.assertTrue(pre_count < post_count, "The count of valid columns did not increase")
+        self.assertIn("packet_id", result_column_list, "prosensing_paf 'packet_id' not in returned valid column list.")
+        self.assertIn("coolant_supply_temp", result_column_list,
+                      "prosensing_paf 'coolant_supply_temp' not in returned valid column list.")
+        self.assertNotIn("ad_skip_count", result_column_list,
+                         "prosensing_paf 'ad_skip_count' in returned valid column list, even though it shouldn't.")
+
 
     def test_synchronize_sort_correctly_sorts_3_simple_data_sets_into_expected_output_format(self, logger):
         dataset_0 = dict(data=[(datetime.datetime.strptime("2015-05-11 01:00", "%Y-%m-%d %H:%M"), 01),
