@@ -131,8 +131,11 @@ Graph.prototype.update_with_values = function(values) {
     }
     if (this.graph_data.length >= 0) {
         //switch from <= 0 to >= 0, now redraws graph every time, keeps selection's deviation range current.
-        if (values.length > 0){
-            this.graph_data = this.graph_data.concat(values)
+        console.log("Values length " + values.length)
+        console.log("Graph Data " + this.graph_data.length)
+        this.graph_data = this.graph_data.concat(values)
+        if (this.graph_data.length > 0){
+            //this.graph_data = this.graph_data.concat(values)
             delete this.dygraph;
             this.dygraph = new Dygraph(
             this.inner_div,
@@ -193,6 +196,7 @@ Graph.prototype.request_values = function(keys, beginning_time, end_time, origin
         {
             //Pull out the response text from the request
             var rec_message = JSON.parse(xmlhttp.responseText);
+            console.log(rec_message)
             for (i = 0; i < rec_message['data'].length; i ++)
             {
                 // Have add a Z to the given UTC time to convert in JavaScript
