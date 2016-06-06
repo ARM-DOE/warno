@@ -85,6 +85,10 @@ div.sub-title {
     border-bottom: solid 2px black;
 }
 
+div.instrument_dygraph {
+    border: 2px solid lightGray;
+}
+
 div.info {
     background:  lightBlue;
     border: 1px solid black;
