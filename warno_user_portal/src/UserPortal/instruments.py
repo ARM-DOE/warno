@@ -351,12 +351,13 @@ def generate_instrument_graph():
         for key, value in keys.iteritems():
             sql_query = None
             if reference.description == value["key"]:
-                event_code = db.session.execute('SELECT event_code FROM event_codes WHERE description = :key AND time >= :origin AND time <= :end',
-                                                dict(key=value["key"], origin=origin, end=end)).fetchone()
+                event_code = db.session.execute('SELECT event_code FROM event_codes WHERE description = :key',
+                                                dict(key=value["key"])).fetchone()
                 aggregate_query = 'SELECT avg(value), stddev_pop(value) FROM events_with_value ' \
-                                  'WHERE instrument_id = :id AND event_code = :event_code'
-                db_aggregates = db.session.execute(aggregate_query, dict(id=instrument_id,
-                                                                         event_code=event_code[0])).fetchall()[0]
+                                  'WHERE instrument_id = :id AND event_code = :event_code AND ' \
+                                  'time >= :origin AND time <= :end'
+                db_aggregates = db.session.execute(aggregate_query, dict(id=instrument_id, event_code=event_code[0],
+                                                                         origin=origin, end=end)).fetchall()[0]
 
                 average = db_aggregates[0]
                 std_deviation = db_aggregates[1]
@@ -375,8 +376,8 @@ def generate_instrument_graph():
                     average = db_aggregates[0]
                     std_deviation = db_aggregates[1]
 
-                    sql_query = 'SELECT time, %s FROM %s WHERE instrument_id = :id AND time >= :start AND time <= :end ORDER BY time' % (
-                        value["key"], reference.description)
+                    sql_query = 'SELECT time, %s FROM %s WHERE instrument_id = :id AND time >= :start AND time <= :end AND %s IS NOT NULL ORDER BY time' % (
+                        value["key"], reference.description, value["key"])
             # Selects the time and the "key" column from the data table with time between 'start' and 'end'
             if sql_query:
                 try:
@@ -390,7 +391,7 @@ def generate_instrument_graph():
 
     lower_deviation = 0
     upper_deviation = 0
-    if len(keys) == 1:
+    if len(keys) == 1 and average and std_deviation:
         upper_deviation = float(average) + (2. * float(std_deviation))
         lower_deviation = float(average) - (2. * float(std_deviation))
 
@@ -441,6 +442,7 @@ def get_attribute_stats(attribute=None, instrument_id=None):
 
     minimum = None
     maximum = None
+    median = None
     average = None
     std_deviation = None
 
@@ -453,10 +455,16 @@ def get_attribute_stats(attribute=None, instrument_id=None):
 
     for ref in references:
         if ref.description == attribute:
-            aggregate_parameters = (attribute, attribute, attribute, attribute)
-            aggregate_sql = 'SELECT min(%s), max(%s), avg(%s), stddev_pop(%s) FROM events_with_value WHERE instrument_id = :id' % aggregate_parameters
+            event_code = db.session.execute('SELECT event_code FROM event_codes WHERE description = :attribute',
+                                            dict(attribute=attribute)).fetchone()[0]
+            aggregate_sql = 'SELECT min(value), max(value), avg(value), stddev_pop(value) FROM events_with_value WHERE instrument_id = :id AND event_code = %s' % (event_code,)
             db_aggregates = db.session.execute(aggregate_sql, dict(column=attribute, id=instrument_id)).fetchall()[0]
-            break
+
+            db_values = db.session.query(EventWithValue.value).filter(EventWithValue.instrument_id == instrument_id)\
+                .filter(EventWithValue.value.isnot(None)).all()
+            values = [value[0] for value in db_values]
+            values = sorted(values)
+            median = values[len(values)/2]
 
         elif ref.special is True:
             rows = db.session.execute("SELECT column_name FROM information_schema.columns WHERE table_name = :table",
@@ -464,9 +472,15 @@ def get_attribute_stats(attribute=None, instrument_id=None):
             columns = [row[0] for row in rows]
 
             if attribute in columns:
-                aggregate_parameters = (attribute, attribute, attribute, attribute, 'prosensing_paf')
+                aggregate_parameters = (attribute, attribute, attribute, attribute, ref.description)
                 aggregate_sql = 'SELECT min(%s), max(%s), avg(%s), stddev_pop(%s) FROM %s WHERE instrument_id = :id' % aggregate_parameters
                 db_aggregates = db.session.execute(aggregate_sql, dict(id=instrument_id)).fetchall()[0]
+
+                values_sql = "SELECT %s FROM %s WHERE instrument_id = :id" % (attribute, ref.description,)
+                db_values = db.session.execute(values_sql, dict(id=instrument_id)).fetchall()
+                values = [value[0] for value in db_values]
+                values = sorted(values)
+                median = values[len(values)/2]
                 break
 
     if db_aggregates:
@@ -475,20 +489,20 @@ def get_attribute_stats(attribute=None, instrument_id=None):
         average = db_aggregates[2]
         std_deviation = db_aggregates[3]
 
-    payload = dict(min=minimum, max=maximum, average=average, std_deviation=std_deviation)
+    payload = dict(min=minimum, max=maximum, median=median, average=average, std_deviation=std_deviation)
     message = json.dumps(payload)
 
     return message
 
 
-def iso_first_element(input):
+def iso_first_element(input_list):
     """Update first element of input list from a python datetime object into an ISO formatted time.
     (Used as map function).
 
     Parameters
     ----------
-    input: list
-        First element of 'input' is a python datetime object.
+    input_list: list
+        First element of 'input_list' is a python datetime object.
 
     Returns
     -------
@@ -496,7 +510,7 @@ def iso_first_element(input):
 
     """
 
-    input[0] = input[0].isoformat()
+    input_list[0] = input_list[0].isoformat()
 
 def synchronize_sort(dataset_dict):
     """Sorts a dictionary of data sets to be consistent in time.  Each iteration, it checks the earliest time of each

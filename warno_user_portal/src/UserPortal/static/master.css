@@ -283,6 +283,15 @@ div.rect {
     border: 2px solid black;
 }
 
+div.graph_stats {
+    margin: 10px;
+}
+
+div.graph_stats_half {
+    display: inline-block;
+    width: 49%;
+}
+
 button.site_toggle {
     border: 1px solid black;
     border-radius: 2px;

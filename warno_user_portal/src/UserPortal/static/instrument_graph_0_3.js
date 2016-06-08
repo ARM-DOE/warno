@@ -33,10 +33,12 @@ function Graph(manager, id, keys, instrument_id, base_url, beginning_time, end_t
     this.end_time = end_time;
     this.origin_time = beginning_time;
     this.graph_data = [];
+    this.graph_title = null;
     this.sel_lower_deviation = 0;
     this.sel_upper_deviation = 0;
     this.minimum = 0;
     this.maximum = 0;
+    this.median = 0;
     this.average = 0;
     this.std_deviation = 0;
     this.stat_frequency = 10;
@@ -50,19 +52,28 @@ function Graph(manager, id, keys, instrument_id, base_url, beginning_time, end_t
 
     this.data_div_id = "datadiv" + id;
     this.data_div = document.createElement('div');
+    this.data_div.className = "graph_stats"
 
     //This only fills in if there is only one attribute for the graph
     if (String(this.keys).split(",").length ==1){
-        this.data_div.innerHTML = '<b>Selection:</b><br>' +
-                                  'BLUE= Upper bound: Loading...' +
-                                  '<br>RED = Lower bound: Loading...' +
-                                  '<br><i>2 standard deviations for selected set</i>' +
-                                  '<br><b>Entire Database</b>' +
-                                  '<br>Current Value: Loading...' +
-                                  '<br>Minimum: Loading...' +
-                                  '<br>Maximum: Loading...' +
+        this.graph_title = String(this.keys)
+        this.data_div.innerHTML = '<b>Selection 95th Percentile:</b><br>' +
+                                  'Loading...' +
+                                  '<br><b>Entire Database:</b><br>' +
+                                  '<div class="graph_stats_half">Current: Loading...' +
                                   '<br>Average: Loading...' +
-                                  '<br>Standard Deviation: Loading...';
+                                  '<br>Std. Dev.: Loading...' + '</div>' +
+                                  '<div class="graph_stats_half">Minimum: Loading...' +
+                                  '<br>Maximum: Loading...' +
+                                  '<br>Median: Loading...' + '</div>';
+    }
+    else {
+        html_construct = "<b>Attributes: </b>";
+        attribute_list = String(this.keys).split(",");
+        for (i = 0; i < attribute_list.length; i ++ ) {
+            html_construct += "<br>" + attribute_list[i];
+        }
+        this.data_div.innerHTML = html_construct;
     }
 
     master_div.insertBefore(this.div, master_div.firstChild);
@@ -79,12 +90,13 @@ function Graph(manager, id, keys, instrument_id, base_url, beginning_time, end_t
 
 Graph.prototype.update_with_values = function(values) {
     //Read in the upper and lower deviations
-    var upper = this.sel_upper_deviation;
-    var lower = this.sel_lower_deviation;
-    var minimum = this.minimum;
-    var maximum = this.maximum;
-    var average = this.average;
-    var std_deviation = this.std_deviation;
+    var upper = this.sel_upper_deviation.toPrecision(4);
+    var lower = this.sel_lower_deviation.toPrecision(4);
+    var minimum = this.minimum.toPrecision(4);
+    var maximum = this.maximum.toPrecision(4);
+    var median = this.median.toPrecision(4);
+    var average = this.average.toPrecision(4);
+    var std_deviation = this.std_deviation.toPrecision(4);
 
     if (String(this.keys).split(",").length == 1) {
         //Add extra information if there is only one attribute
@@ -94,22 +106,21 @@ Graph.prototype.update_with_values = function(values) {
 
         var current = 0
         if (values.length > 0) {
-            current = values[values.length - 1][1];
+            current = values[values.length - 1][1].toPrecision(4);
         }
         else if (this.graph_data.length > 0) {
-            current = this.graph_data[this.graph_data.length - 1][1];
+            current = this.graph_data[this.graph_data.length - 1][1].toPrecision(4);
         }
 
-        this.data_div.innerHTML = '<b>Selection:</b><br>' +
-                                  'BLUE= Upper bound: ' + upper +
-                                  '<br>RED = Lower bound: ' + lower +
-                                  '<br><i>2 standard deviations</i>' +
-                                  '<br><b>Entire Database</b>' +
-                                  '<br>Current Value: ' + current +
-                                  '<br>Minimum: ' + minimum +
-                                  '<br>Maximum: ' + maximum +
+        this.data_div.innerHTML = '<b>Selection 95th Percentile:</b><br>' +
+                                  lower + ', ' + upper +
+                                  '<br><b>Entire Database:</b><br>' +
+                                  '<div class="graph_stats_half">Current: ' + current +
                                   '<br>Average: ' + average +
-                                  '<br>Standard Deviation: ' + std_deviation;
+                                  '<br>Std. Dev.: ' + std_deviation + "</div>" +
+                                  '<div class="graph_stats_half">Minimum: ' + minimum +
+                                  '<br>Maximum: ' + maximum +
+                                  '<br>Median: ' + median + "<div>";
 
 
         //Callback handles drawing the deviation lines on the graph.
@@ -129,18 +140,14 @@ Graph.prototype.update_with_values = function(values) {
     else {
         deviation_callback = null;
     }
-    if (this.graph_data.length >= 0) {
-        //switch from <= 0 to >= 0, now redraws graph every time, keeps selection's deviation range current.
-        console.log("Values length " + values.length)
-        console.log("Graph Data " + this.graph_data.length)
+    if (this.graph_data.length <= 0) {
         this.graph_data = this.graph_data.concat(values)
         if (this.graph_data.length > 0){
-            //this.graph_data = this.graph_data.concat(values)
-            delete this.dygraph;
             this.dygraph = new Dygraph(
             this.inner_div,
             this.graph_data,
             {
+                title: this.graph_title,
                 rollPeriod: 3,
                 showRoller: true,
                 showRangeSelector: true,
@@ -196,7 +203,6 @@ Graph.prototype.request_values = function(keys, beginning_time, end_time, origin
         {
             //Pull out the response text from the request
             var rec_message = JSON.parse(xmlhttp.responseText);
-            console.log(rec_message)
             for (i = 0; i < rec_message['data'].length; i ++)
             {
                 // Have add a Z to the given UTC time to convert in JavaScript
@@ -209,9 +215,11 @@ Graph.prototype.request_values = function(keys, beginning_time, end_time, origin
                 this_graph.minimum = rec_message['min'];}
             if (rec_message['max']){
                 this_graph.maximum = rec_message['max'];}
+            if (rec_message['median']){
+                this_graph.median = rec_message['median'];}
             if (rec_message['average']){
                 this_graph.average = rec_message['average'];}
-            if (rec_message['average']){
+            if (rec_message['std_deviation']){
                 this_graph.std_deviation = rec_message['std_deviation'];}
 
             this_graph.update_with_values(rec_message['data']);
