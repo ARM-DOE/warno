@@ -363,7 +363,7 @@ def generate_instrument_graph():
                 std_deviation = db_aggregates[1]
 
                 sql_query = ('SELECT time, value FROM events_with_value WHERE instrument_id = :id '
-                             'AND time >= :start AND time <= :end AND event_code = %s ORDER BY time') % event_code[0]
+                             'AND time >= :start AND time <= :end AND event_code = %s ORDER BY time DESC') % event_code[0]
             elif reference.special is True:
                 rows = db.session.execute("SELECT column_name FROM information_schema.columns WHERE table_name = :table",
                                           dict(table=reference.description)).fetchall()
@@ -376,7 +376,7 @@ def generate_instrument_graph():
                     average = db_aggregates[0]
                     std_deviation = db_aggregates[1]
 
-                    sql_query = 'SELECT time, %s FROM %s WHERE instrument_id = :id AND time >= :start AND time <= :end AND %s IS NOT NULL ORDER BY time' % (
+                    sql_query = 'SELECT time, %s FROM %s WHERE instrument_id = :id AND time >= :start AND time <= :end AND %s IS NOT NULL ORDER BY time DESC' % (
                         value["key"], reference.description, value["key"])
             # Selects the time and the "key" column from the data table with time between 'start' and 'end'
             if sql_query:
@@ -523,9 +523,9 @@ def synchronize_sort(dataset_dict):
 
     *Set 0*                 *Set 1*                   *Set 2*
     [                       [                       [
-    (2015-05-11 01:00, 01), (2015-05-11 02:00, 11), (2015-05-11 01:00, 21),
+    (2015-05-11 02:00, 03), (2015-05-11 03:00, 13), (2015-05-11 02:30, 23),
     (2015-05-11 01:30, 02), (2015-05-11 02:30, 12), (2015-05-11 02:00, 22),
-    (2015-05-11 02:00, 03)] (2015-05-11 03:00, 13)] (2015-05-11 02:30, 23)]
+    (2015-05-11 01:00, 01)] (2015-05-11 02:00, 11)] (2015-05-11 01:00, 21)]
 
     Ends with a sorted list:
     [
@@ -541,12 +541,12 @@ def synchronize_sort(dataset_dict):
     Dictionary for the algorithm to sort.  Of the form {**integer** set number: {'data':
         [(**Datetime** time1, **float/int** value1), (time2, value2) ... (timeN, valueN)]}}
     The set numbers must increment as integers from 1 to N, but can be in any order (dictionaries are unsorted).
-    Each data set should be sorted from earliest to latest time.
+    Each data set should be sorted from latest to earliest time.
 
     Returns
     -------
-    Sorted list, of form [**Datetime** 2015-05-11 01:00, 15, None, 12, ...], [2015-05-11 02:00, None, 30, None, ...],
-        ...[Final Datetime, Dataset0 Value, Dataset1 Value, Dataset2 Value, ... AttributeN Value]]
+    Sorted list, of form [**Datetime** 2015-05-11 02:00, 15, None, 12, ...], [2015-05-11 01:00, None, 30, None, ...],
+        ...[Earliest Datetime, Dataset0 Value, Dataset1 Value, Dataset2 Value, ... AttributeN Value]]
     """
     results = []
     length = len(dataset_dict)
@@ -556,7 +556,7 @@ def synchronize_sort(dataset_dict):
 
         # Gets a list of the times containing the first element of each data set (therefore, the most earliest time for
         # the set), but only if the set is not empty.
-        first_elem_times = [value["data"][0][0] for _, value in dataset_dict.iteritems() if len(value["data"]) > 0]
+        first_elem_times = [value["data"][-1][0] for _, value in dataset_dict.iteritems() if len(value["data"]) > 0]
         # Gets the earliest of the times of the data sets
         min_time = min(first_elem_times)
 
@@ -571,12 +571,11 @@ def synchronize_sort(dataset_dict):
             # in for that point and removes that element from its list.  Updates the index of the data point
             # that corresponds to the list's dictionary value.  This assures that each element of the packet
             # stays in the same order as the list.  If there is no valid value, stays None
-            if len(value["data"]) > 0 and value["data"][0][0] == min_time:
+            if len(value["data"]) > 0 and value["data"][-1][0] == min_time:
                 # 'set_number + 1' is necessary because the first element [0] is for the time.
-                values_at_time[set_number + 1] = value["data"][0][1]
-                del value["data"][0]
+                values_at_time[set_number + 1] = value["data"][-1][1]
+                del value["data"][-1]
 
         # Add point in time to result list
         results.append(values_at_time)
-
     return results
