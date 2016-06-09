@@ -106,8 +106,9 @@ class Alias(db.Model):
     table_name = db.Column(db.String, nullable=False)
     column_name = db.Column(db.String, nullable=False)
     name_short = db.Column(db.String, nullable=False)
-    name_long = db.Column(db.String, nullable=False)
-    role = db.Column(db.String, nullable=False)
+    name_long = db.Column(db.String)
+    unit = db.Column(db.String)
+    role = db.Column(db.String)
 
 
 class EventWithText(db.Model):

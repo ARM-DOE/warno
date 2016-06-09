@@ -21,8 +21,9 @@ def upgrade():
     sa.Column('table_name', sa.String(), nullable=False),
     sa.Column('column_name', sa.String(), nullable=False),
     sa.Column('name_short', sa.String(), nullable=False),
-    sa.Column('name_long', sa.String(), nullable=False),
-    sa.Column('role', sa.String(), nullable=False),
+    sa.Column('name_long', sa.String()),
+    sa.Column('unit', sa.String()),
+    sa.Column('role', sa.String()),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('valid_columns',
