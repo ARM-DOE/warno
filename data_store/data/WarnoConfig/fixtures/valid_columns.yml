@@ -1,0 +1,15 @@
+# Had to start ids high because the database would insert new valid columns at id '1' even if it was already taken.
+- model: WarnoConfig.models.ValidColumn
+  records:
+    - id: 10
+      instrument_id: 1
+      table_name: "prosensing_paf"
+      column_name: "antenna_humidity"
+    - id: 11
+      instrument_id: 1
+      table_name: "prosensing_paf"
+      column_name: "packet_id"
+    - id: 12
+      instrument_id: 1
+      table_name: "events_with_value"
+      column_name: "not_special"
