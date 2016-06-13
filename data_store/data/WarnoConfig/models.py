@@ -90,6 +90,27 @@ class PulseCapture(db.Model):
     instrument = db.relationship(Instrument)
 
 
+class ValidColumn(db.Model):
+    __tablename__ = "valid_columns"
+
+    id = db.Column(db.Integer, primary_key=True)
+    instrument_id = db.Column(db.Integer, db.ForeignKey('instruments.instrument_id'), nullable=False)
+    table_name = db.Column(db.String, nullable=False)
+    column_name = db.Column(db.String, nullable=False)
+
+
+class Alias(db.Model):
+    __tablename__ = "aliases"
+
+    id = db.Column(db.Integer, primary_key=True)
+    table_name = db.Column(db.String, nullable=False)
+    column_name = db.Column(db.String, nullable=False)
+    name_short = db.Column(db.String, nullable=False)
+    name_long = db.Column(db.String)
+    unit = db.Column(db.String)
+    role = db.Column(db.String)
+
+
 class EventWithText(db.Model):
     __tablename__ = "events_with_text"
 
