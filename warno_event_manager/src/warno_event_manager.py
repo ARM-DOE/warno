@@ -1,7 +1,9 @@
+import datetime
 import requests
 import logging
 import psutil
 import json
+import csv
 import os
 
 from flask import Flask, request
@@ -94,6 +96,78 @@ cfg = None
 headers = {'Content-Type': 'application/json'}
 
 cert_verify = False
+
+
+@app.route("/eventmanager/json")
+def jsonify_database():
+    a = datetime.datetime.now()
+    filename = "jsonify.json"
+    payload = dict(definition=dict(table_name="prosensing_paf"))
+    rows = db.session.execute("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'prosensing_paf'").fetchall()
+    columns = [(row[0], row[1]) for row in rows]
+
+    rows = db.session.execute("SELECT version_num FROM alembic_version LIMIT 1").fetchall()
+    payload['definition']['alembic_version'] = rows[0][0]
+
+    payload['definition']['columns'] = columns
+
+    rows = db.session.execute("SELECT * FROM prosensing_paf ORDER BY time ASC LIMIT 5").fetchall()
+    with open("tempcounter_authority.txt", "a") as tempfile:
+        tempfile.write("Successfully loaded in rows\n")
+    data = [list(row) for row in rows]
+
+    # Datetimes must be converted to iso compliant time format for json.dump
+    for item in data:
+        item[1] = item[1].isoformat() + "Z"
+
+    payload['definition']['start_time'] = data[0][1]
+    payload['definition']['end_time'] = data[-1][1]
+    payload['definition']['num_entries'] = len(data)
+
+    payload['data'] = data
+    with open("tempcounter_authority.txt", "a") as tempfile:
+        tempfile.write("Successfully loaded in data\n")
+
+    with open(filename, "w") as writefile:
+        json.dump(payload, writefile)
+
+    b = datetime.datetime.now() - a
+    with open("tempcounter_authority.txt", "a") as tempfile:
+        tempfile.write(str(b.seconds) + " secs " + str(b.microseconds) + " usecs\n")
+
+    return "<h1>JSON Pt.2</h1>"
+
+
+def jarkonnen():
+    tables = ["events_with_value", "events_with_text", "prosensing_paf"]
+    a = datetime.datetime.now()
+    msg = ""
+    for table in tables:
+        with open(table + ".backup", "w") as temp:
+            tempcsv = csv.writer(temp, delimiter=',')
+            offset = 0
+            chunksize = 5000
+
+            rows = db.session.execute("SELECT column_name from information_schema.columns where table_name = :table", dict(table=table))
+            columns = [row[0] for row in rows]
+            tempcsv.writerow(columns)
+
+            month_ago = datetime.datetime.now() + datetime.timedelta(-30)
+
+            while True:
+
+                rows = db.session.execute("SELECT * from %s where time <= :time offset :offset limit :chunksize" % (table,), dict(offset=offset, chunksize=chunksize, time=month_ago.isoformat())).fetchall()
+                data = [list(row) for row in rows]
+                if len(data) <= 0:
+                    break
+                offset += chunksize
+
+                tempcsv.writerows(data)
+
+    b = datetime.datetime.now() - a
+    with open("temptime", "a") as tempfile:
+        tempfile.write(str(b.seconds) + " secs " + str(b.microseconds) + " usecs")
+    return "<h1>JSON</h1>" + msg
 
 
 @app.route("/eventmanager/event", methods=['POST'])
