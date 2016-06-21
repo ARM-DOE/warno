@@ -224,15 +224,15 @@ class TestInstruments(TestCase, FixturesMixin):
 
 
     def test_synchronize_sort_correctly_sorts_3_simple_data_sets_into_expected_output_format(self, logger):
-        dataset_0 = dict(data=[(datetime.datetime.strptime("2015-05-11 01:00", "%Y-%m-%d %H:%M"), 01),
+        dataset_0 = dict(data=[(datetime.datetime.strptime("2015-05-11 02:00", "%Y-%m-%d %H:%M"), 03),
                                (datetime.datetime.strptime("2015-05-11 01:30", "%Y-%m-%d %H:%M"), 02),
-                               (datetime.datetime.strptime("2015-05-11 02:00", "%Y-%m-%d %H:%M"), 03)])
-        dataset_1 = dict(data=[(datetime.datetime.strptime("2015-05-11 02:00", "%Y-%m-%d %H:%M"), 11),
+                               (datetime.datetime.strptime("2015-05-11 01:00", "%Y-%m-%d %H:%M"), 01)])
+        dataset_1 = dict(data=[(datetime.datetime.strptime("2015-05-11 03:00", "%Y-%m-%d %H:%M"), 13),
                                (datetime.datetime.strptime("2015-05-11 02:30", "%Y-%m-%d %H:%M"), 12),
-                               (datetime.datetime.strptime("2015-05-11 03:00", "%Y-%m-%d %H:%M"), 13)])
-        dataset_2 = dict(data=[(datetime.datetime.strptime("2015-05-11 01:00", "%Y-%m-%d %H:%M"), 21),
+                               (datetime.datetime.strptime("2015-05-11 02:00", "%Y-%m-%d %H:%M"), 11)])
+        dataset_2 = dict(data=[(datetime.datetime.strptime("2015-05-11 02:30", "%Y-%m-%d %H:%M"), 23),
                                (datetime.datetime.strptime("2015-05-11 02:00", "%Y-%m-%d %H:%M"), 22),
-                               (datetime.datetime.strptime("2015-05-11 02:30", "%Y-%m-%d %H:%M"), 23)])
+                               (datetime.datetime.strptime("2015-05-11 01:00", "%Y-%m-%d %H:%M"), 21)])
 
         expected_result = [[datetime.datetime.strptime("2015-05-11 01:00", "%Y-%m-%d %H:%M"),   01, None,   21],
                            [datetime.datetime.strptime("2015-05-11 01:30", "%Y-%m-%d %H:%M"),   02, None, None],

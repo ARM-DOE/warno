@@ -8,6 +8,7 @@ from time import sleep
 import logging
 
 from Plugin import Plugin as Plugin
+from WarnoConfig import config
 
 logfile = "/vagrant/data_store/data/agent_exceptions.log"
 
@@ -24,6 +25,8 @@ class SystemStatusPlugin(Plugin):
         self.plugin_description = 'test'
         self.add_event_code("cpu_usage")
         self.white_list = white_list
+        self.config_ctxt = config.get_config_context()
+        self.config_id = None
 
     def run(self, msg_queue, config, ctrl_queue):
         self.ctrl_queue = ctrl_queue
@@ -32,7 +35,7 @@ class SystemStatusPlugin(Plugin):
             msg_queue.put('{"event": "%s", "data": {"instrument_id": %s, "time": "%s", "value": %s}}' %
             ("cpu_usage", config['instrument_id'], timestamp, psutil.cpu_percent()))
             self.process_ctrl_queue()
-            sleep(2)
+            sleep(self.config_ctxt['agent']['instrument_list'][self.config_id]['sampling_interval'])
 
 
 def get_plugin():

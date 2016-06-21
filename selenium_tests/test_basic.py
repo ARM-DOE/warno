@@ -82,7 +82,7 @@ class TestIndexFunctionality(TestCase):
         test_log = {'user': 'John J. Technician',
                     'instrument': 'ENA:KAZR',
                     'instrument_name_only': 'KAZR',
-                    'date': '2016-01-01 22:22:22',
+                    'date': '2030-01-01 22:22:22',
                     'status': 'NOT WORKING',
                     'contents': 'TESTLOGCONTENTS'}
         # Navigate to the Submit Log page

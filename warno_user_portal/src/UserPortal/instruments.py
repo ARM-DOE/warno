@@ -304,19 +304,26 @@ def generate_instrument_graph():
     end: JSON JavaScript Date
         Passed as an HTML query parameter, the end time to limit results to.
 
+    do_stats: integer
+        Passed as an HTML query parameter, indicates whether to do aggregates stats for an attribute (1=true, 0=false).
     Returns
     -------
     message: JSON object
         Returns a JSON object as a list of attribute values at points in time, of the form:
-        [[Time0, Attribute0, Attribute1, ... AttributeN], [T1, A0, A1, ...AN], ... [TN, A0, A1, ... AN]]
+        {data: [[Time0, Attribute0, Attribute1, ... AttributeN], [T1, A0, A1, ...AN], ... [TN, A0, A1, ... AN]],
+         lower_deviation: (average for attribute if only one was given - 3 standard deviations),
+         upper_deviation: (average for attribute if only one was given + 3 standard deviations)
+        }
     """
 
     arg_keys = request.args.get("keys")
     arg_keys = arg_keys.split(',')
 
     instrument_id = request.args.get("instrument_id")
+    origin = request.args.get("origin")
     start = request.args.get("start")
     end = request.args.get("end")
+    do_stats = request.args.get("do_stats")
 
     keys = {index: dict(key=a_key, data=[]) for index, a_key in enumerate(arg_keys)}
 
@@ -327,6 +334,9 @@ def generate_instrument_graph():
             return json.dumps("[]")
     references = db_get_instrument_references(instrument_id)
 
+    average = 0
+    std_deviation = 0
+
     # Build the SQL query for the given key.  If the key is a part of a special table,
     # build a query based on the key and containing table
     for reference in references:
@@ -334,16 +344,33 @@ def generate_instrument_graph():
             sql_query = None
             if reference.description == value["key"]:
                 event_code = db.session.execute('SELECT event_code FROM event_codes WHERE description = :key',
-                                                         {'key': value["key"]}).fetchone()
+                                                dict(key=value["key"])).fetchone()
+                aggregate_query = 'SELECT avg(value), stddev_pop(value) FROM events_with_value ' \
+                                  'WHERE instrument_id = :id AND event_code = :event_code AND ' \
+                                  'time >= :origin AND time <= :end'
+                db_aggregates = db.session.execute(aggregate_query, dict(id=instrument_id, event_code=event_code[0],
+                                                                         origin=origin, end=end)).fetchall()[0]
+
+                average = db_aggregates[0]
+                std_deviation = db_aggregates[1]
+
                 sql_query = ('SELECT time, value FROM events_with_value WHERE instrument_id = :id '
-                             'AND time >= :start AND time <= :end AND event_code = %s ORDER BY time') % event_code[0]
+                             'AND time >= :start AND time <= :end AND event_code = %s ORDER BY time DESC') % event_code[0]
             elif reference.special is True:
                 rows = db.session.execute("SELECT column_name FROM information_schema.columns WHERE table_name = :table",
-                                          {'table': reference.description}).fetchall()
+                                          dict(table=reference.description)).fetchall()
+
                 columns = [row[0] for row in rows]
                 if value["key"] in columns:
-                    sql_query = 'SELECT time, %s FROM %s WHERE instrument_id = :id AND time >= :start AND time <= :end ORDER BY time' % (
-                        value["key"], reference.description)
+                    aggregate_query = 'SELECT avg(%s), stddev_pop(%s) FROM %s WHERE instrument_id = :id AND time >= :origin AND time <= :end' % (value['key'], value['key'], reference.description)
+                    db_aggregates = db.session.execute(aggregate_query,
+                                                       dict(id=instrument_id, origin=origin, end=end)).fetchall()[0]
+
+                    average = db_aggregates[0]
+                    std_deviation = db_aggregates[1]
+
+                    sql_query = 'SELECT time, %s FROM %s WHERE instrument_id = :id AND time >= :start AND time <= :end AND %s IS NOT NULL ORDER BY time DESC' % (
+                        value["key"], reference.description, value["key"])
             # Selects the time and the "key" column from the data table with time between 'start' and 'end'
             if sql_query:
                 try:
@@ -352,12 +379,112 @@ def generate_instrument_graph():
                     print(e)
                     return json.dumps("[]")
 
-    result = synchronize_sort(keys)
-    map(iso_first_element, result)
+    data = synchronize_sort(keys)
+    map(iso_first_element, data)
 
-    message = json.dumps(result)
+    lower_deviation = 0
+    upper_deviation = 0
+    if len(keys) == 1 and average and std_deviation:
+        upper_deviation = float(average) + (2. * float(std_deviation))
+        lower_deviation = float(average) - (2. * float(std_deviation))
+
+    results = dict(data=data, lower_deviation=lower_deviation, upper_deviation=upper_deviation)
+
+    if do_stats == "1":
+        # This will do the first key it can get to do stats on.  The caller of the generate function
+        # should assure that there is only one key before specifying 'do_stats', otherwise it will
+        # randomly pick a key to do stats on.
+        stats = get_attribute_stats(keys[0]['key'], instrument_id)
+        stats_dict = dict(json.loads(stats))
+        results.update(stats_dict)
+    message = json.dumps(results)
 
     # Send out the JSON message
+    return message
+
+
+@instruments.route('/attribute_stats')
+def get_attribute_stats(attribute=None, instrument_id=None):
+    """Generates aggregate data on an attribute for an instrument (min, max, mean, standard deviation)
+    and returns it in a JSON dictionary.
+
+    Parameters
+    ----------
+    attribute: string
+        Can be passed as an HTML query parameter, the name of the database column to get aggregate data for.
+
+    instrument_id: integer
+        Can be passed as an HTML query parameter, the id of the instrument in the
+            database, indicates which instrument's data to use.
+
+    Returns
+    -------
+    message: JSON object
+        Returns a JSON object as a list of the attribute's aggregate data, of the form:
+        {'min': (minimum of all values), 'max': (maximum of all values), 'average': (average of all values),
+         'std_deviation': (standard deviation for the data set)
+        }
+
+    """
+    arg_attribute = request.args.get("attribute")
+    if arg_attribute:
+        attribute = arg_attribute
+    arg_instrument_id = request.args.get("instrument_id")
+    if arg_instrument_id:
+        instrument_id = arg_instrument_id
+
+    minimum = None
+    maximum = None
+    median = None
+    average = None
+    std_deviation = None
+
+    if attribute not in valid_columns_for_instrument(instrument_id):
+        up_logger.debug("key %s not in valid columns for instrument id %s", attribute, instrument_id)
+
+    references = db_get_instrument_references(instrument_id)
+
+    db_aggregates = None
+
+    for ref in references:
+        if ref.description == attribute:
+            event_code = db.session.execute('SELECT event_code FROM event_codes WHERE description = :attribute',
+                                            dict(attribute=attribute)).fetchone()[0]
+            aggregate_sql = 'SELECT min(value), max(value), avg(value), stddev_pop(value) FROM events_with_value WHERE instrument_id = :id AND event_code = %s' % (event_code,)
+            db_aggregates = db.session.execute(aggregate_sql, dict(column=attribute, id=instrument_id)).fetchall()[0]
+
+            db_values = db.session.query(EventWithValue.value).filter(EventWithValue.instrument_id == instrument_id)\
+                .filter(EventWithValue.value.isnot(None)).all()
+            values = [value[0] for value in db_values]
+            values = sorted(values)
+            median = values[len(values)/2]
+
+        elif ref.special is True:
+            rows = db.session.execute("SELECT column_name FROM information_schema.columns WHERE table_name = :table",
+                                      dict(table=ref.description)).fetchall()
+            columns = [row[0] for row in rows]
+
+            if attribute in columns:
+                aggregate_parameters = (attribute, attribute, attribute, attribute, ref.description)
+                aggregate_sql = 'SELECT min(%s), max(%s), avg(%s), stddev_pop(%s) FROM %s WHERE instrument_id = :id' % aggregate_parameters
+                db_aggregates = db.session.execute(aggregate_sql, dict(id=instrument_id)).fetchall()[0]
+
+                values_sql = "SELECT %s FROM %s WHERE instrument_id = :id" % (attribute, ref.description,)
+                db_values = db.session.execute(values_sql, dict(id=instrument_id)).fetchall()
+                values = [value[0] for value in db_values]
+                values = sorted(values)
+                median = values[len(values)/2]
+                break
+
+    if db_aggregates:
+        minimum = db_aggregates[0]
+        maximum = db_aggregates[1]
+        average = db_aggregates[2]
+        std_deviation = db_aggregates[3]
+
+    payload = dict(min=minimum, max=maximum, median=median, average=average, std_deviation=std_deviation)
+    message = json.dumps(payload)
+
     return message
 
 
@@ -489,9 +616,9 @@ def synchronize_sort(dataset_dict):
 
     *Set 0*                 *Set 1*                   *Set 2*
     [                       [                       [
-    (2015-05-11 01:00, 01), (2015-05-11 02:00, 11), (2015-05-11 01:00, 21),
+    (2015-05-11 02:00, 03), (2015-05-11 03:00, 13), (2015-05-11 02:30, 23),
     (2015-05-11 01:30, 02), (2015-05-11 02:30, 12), (2015-05-11 02:00, 22),
-    (2015-05-11 02:00, 03)] (2015-05-11 03:00, 13)] (2015-05-11 02:30, 23)]
+    (2015-05-11 01:00, 01)] (2015-05-11 02:00, 11)] (2015-05-11 01:00, 21)]
 
     Ends with a sorted list:
     [
@@ -507,12 +634,12 @@ def synchronize_sort(dataset_dict):
     Dictionary for the algorithm to sort.  Of the form {**integer** set number: {'data':
         [(**Datetime** time1, **float/int** value1), (time2, value2) ... (timeN, valueN)]}}
     The set numbers must increment as integers from 1 to N, but can be in any order (dictionaries are unsorted).
-    Each data set should be sorted from earliest to latest time.
+    Each data set should be sorted from latest to earliest time.
 
     Returns
     -------
-    Sorted list, of form [**Datetime** 2015-05-11 01:00, 15, None, 12, ...], [2015-05-11 02:00, None, 30, None, ...],
-        ...[Final Datetime, Dataset0 Value, Dataset1 Value, Dataset2 Value, ... AttributeN Value]]
+    Sorted list, of form [**Datetime** 2015-05-11 02:00, 15, None, 12, ...], [2015-05-11 01:00, None, 30, None, ...],
+        ...[Earliest Datetime, Dataset0 Value, Dataset1 Value, Dataset2 Value, ... AttributeN Value]]
     """
     results = []
     length = len(dataset_dict)
@@ -522,7 +649,7 @@ def synchronize_sort(dataset_dict):
 
         # Gets a list of the times containing the first element of each data set (therefore, the most earliest time for
         # the set), but only if the set is not empty.
-        first_elem_times = [value["data"][0][0] for _, value in dataset_dict.iteritems() if len(value["data"]) > 0]
+        first_elem_times = [value["data"][-1][0] for _, value in dataset_dict.iteritems() if len(value["data"]) > 0]
         # Gets the earliest of the times of the data sets
         min_time = min(first_elem_times)
 
@@ -537,12 +664,11 @@ def synchronize_sort(dataset_dict):
             # in for that point and removes that element from its list.  Updates the index of the data point
             # that corresponds to the list's dictionary value.  This assures that each element of the packet
             # stays in the same order as the list.  If there is no valid value, stays None
-            if len(value["data"]) > 0 and value["data"][0][0] == min_time:
+            if len(value["data"]) > 0 and value["data"][-1][0] == min_time:
                 # 'set_number + 1' is necessary because the first element [0] is for the time.
-                values_at_time[set_number + 1] = value["data"][0][1]
-                del value["data"][0]
+                values_at_time[set_number + 1] = value["data"][-1][1]
+                del value["data"][-1]
 
         # Add point in time to result list
         results.append(values_at_time)
-
     return results
