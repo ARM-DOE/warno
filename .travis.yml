@@ -27,7 +27,7 @@ install: source continuous_integration/install.sh
 before_script: source utility_setup_scripts/set_env_for_testing.sh
 
 script:
-    - nosetests --exclude-dir=selenium_tests --exclude-dir=warno_user_portal/src/tests --with-xunit
+    - nosetests --exclude-dir=selenium_tests --exclude-dir=warno_user_portal/src/tests --exclude-dir=warno_event_manager/src/tests --with-xunit
 
 #after_success:
 #    - if [[ "$DOC_BUILD" == "true" ]]; then cd $TRAVIS_BUILD_DIR; source continuous_integration/build_docs.sh; fi
