@@ -342,3 +342,17 @@ button.site_toggle:hover {
     text-align: center;
     padding: 4px;
 }
+
+div.em_table_stats {
+    border: 2px solid black;
+    display: inline-block;
+    padding: 5px;
+    background-color: #DDDDDD;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+table.em_status {
+    border: none;
+    width: 90%;
+}

@@ -1,7 +1,7 @@
 - model: WarnoConfig.models.EventWithValue
   records:
     - id: 1
-      event_code_id: 2
       instrument_id: 1
-      time: "2016-05-05T01:01:01Z"
-      value: 20
+      event_code_id: 3
+      time: "2001-01-01T01:01:01Z"
+      value: 123

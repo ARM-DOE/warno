@@ -1,10 +1,11 @@
+import subprocess
+import psycopg2
+import pandas
+import ijson
 import sys
 import os
-import psycopg2
-import numpy as np
-import pandas
+
 from sqlalchemy import create_engine
-import subprocess
 
 import config
 
@@ -295,3 +296,134 @@ def connect_db():
                            (db_cfg['DB_USER'], s_db_cfg['DB_PASS'], db_cfg['DB_HOST'],
                             db_cfg['DB_PORT'], db_cfg['DB_NAME']))
 
+
+def save_rows_to_table(table, columns, data):
+    """ Saves the list of database values in 'data' into the 'columns' for the specified 'table'.
+
+    Parameters
+    ----------
+    table: string
+        Name of the database table to save the entries into.
+    columns: list of strings
+        List of column names to save the database entries into.  Length of list should match the length of each element
+        of 'data', as each value in a 'data' row maps to the corresponding column in 'columns'.
+    data: list of value lists
+        'data' is effectively a list of database table rows, with each row having the same number of elements as
+        'columns', and each element being the proper type for the column (not enforced here).
+
+    """
+
+    # The index for the time column varies by table, but time must be updated to save properly.
+    if table in ["prosensing_paf", "instrument_logs"]:
+        time_index = 1
+    elif table == "pulse_captures":
+        time_index = 2
+    else:
+        time_index = 3
+
+    for item in data:
+        # Update the JSON compatible string for each data to one acceptable to the SQL query
+        item[time_index] = item[time_index].replace('Z', '').replace('T', ' ')
+
+    # First section of sql query, looks like 'INSERT INTO table_name(col_1, col_2, ..., col_N) VALUES '
+    sql_columns = "INSERT INTO " + str(table) + "(" + ", ".join(columns) + ") VALUES "
+
+    # A bit hard to read, but should make it faster.
+    # Each row of data is written as a string, then parentheses are added to make it sql friendly.
+    # Final join makes it comma separated for the insert.
+    sql_data = ", ".join(["(" + ", ".join(["'" + str(d) + "'" if str(d) != 'None' else "NULL" for d in data_row]) +
+                          ")" for data_row in data])
+
+    # Connect the column and value strings into a full query
+    full_sql_query = sql_columns + sql_data
+
+    # Connect to the database and execute the sql, closing the connection even if there is an exception.
+    db_cfg = config.get_config_context()['database']
+    s_db_cfg = config.get_config_context()['s_database']
+
+    engine = create_engine('postgresql://%s:%s@%s:%s/%s' %
+                           (db_cfg['DB_USER'], s_db_cfg['DB_PASS'], db_cfg['DB_HOST'],
+                            db_cfg['DB_PORT'], db_cfg['DB_NAME']))
+    connection = engine.connect()
+
+    try:
+        connection.execute(full_sql_query)
+        connection.execute("COMMIT")
+    finally:
+        connection.close()
+
+
+def load_json_data(filename):
+    """ Load json data from 'filename' into the database. Each file should have a list of 'definition'/'data' pairs, one
+    for each database table to have data loaded in.  Each definition should at least have: 'table_name', 'num_entries',
+    and 'columns'.
+
+    Example File (indentation unnecessary):
+
+    [
+        {
+            "definition": {
+                "table_name":  *database table name*,
+                "num_entries": *number of data rows to be added to this table*,
+                "columns":     [(column_name_1, column_type_1), ..., (column_name_N, column_type_N)]
+            }
+            "data": [
+                [val_1, val_2, ..., val_N],
+                [val_1, val_2, ..., val_N],
+                ...,
+                [val_1, val_2, ..., val_N]
+            ]
+        },
+        { *table_2*
+        },
+        ...,
+        { *table_N*
+        }
+    ]
+
+
+    Parameters
+    ----------
+    filename: string
+        Name of the file to be loaded into the database.  Must be proper JSON.
+
+    """
+
+    table_defs = []
+    with open(filename, "rb") as jfile:
+        # Read in the table definitions for the data
+        for definition in ijson.items(jfile, "item.definition"):
+            table_defs.append(definition)
+
+        table_index = 0
+        row_index = 0
+        data = []
+
+        # Seek back to the beginning of the file so it can be rerun, pulling data rather than definitions.
+        jfile.seek(0)
+        for data_row in ijson.items(jfile, "item.data.item"):
+
+            # For any tables with no entries, move on to the next table
+            while table_defs[table_index]['num_entries'] <= 0:
+                table_index += 1
+
+            row_index += 1
+            data.append(data_row)
+
+            # If the number of rows processed matches the number of entries for the table, save off any that
+            # haven't been saved yet, reset the row index, and move on to the next table definition.
+            if row_index >= table_defs[table_index]['num_entries']:
+                # Save data entries
+                if len(data) > 0:
+                    save_rows_to_table(table_defs[table_index]['table_name'],
+                                       [column[0] for column in table_defs[table_index]['columns']], data)
+                data = []
+                table_index += 1
+                row_index = 0
+
+            # Saves data in chunks of 500
+            if len(data) >= 500:
+                # Save data entries
+                save_rows_to_table(table_defs[table_index]['table_name'],
+                                   [column[0] for column in table_defs[table_index]['columns']], data)
+                data = []

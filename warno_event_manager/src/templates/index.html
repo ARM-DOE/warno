@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+        <link rel="icon" href="../../favicon.ico">
+
+        <title>Event Manager Dashboard</title>
+
+        <!-- Custom styles for this template -->
+        <link rel=stylesheet type=text/css href="{{ url_for('static', filename='master.css') }}">
+
+        <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Poiret+One" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Raleway" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Rock+Salt" rel="stylesheet" type="text/css">
+
+    </head>
+    <body>
+        <div class="head-title-wrapper">
+	        <a href="http://www.arm.gov"><img src="{{url_for('static', filename='arm_logo.png')}}" id="arm-logo" alt="Atmospheric Radiation Measurement Climate Research Facility"></img></a>
+
+            <div class="head-title" align="center">
+                <h1>Event Manager</h1>
+                <br>
+                <h3>Dashboard</h3>
+            </div>
+        </div>
+        <div class="content">
+            <table class="em_status">
+                <tr>
+                    <td>
+                        <h3>Status</h3>
+                    </td>
+                    <td>
+                        <h3>Archival</h3>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Current CPU usage: {{usage}}</td>
+                    <td>Days Retained: {{days_retained}}</td>
+                </tr>
+                <tr>
+                    <td>Current Site Name: {{site}}</td>
+                    <td>Cutoff Time: {{cutoff_time}}</td>
+                </tr>
+            </table>
+            <br>
+            <button id="archive_button" onclick="archive_request(this)">Start Archival</button>
+            <i>This process can take a few minutes, and will use the cpu heavily on the server.
+            <br>
+                There is currently no message returned when it finishes.
+            </i>
+            <br>
+            <br>
+            <div class="em_table_stats_container">
+            {% for table in table_stats %}
+                <div class="em_table_stats">
+                    <table>
+                        <tr>
+                            <td>Table Name:</td>
+                            <td>'{{table['name']}}'</td>
+                        </tr>
+                        <tr>
+                            <td>Total Entries:</td>
+                            <td>{{table['count']}}</td>
+                        </tr>
+                        <tr>
+                            <td>Oldest Entry:</td>
+                            <td>{{table['oldest']}}</td>
+                        </tr>
+                        <tr>
+                            <td>Archivable Entries:</td>
+                            <td>{{table['cutoff_entries']}}</td>
+                        </tr>
+                    </table>
+                </div>
+            {% endfor %}
+            </div>
+        </div>
+        <script>
+            elem = document.getElementById("archive_button");
+            elem.disabled = false;
+            function archive_request(e) {
+
+                var xmlhttp = new XMLHttpRequest();
+                xmlhttp.onreadystatechange = function() {
+                    //After the asyncronous request successfully returns
+                    if (xmlhttp.readyState == 4 && xmlhttp.status == 200)
+                    {
+                        //Pull out the response text from the request
+                        var rec_message = xmlhttp.responseText;
+                        console.log(rec_message)
+                        //window.location.reload(true);
+                    }
+                };
+                // 10 Minute Timeout
+                var url = "{{url_for('save_json_db_data')}}";
+                xmlhttp.open("GET", url, true);
+                xmlhttp.timeout = 0;
+
+                //Send out the request;
+                xmlhttp.send();
+
+                e.disabled = true;
+                e.innerHTML = "Archive Triggered"
+            }
+        </script>
+    </body>
+</html>

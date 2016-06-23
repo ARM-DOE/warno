@@ -1,0 +1,9 @@
+- model: WarnoConfig.models.PulseCapture
+  records:
+    - id: 1
+      instrument_id: 1
+      time: "2001-01-01 01:01:01"
+      data:
+        - 1
+        - 2
+        - 3

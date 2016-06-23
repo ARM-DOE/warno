@@ -16,6 +16,7 @@ type:
 
 database:
     test_db      : true
+    days_retained: 30
     DB_HOST      : "192.168.50.100"
     DB_NAME      : "warno"
     DB_USER      : "warno"

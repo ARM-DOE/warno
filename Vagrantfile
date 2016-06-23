@@ -31,7 +31,7 @@ Vagrant.configure(2) do |config|
   ## VirtualBox ##
   config.vm.provider "virtualbox" do |v|
     v.name = "warno"
-    v.memory = 8192
+    v.memory = 1024
   end
 
   ## Set up NFS shared folders ##
