@@ -4,6 +4,11 @@ env:
   - "DATA_STORE_PATH=/home/jenkins/warno-vagrant/data_store/data/"
   - "USER_PORTAL_PATH=/home/jenkins/warno-vagrant/warno_user_portal/src/"
 
+env:
+  global:
+    # warno-docs-bot GH
+    secure: "cHUzL+m2ZBGAY0adl6DirWg3zUXvfuVo1meTf5sSMg0XBCoUlhpLuIrFMGgBET88G6OokfzUa8wfZHml4bkjN4N3u9ZjphvAB+zrhC5yL1cecLvo0Z9k+umfq9/Ieo4qe2oofr1TfRbqkgWViio+GSYrrhh/vEbF1zr4weaPGRY="
+
 matrix:
   include:
       - python: "2.7"
@@ -11,6 +16,7 @@ matrix:
         - PYTHON_VERSION="2.7"
         - NOSE_ARGS="-v --no-skip --exclude-dir=selenium_tests --exclude-dir=warno_user_portal/src/tests"
         - COVERALLS="true"
+        - DOC_BUILD="true"
 
 before_install:
     - pip install pytest pytest-cov nose nose-exclude
@@ -22,3 +28,6 @@ before_script: source utility_setup_scripts/set_env_for_testing.sh
 
 script:
     - nosetests --exclude-dir=selenium_tests --exclude-dir=warno_user_portal/src/tests --with-xunit
+
+#after_success:
+#    - if [[ "$DOC_BUILD" == "true" ]]; then cd $TRAVIS_BUILD_DIR; source continuous_integration/build_docs.sh; fi

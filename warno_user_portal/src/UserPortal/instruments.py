@@ -311,8 +311,8 @@ def generate_instrument_graph():
     message: JSON object
         Returns a JSON object as a list of attribute values at points in time, of the form:
         {data: [[Time0, Attribute0, Attribute1, ... AttributeN], [T1, A0, A1, ...AN], ... [TN, A0, A1, ... AN]],
-         lower_deviation: (average for attribute if only one was given - 3 standard deviations),
-         upper_deviation: (average for attribute if only one was given + 3 standard deviations)
+        lower_deviation: (average for attribute if only one was given - 3 standard deviations),
+        upper_deviation: (average for attribute if only one was given + 3 standard deviations)
         }
     """
 
@@ -422,7 +422,7 @@ def get_attribute_stats(attribute=None, instrument_id=None):
     message: JSON object
         Returns a JSON object as a list of the attribute's aggregate data, of the form:
         {'min': (minimum of all values), 'max': (maximum of all values), 'average': (average of all values),
-         'std_deviation': (standard deviation for the data set)
+        'std_deviation': (standard deviation for the data set)
         }
 
     """

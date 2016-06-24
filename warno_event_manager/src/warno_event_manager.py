@@ -42,14 +42,17 @@ class ReverseProxied(object):
 
     In nginx:
     location /myprefix {
-        proxy_pass http://192.168.0.1:5001;
-        proxy_set_header Host $host;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Scheme $scheme;
-        proxy_set_header X-Script-Name /myprefix;
-        }
+    proxy_pass http://192.168.0.1:5001;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Scheme $scheme;
+    proxy_set_header X-Script-Name /myprefix;
+    }
 
-    :param given_app: the WSGI application
+    Parameters
+    ----------
+    given_app: the WSGI application
+
     """
     def __init__(self, given_app):
         self.app = given_app

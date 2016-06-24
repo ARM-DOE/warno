@@ -81,7 +81,8 @@ def widget_log_viewer_controller(widget_id):
     Parameters
     ----------
     widget_id: integer
-        Allows for this widget to be dynamically created, tracked, and removed.
+        Allows for this widget to be dynamically created, tracked, and removed. Passed into the template and
+        incorporated in element ids.
 
     Returns
     -------
@@ -215,6 +216,7 @@ def show_pulse():
     show_pulse.html: HTML document
         Returns an HTML document with an argument for a list of pulse_id's to choose from
         for deciding which pulse's series to plot.
+
     """
 
     db_pulses = db.session.query(PulseCapture).join(PulseCapture.instrument).all()
@@ -245,6 +247,7 @@ def generate_pulse_graph():
     -------
     message: JSON object
         Returns a JSON object with a list of 'x' values corresponding to a list of 'y' values.
+
     """
     pulse_id = request.args.get("pulse_id")
 
@@ -293,6 +296,7 @@ def show_radar_status():
     radar_status.html: HTML document
         Returns an HTML document with arguments including a list of instruments,
             their status and their most recent log entries.
+
     """
 
     # Get the most recent log for each instrument to determine its current status
@@ -332,6 +336,7 @@ def query():
     -------
     query.html: HTML document
         Returns an HTML document with the results from the query displayed.
+
     """
     data = ""
     if request.method == 'POST':
