@@ -575,7 +575,7 @@ def update_valid_columns_for_instrument(instrument_id):
         special_valid_columns = [column.column_name for column in db_special_valid_columns]
 
         db_table_columns = db.session.execute("SELECT column_name, data_type from information_schema.columns WHERE table_name = :table", dict(table=ref.description))
-        table_columns = [row[0] for row in db_table_columns if row[1] in ["integer", "boolean", "double precision"]]
+        table_columns = [row[0] for row in db_table_columns if row[1] in ["integer", "double precision"]]
 
         # These columns are viable columns that are not already in the Valid Columns table.
         # These are the columns that need to be checked to determine if they are now valid columns

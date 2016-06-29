@@ -200,7 +200,7 @@ def save_special_prosensing_paf(msg, msg_struct):
                 float(value)
                 sql_query_b = ', '.join([sql_query_b, "%s" % value])
             except ValueError:
-                sql_query_b = ', '.join([sql_query_b, "'%s'" % value])
+                sql_query_b = ', '.join([sql_query_b, "'%s'" % value.rstrip('\x00')])
     sql_query = ''.join([sql_query_a, sql_query_b, ")"])
 
     db.session.execute(sql_query)
