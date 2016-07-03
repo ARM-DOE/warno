@@ -35,19 +35,19 @@ agent:
         name: "KAZR"
         base_url: "192.148.95.5"
         base_port: 3000
-        sampling_interval: 10
+        sampling_interval: 60
         ps_type: "KAZR2"
       KaSACR2:
         name: "KASACR"
         base_url: "192.148.95.7"
         base_port: 3000
-        sampling_interval: 10
+        sampling_interval: 60
         ps_type: "SACR2"
       WSACR2:
         name: "WSACR"
         base_url: "192.148.95.7"
         base_port: 3001
-        sampling_interval: 10
+        sampling_interval: 60
         ps_type: "SACR2"
 
 

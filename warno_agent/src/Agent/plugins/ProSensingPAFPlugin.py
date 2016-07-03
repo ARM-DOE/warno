@@ -1,18 +1,18 @@
-import time
-import traceback
-import json
-import os
 import datetime
+import traceback
+import time
+import json
+
 from pyarmret.io.PAFClient import PAFClient
 from Plugin import Plugin as Plugin
 
 from WarnoConfig import config
 
-logfile = "/vagrant/logs/agent_exceptions.log"
-
 import pyarmret
 pt = pyarmret.__file__
 
+
+LOGFILE = "/vagrant/logs/agent_exceptions.log"
 
 white_list = ['KAZR-OLI','SACR', 'KAZR', 'WSACR', 'KASACR', 'KASACRO','WSACRO'] # We need to generalize this.
 
@@ -34,38 +34,34 @@ class ProSensingPAFPlugin(Plugin):
 
     def run(self, msg_queue, config, ctrl_queue):
 
-        self.ctrl_queue= ctrl_queue
+        self.ctrl_queue = ctrl_queue
         base_url = self.config_ctxt['agent']['instrument_list'][self.config_id]['base_url']
         base_port = self.config_ctxt['agent']['instrument_list'][self.config_id]['base_port']
         fmt = self.config_ctxt['agent']['instrument_list'][self.config_id]['ps_type']
         pafc = PAFClient(base_url, base_port, fmt=fmt)
-        pafc.connect()
+
+        # Counter for the 'non_paf_event'
         i = 1
         while True:
             timestamp = self.get_timestamp()
             try:
+                pafc.connect()
                 events = pafc.get_all_text_dict()
                 events_payload = json.dumps(events)
-                msg_queue.put('{"event": "%s", "data": {"instrument_id": %s, "time": "%s", "values": %s}}'\
+                msg_queue.put('{"event": "%s", "data": {"instrument_id": %s, "time": "%s", "values": %s}}'
                               % ("prosensing_paf", config['instrument_id'], timestamp, events_payload))
-            except UnicodeDecodeError, e:
-                with open(logfile, "a+") as log:
-                    log.write("\nUnicodeDecodeError\n")
-                    log.write(str(e))
-                    log.write("\nUndecoded Message\n")
-                    log.write(str(events))
-                    log.write("\nException Traceback\n")
+            except Exception, e:
+                with open(LOGFILE, "a+") as log:
+                    log.write("--%s\n%s\n" % (str(self.get_timestamp()), e))
                     traceback.print_exc(limit=5, file=log)
-            except Exception:
-                with open(logfile, "a+") as log:
-                    log.write("\nException Traceback\n")
-                    traceback.print_exc(limit=5, file=log)
+            finally:
+                pafc.close()
 
             timestamp = self.get_timestamp()
             msg_queue.put('{"event": "non_paf_event", "data": {"instrument_id": %s, "time": "%s", "value": "%s"}}'\
                           % (config['instrument_id'], timestamp, i))
 
-            i = i + 1
+            i += 1
             self.process_ctrl_queue()
 
             time.sleep(self.config_ctxt['agent']['instrument_list'][self.config_id]['sampling_interval'])
