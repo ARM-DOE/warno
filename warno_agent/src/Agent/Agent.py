@@ -38,7 +38,8 @@ logfile = "/vagrant/data_store/data/agent_exceptions.log"
 
 @app.route('/agent')
 def serve_dashboard():
-    """ Anchor point to serve the agent dashboard.
+    """Anchor point to serve the agent dashboard.
+
     Returns
     -------
     template: index.html
@@ -65,7 +66,8 @@ def serve_dashboard():
 
 @app.route('/agent/<instrument>/<plugin_name>/stop')
 def serve_stop_plugin(instrument, plugin_name):
-    """ Anchor point to stop a plugin by name.
+    """Anchor point to stop a plugin by name.
+
     Parameters
     ----------
     plugin_name: str
@@ -86,6 +88,7 @@ def serve_stop_plugin(instrument, plugin_name):
 @app.route('/agent/<instrument>/<plugin_name>/start')
 def serve_start_plugin(instrument, plugin_name):
     """ Anchor point to start a plugin by name.
+
     Parameters
     ----------
     plugin_name: str

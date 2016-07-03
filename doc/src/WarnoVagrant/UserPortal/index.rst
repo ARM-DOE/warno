@@ -39,7 +39,7 @@ glues the application together by connecting all of the Flask blueprints. Each F
 of the underlying server into logical components. For example, all functions and requests pertaining to instruments are in
 one blueprint, while everything pertaining to sites is in another.
 
-Configuration in the Data Store container gives the User Portal everything it needs to connect with the database properly.
+Configuration in the Data Store directory gives the User Portal everything it needs to connect with the database properly.
 
 HTTP will soon be switched over to HTTPS, which the NGINX proxy server will automatically handle. A REST API
 will allow applications to pull in data from the User Portal without needing to use a browser.
