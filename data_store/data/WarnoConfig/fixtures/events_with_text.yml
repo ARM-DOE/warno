@@ -1,0 +1,7 @@
+- model: WarnoConfig.models.EventWithText
+  records:
+    - id: 1
+      instrument_id: 1
+      event_code_id: 2
+      time: "2001-01-01 01:01:01"
+      text: "string"

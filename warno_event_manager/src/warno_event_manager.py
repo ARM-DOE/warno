@@ -1,10 +1,12 @@
+import datetime
 import requests
 import logging
 import psutil
 import json
+import csv
 import os
 
-from flask import Flask, request
+from flask import Flask, request, render_template, redirect, url_for
 from flask_migrate import Migrate, upgrade
 
 from WarnoConfig import config
@@ -86,7 +88,6 @@ db.init_app(app)
 migrate = Migrate(app, db)
 migration_path = os.environ.get("MIGRATION_PATH")
 
-
 is_central = 0
 cf_url = ""
 cfg = None
@@ -94,6 +95,238 @@ cfg = None
 headers = {'Content-Type': 'application/json'}
 
 cert_verify = False
+
+
+def save_json_db_info():
+    """Saves database tables containing more permanent information, such as sites or instruments, to a json file.
+    File name has the format 'db_info_*day*_*month*_*year*', where the date corresponds to the date the function was run,
+    because it shows the current status of the database.
+
+    Example File (indentation unnecessary):
+
+    [
+        {
+            "definition": {
+                "table_name":  *database table name*,
+                "columns":     [(column_name_1, column_type_1), ..., (column_name_N, column_type_N)]
+            }
+            "data": [
+                [val_1, val_2, ..., val_N],
+                [val_1, val_2, ..., val_N],
+                ...,
+                [val_1, val_2, ..., val_N]
+            ]
+        },
+        { *table_2*
+        },
+        ...,
+        { *table_N*
+        }
+    ]
+
+    """
+
+    save_time = datetime.datetime.now()
+    filename = "db_info_" + str(save_time.day) + "_" + str(save_time.month) + "_" + str(save_time.year) + "_t_" +\
+               str(save_time.hour) + "_" + str(save_time.minute) + ".json"
+    tables = ["event_codes", "users", "sites", "instruments", "instrument_data_references"]
+
+    first_table = True
+
+    with open(filename, "w") as datafile:
+        # Begin the list of tables
+        datafile.write("[")
+        # Only prepend a comma separation if it is not the first table to be saved
+        for table in tables:
+            if not first_table:
+                datafile.write(", ")
+            else:
+                first_table = False
+
+            datafile.write('{"definition": ')
+
+            definition = dict()
+            definition['table_name'] = table
+
+            rows = db.session.execute("SELECT column_name, data_type FROM information_schema.columns "
+                                      "WHERE table_name = :table", dict(table=table)).fetchall()
+            definition['columns'] = [(row[0], row[1]) for row in rows]
+
+            # Write the definition and start the data section, with its list of records
+            json.dump(definition, datafile)
+            datafile.write(', "data": [')
+
+            first_record = True
+            rows = db.session.execute("SELECT * FROM %s" % (table,)).fetchall()
+
+            data = [list(row) for row in rows]
+
+            # Datetimes must be converted to iso compliant time format for json.dump
+            # Different tables have time in different places
+
+            for record in data:
+                # If the record is not the first, prepends a comma separation to separate the list elements
+                if not first_record:
+                    datafile.write(", ")
+                else:
+                    first_record = False
+                json.dump(record, datafile)
+
+            # Close the JSON for this table section
+            datafile.write("]}")
+        # Close the list of tables
+        datafile.write("]")
+
+
+@app.route("/eventmanager/archive_data")
+def save_json_db_data():
+    """Saves database tables containing data information, such as 'events_with_value' or 'prosensing_paf' events, to a
+    json file.  'num_entries' for each table specifies how many data rows are in the file for the table, making
+    iterative parsing much easier.
+
+    Example File (indentation unnecessary):
+
+    [
+        {
+            "definition": {
+                "table_name":  *database table name*,
+                "num_entries": *number of data rows to be added to this table*,
+                "columns":     [(column_name_1, column_type_1), ..., (column_name_N, column_type_N)]
+            }
+            "data": [
+                [val_1, val_2, ..., val_N],
+                [val_1, val_2, ..., val_N],
+                ...,
+                [val_1, val_2, ..., val_N]
+            ]
+        },
+        { *table_2*
+        },
+        ...,
+        { *table_N*
+        }
+    ]
+
+    """
+    # Get the cutoff time for the data.  Any data recorded before this time will be saved to json and deleted from the
+    # database
+    cutoff_time = datetime.datetime.now() + datetime.timedelta(-db_cfg['days_retained'])
+
+    # First save off the supplementary database table information (users, instruments, etc.)
+    # File name format described next
+    save_json_db_info()
+
+    # Each data file saved will use this extension, resulting in "*id*_archived_*day*_*month*_*year*.json".
+    # For example, for an instrument id of 5, the filename would be "5_archived_30_12_1999", meaning all the data in the
+    # archived file is dated on or before 30th of December, 1999
+    filename_extension = "_archived_" + str(cutoff_time.day) + "_" + str(cutoff_time.month) + \
+                         "_" + str(cutoff_time.year) + "_t_" + str(cutoff_time.hour) + "_" + \
+                         str(cutoff_time.minute) + ".json"
+
+    # Names of the tables to be saved.
+    tables = ["prosensing_paf", "events_with_value", "events_with_text", "instrument_logs", "pulse_captures"]
+
+    # Get a list of instrument_ids, so that the data can be archived according to the instrument the data is for
+    rows = db.session.execute("SELECT instrument_id FROM instruments").fetchall()
+    instrument_ids = [row[0] for row in rows]
+
+    for instrument_id in instrument_ids:
+        filename = str(instrument_id) + filename_extension
+        first_table = True
+        with open(filename, "w") as datafile:
+            # Begin the list of tables
+            datafile.write("[")
+            # Only prepend a comma separation if it is not the first table to be saved
+            for table in tables:
+                if not first_table:
+                    datafile.write(", ")
+                else:
+                    first_table = False
+                datafile.write('{\n"definition": ')
+
+                definition = dict()
+                definition['table_name'] = table
+
+                # List of (column_name, data_type) pairs to define the format of each data row
+                rows = db.session.execute("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = :table",
+                                          dict(table=table)).fetchall()
+                definition['columns'] = [(row[0], row[1]) for row in rows]
+
+                # If there are any values to be saved, defines the oldest as the 'start_time' and the newest as the
+                # 'end_time'.  Together they allow anyone reading the file to easily get the time range of the values
+                rows = db.session.execute("SELECT time FROM %s WHERE instrument_id = :id ORDER BY time ASC LIMIT 1" % (table,),
+                                          dict(id=instrument_id)).fetchall()
+                if len(rows) > 0:
+                    # A little extra work to make the database time JSON serializable UTC
+                    definition['start_time'] = rows[0][0].isoformat() + "Z"
+                else:
+                    definition['start_time'] = None
+
+                rows = db.session.execute("SELECT time FROM %s WHERE instrument_id = :id ORDER BY time DESC LIMIT 1" % (table,),
+                                          dict(id=instrument_id)).fetchall()
+                if len(rows) > 0:
+                    # A little extra work to make the database time JSON serializable UTC
+                    definition['end_time'] = rows[0][0].isoformat() + "Z"
+                else:
+                    definition['end_time'] = None
+
+                # Count the number of rows to be saved off.  Having this defined makes reading in the data easier
+                count = db.session.execute("SELECT count(*) FROM %s WHERE time < :time AND instrument_id = :id" % (table,),
+                                           dict(time=cutoff_time.isoformat(), id=instrument_id)).fetchall()[0][0]
+                definition['num_entries'] = count
+
+                # Write the definition and start the data section, with its list of records
+                json.dump(definition, datafile)
+                datafile.write(', "data": [')
+
+                offset = 0
+                chunk_size = 5000
+                first_record = True
+                while True:
+                    # Using offset and chunk_size in conjunction, retrieves and saves chunks of 5000 records at a time
+                    # Loop runs until no records are returned, then breaks
+                    rows = db.session.execute("SELECT * FROM %s WHERE time < :time AND instrument_id = :id ORDER BY time ASC OFFSET :offset LIMIT :chunk_size" % (table,),
+                                              dict(offset=offset, chunk_size=chunk_size, time=cutoff_time.isoformat(), id=instrument_id)).fetchall()
+                    if len(rows) <= 0:
+                        break
+
+                    # The data must be a list to update values by index
+                    data = [list(row) for row in rows]
+
+                    # Datetimes must be converted to iso compliant time format for json.dump
+                    # Different tables have time in different places
+                    if table in ["prosensing_paf", "instrument_logs"]:
+                        time_index = 1
+                    elif table == "pulse_captures":
+                        time_index = 2
+                    else:
+                        time_index = 3
+                    for item in data:
+                        item[time_index] = item[time_index].isoformat() + "Z"
+
+                    # Encode each data row into a JSON string
+                    data = [json.dumps(item) for item in data]
+
+                    # If the record is not the first, prepends a comma separation to separate the list elements.
+                    # The rows are joined by commas to make them JSON compliant
+                    if not first_record:
+                        msg = ", ".join(data)
+                        datafile.write(", %s" % msg)
+                    else:
+                        first_record = False
+                        msg = ", ".join(data)
+                        datafile.write(msg)
+
+                    offset += chunk_size
+                # Close the JSON for this table section
+                datafile.write("]}")
+                db.session.execute("DELETE FROM %s WHERE time < :time AND instrument_id = :id" % (table,),
+                                   dict(time=cutoff_time.isoformat(), id=instrument_id))
+                db.session.commit()
+            # Close the list of tables
+            datafile.write("]\n")
+
+    return "Finish"
 
 
 @app.route("/eventmanager/event", methods=['POST'])
@@ -196,7 +429,7 @@ def save_special_prosensing_paf(msg, msg_struct):
     for key, value in msg_struct['data']['values'].iteritems():
         sql_query_a = ', '.join([sql_query_a, key])
         # Converts inf and -inf to Postgresql equivalents
-        if "-inf" in str(value) or "inf" in str(value):
+        if "-inf" in str(value) or "inf" in str(value) or "-Inf" in str(value) or "Inf" in str(value):
             sql_query_b = ', '.join([sql_query_b, "NULL"])
         else:
             try:
@@ -612,19 +845,48 @@ def initialize_database():
         utility.reset_db_keys()
 
 
+@app.route('/eventmanager/borktrigger')
+def bork_trigger():
+    import time
+    time.sleep(4)
+    return "Counterbork Authority"
+
+
 @app.route('/eventmanager')
-def hello_world():
-    """Calculates very basic information and returns a string with it.  Used to verify that the event manager is
-    operational and accessible from the outside.
+def event_manager_home():
+    """Calculates very basic information (cpu usage, site name) and passes the information to a template, serving as
+    a home page for the event manager.
 
     Returns
     -------
-    String message with basic information such as current CPU usage.
+    index.html: HTML document
+
     """
-    ret_message = 'Hello World! Event Manager is operational. CPU Usage on Event Manager VM is: %g \n ' \
-                  % psutil.cpu_percent()
-    ret_message2 = '\n Site is: %s' % os.environ.get('SITE')
-    return ret_message + ret_message2
+    table_stats = []
+    data_tables = ["prosensing_paf", "events_with_value", "events_with_text", "instrument_logs", "pulse_captures"]
+
+    cutoff_time = datetime.datetime.now() + datetime.timedelta(-db_cfg['days_retained'])
+
+    for table in data_tables:
+        table_stat_name = table
+
+        # Total entry count in table
+        entry_count = db.session.execute("SELECT count(*) from %s" % table).first()[0]
+        # Number of entries that are beyond the cutoff date (if data is archived, number of entries archived)
+        cutoff_entries = db.session.execute("SELECT count(*) from %s WHERE time < :cutoff_time" % table,
+                                            dict(cutoff_time=cutoff_time.isoformat())).first()[0]
+
+        oldest_entry = db.session.execute("SELECT time from %s ORDER BY time ASC" % table).first()
+
+        if oldest_entry is not None:
+            oldest_entry = oldest_entry[0].strftime("%d-%m-%Y %H:%M")
+
+        table_stats.append(dict(name=table_stat_name, count=int(entry_count), oldest=oldest_entry,
+                                cutoff_entries=int(cutoff_entries)))
+
+    return render_template('index.html', usage=psutil.cpu_percent(), site=os.environ.get('SITE'),
+                           days_retained=db_cfg['days_retained'], cutoff_time=cutoff_time.strftime("%d-%m-%Y %H:%M"),
+                           table_stats=table_stats)
 
 
 if __name__ == '__main__':

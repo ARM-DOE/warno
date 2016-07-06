@@ -4,3 +4,5 @@
       description: "Test Event Code 1"
     - event_code: 2
       description: "Test Event Code 2"
+    - event_code: 3
+      description: "not_special"

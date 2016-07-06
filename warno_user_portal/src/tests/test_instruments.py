@@ -217,8 +217,8 @@ class TestInstruments(TestCase, FixturesMixin):
 
         self.assertTrue(pre_count < post_count, "The count of valid columns did not increase")
         self.assertIn("packet_id", result_column_list, "prosensing_paf 'packet_id' not in returned valid column list.")
-        self.assertIn("coolant_supply_temp", result_column_list,
-                      "prosensing_paf 'coolant_supply_temp' not in returned valid column list.")
+        self.assertIn("antenna_temp", result_column_list,
+                      "prosensing_paf 'antenna_temp' not in returned valid column list.")
         self.assertNotIn("ad_skip_count", result_column_list,
                          "prosensing_paf 'ad_skip_count' in returned valid column list, even though it shouldn't.")
 
