@@ -3,24 +3,22 @@ from unittest import TestCase
 from .. import config
 
 
-class TestGet_config_context(TestCase):
-    list_required_keys = ['DB_HOST', 'DB_USER', 'DB_NAME']
+class TestGetConfigContext(TestCase):
+    required_config_keys = ['DB_HOST', 'DB_USER', 'DB_NAME']
 
-    def test_get_config_context_database_entries(self):
-        """Test the configuration context"""
+    def test_get_config_context_construct_contains_expected_database_keys(self):
+        """The configuration context should be properly set with the expected database keys."""
 
-        cfg = config.get_config_context()
+        config_construct = config.get_config_context()
 
-        for value in self.list_required_keys:
-            self.assertIn(value, cfg['database'], 'config context does not contain key:"%s"' % value)
+        for value in self.required_config_keys:
+            self.assertIn(value, config_construct['database'], 'config context does not contain key:"%s"' % value)
 
-        self.assertIn('DB_PASS', cfg['s_database'], 'config context does not contain key: "DB_PASS"')
+        self.assertIn('DB_PASS', config_construct['s_database'], 'config context does not contain key: "DB_PASS"')
 
-    def test_get_config_context_top_level_dicts(self):
-        cfg = config.get_config_context()
+    def test_get_config_context_construct_top_level_dicts_setup_and_type(self):
+        """Configuration construct should have top level dictionaries 'setup' and 'type'"""
+        config_construct = config.get_config_context()
 
-        self.assertIn('setup', cfg, 'Configuration should have "setup" entry' )
-        self.assertIn('type', cfg, 'Configuration should have "type" entry')
-
-
-
+        self.assertIn('setup', config_construct, 'Configuration construct should have "setup" entry')
+        self.assertIn('type', config_construct, 'Configuration construct should have "type" entry')

@@ -11,6 +11,7 @@ from WarnoConfig.models import db
 
 @mock.patch('logging.Logger')
 class TestViews(TestCase, FixturesMixin):
+    """Contains tests for the UserPortal main 'views' file."""
 
     render_templates = False
     db_cfg = config.get_config_context()['database']
@@ -41,16 +42,16 @@ class TestViews(TestCase, FixturesMixin):
         return views.app
 
     def test_status_log_for_each_instrument_returns_expected_logs(self, logger):
-
-        result = views.status_log_for_each_instrument()
-        print result
+        """Test that the status_log_for_each_instrument function returns the two expected logs, which are the most
+        recent instrument logs for each instrument. There are two logs for instrument 1 and one for instrument 2.
+        The most recent log for instrument 1 has the contents 'Log 2 Contents'.  The only log for instrument 2 has
+        contents 'Log 3 Contents'"""
+        function_return = views.status_log_for_each_instrument()
+        # According to the database fixture instrument log entries:
         # Instrument id 1 has two logs, the most recent having contents 'Log 2 Contents'
         # Instrument id 2 has one log, having contents 'Log 3 Contents'
 
-        self.assertEqual(result[1]['contents'], 'Log 2 Contents',
-                         "Instrument with id 1's most recent log did not have contents 'Log 2 Contents'")
-        self.assertEqual(result[2]['contents'], 'Log 3 Contents',
-                         "Instrument with id 2's most recent log did not have contents 'Log 3 Contents'")
-
-    def test_two(self, logger):
-        self.assertTrue(True)
+        self.assertEqual(function_return[1]['contents'], 'Log 2 Contents',
+                         "Instrument with id '1's most recent log did not have expected contents 'Log 2 Contents'")
+        self.assertEqual(function_return[2]['contents'], 'Log 3 Contents',
+                         "Instrument with id '2's most recent log did not have expected contents 'Log 3 Contents'")

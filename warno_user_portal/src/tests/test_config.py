@@ -3,11 +3,10 @@ import os
 
 from unittest import TestCase
 
-from .. import UserPortal
 from WarnoConfig import config
 
 
-class TestGet_config_context(TestCase):
+class TestGetConfigContext(TestCase):
 
     def setUp(self):
         self.log_patch = mock.patch('logging.Logger')
@@ -16,23 +15,26 @@ class TestGet_config_context(TestCase):
     def tearDown(self):
         self.log_patch.stop()
 
-    list_required_keys = ['DB_HOST', 'DB_USER', 'DB_NAME']
+    required_config_keys = ['DB_HOST', 'DB_USER', 'DB_NAME']
 
     def test_data_store_path_defined(self):
         self.assertIsNotNone(os.getenv('DATA_STORE_PATH'), 'DATA_STORE_PATH not set')
 
-    def test_get_config_context_database_entries(self):
-        """Test the configuration context"""
+    def test_get_config_context_construct_contains_expected_database_keys(self):
+        """The configuration context should be properly set with the expected database keys."""
 
-        cfg = config.get_config_context()
+        config_construct = config.get_config_context()
 
-        for value in self.list_required_keys:
-            self.assertIn(value, cfg['database'], 'config context does not contain key:"%s"' % value)
+        for value in self.required_config_keys:
+            self.assertIn(value, config_construct['database'],
+                          'config context does not contain "database" key:"%s"' % value)
 
-        self.assertIn('DB_PASS', cfg['s_database'], 'config context does not contain key:"DB_PASS"')
+        self.assertIn('DB_PASS', config_construct['s_database'],
+                      'config context does not contain "s_database" key: "DB_PASS"')
 
-    def test_get_config_context_top_level_dicts(self):
-        cfg = config.get_config_context()
+    def test_get_config_context_construct_contains_expected_top_level_dicts_setup_and_type(self):
+        """Configuration construct should have top level dictionaries 'setup' and 'type'"""
+        config_construct = config.get_config_context()
 
-        self.assertIn('setup', cfg, 'Configuration should have "setup" entry')
-        self.assertIn('type', cfg, 'Configuration should have "type" entry')
+        self.assertIn('setup', config_construct, 'Configuration should have "setup" entry')
+        self.assertIn('type', config_construct, 'Configuration should have "type" entry')
