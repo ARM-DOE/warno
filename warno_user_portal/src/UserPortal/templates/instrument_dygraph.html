@@ -8,24 +8,32 @@
     <body>
         <div>
 
-            <div style=" vertical-align: top;">
+            <div class="graph_setup_container" style="vertical-align: top;">
 
                 <p><label for="time">Start Date/Time in UTC:</label>
                     <input type="datetime" id="datetime-input-start" name="start" value="01/01/1970 12:27:31">
                 </p>
-
+                <div style="display: inline-block" class="graph_setup_button" onclick="update_start_time(1)">Yesterday</div>
+                <div style="display: inline-block" class="graph_setup_button" onclick="update_start_time(7)">Last Week</div>
+                <div style="display: inline-block" class="graph_setup_button" onclick="update_start_time(14)">Fortnight</div>
+                <div style="display: inline-block" class="graph_setup_button" onclick="update_start_time(30)">Last Month</div>
+                <div style="display: inline-block" class="graph_setup_button" onclick="update_start_time(180)">Six Months</div>
+                <br>
+                <br>
                 <p><label for="time">End Date/Time in UTC:</label>
                     <input type="datetime" id="datetime-input-end" name="end" value="01/01/2170 12:27:31">
                     <br>
-                    (MM/DD/YYYY HH:MM:SS)
+                    <div class="graph_time_format">
+                        <i>(MM/DD/YYYY HH:MM:SS)</i>
+                    </div>
                     {% if error %}
                         <div id="new-log-error" style="color: red">{{error}}</div>
                     {% endif %}
                 </p>
 
                 Graph By Attributes:
-                <button type="button" onclick="add_graph()">Graph</button>
-                <button type="button" onclick="add_attr()">Add Attribute</button>
+                <button type="button" class="graph_setup_button" onclick="add_graph()">Graph</button>
+                <button type="button" class="graph_setup_button" onclick="add_attr()">Add Attribute</button>
 
                 <br>
                 <div id="attr_div">
@@ -48,6 +56,17 @@
 
             gm = new GraphManager();
 
+            function update_start_time(days) {
+                temp = new Date()
+                temp.setDate(temp.getDate() - days)
+                updated_time = (temp.getUTCMonth() + 1) + '/' + temp.getUTCDate() + '/' + temp.getUTCFullYear() + " " +
+                               temp.getUTCHours() + ":" + temp.getUTCMinutes();
+                document.getElementById("datetime-input-start").value = updated_time;
+            }
+
+            // After the page loads, the graph's default 'start' time is set to one week ago
+            update_start_time(7);
+
             function add_attr() {
                 var div = document.createElement('div');
                 div.innerHTML = '<div><button type="button" onclick="remove_attr(this)">X</button> <select class="attrSelect">{% for column in columns %}<option value="{{column}}">{{column}}</option>{% endfor %}</select></div>';
@@ -56,8 +75,11 @@
             }
 
             function remove_attr(e) {
-                elem = e.closest('div');
-                elem.parentNode.removeChild(elem);
+                attr_elems = document.getElementsByClassName('attrSelect');
+                if (attr_elems.length > 1) {
+                    elem = e.closest('div');
+                    elem.parentNode.removeChild(elem);
+                }
             }
 
             function add_graph()

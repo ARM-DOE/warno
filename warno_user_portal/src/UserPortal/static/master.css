@@ -86,7 +86,7 @@ div.sub-title {
 }
 
 div.instrument_dygraph {
-    border: 2px solid lightGray;
+    border: 2px solid darkGray;
 }
 
 div.info {
@@ -281,6 +281,48 @@ div.round {
 div.rect {
     border-radius: 2px;
     border: 2px solid black;
+}
+
+div.graph_setup_container {
+    vertical-align: top;
+
+    border: 2px solid darkGray;
+    padding: 5px;
+}
+
+div.graph_time_format {
+    padding-bottom: 10px;
+    padding-right: 100px;
+
+    font-size: 80%;
+    text-align: right;
+}
+
+.graph_setup_button {
+    background-color: #e0dfff;
+    border: 1px solid darkGray;
+    border-radius: 2px;
+
+    padding: 2px;
+    padding-left: 8px;
+    padding-right: 8px;
+
+    text-decoration: none;
+    font-size: 80%;
+    cursor: pointer;
+}
+
+.graph_setup_button:hover {
+    background-color: #f3ecff;
+}
+
+.graph_setup_button:active {
+    background-color: #ccccdc;
+}
+
+select.attrSelect {
+    font-size:90%;
+    padding: 0px;
 }
 
 div.graph_stats {
