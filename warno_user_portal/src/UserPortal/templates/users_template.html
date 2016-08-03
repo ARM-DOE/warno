@@ -8,26 +8,20 @@ Users
 <div>
 <table class="listing-table sortable" id='user-table'>
     <tr>
-        <th> User Name</th>
+        <th> Username</th>
+        <th> Name</th>
         <th> User E-mail</th>
         <th> User Location</th>
         <th> User Position</th>
-        <th> User ID </th>
-        <th> Username</th>
-        <th> Active</th>
-        <th> Pathword</th>
         <th></th>
     </tr>
     {%  for user in users %}
     <tr>
+        <td>{{ user.username }}</td>
         <td>{{ user.name }}</td>
         <td>{{ user.email }}</td>
         <td>{{ user.location }}</td>
         <td>{{ user.position }}</td>
-        <td>{{ user.id }}</td>
-        <td>{{ user.username }}</td>
-        <td>{{ user.active }}</td>
-        <td>{{ user.password}}</td>
         <td><a href="{{url_for('users.edit_user', user_id=user.id)}}">Edit</a></td>
     </tr>
     {% endfor %}
@@ -38,8 +32,7 @@ Users
 <hr>
 <br>
 
-<form action="{{ url_for('users.new_user') }}" method="get">
-  <input type="submit" id="new-user-redirect-button"
-         value="Add New User"/>
+<form action="{{ url_for('user.register') }}" method="get">
+    <input type="submit" id="new-user-redirect-button" value="Register New User"/>
 </form>
 {% endblock %}

@@ -11,6 +11,8 @@ db = SQLAlchemy()
 # Non-Database Models
 class MyRegisterForm(RegisterForm):
     name = StringField('Name', validators=[validators.DataRequired('Name is required.')])
+    position = StringField('Position')
+    location = StringField('Location')
 
 
 # Define the User profile form

@@ -6,7 +6,30 @@ User Profile
 
 {% block content %}
 {% from "flask_user/_macros.html" import render_field, render_checkbox_field, render_submit_field %}
-<h1>{%trans%}User Profile:{%endtrans%} {{ current_user.username }}</h1>
+<h2>{%trans%}User Profile:{%endtrans%} {{ current_user.username }}</h2>
+<div class="grid-container">
+    <hr>
+    <div class="row">
+        <div class="col-6">Name:</div>
+        <div class="col-6 text-right">{{ current_user.name }}</div>
+    </div>
+    <hr>
+    <div class="row">
+        <div class="col-6">E-Mail:</div>
+        <div class="col-6 text-right">{{ current_user.email }}</div>
+    </div>
+    <hr>
+    <div class="row">
+        <div class="col-6">Position:</div>
+        <div class="col-6 text-right">{{ current_user.position }}</div>
+    </div>
+    <hr>
+    <div class="row">
+        <div class="col-6">Location</div>
+        <div class="col-6 text-right">{{ current_user.location }}</div>
+    </div>
+    <hr>
+</div>
 
 {% if user_manager.enable_change_username %}
 <p><a href="{{ url_for('user.change_username') }}">{%trans%}Change username{%endtrans%}</a></p>
@@ -14,5 +37,7 @@ User Profile
 {% if user_manager.enable_change_password %}
 <p><a href="{{ url_for('user.change_password') }}">{%trans%}Change password{%endtrans%}</a></p>
 {% endif %}
+
+<p><a href="{{url_for('users.edit_user', user_id=current_user.id)}}">Edit Information</a></p>
 
 {% endblock %}

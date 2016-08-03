@@ -172,7 +172,7 @@ class TestIndexFunctionality(TestCase):
         self.assertTrue(test_log['status'] in test_div.text,
                         "Log's status %s not displayed in %s's log" % (test_log['status'], test_log['user']))
 
-    def test_user_add_button_redirects_to_new_user_page(self):
+    def test_user_add_button_redirects_to_register_page(self):
         """
         Test that clicking on the new user button redirects to the new user form page.
         """
@@ -180,7 +180,7 @@ class TestIndexFunctionality(TestCase):
         self.browser.find_element_by_link_text('Users').click()
         self.browser.find_element_by_id('new-user-redirect-button').click()
         contents = self.browser.find_element_by_class_name('sub-title')
-        self.assertTrue('New User' in contents.text, "Redirected page's subtitle did not contain 'New User'")
+        self.assertTrue('Register' in contents.text, "Redirected page's subtitle did not contain 'Register'")
 
     def test_user_add_adds_user(self):
         """

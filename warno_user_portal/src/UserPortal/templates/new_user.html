@@ -5,6 +5,7 @@ New User
 {% endblock %}
 
 {% block content %}
+<!--Deprecated in favor of using flask_user's user registration-->
 <form method="post">
    <section>
      <p><label for="name">Name:</label>
@@ -24,7 +25,7 @@ New User
      </p>
   </section>
   <menu>
-    <button id="cancel" type="reset">Cancel</button>
+    <button id="clear" type="reset">Clear Fields</button>
     <button type="submit" id="submit">Confirm</button>
   </menu>
 </form>

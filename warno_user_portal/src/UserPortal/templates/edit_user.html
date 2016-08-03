@@ -7,6 +7,9 @@ Edit User
 {% block content %}
 <form method="post">
     <section>
+        <p><label for="username">Username:</label>
+            <input type="username" id="userUsernameBox" name="username" maxlength="128" value="{{user.username}}"></input>
+        </p>
         <p><label for="name">Name:</label>
             <input type="text" id="userNameBox" name="name" maxlength="128" value="{{user.name}}"></input>
         </p>
@@ -19,12 +22,9 @@ Edit User
         <p><label for="position">Position:</label>
             <input type="text" id="userPositionBox" name="position" maxlength="24" value="{{user.position}}"></input>
         </p>
-        <p><label for="password">Password:</label>
-            <input type="password" id="userPasswordBox" name="password" maxlength="128"></input>
-        </p>
     </section>
     <menu>
-        <button id="cancel" type="reset">Cancel</button>
+        <button id="reset" type="reset">Reset Fields</button>
         <button type="submit" id="submit">Confirm</button>
     </menu>
 </form>

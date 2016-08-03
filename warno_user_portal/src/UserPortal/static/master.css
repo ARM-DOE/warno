@@ -1,4 +1,23 @@
-﻿html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td,article,aside,canvas,details,embed,figure,figcaption,footer,header,hgroup,menu,nav,output,ruby,section,summary,time,mark,audio,video {
+﻿
+/***** Generic short helpers *****/
+.expanded {
+    width: 99%;
+}
+
+.ib {
+    display: inline-block;
+}
+
+.no_padding {
+    padding: 0px;
+}
+
+.text-right {
+    text-align: right;
+}
+
+/***** Base Template (header, navigation, content) *****/
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td,article,aside,canvas,details,embed,figure,figcaption,footer,header,hgroup,menu,nav,output,ruby,section,summary,time,mark,audio,video {
   margin: 0;
   padding: 0;
   border: 0;
@@ -24,16 +43,7 @@ div.content, div.head-title, div.head-title-wrapper, div.sub-title {
   margin-right: auto;
 }
 
-.histogram_box {
-    background: white;
-
-    overflow : hidden;
-    float: left;
-    padding: 30px;
-    margin: 20px;
-    border: 2px solid darkGray;
-}
-
+/*** Content ***/
 div.content {
     background: -moz-linear-gradient(left, #FCFCFC, #F4F4F4); /* FF3.6-15 */
     background: -webkit-linear-gradient(left, #FCFCFC, #F4F4F4); /* Chrome10-25,Safari5.1-6 */
@@ -46,6 +56,7 @@ div.content {
     border-right: solid 2px black;
 }
 
+/*** Head and Navigation***/
 div.head-title-wrapper {
     background: -moz-linear-gradient(left, #e5f2ff, #c0d0f5); /* FF3.6-15 */
     background: -webkit-linear-gradient(left, #e5f2ff, #c0d0f5); /* Chrome10-25,Safari5.1-6 */
@@ -90,15 +101,6 @@ div.sub-title {
     border-bottom: solid 2px black;
 }
 
-div.instrument_dygraph {
-    border: 2px solid darkGray;
-}
-
-div.info {
-    background:  lightBlue;
-    border: 1px solid black;
-}
-
 table.nav-table{
 	width: 50%;
 }
@@ -107,32 +109,6 @@ table.nav-table td {
 	text-align: center;
 }
 
-table.listing-table{
-    width: 99%;
-    margin: 5px;
-    border-collapse: collapse;
-}
-
-table.listing-table tr:nth-child(even) {
-    background-color: #eee;
-}
-table.listing-table tr:nth-child(odd) {
-    background-color: lightGray;
-}
-table.listing-table th {
-    color: black;
-    background: #b8e6ff;}
-
-table.listing-table td, th {
-    padding-left: 5px;
-    padding-right: 5px;
-    padding-bottom: 1px;
-    border: 1px solid black;
-}
-
-table.listing-table a {
-    color: darkBlue;
-}
 
 ul.nav-buttons {
     display: block;
@@ -156,6 +132,7 @@ ul.nav-buttons li{
     font-size: 16px;
 }
 
+/** Navigation Buttons **/
 ul.nav-buttons a:first-child li{
     border-radius: 8px 0 0 8px;
 }
@@ -183,6 +160,67 @@ ul.nav-buttons a li.selected{
     background: linear-gradient(to right, #999999 0%, #DDDDDD 15%, #DDDDDD 85%, #999999 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
 }
 
+
+/***** Dygraphs and their containers *****/
+div.master_graphdiv {
+    display: flex;
+    flex-flow: row wrap;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    max-width: 1000px;
+}
+
+div.instrument_dygraph {
+    border: 2px solid lightGray;
+    flex: 1;
+}
+
+div.info {
+    background:  lightBlue;
+    border: 1px solid black;
+}
+
+/*** Dygraph stats ***/
+div.graph_stats {
+    margin: 10px;
+}
+
+div.graph_stats_half {
+    display: inline-block;
+    width: 49%;
+}
+
+
+/***** Listing Tables (instrument list, site list, etc.) *****/
+table.listing-table{
+    width: 99%;
+    margin: 5px;
+    border-collapse: collapse;
+}
+
+table.listing-table tr:nth-child(even) {
+    background-color: #eee;
+}
+table.listing-table tr:nth-child(odd) {
+    background-color: lightGray;
+}
+table.listing-table th {
+    color: black;
+    background: #b8e6ff;}
+
+table.listing-table td, th {
+    padding-left: 5px;
+    padding-right: 5px;
+    padding-bottom: 1px;
+    border: 1px solid black;
+}
+
+table.listing-table a {
+    color: darkBlue;
+}
+
+
+/***** Dashboard widgets *****/
 div.log_widget {
     background: -moz-linear-gradient(left, #FCFCFC, #F4F4F4); /* FF3.6-15 */
     background: -webkit-linear-gradient(left, #FCFCFC, #F4F4F4); /* Chrome10-25,Safari5.1-6 */
@@ -211,6 +249,8 @@ div.wd {
     background-color: #e5f2ff;
 }
 
+
+/***** Status displays *****/
 div.status_page {
     background: -moz-linear-gradient(left, #DDDDDD, #CCCCCC); /* FF3.6-15 */
     background: -webkit-linear-gradient(left, #DDDDDD, #CCCCCC); /* Chrome10-25,Safari5.1-6 */
@@ -265,13 +305,6 @@ table.legend {
   align: center
 }
 
-.expanded {
-    width: 99%;
-}
-.ib {
-    display: inline-block;
-}
-
 div.round {
   border-radius: 50%;
   width: 18px;
@@ -283,6 +316,177 @@ div.round {
 div.rect {
     border-radius: 2px;
     border: 2px solid black;
+}
+
+button.site_toggle {
+    border: 1px solid black;
+    border-radius: 2px;
+    padding: 0;
+    width: 20px;
+}
+
+button.site_toggle:hover {
+    background-color: moccasin;
+}
+
+/*** Status types ***/
+.operational {
+    background: -moz-linear-gradient(top, #90EEA0, #8AE98A); /* FF3.6-15 */
+    background: -webkit-linear-gradient(top, #90EEA0, #8AE98A); /* Chrome10-25,Safari5.1-6 */
+    background: linear-gradient(to bottom, #90EEA0, #8AE98A); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+    text-align: center;
+    padding: 4px;
+}
+
+.not_working {
+    background: -moz-linear-gradient(top, #F0A0A0, #F08080); /* FF3.6-15 */
+    background: -webkit-linear-gradient(top, #F0A0A0, #F08080); /* Chrome10-25,Safari5.1-6 */
+    background: linear-gradient(to bottom, #F0A0A0, #F08080); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+    text-align: center;
+    padding: 4px;
+}
+
+.in_upgrade {
+    background: -moz-linear-gradient(top, #BEE9F7, #ADD8E6); /* FF3.6-15 */
+    background: -webkit-linear-gradient(top, #BEE9F7, #ADD8E6); /* Chrome10-25,Safari5.1-6 */
+    background: linear-gradient(to bottom, #BEE9F7, #ADD8E6); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+    text-align: center;
+    padding: 4px;
+}
+
+.testing {
+    background: -moz-linear-gradient(top, #F3F35A, #E7E70A); /* FF3.6-15 */
+    background: -webkit-linear-gradient(top, #F3F35A, #E7E70A); /* Chrome10-25,Safari5.1-6 */
+    background: linear-gradient(to bottom, #F3F35A, #E7E70A); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+    text-align: center;
+    padding: 4px;
+}
+
+.transit{
+    background: -moz-linear-gradient(top, #FFE4B5, #F7DCAC); /* FF3.6-15 */
+    background: -webkit-linear-gradient(top, #FFE4B5, #F7DCAC); /* Chrome10-25,Safari5.1-6 */
+    background: linear-gradient(to bottom, #FFE4B5, #F7DCAC); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+    text-align: center;
+    padding: 4px;
+}
+
+
+/***** Event Manager Dashboard *****/
+div.em_table_stats {
+    border: 2px solid black;
+    display: inline-block;
+    padding: 5px;
+    background-color: #DDDDDD;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+table.em_status {
+    border: none;
+    width: 90%;
+}
+
+
+/***** Flask_User forms *****/
+div.flask_user_container {
+    text-align: center;
+}
+
+div.flask_user_content {
+    text-align: left;
+    background-color: #F4F4F4;
+
+    min-width: 400px;
+    min-height: 200px;
+    margin-top: 40px;
+    margin-bottom: 20px;
+    display: inline-block;
+
+    border: 2px solid darkGray;
+    border-radius: 20px;
+    padding: 15px;
+}
+
+.form-group {
+    font-size: 90%;
+    padding-top: 10px;
+}
+
+.form-control {
+    width: 100%;
+}
+
+/***** Grid and Column Framework *****/
+/* Base for custom grid, adapted from http://j4n.co/blog/Creating-your-own-css-grid-system */
+.grid-container{
+    width: 100%;
+    max-width: 1000px;
+}
+
+/*-- setting border box on all elements inside the grid --*/
+    .grid-container *{
+        box-sizing: border-box;
+    }
+
+/*-- our clearfix hack -- */
+.row:before,
+.row:after {
+    content:"";
+      display: table ;
+    clear:both;
+}
+
+[class*='col-'] {
+    float: left;
+    min-height: 1px;
+    width: 8.33%;
+}
+
+/*-- our gutter -- */
+.with_gutter {
+    padding: 12px;
+}
+
+.col-1 { width: 8.33%;  }
+.col-2 { width: 16.66%; }
+.col-3 { width: 25%;    }
+.col-4 { width: 33.33%; }
+.col-5 { width: 41.66%; }
+.col-6 { width: 50%;    }
+.col-7 { width: 58.33%; }
+.col-8 { width: 66.66%; }
+.col-9 { width: 75%;    }
+.col-10{ width: 83.33%; }
+.col-11{ width: 91.66%; }
+.col-12{ width: 100%;   }
+
+/*-- example: some extra column content styling --*/
+/*[class*='col-'] > p {
+ background-color: #FFC2C2;
+ padding: 0;
+ margin: 0;
+ text-align: center;
+ color: white;
+}*/
+
+/* Needs Classifying */
+.histogram_box {
+    background: white;
+
+    overflow : hidden;
+    float: left;
+    padding: 30px;
+    margin: 20px;
+    border: 2px solid darkGray;
+}
+
+div.instrument_dygraph {
+    border: 2px solid darkGray;
+}
+
+div.info {
+    background:  lightBlue;
+    border: 1px solid black;
 }
 
 div.graph_setup_container {
@@ -335,17 +539,6 @@ div.graph_stats_half {
     width: 49%;
 }
 
-button.site_toggle {
-    border: 1px solid black;
-    border-radius: 2px;
-    padding: 0;
-    width: 20px;
-}
-
-button.site_toggle:hover {
-    background-color: moccasin;
-}
-
 div.devel_button {
     display: inline-block;
     background: #DDDDDD;
@@ -366,77 +559,4 @@ div.devel_notification {
 
     border-radius: 5px;
     border: 2px solid Salmon;
-}
-
-.operational {
-    background: -moz-linear-gradient(top, #90EEA0, #8AE98A); /* FF3.6-15 */
-    background: -webkit-linear-gradient(top, #90EEA0, #8AE98A); /* Chrome10-25,Safari5.1-6 */
-    background: linear-gradient(to bottom, #90EEA0, #8AE98A); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-    text-align: center;
-    padding: 4px;
-}
-
-.not_working {
-    background: -moz-linear-gradient(top, #F0A0A0, #F08080); /* FF3.6-15 */
-    background: -webkit-linear-gradient(top, #F0A0A0, #F08080); /* Chrome10-25,Safari5.1-6 */
-    background: linear-gradient(to bottom, #F0A0A0, #F08080); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-    text-align: center;
-    padding: 4px;
-}
-
-.in_upgrade {
-    background: -moz-linear-gradient(top, #BEE9F7, #ADD8E6); /* FF3.6-15 */
-    background: -webkit-linear-gradient(top, #BEE9F7, #ADD8E6); /* Chrome10-25,Safari5.1-6 */
-    background: linear-gradient(to bottom, #BEE9F7, #ADD8E6); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-    text-align: center;
-    padding: 4px;
-}
-
-.testing {
-    background: -moz-linear-gradient(top, #F3F35A, #E7E70A); /* FF3.6-15 */
-    background: -webkit-linear-gradient(top, #F3F35A, #E7E70A); /* Chrome10-25,Safari5.1-6 */
-    background: linear-gradient(to bottom, #F3F35A, #E7E70A); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-    text-align: center;
-    padding: 4px;
-}
-
-.transit{
-    background: -moz-linear-gradient(top, #FFE4B5, #F7DCAC); /* FF3.6-15 */
-    background: -webkit-linear-gradient(top, #FFE4B5, #F7DCAC); /* Chrome10-25,Safari5.1-6 */
-    background: linear-gradient(to bottom, #FFE4B5, #F7DCAC); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-    text-align: center;
-    padding: 4px;
-}
-
-div.em_table_stats {
-    border: 2px solid black;
-    display: inline-block;
-    padding: 5px;
-    background-color: #DDDDDD;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-table.em_status {
-    border: none;
-    width: 90%;
-}
-
-div.flask_user_container {
-    text-align: center;
-}
-
-div.flask_user_content {
-    text-align: left;
-    background-color: #F4F4F4;
-
-    min-width: 400px;
-    min-height: 200px;
-    margin-top: 40px;
-    margin-bottom: 20px;
-    display: inline-block;
-
-    border: 2px solid darkGray;
-    border-radius: 20px;
-    padding: 15px;
 }
