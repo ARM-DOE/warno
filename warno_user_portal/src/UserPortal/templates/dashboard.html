@@ -1,36 +1,26 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends 'partials/site_base.html' %}
 
-<head>
-    <meta charset="UTF-8">
-    <title>Dashboard</title>
-    <link rel=stylesheet type=text/css href="{{ url_for('static', filename='master.css') }}">
-    <script type="text/javascript" src="{{ url_for('static', filename='jquery-2.1.4.js')}}"></script>
-</head>
+{% block title %}
+Dashboard
+{% endblock %}
 
-<body>
-{% with title='Dashboard' %}
-{% include 'partials/header_template.html' %}
-{% endwith %}
+{% block content %}
+<div style="padding: 10px" id="widget_picker_div">
+    <h3>Widgets</h3>
+    <select id="select-widget" name="select-widget">
+        <option value="status_plot">Status Plot</option>
+        <option value="log_viewer">Log Viewer</option>
+        <option value="instrument_dygraph">Instrument Dygraph</option>
+    </select>
+    <button type="button" onclick="add_widget_to_collection()">Add Widget</button>
+</div>
 
-<div class="content" >
-    <div style="padding: 10px" id="widget_picker_div">
-        <h3>Widgets</h3>
-        <select id="select-widget" name="select-widget">
-            <option value="status_plot">Status Plot</option>
-            <option value="log_viewer">Log Viewer</option>
-            <option value="instrument_dygraph">Instrument Dygraph</option>
-        </select>
-        <button type="button" onclick="add_widget_to_collection()">Add Widget</button>
-    </div>
-
-    <div id="collection">
-
-    </div>
+<div id="collection">
 
 </div>
-</body>
+{% endblock %}
 
+{% block script %}
 <script>
     widget_index = 0
     function add_widget_to_collection()
@@ -90,3 +80,5 @@
         element.parentNode.removeChild(element)
     }
 </script>
+
+{% endblock %}

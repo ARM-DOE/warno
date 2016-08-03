@@ -1,22 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Pulse from Instrument</title>
-<link rel=stylesheet type=text/css href="{{ url_for('static', filename='master.css') }}">
+{% extends 'partials/site_base.html' %}
 
-</head>
-<body>
+{% block title %}
+Pulses
+{% endblock %}
 
-{% with title="Pulses" %}
-{% include 'partials/header_template.html' %}
-{% endwith %}
-
-<div class="content">
+{% block content %}
     {% with pulses=pulses %}
     {% include 'pulse_dygraph.html' %}
     {% endwith %}
-</div>
-
-</body>
-</html>
+{% endblock %}

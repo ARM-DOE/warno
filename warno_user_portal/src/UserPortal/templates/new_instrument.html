@@ -1,18 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>New Instrument on ARM Site</title>
-<link rel=stylesheet type=text/css href="{{ url_for('static', filename='master.css') }}">
+{% extends 'partials/site_base.html' %}
 
-</head>
-<body>
+{% block title %}
+New Instrument
+{% endblock %}
 
-{% with title='New Instrument' %}
-{% include 'partials/header_template.html' %}
-{% endwith %}
-
-<div class="content">
+{% block content %}
 <form method="post">
    <section>
      <p><label for="abbv">Abbv:</label>
@@ -46,7 +38,4 @@
     <button type="submit" id="submit">Confirm</button>
   </menu>
 </form>
-</div>
-
-</body>
-</html>
+{% endblock %}

@@ -1,0 +1,50 @@
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}{% endblock %}</title>
+    <link rel=stylesheet type=text/css href="{{ url_for('static', filename='master.css') }}">
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Poiret+One" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Raleway" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Rock+Salt" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="{{ url_for('static', filename='jquery-2.1.4.js')}}"></script>
+
+</head>
+
+<body>
+<div class="head-title-wrapper">
+    <a href="http://www.arm.gov"><img src="{{url_for('static', filename='arm_logo.png')}}" id="arm-logo" alt="Atmospheric Radiation Measurement Climate Research Facility"></img></a>
+
+    <div class="head-title" align="center" >
+        <h1>WARNO</h1>
+        <ul class="nav-buttons">
+            <a href="{{url_for('show_radar_status')}}"><li {% if title == "Home" %} class="selected" {% endif %}>Status</li></a>
+            <a href="{{url_for('sites.list_sites')}}"><li {% if title == "Sites" %} class="selected" {% endif %}>Sites</li></a>
+            <a href="{{url_for('instruments.list_instruments')}}"><li {% if title == "Instruments" %} class="selected" {% endif %}>Instruments</li></a>
+            <a href="{{url_for('show_pulse')}}"><li {% if title == "Pulses" %} class="selected" {% endif %}>Pulses</li></a>
+            <a href="{{url_for('users.list_users')}}"><li {% if title == "Users" %} class="selected" {% endif %}>Users</li></a>
+            <a href="{{url_for('logs.new_log')}}"><li {% if title == "Submit Log" %} class="selected" {% endif %}>Submit Log</li></a>
+            <a href="{{url_for('dashboard')}}"><li {% if title == "Dashboard" %} class="selected" {% endif %}>Dashboard</li></a>
+        </ul>
+    </div>
+</div>
+<div class="sub-title" align="center">
+    <div style="float: right; font-size: 80%;">
+        {% if current_user.is_active %}
+            Logged In As: <a href="{{url_for('user.profile')}}">{{current_user.username}}</a> &nbsp <a href="{{url_for('user.logout')}}">Log Out</a>
+        {% else %}
+             You are not logged in. <a href="{{url_for('user.login')}}">Sign In</a>?
+        {% endif %}
+    </div>
+    <div style="text-align: center; width: 200px;">{{ self.title() }}</div>
+
+</div>
+
+<div class="content">
+    {% block wrapped_content %}{% endblock %}
+</div>
+</body>
+
+{% block script %}{% endblock %}
+</html>

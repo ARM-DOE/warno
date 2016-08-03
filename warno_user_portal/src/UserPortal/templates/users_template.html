@@ -1,19 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>User Accounts on WARNO</title>
-<link rel=stylesheet type=text/css href="{{ url_for('static', filename='master.css') }}">
-<script src="{{ url_for('static', filename='sorttable.js')}}"></script>
+{% extends 'partials/site_base.html' %}
 
-</head>
-<body>
+{% block title %}
+Users
+{% endblock %}
 
-{% with title='Users' %}
-{% include 'partials/header_template.html' %}
-{% endwith %}
-
-<div class="content">
+{% block content %}
 <div>
 <table class="listing-table sortable" id='user-table'>
     <tr>
@@ -22,6 +13,9 @@
         <th> User Location</th>
         <th> User Position</th>
         <th> User ID </th>
+        <th> Username</th>
+        <th> Active</th>
+        <th> Pathword</th>
         <th></th>
     </tr>
     {%  for user in users %}
@@ -31,6 +25,9 @@
         <td>{{ user.location }}</td>
         <td>{{ user.position }}</td>
         <td>{{ user.id }}</td>
+        <td>{{ user.username }}</td>
+        <td>{{ user.active }}</td>
+        <td>{{ user.password}}</td>
         <td><a href="{{url_for('users.edit_user', user_id=user.id)}}">Edit</a></td>
     </tr>
     {% endfor %}
@@ -45,6 +42,4 @@
   <input type="submit" id="new-user-redirect-button"
          value="Add New User"/>
 </form>
-</div>
-</body>
-</html>
+{% endblock %}

@@ -1,19 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>WARNO: ARM Site</title>
-<link rel=stylesheet type=text/css href="{{ url_for('static', filename='master.css') }}">
-<script src="{{ url_for('static', filename='sorttable.js')}}"></script>
+{% extends 'partials/site_base.html' %}
 
-</head>
-<body>
+{% block title %}
+{{ site.abbv }}
+{% endblock %}
 
-{% with title=site.abbv %}
-{% include 'partials/header_template.html' %}
-{% endwith %}
-
-<div class="content">
+{% block content %}
 <div>
     <br>
     Instruments at site:
@@ -97,7 +88,4 @@
         {% endfor %}
     </div>
 </div>
-</div>
-
-</body>
-</html>
+{% endblock %}

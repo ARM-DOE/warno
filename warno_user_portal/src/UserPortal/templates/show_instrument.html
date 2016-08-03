@@ -1,17 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Instrument on ARM Site</title>
-<link rel=stylesheet type=text/css href="{{ url_for('static', filename='master.css') }}">
-</head>
-<body>
+{% extends 'partials/site_base.html' %}
 
-{% with title=instrument.abbv %}
-{% include 'partials/header_template.html' %}
-{% endwith %}
+{% block title %}
+{{ instrument.abbv }}
+{% endblock %}
 
-<div class="content">
+{% block content %}
     <div style="width: 300px; display: inline-block; vertical-align: top; border: 2px solid black; margin: 5px">
         <div>
             <img src='https://maps.googleapis.com/maps/api/staticmap?center={{instrument.latitude}}, {{instrument.longitude}}&zoom=1&size=300x300&maptype=roadmap&markers=color:blue%7Clabel:S%7C{{instrument.latitude}}, {{instrument.longitude}}&sensor=false'/>
@@ -76,8 +69,4 @@
         </div>
 
     </div>
-
-</div>
-
-</body>
-</html>
+{% endblock %}

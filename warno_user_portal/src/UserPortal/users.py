@@ -32,7 +32,7 @@ def list_users():
     """
 
     db_users = db.session.query(User).all()
-    users_dict = [dict(name=user.name, email=user.email, location=user.location, position=user.position, id=user.id)
+    users_dict = [dict(name=user.name, email=user.email, location=user.location, position=user.position, id=user.id, username=user.username, active=user.is_active, password=user.password)
                   for user in db_users]
 
     return render_template('users_template.html', users=users_dict)

@@ -1,19 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>WARNO: ARM Site List</title>
-<link rel=stylesheet type=text/css href="{{ url_for('static', filename='master.css') }}">
-<script src="{{ url_for('static', filename='sorttable.js')}}"></script>
+{% extends 'partials/site_base.html' %}
 
-</head>
-<body>
+{% block title %}
+Sites
+{% endblock %}
 
-{% with title='Sites' %}
-{% include 'partials/header_template.html' %}
-{% endwith %}
-
-<div class="content">
+{% block content %}
 <table class="listing-table sortable" id="site-table">
     <tr>
         <th> Site Abbv</th>
@@ -53,6 +44,4 @@
   <input type="submit" id="new-site-redirect-button"
          value="Add New Site"/>
 </form>
-</div>
-</body>
-</html>
+{% endblock %}

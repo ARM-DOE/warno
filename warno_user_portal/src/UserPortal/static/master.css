@@ -2,7 +2,7 @@
   margin: 0;
   padding: 0;
   border: 0;
-  vertical-align: baseline
+  vertical-align: baseline;
 }
 
 body {
@@ -420,4 +420,23 @@ div.em_table_stats {
 table.em_status {
     border: none;
     width: 90%;
+}
+
+div.flask_user_container {
+    text-align: center;
+}
+
+div.flask_user_content {
+    text-align: left;
+    background-color: #F4F4F4;
+
+    min-width: 400px;
+    min-height: 200px;
+    margin-top: 40px;
+    margin-bottom: 20px;
+    display: inline-block;
+
+    border: 2px solid darkGray;
+    border-radius: 20px;
+    padding: 15px;
 }
