@@ -171,8 +171,9 @@ def db_get_instrument_references(instrument_id):
             Each element being the name of the reference and whether or not it is a special reference
             (meaning it references a full table rather than just a certain event type)
     """
-    references = db.session.query(InstrumentDataReference)\
-        .filter(InstrumentDataReference.instrument_id == instrument_id).all()
+    references = (db.session.query(InstrumentDataReference)
+                  .filter(InstrumentDataReference.instrument_id == instrument_id)
+                  .all())
     return references
 
 
@@ -271,8 +272,8 @@ def db_recent_logs_by_instrument(instrument_id, maximum_number=5):
 
     """
     # Creates a list of dictionaries, each dictionary being one of the log entries
-    db_logs = db.session.query(InstrumentLog).filter(InstrumentLog.instrument_id == instrument_id)\
-        .order_by(InstrumentLog.time.desc()).limit(maximum_number).all()
+    db_logs = (db.session.query(InstrumentLog).filter(InstrumentLog.instrument_id == instrument_id)
+               .order_by(InstrumentLog.time.desc()).limit(maximum_number).all())
 
     return [dict(time=log.time, contents=log.contents, status=log.status,
                  supporting_images=log.supporting_images, author=log.author.name)
@@ -345,9 +346,9 @@ def generate_instrument_graph():
             if reference.description == value["key"]:
                 event_code = db.session.execute('SELECT event_code FROM event_codes WHERE description = :key',
                                                 dict(key=value["key"])).fetchone()
-                aggregate_query = 'SELECT avg(value), stddev_pop(value) FROM events_with_value ' \
-                                  'WHERE instrument_id = :id AND event_code = :event_code AND ' \
-                                  'time >= :origin AND time <= :end'
+                aggregate_query = ('SELECT avg(value), stddev_pop(value) FROM events_with_value '
+                                   'WHERE instrument_id = :id AND event_code = :event_code AND '
+                                   'time >= :origin AND time <= :end')
                 db_aggregates = db.session.execute(aggregate_query, dict(id=instrument_id, event_code=event_code[0],
                                                                          origin=origin, end=end)).fetchall()[0]
 
@@ -388,7 +389,7 @@ def generate_instrument_graph():
         upper_deviation = float(average) + (2. * float(std_deviation))
         lower_deviation = float(average) - (2. * float(std_deviation))
 
-    results = dict(data=data, lower_deviation=lower_deviation, upper_deviation=upper_deviation)
+    message = dict(data=data, lower_deviation=lower_deviation, upper_deviation=upper_deviation)
 
     if do_stats == "1":
         # This will do the first key it can get to do stats on.  The caller of the generate function
@@ -396,11 +397,12 @@ def generate_instrument_graph():
         # randomly pick a key to do stats on.
         stats = get_attribute_stats(keys[0]['key'], instrument_id)
         stats_dict = dict(json.loads(stats))
-        results.update(stats_dict)
-    message = json.dumps(results)
+        message.update(stats_dict)
+    serialized_message = json.dumps(message)
 
     # Send out the JSON message
-    return message
+    # TODO this return data should be compressed, it can get pretty heavy when on large data sets.  May need headers
+    return serialized_message
 
 
 @instruments.route('/attribute_stats')
@@ -457,6 +459,7 @@ def get_attribute_stats(attribute=None, instrument_id=None):
                          .filter(EventWithValue.instrument_id == instrument_id)
                          .filter(EventWithValue.event_code_id == int(event_code))
                          .filter(EventWithValue.value.isnot(None)).all())
+
             values = [value[0] for value in db_values]
             values = sorted(values)
             median = values[len(values)/2]
@@ -544,7 +547,9 @@ def update_valid_columns_for_instrument(instrument_id):
 
     """
     message = ""
-    current_references = db.session.query(InstrumentDataReference).filter(InstrumentDataReference.instrument_id == instrument_id).all()
+    current_references = (db.session.query(InstrumentDataReference)
+                          .filter(instrument_id == InstrumentDataReference.instrument_id)
+                          .all())
 
     special_refs = []
     non_special_refs = []
@@ -554,8 +559,10 @@ def update_valid_columns_for_instrument(instrument_id):
         else:
             non_special_refs.append(ref)
 
-    db_non_special_valid_columns = db.session.query(ValidColumn).filter(ValidColumn.instrument_id == instrument_id)\
-        .filter(ValidColumn.table_name == "events_with_value").all()
+    db_non_special_valid_columns = (db.session.query(ValidColumn)
+                                    .filter(ValidColumn.instrument_id == instrument_id)
+                                    .filter(ValidColumn.table_name == "events_with_value")
+                                    .all())
     non_special_valid_columns = [column.column_name for column in db_non_special_valid_columns]
 
     excluded_refs = [ref for ref in non_special_refs if ref.description not in non_special_valid_columns]
@@ -572,11 +579,15 @@ def update_valid_columns_for_instrument(instrument_id):
             message += " -- Added previously null 'events_with_value' column '" + str(ref.description) + "'<br>"
 
     for ref in special_refs:
-        db_special_valid_columns = db.session.query(ValidColumn).filter(ValidColumn.instrument_id == instrument_id)\
-            .filter(ValidColumn.table_name == ref.description).all()
+        db_special_valid_columns = (db.session.query(ValidColumn)
+                                    .filter(ValidColumn.instrument_id == instrument_id)
+                                    .filter(ValidColumn.table_name == ref.description)
+                                    .all())
         special_valid_columns = [column.column_name for column in db_special_valid_columns]
 
-        db_table_columns = db.session.execute("SELECT column_name, data_type from information_schema.columns WHERE table_name = :table", dict(table=ref.description))
+        db_table_columns = db.session.execute(
+                "SELECT column_name, data_type from information_schema.columns WHERE table_name = :table",
+                dict(table=ref.description))
         table_columns = [row[0] for row in db_table_columns if row[1] in ["integer", "double precision"]]
 
         # These columns are viable columns that are not already in the Valid Columns table.
@@ -601,8 +612,8 @@ def update_valid_columns_for_instrument(instrument_id):
         db.session.commit()
 
         # Small message to give the caller an idea of how many rows successfully updated.
-        message += " -- Added " + str(len(added_columns)) + " of " + str(len(excluded_columns)) + \
-                   " previously null columns.<br>"
+        message += (" -- Added " + str(len(added_columns)) + " of " + str(len(excluded_columns))
+                    + " previously null columns.<br>")
 
     return message
 
