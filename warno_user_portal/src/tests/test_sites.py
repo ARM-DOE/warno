@@ -11,6 +11,7 @@ from WarnoConfig.models import db
 
 @mock.patch('logging.Logger')
 class TestSites(TestCase, FixturesMixin):
+    """Contains tests for the UserPortal 'sites' file."""
 
     render_templates = False
     db_cfg = config.get_config_context()['database']
@@ -41,12 +42,13 @@ class TestSites(TestCase, FixturesMixin):
         return views.app
 
     def test_method_get_on_edit_site_returns_200_ok_and_passes_fixture_site_as_context_variable_using_correct_template(self, logger):
-
-        result = self.client.get('/sites/2/edit')
-        self.assert200(result)
+        """A 'GET' request to /sites/<site_id>/edit returns a response of '200' OK and passes the database information
+        of the site with an id matching 'site_id' as a context variable to the 'edit_site.html' template."""
+        # Should get database fixture site entry with id 2
+        get_request_return = self.client.get('/sites/2/edit')
+        self.assert200(get_request_return)
 
         context_site = self.get_context_variable('site')
-        print context_site
 
         self.assertEqual(context_site['name_short'], 'TESTSIT2',
                          "'TESTSIT2' is not in the 'name_short' field for the context variable site.")
