@@ -12,7 +12,7 @@ A Vagrant virtual machine containing multiple servers, with each server providin
 
 ## Installation
 
-First, install the latest versions of Vagrant and VirtualBox (Installation instructions for each on their respective sites.
+First, install the latest versions of Vagrant and VirtualBox (Installation instructions for each on their respective sites).
 
 https://www.vagrantup.com/
 

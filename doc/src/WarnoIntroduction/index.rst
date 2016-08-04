@@ -3,17 +3,16 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Latest Release
-==============
+Getting Started
+===============
 
 WARNO uses microservices working in concert to monitor and pull metadata from ARM radars across the world,
-process the information, and aggregate it in a central location for long term storage, retrieval, and display.
+process the information, and aggregate it in a central location for long term storage and retrieval.
 
-.. toctree::
-   :maxdepth: 2
+.. include:: introduction.rst
 
-   WarnoConfig/index
-   Agent/index
-   UserPortal/index
-   EventManager/index
+.. include:: installation.rst
 
+.. include:: fabric.rst
+
+.. include:: design.rst

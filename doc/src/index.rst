@@ -10,25 +10,15 @@ WARNO uses microservices working in concert to monitor and pull metadata from AR
 process the information, and aggregate it in a central location for long term storage and retrieval.
 
 Table of Contents
-=================
+-----------------
 
 .. toctree::
    :maxdepth: 2
 
-   introduction
-   design
-   tutorial
+   WarnoIntroduction/index.rst
+   WarnoIntroduction/installation
+   WarnoIntroduction/tutorial
    WarnoVagrant/index.rst
+   indices
 
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
-.. include:: introduction.rst
-
-.. include:: design.rst
-
+.. include:: indices.rst

@@ -1,17 +1,20 @@
 Design
-======
+------
 
 WARNO uses a Vagrant VM (Virtual Machine) to create a uniform environment regardless of what OS it is on, and within that VM
 starts and manages multiple servers, each of them providing their own service to the other services
 or to the user.
 
+Services
+^^^^^^^^
+
 Current services include:
 
-- Agent: Gathers, processes, and passes information to the Event Manager (localhost or remote)
+- :ref:`agent`: Gathers, processes, and passes information to the Event Manager (localhost or remote)
 
-- Event Manager: Gathers data passed from multiple agents, stores it in a database, and either passes the data on to a more comprehensive Event Manager if one exists.
+- :ref:`event-manager`: Gathers data passed from multiple agents, stores it in a database, and either passes the data on to a more comprehensive Event Manager if one exists.
 
-- User Portal:  Web server allowing users to either visit the web site to access data or to pull out data through a set of API hooks.
+- :ref:`user-portal`:  Web server allowing users to either visit the web site to access data or to pull out data through a set of API hooks.
 
 - Postgresql:  A database server.
 
@@ -19,6 +22,8 @@ Current services include:
 
 - Proxy:  An NGINX proxy server responsible for determining whether requests should be passed to the User Portal or the Event Manager running within the same VM.
 
+Description
+^^^^^^^^^^^
 
 WARNO is designed as such that each VM uses the exact same code base, and the difference in roles and functionality are
 specified by configuration.  For example, an Agent would likely have the Event Manager disabled on the same VM, and the
@@ -38,7 +43,7 @@ communicate with that Event Manager, or if they connect to the central User Port
 instruments.  If a user were to make changes at a site, for example submitting a log for one of the instruments, the log
 is then transferred to the central Event Manager for any user to access.
 
-.. figure:: _static/warno_network.png
+.. figure:: ../_static/warno_network.png
 
    Figure: Example WARNO network. Each block of services represents a copy of the WARNO VM, with the only differences
    being configuration and the plugins supplied.  Different configurations determine whether Agent, User Portal,
