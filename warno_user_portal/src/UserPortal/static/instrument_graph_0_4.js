@@ -1,4 +1,4 @@
-function GraphManager() {
+function GraphManager() {  // Handles tracking and updating all Graphs
     this.graph_index = 0;
     this.graphs = [];
     this.timer = setInterval(this.tick.bind(this), 60000)
@@ -6,8 +6,7 @@ function GraphManager() {
 
 GraphManager.prototype.tick = function(){
     for (i = 0; i < this.graphs.length; i++){
-        // Only do updates on graphs that have not been removed from the HTML
-        if (this.graphs[i].div.parentNode != null)
+        if (this.graphs[i].div.parentNode != null) // Only do updates on graphs that have not been removed from the HTML
             this.graphs[i].tick()
     }
 };
@@ -24,16 +23,19 @@ GraphManager.prototype.get_count = function() {
 
 
 function Graph(manager, id, keys, instrument_id, base_url, beginning_time, end_time, master_div) {
-    this.manager = manager
+    this.manager = manager                // Keep a reference to the parent GraphManager
     this.id = id;
-    this.keys = keys;
+    this.keys = keys;                     // Given attribute keys to graph
     this.instrument_id = instrument_id;
     this.base_url = base_url;
-    this.beginning_time = beginning_time;
-    this.end_time = end_time;
-    this.origin_time = beginning_time;
+    this.beginning_time = beginning_time; // Start time for the next data request. Updates each request to avoid duplicates
+    this.end_time = end_time;             // End time for the next data request
+    this.origin_time = beginning_time;    // Origin time is the beginning time at graph creation, for aggregate stats
     this.graph_data = [];
     this.graph_title = null;
+
+    // Statistic fields, only handled if stats_enabled is true
+    this.stats_enabled = false;
     this.sel_lower_deviation = 0;
     this.sel_upper_deviation = 0;
     this.minimum = 0;
@@ -41,9 +43,11 @@ function Graph(manager, id, keys, instrument_id, base_url, beginning_time, end_t
     this.median = 0;
     this.average = 0;
     this.std_deviation = 0;
-    this.stat_frequency = 10;
-    //Guarantees the first request gets stats
-    this.stat_count = this.stat_frequency - 1;
+    this.stat_frequency = 10;   // How often the stats will be generated. Every X requests for data, update stats
+    this.force_redraw = false;  // When set to true, redraws the whole Dygraph.  Used to update stat lines
+    this.stat_count = this.stat_frequency - 1; // Counter for requests without stat generation.
+                                               // Setting this way guarantees the first request generates stats
+
 
     this.div_id = "graphdiv" + id;
     this.div = document.createElement('div');
@@ -54,20 +58,26 @@ function Graph(manager, id, keys, instrument_id, base_url, beginning_time, end_t
     this.data_div = document.createElement('div');
     this.data_div.className = "graph_stats"
 
-    //This only fills in if there is only one attribute for the graph
+    // If there is only one attribute graphed, generate a button that allows the user to get stats for the attribute
     if (String(this.keys).split(",").length ==1){
         this.graph_title = String(this.keys)
-        this.data_div.innerHTML = '<b>Selection 95th Percentile:</b><br>' +
-                                  'Loading...' +
-                                  '<br><b>Entire Database:</b><br>' +
-                                  '<div class="graph_stats_half">Current: Loading...' +
-                                  '<br>Average: Loading...' +
-                                  '<br>Std. Dev.: Loading...' + '</div>' +
-                                  '<div class="graph_stats_half">Minimum: Loading...' +
-                                  '<br>Maximum: Loading...' +
-                                  '<br>Median: Loading...' + '</div>';
+
+        // Clear anything that might be in there already
+        while (this.data_div.hasChildNodes()){
+            this.data_div.removeChild(this.data_div.firstChild);
+        }
+
+        var custom_button=document.createElement('button');
+        var that = this;
+        custom_button.innerHTML = "Get Dataset Statistics";
+        // Passes the Graph into the function so that the button with reference the Graph that created it
+        custom_button.onclick = function () { that.enable_stats(that); } ;
+
+        this.data_div.appendChild(custom_button);
+
     }
     else {
+        // If there is more than one attribute graphed, display a list of the attributes being graphed
         html_construct = "<b>Attributes: </b>";
         attribute_list = String(this.keys).split(",");
         for (i = 0; i < attribute_list.length; i ++ ) {
@@ -77,7 +87,7 @@ function Graph(manager, id, keys, instrument_id, base_url, beginning_time, end_t
     }
 
     master_div.insertBefore(this.div, master_div.firstChild);
-    //Appending data_div onto this div assures that it will be removed with the graph if the graph is removed
+    //Appending data_div onto this div assures that it will be removed with the Graph if the Graph is removed
     this.div.firstChild.appendChild(this.data_div)
     this.inner_div = document.getElementById(this.div_id);
     this.inner_div.innerHTML = "<p><br><i>Loading Graph...</i></p>"
@@ -88,8 +98,28 @@ function Graph(manager, id, keys, instrument_id, base_url, beginning_time, end_t
 
 };
 
+Graph.prototype.enable_stats = function(graph) {
+    // Even though this is a Graph's 'enable stats' function, it was necessary to pass the graph to allow it
+    // to be dynamically called by a button generated by the Graph.
+
+    graph.stats_enabled = true; // Graph will now display and track stats
+    graph.force_redraw = true;  // Graph will be redrawn on next update to show std deviation lines
+
+    graph.data_div.innerHTML = '<b>Selection 95th Percentile:</b><br>' +
+                               'Loading...' +
+                               '<br><b>Entire Database:</b><br>' +
+                               '<div class="graph_stats_half">Current: Loading...' +
+                               '<br>Average: Loading...' +
+                               '<br>Std. Dev.: Loading...' + '</div>' +
+                               '<div class="graph_stats_half">Minimum: Loading...' +
+                               '<br>Maximum: Loading...' +
+                               '<br>Median: Loading...' + '</div>';
+
+    graph.request_values(graph.keys, graph.beginning_time, graph.end_time, graph.origin_time)
+};
+
 Graph.prototype.update_with_values = function(values) {
-    //Read in the upper and lower deviations
+    // Read in the various statistics for the Graph
     var upper = this.sel_upper_deviation.toPrecision(4);
     var lower = this.sel_lower_deviation.toPrecision(4);
     var minimum = this.minimum.toPrecision(4);
@@ -98,8 +128,9 @@ Graph.prototype.update_with_values = function(values) {
     var average = this.average.toPrecision(4);
     var std_deviation = this.std_deviation.toPrecision(4);
 
-    if (String(this.keys).split(",").length == 1) {
-        //Add extra information if there is only one attribute
+
+    if (this.stats_enabled == true) {
+        //Add extra information if stats are enabled
 
         //Get the current value (either the most recent incoming value, or if there are no incoming values,
         //the most recent value currently stored.
@@ -113,17 +144,17 @@ Graph.prototype.update_with_values = function(values) {
         }
 
         this.data_div.innerHTML = '<b>Selection 95th Percentile:</b><br>' +
-                                  lower + ', ' + upper +
-                                  '<br><b>Entire Database:</b><br>' +
-                                  '<div class="graph_stats_half">Current: ' + current +
-                                  '<br>Average: ' + average +
-                                  '<br>Std. Dev.: ' + std_deviation + "</div>" +
-                                  '<div class="graph_stats_half">Minimum: ' + minimum +
-                                  '<br>Maximum: ' + maximum +
-                                  '<br>Median: ' + median + "<div>";
+                                   lower + ', ' + upper +
+                                   '<br><b>Entire Database:</b><br>' +
+                                   '<div class="graph_stats_half">Current: ' + current +
+                                   '<br>Average: ' + average +
+                                   '<br>Std. Dev.: ' + std_deviation + "</div>" +
+                                   '<div class="graph_stats_half">Minimum: ' + minimum +
+                                   '<br>Maximum: ' + maximum +
+                                   '<br>Median: ' + median + "<div>";
 
 
-        //Callback handles drawing the deviation lines on the graph.
+        //Callback handles drawing the deviation lines on the Dygraph.
         deviation_callback = function(canvas, area, g) {
                   var LowCoords = g.toDomCoords(0, lower);
                   var HighCoords = g.toDomCoords(0, upper);
@@ -140,8 +171,10 @@ Graph.prototype.update_with_values = function(values) {
     else {
         deviation_callback = null;
     }
-    if (this.graph_data.length <= 0) {
-        this.graph_data = this.graph_data.concat(values)
+    if (this.graph_data.length <= 0 || this.force_redraw == true) {
+        this.graph_data = this.graph_data.concat(values);
+        this.force_redraw == false;
+
         if (this.graph_data.length > 0){
             this.dygraph = new Dygraph(
             this.inner_div,
@@ -222,6 +255,7 @@ Graph.prototype.request_values = function(keys, beginning_time, end_time, origin
             if (rec_message['std_deviation']){
                 this_graph.std_deviation = rec_message['std_deviation'];}
 
+            // TODO add hook to force an update to stats
             this_graph.update_with_values(rec_message['data']);
         }
     };
@@ -234,8 +268,8 @@ Graph.prototype.request_values = function(keys, beginning_time, end_time, origin
     var end_utc = end_time.toUTCString();
 
     var do_stats = 0;
-    //If there is only one key, set 'do_stats' every 'this.stat_frequency' times
-    if(String(this.keys).split(',').length == 1) {
+    //If stats are enabled, set 'do_stats' every 'this.stat_frequency' times
+    if(this.stats_enabled) {
             this.stat_count += 1;
             if (this.stat_count >= this.stat_frequency) {
                 this.stat_count = 0;

@@ -334,8 +334,8 @@ def generate_instrument_graph():
             return json.dumps("[]")
     references = db_get_instrument_references(instrument_id)
 
-    average = 0
-    std_deviation = 0
+    average = None
+    std_deviation = None
 
     # Build the SQL query for the given key.  If the key is a part of a special table,
     # build a query based on the key and containing table
@@ -384,7 +384,7 @@ def generate_instrument_graph():
 
     lower_deviation = 0
     upper_deviation = 0
-    if len(keys) == 1 and average and std_deviation:
+    if len(keys) == 1 and average is not None and std_deviation is not None:
         upper_deviation = float(average) + (2. * float(std_deviation))
         lower_deviation = float(average) - (2. * float(std_deviation))
 
@@ -453,8 +453,10 @@ def get_attribute_stats(attribute=None, instrument_id=None):
             aggregate_sql = 'SELECT min(value), max(value), avg(value), stddev_pop(value) FROM events_with_value WHERE instrument_id = :id AND event_code = %s' % (event_code,)
             db_aggregates = db.session.execute(aggregate_sql, dict(column=attribute, id=instrument_id)).fetchall()[0]
 
-            db_values = db.session.query(EventWithValue.value).filter(EventWithValue.instrument_id == instrument_id)\
-                .filter(EventWithValue.value.isnot(None)).all()
+            db_values = (db.session.query(EventWithValue.value)
+                         .filter(EventWithValue.instrument_id == instrument_id)
+                         .filter(EventWithValue.event_code_id == int(event_code))
+                         .filter(EventWithValue.value.isnot(None)).all())
             values = [value[0] for value in db_values]
             values = sorted(values)
             median = values[len(values)/2]
@@ -477,10 +479,10 @@ def get_attribute_stats(attribute=None, instrument_id=None):
                 break
 
     if db_aggregates:
-        minimum = db_aggregates[0]
-        maximum = db_aggregates[1]
-        average = db_aggregates[2]
-        std_deviation = db_aggregates[3]
+        minimum = float(db_aggregates[0])
+        maximum = float(db_aggregates[1])
+        average = float(db_aggregates[2])
+        std_deviation = float(db_aggregates[3])
 
     payload = dict(min=minimum, max=maximum, median=median, average=average, std_deviation=std_deviation)
     message = json.dumps(payload)
