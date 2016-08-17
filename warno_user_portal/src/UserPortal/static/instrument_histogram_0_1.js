@@ -25,6 +25,7 @@ function create_histogram_div(div, instrument_id, instrument_name, field, start_
             var field1 = response.data.map(i => i[1]);
             //field1 = field1.filter(isNaN)
             field1.filter(isSentinel)
+            nbins = Math.sqrt(field1.length);
             var data = [
                 {
                     x: field1,
@@ -32,7 +33,7 @@ function create_histogram_div(div, instrument_id, instrument_name, field, start_
                     marker: {
                         color: 'rgba(0, 50, 226, 0.7)',
                     },
-                    nbinsx : 100,
+                    nbinsx : nbins,
                 }]
 
         var layout = {

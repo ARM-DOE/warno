@@ -65,11 +65,14 @@
                 fieldSelect = document.getElementById("fieldSelect")
                 removeOptions(fieldSelect)
                 instrument_id = attrSelect.value
+                valid_columns = valid_columns[instrument_id];
+                valid_columns.sort()
 
-                for (column in valid_columns[instrument_id]){
-                    element = document.createElement("option")
-                    element.value=valid_columns[instrument_id][column]
-                    element.text=valid_columns[instrument_id][column]
+                for (var i =0; i< valid_columns.length; i++){
+
+                    element = document.createElement("option");
+                    element.value=valid_columns[i];
+                    element.text=valid_columns[i];
                     fieldSelect.add(element )
                 }
             };
