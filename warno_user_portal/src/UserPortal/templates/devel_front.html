@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Development Index: </title>
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='master.css') }}">
+</head>
+<body>
+
+{% with title="Devel" %}
+{% include 'partials/header_template.html' %}
+{% endwith %}
+
+<div class="content">
+
+    <div> All content on this page is set up as release candidates for being incorporated into WARNO. Please contact us if you have any concerns/find any bugs.</div>
+
+    <div style="margin: 10px;">
+        <ol>
+           <li>   <a href="{{ url_for('devel.histogram_page') }}">Histogram Plotting Routines</a>   </li>
+        </ol>
+    </div>
+
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>
