@@ -5,7 +5,7 @@ function remove_graph(e)
     elem.parentNode.removeChild(elem);
 };
 
-function create_histogram_div(div, instrument_id, instrument_name, field ) {
+function create_histogram_div(div, instrument_id, instrument_name, field, start_utc, end_utc ) {
     var x = [];
     var data1;
     var trace1;
@@ -54,8 +54,8 @@ function create_histogram_div(div, instrument_id, instrument_name, field ) {
         Plotly.newPlot(div, data, layout);
 }};
 
-var start_utc = "Tue, 24 May 2001 14:05:01 GMT";
-var end_utc = "Tue, 24 Dec 2016 14:05:01 GMT";
+//var start_utc = "Tue, 24 May 2001 14:05:01 GMT";
+//var end_utc = "Tue, 24 Dec 2016 14:05:01 GMT";
 
 var url = "/generate_instrument_graph" + "?keys=" + field+ "&instrument_id=" + instrument_id + "&start=" + start_utc + "&end=" + end_utc;
 xmlhttp.open("POST", url, true);

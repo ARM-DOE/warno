@@ -117,7 +117,8 @@
                     instrument_id = attrSelect.value;
                     instrument_name = attrSelect.options[attrSelect.selectedIndex].text;
                     field_id = fieldSelect.value;
-
+                    start_utc = document.getElementById("datetime-input-start").value
+                    end_utc = document.getElementById("datetime-input-end").value
 
                     key_elems = document.getElementsByClassName('attrSelect');
                     var keys = [];
@@ -154,7 +155,9 @@
                     master_div.appendChild(div);
 
 
-                    create_histogram_div(div_tracker.toString(), instrument_id, instrument_name, field_id );
+                    console.log(start_utc);
+                    console.log(end_utc);
+                    create_histogram_div(div_tracker.toString(), instrument_id, instrument_name, field_id , start_utc, end_utc);
 
 
                 };
