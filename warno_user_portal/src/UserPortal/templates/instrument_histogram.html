@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script type="text/javascript" src="{{ url_for('static', filename='jquery-2.1.4.js')}}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='instrument_histogram_0_1.js')}}"></script>
+        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    </head>
+    <body>
+        <div>
+
+            <div class="graph_setup_container" style="vertical-align: top;">
+
+                <p><label for="time">Start Date/Time in UTC:</label>
+                    <input type="datetime" id="datetime-input-start" name="start" value="01/01/1970 12:27:31">
+                </p>
+                <div style="display: inline-block" class="graph_setup_button" onclick="update_start_time(1)">Yesterday</div>
+                <div style="display: inline-block" class="graph_setup_button" onclick="update_start_time(7)">Last Week</div>
+                <div style="display: inline-block" class="graph_setup_button" onclick="update_start_time(14)">Fortnight</div>
+                <div style="display: inline-block" class="graph_setup_button" onclick="update_start_time(30)">Last Month</div>
+                <div style="display: inline-block" class="graph_setup_button" onclick="update_start_time(180)">Six Months</div>
+                <br>
+                <br>
+                <p><label for="time">End Date/Time in UTC:</label>
+                    <input type="datetime" id="datetime-input-end" name="end" value="01/01/2170 12:27:31">
+                    <br>
+                    <div class="graph_time_format">
+                        <i>(MM/DD/YYYY HH:MM:SS)</i>
+                    </div>
+                    {% if error %}
+                        <div id="new-log-error" style="color: red">{{error}}</div>
+                    {% endif %}
+                </p>
+
+                <button type="button" class="graph_setup_button" onclick="add_graph()">Add Graph</button>
+
+                <br>
+                <div id="attr_div">
+                    <span>
+                        <select class="attrSelect" id ="attrSelect" onChange="update_fields();">
+                            {% for instr in instrument_list %}
+                            <option value="{{instr.id}}">{{instr.abbv}}</option>
+                            {% endfor %}
+                        </select>
+                    </span>
+                    <span>
+                        <select id="fieldSelect">
+                            <option>Select an Instrument</option>
+                        </select>
+                    </span>
+                </div>
+
+		    </div>
+
+		</div>
+		<div id="master-graphdiv" style="display: inline-block"></div>
+
+        <script>
+
+            var div_tracker=0
+
+
+            function update_fields(){
+                var valid_columns = {{ column_list |safe }};
+                attrSelect = document.getElementById("attrSelect");
+                fieldSelect = document.getElementById("fieldSelect")
+                removeOptions(fieldSelect)
+                instrument_id = attrSelect.value
+
+                for (column in valid_columns[instrument_id]){
+                    element = document.createElement("option")
+                    element.value=valid_columns[instrument_id][column]
+                    element.text=valid_columns[instrument_id][column]
+                    fieldSelect.add(element )
+                }
+            };
+
+            function removeOptions(selectbox)
+            {
+                var i;
+                for(i = selectbox.options.length - 1 ; i >= 0 ; i--)
+                {
+                    selectbox.remove(i);
+                }
+            }
+
+            function update_start_time(days) {
+                temp = new Date()
+                temp.setDate(temp.getDate() - days)
+                updated_time = (temp.getUTCMonth() + 1) + '/' + temp.getUTCDate() + '/' + temp.getUTCFullYear() + " " +
+                               temp.getUTCHours() + ":" + temp.getUTCMinutes();
+                document.getElementById("datetime-input-start").value = updated_time;
+            }
+
+            // After the page loads, the graph's default 'start' time is set to one week ago
+            update_start_time(7);
+
+            function add_attr() {
+                var div = document.createElement('div');
+                div.innerHTML = '<div><button type="button" onclick="remove_attr(this)">X</button> <select class="attrSelect">{% for column in columns %}<option value="{{column}}">{{column}}</option>{% endfor %}</select></div>';
+                parent_div = document.getElementById('attr_div')
+                parent_div.appendChild(div)
+            }
+
+            function remove_attr(e) {
+                attr_elems = document.getElementsByClassName('attrSelect');
+                if (attr_elems.length > 1) {
+                    elem = e.closest('div');
+                    elem.parentNode.removeChild(elem);
+                }
+            }
+
+
+            function add_graph()
+                {
+                    attrSelect = document.getElementById("attrSelect");
+                    fieldSelect = document.getElementById("fieldSelect");
+                    instrument_id = attrSelect.value;
+                    instrument_name = attrSelect.options[attrSelect.selectedIndex].text;
+                    field_id = fieldSelect.value;
+
+
+                    key_elems = document.getElementsByClassName('attrSelect');
+                    var keys = [];
+                    for (var i = 0; i < key_elems.length; i++) {
+                        keys.push(key_elems[i].value);
+                    }
+
+                    start_str = document.getElementById("datetime-input-start").value;
+                    start = new Date(start_str + " UTC");
+
+                    end_str = document.getElementById("datetime-input-end").value;
+                    end = new Date(end_str + " UTC");
+
+                    master_div = document.getElementById('master-graphdiv');
+
+                    div = document.createElement("div");
+                    div_tracker++;
+                    div.id = div_tracker.toString();
+                    div.style.overflow = "hidden"
+{#                    div.style.display= " inline-block;";#}
+                    div.style.float= "left";
+                    div.style.padding="30px 50px 30px 50px;";
+                    div.style.marginLeft="30px";
+                    div.style.marginRight="30px";
+                    div.style.marginTop="30px";
+                    div.style.marginBottom="30px";
+                    div.style.outline= "#101010";
+                    div.style.outlineStyle="solid";
+                    div.style.outlineWidth="5px";
+                    div.innerHTML = '<div id = "' + div.id + '-parent"><button type="button" onclick="remove_graph(this)">Remove Graph</button><br><div id="' +
+                            div.id + '" style=" display: inline-block;"></div></div>'
+
+
+                    master_div.appendChild(div);
+
+
+                    create_histogram_div(div_tracker.toString(), instrument_id, instrument_name, field_id );
+
+
+                };
+
+        update_fields()
+        </script>
+    </body>
+</html>
