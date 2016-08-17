@@ -12,9 +12,8 @@ body {
 }
 
 #arm-logo {
-  padding: 5px;
-  padding-top: 20px;
-  float: left;
+    padding: 20px 5px 5px;
+    float: left;
   position: absolute;
 }
 
@@ -25,13 +24,19 @@ div.content, div.head-title, div.head-title-wrapper, div.sub-title {
   margin-right: auto;
 }
 
+.histogram_box {
+                    overflow : hidden;
+                    float: left;
+                    padding: 30px;
+                    margin: 30px;
+                    outline: rgb(16, 16, 16) solid 5px;
+}
+
 div.content {
     background: -moz-linear-gradient(left, #FCFCFC, #F4F4F4); /* FF3.6-15 */
     background: -webkit-linear-gradient(left, #FCFCFC, #F4F4F4); /* Chrome10-25,Safari5.1-6 */
     background: linear-gradient(to right, #FCFCFC, #F4F4F4); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
     background-color: #FCFCFC;
-    // background-image: url("weather.png");
-    // background-image: repeat;
     min-height: 800px;
     padding: 5px;
     border-bottom: solid 2px black;
@@ -57,9 +62,7 @@ div.head-title {
     padding-right: 10px;
     margin-left: auto;
     margin-right: auto;
-    background-image: url("tmp.png");
-    background-repeat: no-repeat;
-    background-position: right 15px top;
+    background: url("tmp.png") no-repeat right 15px top;
 }
 
 div.head-title a{
@@ -135,7 +138,7 @@ ul.nav-buttons {
     overflow: hidden;
     margin: 5px;
     vertical-align: baseline;
-    font-size: 0px;
+    font-size: 0;
 }
 
 ul.nav-buttons li{
@@ -199,10 +202,7 @@ div.status_widget {
 div.wd {
     border: 2px solid black;
     width: 45%;
-    margin-left: 1%;
-    margin-right: 1%;
-    margin-top: 5px;
-    margin-bottom: 5px;
+    margin: 5px 1%;
     padding: 5px;
     display: inline-block;
     vertical-align: top;
@@ -237,9 +237,9 @@ div.status_block{
 table.status_plot {
   border-collapse: separate;
   text-align: center;
-  border-spacing: 0px;
-  margin: 0px;
-  padding: 0px;
+  border-spacing: 0;
+  margin: 0;
+  padding: 0;
 }
 
 table.status_plot td, th {
@@ -303,9 +303,7 @@ div.graph_time_format {
     border: 1px solid darkGray;
     border-radius: 2px;
 
-    padding: 2px;
-    padding-left: 8px;
-    padding-right: 8px;
+    padding: 2px 8px;
 
     text-decoration: none;
     font-size: 80%;
@@ -322,7 +320,7 @@ div.graph_time_format {
 
 select.attrSelect {
     font-size:90%;
-    padding: 0px;
+    padding: 0;
 }
 
 div.graph_stats {
@@ -337,7 +335,7 @@ div.graph_stats_half {
 button.site_toggle {
     border: 1px solid black;
     border-radius: 2px;
-    padding: 0px;
+    padding: 0;
     width: 20px;
 }
 
@@ -378,7 +376,7 @@ button.site_toggle:hover {
 }
 
 .transit{
-    background: -moz-linear-gradient(top, #FFE4B5, #F7DCAC) /* FF3.6-15 */
+    background: -moz-linear-gradient(top, #FFE4B5, #F7DCAC); /* FF3.6-15 */
     background: -webkit-linear-gradient(top, #FFE4B5, #F7DCAC); /* Chrome10-25,Safari5.1-6 */
     background: linear-gradient(to bottom, #FFE4B5, #F7DCAC); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
     text-align: center;

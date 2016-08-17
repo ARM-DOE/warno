@@ -7,7 +7,7 @@ from . import users
 from . import sites
 from . import instruments
 from . import logs
-
+from . import devel
 
 class ReverseProxied(object):
     """Wrap the application in this middleware and configure the
@@ -69,5 +69,6 @@ app.register_blueprint(users.users)
 app.register_blueprint(sites.sites)
 app.register_blueprint(instruments.instruments)
 app.register_blueprint(logs.logs)
+app.register_blueprint(devel.devel)
 
 app.wsgi_app = ReverseProxied(app.wsgi_app)
