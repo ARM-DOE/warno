@@ -5,6 +5,14 @@ function remove_graph(e)
     elem.parentNode.removeChild(elem);
 };
 
+function isSentinel(value){
+ if (value == -999){
+     return false;
+ }else{
+     return true;
+ }
+};
+
 function create_histogram_div(div, instrument_id, instrument_name, field, start_utc, end_utc ) {
     var x = [];
     var data1;
@@ -16,6 +24,7 @@ function create_histogram_div(div, instrument_id, instrument_name, field, start_
             var response = JSON.parse(xmlhttp.responseText);
             var field1 = response.data.map(i => i[1]);
             //field1 = field1.filter(isNaN)
+            field1.filter(isSentinel)
             var data = [
                 {
                     x: field1,
@@ -29,8 +38,6 @@ function create_histogram_div(div, instrument_id, instrument_name, field, start_
         var layout = {
             showlegend: false,
             autosize: true,
-            //width: div_width,
-            //height: div_height,
             margin: {t: 50, r: 50, b: 50, l: 50, pad:10},
             hovermode: 'closest',
             bargap: 0,
@@ -54,8 +61,6 @@ function create_histogram_div(div, instrument_id, instrument_name, field, start_
         Plotly.newPlot(div, data, layout);
 }};
 
-//var start_utc = "Tue, 24 May 2001 14:05:01 GMT";
-//var end_utc = "Tue, 24 Dec 2016 14:05:01 GMT";
 
 var url = "/generate_instrument_graph" + "?keys=" + field+ "&instrument_id=" + instrument_id + "&start=" + start_utc + "&end=" + end_utc;
 xmlhttp.open("POST", url, true);
