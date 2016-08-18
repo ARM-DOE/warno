@@ -8,7 +8,7 @@
     <body>
         <div>
 
-            <div class="graph_setup_container" style="vertical-align: top;">
+            <div class="graph_setup_container">
 
                 <p><label for="time">Start Date/Time in UTC:</label>
                     <input type="datetime" id="datetime-input-start" name="start" value="01/01/1970 12:27:31">
@@ -48,9 +48,8 @@
                 </div>
 
 		    </div>
-
+		    <div id="master-graphdiv"></div>
 		</div>
-		<div id="master-graphdiv"></div>
 
         <script>
 
@@ -69,7 +68,10 @@
 
             function add_attr() {
                 var div = document.createElement('div');
-                div.innerHTML = '<div><button type="button" onclick="remove_attr(this)">X</button> <select class="attrSelect">{% for column in columns %}<option value="{{column}}">{{column}}</option>{% endfor %}</select></div>';
+                div.innerHTML = '<div><button type="button" onclick="remove_attr(this)">X</button> ' +
+                                '<select class="attrSelect">{% for column in columns %}' +
+                                '<option value="{{column}}">{{column}}</option>' +
+                                '{% endfor %}</select></div>';
                 parent_div = document.getElementById('attr_div')
                 parent_div.appendChild(div)
             };
@@ -90,6 +92,8 @@
                         keys.push(key_elems[i].value);
                     }
 
+                    console.log("Adding Graph with keys " + keys);
+
                     start_str = document.getElementById("datetime-input-start").value;
                     start = new Date(start_str + " UTC");
 
@@ -98,6 +102,10 @@
 
                     master_div = document.getElementById('master-graphdiv');
 
+
+                    console.log("Launching request");
+                    console.log(master_div);
+                    console.log(master_div.innerHTML);
                     gm.add_graph(keys, {{instrument_id}}, "{{url_for('instruments.generate_instrument_graph')}}", start, end, master_div);
 
                 };

@@ -25,11 +25,13 @@ div.content, div.head-title, div.head-title-wrapper, div.sub-title {
 }
 
 .histogram_box {
-                    overflow : hidden;
-                    float: left;
-                    padding: 30px;
-                    margin: 30px;
-                    outline: rgb(16, 16, 16) solid 5px;
+    background: white;
+
+    overflow : hidden;
+    float: left;
+    padding: 30px;
+    margin: 20px;
+    border: 2px solid darkGray;
 }
 
 div.content {
@@ -285,6 +287,7 @@ div.rect {
 
 div.graph_setup_container {
     vertical-align: top;
+    max-width: 520px;
 
     border: 2px solid darkGray;
     padding: 5px;
@@ -341,6 +344,28 @@ button.site_toggle {
 
 button.site_toggle:hover {
     background-color: moccasin;
+}
+
+div.devel_button {
+    display: inline-block;
+    background: #DDDDDD;
+    padding: 5px;
+
+    border-radius: 2px;
+    border: 2px solid darkGray;
+}
+
+div.devel_button:hover {
+    background: #F0F0F0;
+}
+
+div.devel_notification {
+    display: inline-block;
+    background: LavenderBlush;
+    padding: 10px;
+
+    border-radius: 5px;
+    border: 2px solid Salmon;
 }
 
 .operational {

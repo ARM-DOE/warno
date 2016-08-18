@@ -8,7 +8,7 @@
     <body>
         <div>
 
-            <div class="graph_setup_container" style="vertical-align: top;">
+            <div class="graph_setup_container" style="margin: 20px;">
 
                 <p><label for="time">Start Date/Time in UTC:</label>
                     <input type="datetime" id="datetime-input-start" name="start" value="01/01/1970 12:27:31">
@@ -52,7 +52,9 @@
 		    </div>
 
 		</div>
-		<div id="master-graphdiv" style="display: inline-block"></div>
+        <div>
+		    <div id="master-graphdiv" style="display: inline-block"></div>
+        </div>
 
         <script>
 
@@ -99,7 +101,10 @@
 
             function add_attr() {
                 var div = document.createElement('div');
-                div.innerHTML = '<div><button type="button" onclick="remove_attr(this)">X</button> <select class="attrSelect">{% for column in columns %}<option value="{{column}}">{{column}}</option>{% endfor %}</select></div>';
+                div.innerHTML = '<div><button type="button" onclick="remove_attr(this)">X</button> ' +
+                                '<select class="attrSelect">{% for column in columns %}' +
+                                '<option value="{{column}}">{{column}}</option>' +
+                                '{% endfor %}</select></div>';
                 parent_div = document.getElementById('attr_div')
                 parent_div.appendChild(div)
             }
@@ -140,19 +145,10 @@
                     div = document.createElement("div");
                     div_tracker++;
                     div.id = div_tracker.toString();
-                    div.className = 'histogram_box'
-{#                    div.style.overflow = "hidden"#}
-{#                    div.style.float= "left";#}
-{#                    div.style.padding="30px 50px 30px 50px;";#}
-{#                    div.style.marginLeft="30px";#}
-{#                    div.style.marginRight="30px";#}
-{#                    div.style.marginTop="30px";#}
-{#                    div.style.marginBottom="30px";#}
-{#                    div.style.outline= "#101010";#}
-{#                    div.style.outlineStyle="solid";#}
-{#                    div.style.outlineWidth="5px";#}
-                    div.innerHTML = '<div id = "' + div.id + '-parent"><button type="button" onclick="remove_graph(this)">Remove Graph</button><br><div id="' +
-                            div.id + '" style=" display: inline-block;"></div></div>'
+                    div.className = 'histogram_box';
+                    div.innerHTML = '<div id = "' + div.id + '-parent">' +
+                                    '<button type="button" onclick="remove_graph(this)">Remove Graph</button><br>' +
+                                    '</div>';
 
                     master_div.appendChild(div);
 

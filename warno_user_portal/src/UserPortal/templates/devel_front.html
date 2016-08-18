@@ -13,17 +13,28 @@
 
 <div class="content">
 
-    <div> All content on this page is set up as release candidates for being incorporated into WARNO. Please contact us if you have any concerns/find any bugs.</div>
-
-    <div style="margin: 10px;">
-        <ol>
-           <li>   <a href="{{ url_for('devel.histogram_page') }}">Histogram Plotting Routines</a>   </li>
-        </ol>
-    </div>
-
-
+    <div style="padding: 20px;">
+        <div class="devel_notification" >
+            <p>
+                <i>
+                    All content on this page is set up as release candidates for being incorporated into WARNO.
+                    <br>
+                    Please contact us if you have any concerns/find any bugs.
+                </i>
+            </p>
+        </div>
+        <div style="margin-top: 20px; font-size: 120%;">
+            <a href="{{ url_for('devel.histogram_page') }}">
+                <div class="devel_button">
+                    Histogram Plotting Routines
+                </div>
+            </a>
         </div>
 
+
+            </div>
+
+        </div>
     </div>
 
 </div>
