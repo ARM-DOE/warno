@@ -68,7 +68,10 @@
 
             function add_attr() {
                 var div = document.createElement('div');
-                div.innerHTML = '<div><button type="button" onclick="remove_attr(this)">X</button> <select class="attrSelect">{% for column in columns %}<option value="{{column}}">{{column}}</option>{% endfor %}</select></div>';
+                div.innerHTML = '<div><button type="button" onclick="remove_attr(this)">X</button> ' +
+                                '<select class="attrSelect">{% for column in columns %}' +
+                                '<option value="{{column}}">{{column}}</option>' +
+                                '{% endfor %}</select></div>';
                 parent_div = document.getElementById('attr_div')
                 parent_div.appendChild(div)
             };

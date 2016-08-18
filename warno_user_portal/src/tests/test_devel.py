@@ -16,7 +16,7 @@ from WarnoConfig.models import Instrument, InstrumentLog, Site, InstrumentDataRe
 @mock.patch("logging.Logger")
 class TestInstruments(TestCase, FixturesMixin):
 
-   """Contains tests for the UserPortal 'instruments' file."""
+    """Contains tests for the UserPortal 'instruments' file."""
     render_templates = False
     db_cfg = config.get_config_context()['database']
     s_db_cfg = config.get_config_context()['s_database']
@@ -27,7 +27,6 @@ class TestInstruments(TestCase, FixturesMixin):
     # For example, in this case, instruments have foreign keys to sites, so it errors if sites have not yet been defined
     fixtures = ['sites.yml', 'users.yml', 'instruments.yml', 'instrument_data_references.yml', 'event_codes.yml',
                 'instrument_logs.yml', 'valid_columns.yml', 'prosensing_paf.yml', 'events_with_value.yml']
-
 
     def setUp(self):
         db.create_all()
@@ -48,7 +47,6 @@ class TestInstruments(TestCase, FixturesMixin):
         FixturesMixin.init_app(views.app, db)
 
         return views.app
-
 
     def test_histogram_page_loads(self, logger):
         get_request_return = self.client.get('/devel/histogram')

@@ -346,6 +346,28 @@ button.site_toggle:hover {
     background-color: moccasin;
 }
 
+div.devel_button {
+    display: inline-block;
+    background: #DDDDDD;
+    padding: 5px;
+
+    border-radius: 2px;
+    border: 2px solid darkGray;
+}
+
+div.devel_button:hover {
+    background: #F0F0F0;
+}
+
+div.devel_notification {
+    display: inline-block;
+    background: LavenderBlush;
+    padding: 10px;
+
+    border-radius: 5px;
+    border: 2px solid Salmon;
+}
+
 .operational {
     background: -moz-linear-gradient(top, #90EEA0, #8AE98A); /* FF3.6-15 */
     background: -webkit-linear-gradient(top, #90EEA0, #8AE98A); /* Chrome10-25,Safari5.1-6 */
