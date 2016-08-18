@@ -52,7 +52,10 @@ function Graph(manager, id, keys, instrument_id, base_url, beginning_time, end_t
     this.div_id = "graphdiv" + id;
     this.div = document.createElement('div');
     this.div.className = "instrument_dygraph";
-    this.div.innerHTML = '<div id = "' + this.div_id + '-parent"><button type="button" onclick="remove_graph(this)">Remove Graph</button><br><div id="' + this.div_id + '" style="width: 400px; height: 250px; display: inline-block;"></div></div>'
+    this.div.innerHTML = '<div id = "' + this.div_id + '-parent">' +
+                         '<button type="button" onclick="remove_graph(this)">Remove Graph</button><br>' +
+                         '<div id="' + this.div_id +
+                         '" style="width: 400px; height: 250px; display: inline-block;"></div></div>'
 
     this.data_div_id = "datadiv" + id;
     this.data_div = document.createElement('div');
@@ -200,7 +203,8 @@ Graph.prototype.update_with_values = function(values) {
 
         }
         else {
-            this.inner_div.innerHTML = "<p>No Data Available<br>Verify that the start and end times are valid and formatted correctly.</p>";
+            this.inner_div.innerHTML = "<p>No Data Available<br>" +
+                                       "Verify that the start and end times are valid and formatted correctly.</p>";
         }
     }
     else
@@ -277,7 +281,13 @@ Graph.prototype.request_values = function(keys, beginning_time, end_time, origin
             }
         }
 
-    var url = this.base_url + "?keys=" + keys + "&instrument_id=" + this.instrument_id + "&start=" + start_utc + "&end=" + end_utc + "&origin=" + origin_utc + "&do_stats=" + do_stats;
+    var url = this.base_url +
+              "?keys=" + keys +
+              "&instrument_id=" + this.instrument_id +
+              "&start=" + start_utc +
+              "&end=" + end_utc +
+              "&origin=" + origin_utc +
+              "&do_stats=" + do_stats;
     xmlhttp.open("POST", url, true);
 
     //Send out the request

@@ -1,4 +1,3 @@
-
 function remove_graph(e)
 {
     elem = e.closest("div").parentNode;
@@ -63,7 +62,11 @@ function create_histogram_div(div, instrument_id, instrument_name, field, start_
 }};
 
 
-var url = "/generate_instrument_graph" + "?keys=" + field+ "&instrument_id=" + instrument_id + "&start=" + start_utc + "&end=" + end_utc;
+var url = "/generate_instrument_graph" +
+          "?keys=" + field +
+          "&instrument_id=" + instrument_id +
+          "&start=" + start_utc +
+          "&end=" + end_utc;
 xmlhttp.open("POST", url, true);
 
 //Send out the request

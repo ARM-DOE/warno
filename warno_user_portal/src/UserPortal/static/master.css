@@ -25,11 +25,13 @@ div.content, div.head-title, div.head-title-wrapper, div.sub-title {
 }
 
 .histogram_box {
-                    overflow : hidden;
-                    float: left;
-                    padding: 30px;
-                    margin: 30px;
-                    outline: rgb(16, 16, 16) solid 5px;
+    background: white;
+
+    overflow : hidden;
+    float: left;
+    padding: 30px;
+    margin: 20px;
+    border: 2px solid darkGray;
 }
 
 div.content {
@@ -285,6 +287,7 @@ div.rect {
 
 div.graph_setup_container {
     vertical-align: top;
+    max-width: 520px;
 
     border: 2px solid darkGray;
     padding: 5px;
