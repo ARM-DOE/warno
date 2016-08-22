@@ -42,10 +42,10 @@ Current commands
 * **push_ssl_certs**: Pushes a local ssl certificate and its private key to the
   remote host, if they exist.
 * **push_db_dump**: Pushes "db_dump.data.gz" in the same fashion as push_config.
-* **start_application**: Starts the Vagrant machine (vagrant up pro).
-* **stop_application**: Stops the Vagrant machine (vagrant halt pro).
-* **reload_application**: Reloads the Vagrant machine (vagrant reload pro).
-* **destroy_application**: Destroys the Vagrant machine (vagrant destroy -f pro).
+* **start_application**: Starts the Vagrant machine (vagrant up).
+* **stop_application**: Stops the Vagrant machine (vagrant halt).
+* **reload_application**: Reloads the Vagrant machine (vagrant reload).
+* **destroy_application**: Destroys the Vagrant machine (vagrant destroy -f).
 * **purge_application**: Destroys the Vagrant machine and forcibly removes the
   containing folder and all files.
 * **push_and_replace_database**: Calls push_db_dump, then calls destroy_application

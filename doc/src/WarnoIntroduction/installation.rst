@@ -117,14 +117,9 @@ data_store/data/config.yml:
 Start Up
 ^^^^^^^^
 
-There are two versions of this Vagrant machine, production ('pro') and development ('dev'). The production version uses
-slightly more resources (cpu/memory).  To use one or the other, for each vagrant command use 'vagrant <command> <version>'.
-
 To start up your Vagrant machine, enter::
 
-   vagrant up pro
-
-To use the development version, replace 'pro' with 'dev'.
+   vagrant up
 
 Note that occasionally the machine will get stuck at "Mounting NFS shared folders...".
 
@@ -147,8 +142,8 @@ should attempt to remedy the firewall configuration issues.
 
 If you suspect the machine failed in some way to be properly created, you can recreate it by::
 
-   vagrant destroy pro
-   vagrant up pro
+   vagrant destroy
+   vagrant up
 
 *Note that this will destroy the current virtual machine, and any non-persistant data inside*
 

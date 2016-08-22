@@ -29,22 +29,9 @@ Vagrant.configure(2) do |config|
   config.vm.network "forwarded_port", guest: 22, host: 8022, id: "ssh", auto_correct: true
 
   ## VirtualBox ##
-
-  # Lower dev box
-  config.vm.define "dev" do |dev|
-    config.vm.provider "virtualbox" do |v|
-      v.memory = 2048
-      v.cpus = 1
-    end
-  end
-
-  # Production box has higher specs
-  config.vm.define "pro" do |pro|
-    config.vm.provider "virtualbox" do |v|
-      v.name = "warno"
-      v.memory = 4096
-      v.cpus = 2
-    end
+  config.vm.provider "virtualbox" do |v|
+    v.name = "warno"
+    v.memory = 2048
   end
 
   ## Set up NFS shared folders ##
@@ -72,7 +59,7 @@ Vagrant.configure(2) do |config|
   # Must be unprivileged so Anaconda paths install for the vagrant user
   config.vm.provision :shell, path: "utility_setup_scripts/bootstrap.sh", privileged: false
   # Pip installations must be run in a separate bootstrap script, reason unknown
-  config.vm.provision :shell, path: "utility_setup_scripts/pip_bootstrap.sh", privileged: false, run: "always"
+  config.vm.provision :shell, path: "utility_setup_scripts/pip_bootstrap.sh", privileged: false
   
   # Add crontab for regular database backup (currently once daily)
   config.vm.provision :shell, inline: "(crontab -l; echo '0 22 * * * bash /vagrant/data_store/data/db_save.sh') | crontab -"

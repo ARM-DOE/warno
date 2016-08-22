@@ -109,7 +109,7 @@ Cmnd_Alias VAGRANT_EXPORTS_REMOVE = /bin/sed -r -e * d -ibak /tmp/exports
 "vboxusers" can be replaced with any group name you would like to give the permissions to.
 
 <br>
-## Multiple VM's on one machine
+## Multiple VM's one one machine
 If you wish to start up a second Vagrant VM on the same machine, there are a few hoops to jump through:
 
 For the second machine, create a copy of the warno-vagrant directory somewhere else, and in that directory:
@@ -125,15 +125,11 @@ data_store/data/config.yml:
 <br>
 ## Start Up
 
-There are two versions of this Vagrant machine, production ('pro') and development ('dev'). The production version uses
-slightly more resources (cpu/memory).  To use one or the other, for each vagrant command use 'vagrant <command> <version>'.
-
-To start up your Vagrant machine with the production version, enter
+To start up your Vagrant machine, enter
 ```bash
-vagrant up pro
+vagrant up
 ```
 
-To use the development version, replace 'pro' with 'dev'.
 
 Note that currently, occasionally the machine will get stuck at "Mounting NFS shared folders...".
 
@@ -156,8 +152,8 @@ after the VM starts making progress again should remedy the issue.  This is not 
 
 If you suspect the machine failed in some way to be properly created, you can recreate it by:
 ```bash
-vagrant destroy pro
-vagrant up pro
+vagrant destroy
+vagrant up
 ```
 
 Note that this will destroy the current virtual machine, and any non-persistant data inside.
@@ -220,10 +216,10 @@ if it exists.
 - push_ssl_certs: Pushes a local ssl certificate and its private key to the 
 remote host, if they exist.
 - push_db_dump: Pushes "db_dump.data.gz" in the same fashion as push_config.
-- start_application: Starts the Vagrant machine (vagrant up pro).
-- stop_application: Stops the Vagrant machine (vagrant halt pro).
-- reload_application: Reloads the Vagrant machine (vagrant reload pro).
-- destroy_application: Destroys the Vagrant machine (vagrant destroy -f pro).
+- start_application: Starts the Vagrant machine (vagrant up).
+- stop_application: Stops the Vagrant machine (vagrant halt).
+- reload_application: Reloads the Vagrant machine (vagrant reload).
+- destroy_application: Destroys the Vagrant machine (vagrant destroy -f).
 - purge_application: Destroys the Vagrant machine and forcibly removes the 
 containing folder and all files.
 - push_and_replace_database: Calls push_db_dump, then calls destroy_application 
