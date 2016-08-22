@@ -203,22 +203,22 @@ def push_and_replace_database(dir=DEFAULT_HOME + "warno-vagrant", dumpfile=DUMP_
 def start_application(dir=DEFAULT_HOME + "warno-vagrant/"):
     with cd(dir):
         run("echo 'Starting Application'")
-        run("vagrant up")
+        run("vagrant up pro")
 
 def stop_application(dir=DEFAULT_HOME + "warno-vagrant/"):
     with cd(dir):
         run("echo 'Halting Application'")
-        run("vagrant halt")
+        run("vagrant halt pro")
 
 def restart_application(dir=DEFAULT_HOME + "warno-vagrant/"):
     with cd(dir):
         run("echo 'Restarting Application'")
-        run("vagrant reload")
+        run("vagrant reload pro")
 
 def destroy_application(dir=DEFAULT_HOME + "warno-vagrant/"):
     with cd(dir):
         run("echo 'Destroying Application VM'")
-        run("vagrant destroy -f")
+        run("vagrant destroy -f pro")
 
 # Purge does not delete the specified directory that warno-vagrant is installed in, because it may be used
 # for something else.
@@ -261,7 +261,7 @@ def update_application(dir=DEFAULT_HOME, local_prefix=PREFIX_PATH,
         with cd(new_dir):
             needs_halt = False
             with settings(warn_only=True):
-                if run("vagrant status | grep 'running'").return_code == 0:
+                if run("vagrant status pro | grep 'running'").return_code == 0:
                     needs_halt = True
             # If we streamlined this by putting stop_application in the "with settings" block,
             # "warn_only" might be set for stop_application as well, which is undesirable.
