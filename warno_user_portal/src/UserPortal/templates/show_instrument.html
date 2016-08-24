@@ -5,68 +5,99 @@
 {% endblock %}
 
 {% block content %}
-    <div style="width: 300px; display: inline-block; vertical-align: top; border: 2px solid black; margin: 5px">
-        <div>
-            <img src='https://maps.googleapis.com/maps/api/staticmap?center={{instrument.latitude}}, {{instrument.longitude}}&zoom=1&size=300x300&maptype=roadmap&markers=color:blue%7Clabel:S%7C{{instrument.latitude}}, {{instrument.longitude}}&sensor=false'/>
-        </div>
+        <div style="display: inline-block; vertical-align: top;">
+            <div style="width: 302px; border: 2px solid black; margin: 5px">
+                <div>
+                    <img src='https://maps.googleapis.com/maps/api/staticmap?center={{instrument.latitude}}, {{instrument.longitude}}&zoom=1&size=300x300&maptype=roadmap&markers=color:blue%7Clabel:S%7C{{instrument.latitude}}, {{instrument.longitude}}&sensor=false'/>
+                </div>
 
-        <div>
-            <div class="info">
-                <h3 style="margin-left: 10px;">  Information:</h3>
+                <div>
+                    <div class="info" style="text-align: center;">
+                        <h3>STATUS: {{status}}</h3>
+                    </div>
+
+                    <div class="info">
+                        <h3 style="margin-left: 10px;">  Information:</h3>
+                    </div>
+
+                    <div style = "background-color: white; border: 1px solid black; padding: 5px;">
+                        Abbreviation:   {{instrument.abbv}}
+                        <br>
+                        Name:           {{instrument.name}}
+                        <br>
+                        Vendor:         {{instrument.vendor}}
+                        <br>
+                        Type:           {{instrument.type}}
+                        <br>
+                        Frequency Band: {{instrument.frequency_band}}
+                        <br>
+                        Location:
+                        <a href="{{url_for('sites.show_site', site_id= instrument.site_id)}}">{{instrument.location}}</a>
+                        <br>
+                        Description:    {{instrument.description}}
+                    </div>
+
+                </div>
+
+                <div class="info">
+
+                    <h3 style="text-align: center;">Recent Logs:</h3>
+                </div>
+
+                <div style="background-color: white; border:1px solid black;">
+                    {% for log in recent_logs %}
+                    <div style="border: 2px solid black; padding: 5px; margin: 5px; font-size: 80%;">
+                        <div class="grid_container">
+                            <div class="row">
+                                <div class="col-6">
+                                    <b>Logged By</b>:
+                                </div>
+                                <div class="col-6">
+                                    {{log.author}}
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="row">
+                                <div class="col-6">
+                                    <b>Time</b>:
+                                </div>
+                                <div class="col-6">
+                                    {{log.time}}
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="row">
+                                <div class="col-6">
+                                    <b>Status</b>:
+                                </div>
+                                <div class="col-6">
+                                    {{log.status}}
+                                </div>
+                            </div>
+                            <hr>
+                        </div>
+                        <b>Comments</b>:
+                        <br>
+                        {{log.contents}}
+                        <hr>
+                        <b>Supporting Images</b>:
+                        <br>
+                        {{log.supporting_images}}
+                    </div>
+                    {% endfor %}
+
+                </div>
+
             </div>
-
-            <div style = "background-color: white; border: 1px solid black; padding: 5px;">
-                Abbreviation:   {{instrument.abbv}}
-                <br>
-                Name:           {{instrument.name}}
-                <br>
-                Vendor:         {{instrument.vendor}}
-                <br>
-                Type:           {{instrument.type}}
-                <br>
-                Frequency Band: {{instrument.frequency_band}}
-                <br>
-                Location:
-                <a href="{{url_for('sites.show_site', site_id= instrument.site_id)}}">{{instrument.location}}</a>
-                <br>
-                Description:    {{instrument.description}}
+        </div><div style="display: inline-block; vertical-align: top; width: calc(100% - 320px);">
+            <div style="padding: 5px; display: vertical-align: top;">
+                    {% with columns=columns, instrument_id=instrument.id %}
+                    {% include 'instrument_dygraph.html' %}
+                    {% endwith %}
             </div>
-
         </div>
 
-    </div>
 
-    <div style="padding: 5px; display: inline-block; vertical-align: top;">
-            {% with columns=columns, instrument_id=instrument.id %}
-            {% include 'instrument_dygraph.html' %}
-            {% endwith %}
-    </div>
 
-    <div style="display: inline-block; float: right; vertical-align: top; align: right; width: 400px; padding: 5px;">
-        <div class="info" style="text-align: center;">
-            <h3>STATUS: {{status}}</h3>
-        </div>
 
-        <div class="info">
-
-            <h3 style="text-align: center;">Recent Logs:</h3>
-        </div>
-
-        <div style="background-color: white; border:1px solid black; padding: 5px">
-            {% for log in recent_logs %}
-                <b>Logged By</b>: {{log.author}}
-                <br>
-                <b>Time</b>: {{log.time}}
-                <br>
-                <b>Status</b>: {{log.status}}
-                <br>
-                <b>Comments</b>: {{log.contents}}
-                <br>
-                <b>Supporting Images</b>: {{log.supporting_images}}
-                <hr>
-            {% endfor %}
-
-        </div>
-
-    </div>
 {% endblock %}

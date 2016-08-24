@@ -1,43 +1,34 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Development Index: </title>
-<link rel=stylesheet type=text/css href="{{ url_for('static', filename='master.css') }}">
-</head>
-<body>
+{% extends 'partials/site_base.html' %}
 
-{% with title="Devel" %}
-{% include 'partials/header_template.html' %}
-{% endwith %}
+{% block title %}
+Devel
+{% endblock %}
 
-<div class="content">
-
-    <div style="padding: 20px;">
-        <div class="devel_notification" >
-            <p>
-                <i>
-                    All content on this page is set up as release candidates for being incorporated into WARNO.
-                    <br>
-                    Please contact us if you have any concerns/find any bugs.
-                </i>
-            </p>
-        </div>
-        <div style="margin-top: 20px; font-size: 120%;">
-            <a href="{{ url_for('devel.histogram_page') }}">
-                <div class="devel_button">
-                    Histogram Plotting Routines
-                </div>
-            </a>
-        </div>
-
-
+{% block content %}
+<div style="padding: 20px;">
+    <div class="devel_notification" >
+        <p>
+            <i>
+                All content on this page is set up as release candidates for being incorporated into WARNO.
+                <br>
+                Please contact us if you have any concerns/find any bugs.
+            </i>
+        </p>
+    </div>
+    <div style="margin-top: 20px; font-size: 120%;">
+        <a href="{{ url_for('devel.histogram_page') }}">
+            <div class="devel_button">
+                Histogram Plotting Routines
             </div>
-
-        </div>
+        </a>
+    </div>
+    <div style="margin-top: 20px; font-size: 120%;">
+        <a href="{{url_for('show_pulse')}}">
+            <div class="devel_button">
+                Pulse Graphing
+            </div>
+        </a>
     </div>
 
 </div>
-
-</body>
-</html>
+{% endblock %}

@@ -1,4 +1,4 @@
-{% extends 'partials/site_base.html' %}
+{% extends 'flask_user/public_base.html' %}
 
 {% block title %}
 Edit Instrument
@@ -6,36 +6,73 @@ Edit Instrument
 
 {% block content %}
 <form method="post">
-    <section>
-        <p><label for="abbv">Abbv:</label>
-            <input type="text" id="instrumentAbbvBox" name="abbv" maxlength="32" value="{{instrument.name_short}}"></input>
-        </p>
-        <p><label for="name">Name:</label>
-            <input type="text" id="instrumentNameBox" name="name" maxlength="128" value="{{instrument.name_long}}"></input>
-        </p>
-        <p><label for="type">Type:</label>
-            <input type="text" id="instrumentTypeBox" name="type" maxlength="64" value="{{instrument.type}}"></input>
-        </p>
-        <p><label for="vendor">Vendor:</label>
-            <input type="text" id="instrumentVendorBox" name="vendor" maxlength="64" value="{{instrument.vendor}}"></input>
-        </p>
-        <p><label for="description">Description:</label>
-            <input type="text" id="instrumentDescriptionBox" name="description" value="{{instrument.description}}"></input>
-        </p>
-        <p><label for="frequency_band">Frequency Band:</label>
-            <input type="text" id="instrumentFrequencyBandBox" name="frequency_band" maxlength="2" value="{{instrument.frequency_band}}"></input>
-        </p>
-        <p><label for="site">Site:</label>
-        <select id="instrumentSiteSelect" name="site">
-        {% for site in sites %}
-        <option value="{{site.id}}"{% if instrument.site_id == site.id %}selected="selected"{% endif %}>{{site.name}}</option>
-        {% endfor %}
-        </select>
-        </p>
-    </section>
-    <menu>
+    <div class="form-group">
+        <div>
+            <label for="abbv" class="control-label">Abbv:</label>
+        </div>
+    <input type="text" class="form-control" id="instrumentAbbvBox" name="abbv" maxlength="32" value="{{instrument.name_short}}">
+    </div>
+
+    <div class="form-group">
+        <div>
+            <label for="name" class="control-label">Name:</label>
+        </div>
+        <input type="text" class="form-control" id="instrumentNameBox" name="name" maxlength="128" value="{{instrument.name_long}}">
+    </div>
+
+    <div class="form-group">
+        <div>
+            <label for="type" class="control-label">Type:</label>
+        </div>
+        <input type="text" class="form-control" id="instrumentTypeBox" name="type" maxlength="64" value="{{instrument.type}}">
+    </div>
+
+    <div class="form-group">
+        <div>
+            <label for="vendor" class="control-label">Vendor:</label>
+        </div>
+        <input type="text" class="form-control" id="instrumentVendorBox" name="vendor" maxlength="64" value="{{instrument.vendor}}">
+    </div>
+
+    <div class="form-group">
+        <div>
+            <label for="description" class="control-label">Description:</label>
+        </div>
+        <input type="text" class="form-control" id="instrumentDescriptionBox" name="description" value="{{instrument.description}}">
+    </div>
+
+    <div class="grid-container">
+        <div class="row">
+            <div class="col-6">
+                <div class="form-group">
+                    <div>
+                        <label for="frequency_band" class="control-label">Frequency Band:</label>
+                    </div>
+                    <input type="text" style="width: 40px;" id="instrumentFrequencyBandBox" name="frequency_band" maxlength="2" value="{{instrument.frequency_band}}">
+                </div>
+            </div>
+
+            <div class="col-6">
+                <div class="form-group">
+                    <div>
+                        <label for="site" class="form-control">Site:</label>
+                    </div>
+                    <select id="instrumentSiteSelect" name="site">
+                        {% for site in sites %}
+                        <option value="{{site.id}}" {% if instrument.site_id == site.id %}selected="selected"{% endif %}>{{site.name}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <br>
+
+    <div>
         <button id="reset" type="reset">Reset Fields</button>
         <button type="submit" id="submit">Confirm</button>
-    </menu>
+    </div>
+
 </form>
 {% endblock %}

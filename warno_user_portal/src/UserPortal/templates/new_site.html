@@ -1,4 +1,4 @@
-{% extends 'partials/site_base.html' %}
+{% extends 'flask_user/public_base.html' %}
 
 {% block title %}
 New Site
@@ -6,35 +6,70 @@ New Site
 
 {% block content %}
 <form method="post">
-   <section>
-     <p><label for="abbv">Abbreviation:</label>
-       <input type="text" id="siteAbbvBox" name="abbv" maxlength="8"></input>
-     </p>
-     <p><label for="name">Name:</label>
-       <input type="text" id="siteNameBox" name="name" maxlength="128"></input>
-     </p>
-     <p><label for="lat">Latitude:</label>
-       <input type="text" id="siteLatBox" name="lat"></input>
-     </p>
-     <p><label for="lon">Longitude:</label>
-       <input type="text" id="siteLonBox" name="lon"></input>
-     </p>
-     <p><label for="facility">Facility:</label>
-       <input type="text" id="siteFacilityBox" name="facility" maxlength="32"></input>
-     </p>
-     <p><label for="mobile">Mobile:</label>
-        <input type="checkbox" name="mobile">
-     </p>
-     <p><label for="location_name">Location Name:</label>
-       <input type="text" id="siteLocationNameBox" name="location_name" maxlength="64"></input>
-     </p>
-  </section>
-  <menu>
-    {% if error %}
-      <div id="new-site-error" style="color: red">{{error}}</div>
-    {% endif %}
-    <button id="clear" type="reset">Clear Fields</button>
-    <button type="submit" id="submit">Confirm</button>
-  </menu>
+    <div class="form-group">
+        <div>
+            <label for="abbv" class="control-label">Abbreviation:</label>
+        </div>
+        <input type="text" class="form-control" id="siteAbbvBox" name="abbv" maxlength="8">
+    </div>
+    <div class="form-group">
+        <div>
+            <label for="name" class="control-label">Name:</label>
+        </div>
+        <input type="text" class="form-control" id="siteNameBox" name="name" maxlength="128">
+    </div>
+    <div class="form-group">
+        <div>
+            <label for="facility" class="control-label">Facility:</label>
+        </div>
+        <input type="text" class="form-control" id="siteFacilityBox" name="facility" maxlength="32">
+    </div>
+    <div class="form-group">
+        <div>
+            <label for="location_name" class="control-label">Location Name:</label>
+        </div>
+        <input type="text" class="form-control" id="siteLocationNameBox" name="location_name" maxlength="64">
+    </div>
+
+    <div class="grid_container">
+        <div class="row">
+            <div class="col-4">
+                <div class="form-group">
+                    <div>
+                        <label for="mobile" class="control-label">Mobile:</label>
+                    </div>
+                    <input type="checkbox" name="mobile">
+                </div>
+            </div>
+
+            <div class="col-4">
+                <div class="form-group">
+                    <div>
+                        <label for="lat" class="control-label">Latitude:</label>
+                    </div>
+                    <input type="text" style="width: 100px;" id="siteLatBox" name="lat">
+                </div>
+            </div>
+
+            <div class="col-4">
+                <div class="form-group">
+                    <div>
+                        <label for="lon" class="control-label">Longitude:</label>
+                    </div>
+                    <input type="text" style="width: 100px;" id="siteLonBox" name="lon">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <br>
+
+    <div>
+        {% if error %}
+            <div id="new-site-error" style="color: red">{{error}}</div>
+        {% endif %}
+        <button id="reset" type="reset">Clear Fields</button>
+        <button type="submit" id="submit">Confirm</button>
+    </div>
 </form>
 {% endblock %}

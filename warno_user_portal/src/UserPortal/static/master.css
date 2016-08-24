@@ -166,18 +166,55 @@ div.master_graphdiv {
     display: flex;
     flex-flow: row wrap;
     flex-wrap: wrap;
-    justify-content: space-around;
-    max-width: 1000px;
+    justify-content: flex-start;
 }
 
 div.instrument_dygraph {
     border: 2px solid lightGray;
-    flex: 1;
+    margin: 10px;
 }
 
-div.info {
-    background:  lightBlue;
-    border: 1px solid black;
+div.graph_setup_container {
+    vertical-align: top;
+    max-width: 520px;
+    /*margin-left: auto;
+    margin-right: auto; */
+
+    border: 2px solid darkGray;
+    padding: 5px;
+}
+
+div.graph_time_format {
+    padding-bottom: 10px;
+    padding-right: 100px;
+
+    font-size: 80%;
+    text-align: right;
+}
+
+.graph_setup_button {
+    background-color: #e0dfff;
+    border: 1px solid darkGray;
+    border-radius: 2px;
+
+    padding: 2px 8px;
+
+    text-decoration: none;
+    font-size: 80%;
+    cursor: pointer;
+}
+
+.graph_setup_button:hover {
+    background-color: #f3ecff;
+}
+
+.graph_setup_button:active {
+    background-color: #ccccdc;
+}
+
+select.attrSelect {
+    font-size:90%;
+    padding: 0;
 }
 
 /*** Dygraph stats ***/
@@ -221,6 +258,13 @@ table.listing-table a {
 
 
 /***** Dashboard widgets *****/
+div.widget_control {
+    margin: 20px;
+    padding: 10px;
+    width: 300px;
+    border: 2px solid darkGray;
+}
+
 div.log_widget {
     background: -moz-linear-gradient(left, #FCFCFC, #F4F4F4); /* FF3.6-15 */
     background: -webkit-linear-gradient(left, #FCFCFC, #F4F4F4); /* Chrome10-25,Safari5.1-6 */
@@ -416,6 +460,42 @@ div.flask_user_content {
     width: 100%;
 }
 
+/***** Devel Pages and Candidates *****/
+
+div.devel_button {
+    display: inline-block;
+    background: #DDDDDD;
+    padding: 5px;
+
+    border-radius: 2px;
+    border: 2px solid darkGray;
+}
+
+div.devel_button:hover {
+    background: #F0F0F0;
+}
+
+div.devel_notification {
+    display: inline-block;
+    background: LavenderBlush;
+    padding: 10px;
+
+    border-radius: 2px;
+    border: 2px solid Salmon;
+}
+
+/*** Histograms ***/
+
+.histogram_box {
+    background: white;
+
+    overflow : hidden;
+    float: left;
+    padding: 30px;
+    margin: 20px;
+    border: 2px solid darkGray;
+}
+
 /***** Grid and Column Framework *****/
 /* Base for custom grid, adapted from http://j4n.co/blog/Creating-your-own-css-grid-system */
 .grid-container{
@@ -470,93 +550,8 @@ div.flask_user_content {
 }*/
 
 /* Needs Classifying */
-.histogram_box {
-    background: white;
-
-    overflow : hidden;
-    float: left;
-    padding: 30px;
-    margin: 20px;
-    border: 2px solid darkGray;
-}
-
-div.instrument_dygraph {
-    border: 2px solid darkGray;
-}
 
 div.info {
     background:  lightBlue;
     border: 1px solid black;
-}
-
-div.graph_setup_container {
-    vertical-align: top;
-    max-width: 520px;
-
-    border: 2px solid darkGray;
-    padding: 5px;
-}
-
-div.graph_time_format {
-    padding-bottom: 10px;
-    padding-right: 100px;
-
-    font-size: 80%;
-    text-align: right;
-}
-
-.graph_setup_button {
-    background-color: #e0dfff;
-    border: 1px solid darkGray;
-    border-radius: 2px;
-
-    padding: 2px 8px;
-
-    text-decoration: none;
-    font-size: 80%;
-    cursor: pointer;
-}
-
-.graph_setup_button:hover {
-    background-color: #f3ecff;
-}
-
-.graph_setup_button:active {
-    background-color: #ccccdc;
-}
-
-select.attrSelect {
-    font-size:90%;
-    padding: 0;
-}
-
-div.graph_stats {
-    margin: 10px;
-}
-
-div.graph_stats_half {
-    display: inline-block;
-    width: 49%;
-}
-
-div.devel_button {
-    display: inline-block;
-    background: #DDDDDD;
-    padding: 5px;
-
-    border-radius: 2px;
-    border: 2px solid darkGray;
-}
-
-div.devel_button:hover {
-    background: #F0F0F0;
-}
-
-div.devel_notification {
-    display: inline-block;
-    background: LavenderBlush;
-    padding: 10px;
-
-    border-radius: 5px;
-    border: 2px solid Salmon;
 }
