@@ -75,7 +75,8 @@ div.head-title {
     padding-right: 10px;
     margin-left: auto;
     margin-right: auto;
-    background: url("tmp.png") no-repeat right 15px top;
+    background: url("warno_global_line_logo.png") no-repeat right top;
+    background-size: 125px;
 }
 
 div.head-title a{

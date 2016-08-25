@@ -6,9 +6,13 @@
       email: "test1@fixture.com"
       location: "Test Location 1"
       position: "Test Position 1"
+      password: "$2a$12$NlFqxeUtZF.sjO9B22MZT.F2e.4zAwcfE1OwebZKMaVjQSe4QO9MS" # Translation 'Testpass1'
+      is_active: true
     - id: 2
       username: "UName2"
       name: "Test User 2"
       email: "test2@fixture.com"
       location: "Test Location 2"
       position: "Test Position 2"
+      password: "$2a$12$NlFqxeUtZF.sjO9B22MZT.F2e.4zAwcfE1OwebZKMaVjQSe4QO9MS" # Translation 'Testpass1'
+      is_active: true
