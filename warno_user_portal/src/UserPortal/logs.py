@@ -97,7 +97,12 @@ def new_log():
             try:
                 db.session.add(new_db_log)
                 db.session.commit()
-
+            except psycopg2.DataError:
+                # If the timedate object expected by the database was incorrectly formatted, error is set
+                # for when the page is rendered again
+                error = "Invalid Date/Time Format"
+                up_logger.error("Invalid Date/Time format for new log entry.  Value: %s", new_db_log.time)
+            else:
                 # If it is not a central facility, pass the log to the central facility
                 if not cfg['type']['central_facility']:
                     packet = dict(event_code=5,
@@ -110,11 +115,6 @@ def new_log():
 
                 # Redirect to the instrument page that the log was submitted for.
                 return redirect(url_for('instruments.instrument', instrument_id=new_db_log.instrument_id))
-            except psycopg2.DataError:
-                # If the timedate object expected by the database was incorrectly formatted, error is set
-                # for when the page is rendered again
-                error = "Invalid Date/Time Format"
-                up_logger.error("Invalid Date/Time format for new log entry.  Value: %s", new_db_log.time)
 
     # If there was no valid insert, render form normally
 
