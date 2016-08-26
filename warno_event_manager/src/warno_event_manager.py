@@ -17,22 +17,22 @@ from WarnoConfig.models import Instrument, Site, InstrumentLog, PulseCapture, Ev
 
 
 # Set up logging
-log_path = os.environ.get("LOG_PATH")
-if log_path is None:
-    log_path = "/vagrant/logs/"
+LOG_PATH = os.environ.get("LOG_PATH")
+if LOG_PATH is None:
+    LOG_PATH = "/vagrant/logs/"
 
 # Logs to the main log
 logging.basicConfig(format='%(levelname)s:%(asctime)s:%(module)s:%(lineno)d:  %(message)s',
-                    filename='%scombined.log' % log_path,
+                    filename='%scombined.log' % LOG_PATH,
                     filemode='a', level=logging.DEBUG)
 
 # Logs to the event manager log
-em_logger = logging.getLogger(__name__)
-em_handler = logging.FileHandler("%sevent_manager_server.log" % log_path, mode="a")
-em_handler.setFormatter(logging.Formatter('%(levelname)s:%(asctime)s:%(module)s:%(lineno)d:  %(message)s'))
-em_logger.addHandler(em_handler)
+EM_LOGGER = logging.getLogger(__name__)
+EM_HANDLER = logging.FileHandler("%sevent_manager_server.log" % LOG_PATH, mode="a")
+EM_HANDLER.setFormatter(logging.Formatter('%(levelname)s:%(asctime)s:%(module)s:%(lineno)d:  %(message)s'))
+EM_LOGGER.addHandler(EM_HANDLER)
 # Add event manager handler to the main werkzeug logger
-logging.getLogger("werkzeug").addHandler(em_handler)
+logging.getLogger("werkzeug").addHandler(EM_HANDLER)
 
 
 # Located http://flask.pocoo.org/snippets/35/
@@ -384,7 +384,7 @@ def event():
 
             db.session.add(event_wv)
             db.session.commit()
-            em_logger.info("Saved Value Event")
+            EM_LOGGER.info("Saved Value Event")
         except ValueError:
             event_wt = EventWithText()
             event_wt.event_code_id = msg_event_code
@@ -394,12 +394,11 @@ def event():
 
             db.session.add(event_wt)
             db.session.commit()
-            em_logger.info("Saved Text Event")
+            EM_LOGGER.info("Saved Text Event")
         # If application is at a site instead of the central facility, passes data on to be saved at central facility
         if not is_central:
             payload = json.loads(msg)
             requests.post(cf_url, json=payload, headers=headers, verify=cert_verify)
-        return msg
 
 
 def save_special_prosensing_paf(msg, msg_struct):
@@ -415,10 +414,6 @@ def save_special_prosensing_paf(msg, msg_struct):
         values: *Dictionary of database column names mapped to their values*}}
     msg_struct: dictionary
         Decoded version of msg, converted to python dictionary.
-
-    Returns
-    -------
-    The original message 'msg' passed to it.
 
     """
 
@@ -445,7 +440,6 @@ def save_special_prosensing_paf(msg, msg_struct):
     if not is_central:
         payload = json.loads(msg)
         requests.post(cf_url, json=payload, headers=headers, verify=cert_verify)
-    return msg
 
 
 def save_instrument_log(msg, msg_struct):
@@ -461,10 +455,6 @@ def save_instrument_log(msg, msg_struct):
     msg_struct: dictionary
         Decoded version of msg, converted to python dictionary.
 
-    Returns
-    -------
-    The original message 'msg' passed to it.
-
     """
 
     new_log = InstrumentLog()
@@ -477,8 +467,6 @@ def save_instrument_log(msg, msg_struct):
 
     db.session.add(new_log)
     db.session.commit()
-
-    return msg
 
 
 def save_pulse_capture(msg, msg_struct):
@@ -495,10 +483,6 @@ def save_pulse_capture(msg, msg_struct):
     msg_struct: dictionary
         Decoded version of msg, converted to python dictionary.
 
-    Returns
-    -------
-    The original message 'msg' passed to it.
-
     """
 
     new_pulse = PulseCapture()
@@ -512,7 +496,6 @@ def save_pulse_capture(msg, msg_struct):
     if not is_central:
         payload = json.loads(msg)
         requests.post(cf_url, json=payload, headers=headers, verify=cert_verify)
-    return msg
 
 
 def get_instrument_id(msg, msg_struct):
@@ -549,7 +532,7 @@ def get_instrument_id(msg, msg_struct):
 
     # If there is an instrument with a matching name, returns all info to a site or just the id to an agent.
     if db_instrument:
-        em_logger.info("Found Existing Instrument")
+        EM_LOGGER.info("Found Existing Instrument")
         return '{"event_code": %i, "data": {"instrument_id": %s, "site_id": %s, "name_short": "%s", '\
                '"name_long": "%s", "type": "%s", "vendor": "%s", "description": "%s", "frequency_band": "%s"}}' \
                % (utility.INSTRUMENT_ID_REQUEST, db_instrument.id, db_instrument.site_id, db_instrument.name_short,
@@ -558,7 +541,7 @@ def get_instrument_id(msg, msg_struct):
     else:
         # If it does not exist at the central facility, returns an error indicator
         if is_central:
-            em_logger.error("Instrument could not be found at central facility")
+            EM_LOGGER.error("Instrument could not be found at central facility")
             return '{"data": {"instrument_id": -1}}'
         # If it does not exist at a site, requests the site information from the central facility
         else:
@@ -581,7 +564,7 @@ def get_instrument_id(msg, msg_struct):
             db.session.commit()
             utility.reset_db_keys()
 
-            em_logger.info("Saved New Instrument")
+            EM_LOGGER.info("Saved New Instrument")
             return '{"event_code": %i, "data": {"instrument_id": %s, "site_id": %s, "name_short": "%s", ' \
                    '"name_long": "%s", "type": "%s", "vendor": "%s", "description": "%s", "frequency_band": "%s"}}' \
                    % (utility.INSTRUMENT_ID_REQUEST, cf_data['instrument_id'], cf_data['site_id'],
@@ -622,7 +605,7 @@ def get_site_id(msg, msg_struct):
 
     # If there is a site with a matching name, returns all info to a site or just the id to an agent.
     if db_site:
-        em_logger.info("Found Existing Site")
+        EM_LOGGER.info("Found Existing Site")
         return '{"event_code": %i, "data": {"site_id": %s, "name_short": "%s", "name_long": "%s", "latitude": "%s", ' \
                '"longitude": "%s", "facility": "%s", "mobile": "%s", "location_name": "%s"}}' \
                % (utility.SITE_ID_REQUEST, db_site.id, db_site.name_short, db_site.name_long, db_site.latitude,
@@ -631,7 +614,7 @@ def get_site_id(msg, msg_struct):
     else:
         # If it does not exist at the central facility, returns an error indicator
         if is_central:
-            em_logger.error("Site could not be found at central facility")
+            EM_LOGGER.error("Site could not be found at central facility")
             return '{"data": {"site_id": -1}}'
         # If it does not exist at a site, requests the site information from the central facility
         else:
@@ -654,7 +637,7 @@ def get_site_id(msg, msg_struct):
             db.session.commit()
             utility.reset_db_keys()
 
-            em_logger.info("Saved New Site")
+            EM_LOGGER.info("Saved New Site")
             return '{"event_code": %i, "data": {"site_id": %s, "name_short": "%s", "name_long": "%s", ' \
                    '"latitude": "%s", "longitude": "%s", "facility": "%s", "mobile": "%s", "location_name": "%s"}}' \
                    % (utility.SITE_ID_REQUEST, cf_data['site_id'], cf_data['name_short'],
@@ -693,7 +676,7 @@ def save_instrument_data_reference(msg_struct):
 
         db.session.add(new_instrument_data_ref)
         db.session.commit()
-        em_logger.info("Saved new instrument data reference")
+        EM_LOGGER.info("Saved new instrument data reference")
 
 
 def get_event_code(msg, msg_struct):
@@ -719,7 +702,7 @@ def get_event_code(msg, msg_struct):
     db_code = db.session.query(EventCode).filter(EventCode.description == msg_struct['data']['description']).first()
     # If the event code defined here, return it downstream
     if db_code:
-        em_logger.info("Found Existing Event Code")
+        EM_LOGGER.info("Found Existing Event Code")
         return '{"event_code": %i, "data": {"description": "%s"}}' % (
             db_code.event_code, msg_struct['data']['description'])
 
@@ -744,7 +727,7 @@ def get_event_code(msg, msg_struct):
         new_event_code = db.session.query(EventCode.event_code).filter(
                 EventCode.description == msg_struct['data']['description']).first()[0]
 
-        em_logger.info("Created New Event Code")
+        EM_LOGGER.info("Created New Event Code")
         return '{"event_code": %i, "data": {"description": "%s"}}' % (
             new_event_code, msg_struct['data']['description'])
 
@@ -762,7 +745,7 @@ def get_event_code(msg, msg_struct):
         db.session.commit()
         utility.reset_db_keys()
 
-        em_logger.info("Saved Event Code")
+        EM_LOGGER.info("Saved Event Code")
         return '{"event_code": %i, "data": {"description": "%s"}}' % (
             cf_msg['event_code'], cf_msg['data']['description'])
 
@@ -777,10 +760,10 @@ def initialize_database():
 
     """
     with app.app_context():
-        em_logger.info("Database initializing")
+        EM_LOGGER.info("Database initializing")
         # If it is a test database, first wipe and clean up the database.
         if cfg['database']['test_db']:
-            em_logger.debug("Test database enabled.  Clearing database")
+            EM_LOGGER.debug("Test database enabled.  Clearing database")
 
             db.session.execute("DROP SCHEMA public CASCADE;")
             db.session.execute("CREATE SCHEMA public;")
@@ -799,28 +782,28 @@ def initialize_database():
         # If there are still no users, assume the database is empty and populate the basic information
         db_user = User.query.first()
         if db_user is None:
-            em_logger.info("Populating Users")
+            EM_LOGGER.info("Populating Users")
             utility.load_data_into_table("database/schema/users.data", "users")
         else:
-            em_logger.info("Users in table.")
+            EM_LOGGER.info("Users in table.")
 
         db_site = db.session.query(Site).first()
         if db_site is None:
-            em_logger.info("Populating Sites")
+            EM_LOGGER.info("Populating Sites")
             utility.load_data_into_table("database/schema/sites.data", "sites")
         else:
-            em_logger.info("Sites in table.")
+            EM_LOGGER.info("Sites in table.")
 
         db_event_code = db.session.query(EventCode).first()
         if db_event_code is None:
-            em_logger.info("Populating Event Codes")
+            EM_LOGGER.info("Populating Event Codes")
             utility.load_data_into_table("database/schema/event_codes.data", "event_codes")
         else:
-            em_logger.info("Event_codes in table.")
+            EM_LOGGER.info("Event_codes in table.")
 
         # If it is set to be a test database, populate extra information.
         if cfg['database']['test_db']:
-            em_logger.info("Test database demo data loading")
+            EM_LOGGER.info("Test database demo data loading")
             test_tables = [
                            "instruments",
                            "instrument_logs",
@@ -834,22 +817,15 @@ def initialize_database():
             for table in test_tables:
                 result = db.session.execute("SELECT * FROM %s LIMIT 1" % table).fetchone()
                 if result is None:
-                    em_logger.info("Populating %s", table)
+                    EM_LOGGER.info("Populating %s", table)
                     utility.load_data_into_table("database/schema/%s.data" % table, table)
                 else:
-                    em_logger.info("%ss in table.", table)
+                    EM_LOGGER.info("%ss in table.", table)
         else:
-            em_logger.info("Test database demo data disabled")
+            EM_LOGGER.info("Test database demo data disabled")
 
         # Without this, the database prevents the server from running properly.
         utility.reset_db_keys()
-
-
-@app.route('/eventmanager/borktrigger')
-def bork_trigger():
-    import time
-    time.sleep(4)
-    return "Counterbork Authority"
 
 
 @app.route('/eventmanager')
@@ -900,5 +876,5 @@ if __name__ == '__main__':
 
     initialize_database()
 
-    em_logger.info("Starting Event Manager")
+    EM_LOGGER.info("Starting Event Manager")
     app.run(host='0.0.0.0', port=cfg['setup']['event_manager_port'], debug=True)
