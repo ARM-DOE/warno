@@ -1,51 +1,78 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>New ARM Site</title>
-<link rel=stylesheet type=text/css href="{{ url_for('static', filename='master.css') }}">
+{% extends 'flask_user/public_base.html' %}
 
-</head>
-<body>
+{% block title %}
+Edit Site
+{% endblock %}
 
-{% with title='New Site' %}
-{% include 'partials/header_template.html' %}
-{% endwith %}
-
-<div class="content">
+{% block content %}
 <form method="post">
-   <section>
-     <p><label for="abbv">Abbreviation:</label>
-       <input type="text" id="siteAbbvBox" name="abbv" maxlength="8" value="{{site.name_short}}"></input>
-     </p>
-     <p><label for="name">Name:</label>
-       <input type="text" id="siteNameBox" name="name" maxlength="128" value="{{site.name_long}}"></input>
-     </p>
-     <p><label for="lat">Latitude:</label>
-       <input type="text" id="siteLatBox" name="lat" value="{{site.latitude}}"></input>
-     </p>
-     <p><label for="lon">Longitude:</label>
-       <input type="text" id="siteLonBox" name="lon" value="{{site.longitude}}"></input>
-     </p>
-     <p><label for="facility">Facility:</label>
-       <input type="text" id="siteFacilityBox" name="facility" maxlength="32" value="{{site.facility}}"></input>
-     </p>
-     <p><label for="mobile">Mobile:</label>
-        <input type="checkbox" name="mobile" {% if site.mobile %}checked{% endif %}>
-     </p>
-     <p><label for="location_name">Location Name:</label>
-       <input type="text" id="siteLocationNameBox" name="location_name" maxlength="64" value="{{site.location_name}}"></input>
-     </p>
-  </section>
-  <menu>
-    {% if error %}
-      <div id="new-site-error" style="color: red">{{error}}</div>
-    {% endif %}
-    <button id="cancel" type="reset">Cancel</button>
-    <button type="submit" id="submit">Confirm</button>
-  </menu>
-</form>
-</div>
+    <div class="form-group">
+        <div>
+            <label for="abbv" class="control-label">Abbreviation:</label>
+        </div>
+        <input type="text" class="form-control" id="siteAbbvBox" name="abbv" maxlength="8" value="{{site.name_short}}">
+    </div>
+    <div class="form-group">
+        <div>
+            <label for="name" class="control-label">Name:</label>
+        </div>
+        <input type="text" class="form-control" id="siteNameBox" name="name" maxlength="128" value="{{site.name_long}}">
+    </div>
+    <div class="form-group">
+        <div>
+            <label for="facility" class="control-label">Facility:</label>
+        </div>
+        <input type="text" class="form-control" id="siteFacilityBox" name="facility" maxlength="32" value="{{site.facility}}">
+    </div>
+    <div class="form-group">
+        <div>
+            <label for="location_name" class="control-label">Location Name:</label>
+        </div>
+        <input type="text" class="form-control" id="siteLocationNameBox" name="location_name" maxlength="64" value="{{site.location_name}}">
+    </div>
 
-</body>
-</html>
+    <div class="grid_container">
+        <div class="row">
+            <div class="col-4">
+                <div class="form-group">
+                    <div>
+                        <label for="mobile" class="control-label">Mobile:</label>
+                    </div>
+                    <input type="checkbox" name="mobile" {% if site.mobile %}checked{% endif %}>
+                </div>
+            </div>
+
+            <div class="col-4">
+                <div class="form-group">
+                    <div>
+                        <label for="lat" class="control-label">Latitude:</label>
+                    </div>
+                    <input type="text" style="width: 100px;" id="siteLatBox" name="lat" value="{{site.latitude}}">
+                </div>
+            </div>
+
+            <div class="col-4">
+                <div class="form-group">
+                    <div>
+                        <label for="lon" class="control-label">Longitude:</label>
+                    </div>
+                    <input type="text" style="width: 100px;" id="siteLonBox" name="lon" value="{{site.longitude}}">
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+
+
+    <br>
+
+    <div>
+        {% if error %}
+            <div id="new-site-error" style="color: red">{{error}}</div>
+        {% endif %}
+        <button id="reset" type="reset">Reset Fields</button>
+        <button type="submit" id="submit">Confirm</button>
+    </div>
+</form>
+{% endblock %}

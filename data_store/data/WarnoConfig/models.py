@@ -1,8 +1,28 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects import postgresql
+from flask_user.forms import RegisterForm
+from flask_wtf import Form
+from wtforms import StringField, SubmitField, validators
+from flask_user import UserMixin
+
 db = SQLAlchemy()
 
 
+# Non-Database Models
+class MyRegisterForm(RegisterForm):
+    name = StringField('Name', validators=[validators.DataRequired('Name is required.')])
+    position = StringField('Position')
+    location = StringField('Location')
+
+
+# Define the User profile form
+class UserProfileForm(Form):
+    name = StringField('Name', validators=[
+        validators.DataRequired('Name is required')])
+    submit = SubmitField('Save')
+
+
+# Database Models
 class Site(db.Model):
     __tablename__ = 'sites'
 
@@ -16,15 +36,34 @@ class Site(db.Model):
     location_name = db.Column(db.String)
 
 
-class User(db.Model):
+class User(db.Model, UserMixin):
     __tablename__ = "users"
     id = db.Column("user_id", db.Integer, primary_key=True)
-    name = db.Column(db.String, nullable=False)
-    email = db.Column("e-mail", db.String)
+
+    # Authentication
+    username = db.Column(db.String, nullable=False, unique=True)
+    password = db.Column(db.String, nullable=False, server_default='')
+    reset_password_token = db.Column(db.String(100), nullable=False, server_default='')
+
+    # Email info
+    email = db.Column("email", db.String)
+    confirmed_at = db.Column(db.DateTime())
+
+    # User Information
+    is_active = db.Column('is_active', db.Boolean(), nullable=False, server_default="0")
+    name = db.Column(db.String, nullable=False, server_default='')
     location = db.Column(db.String)
     position = db.Column(db.String)
-    password = db.Column(db.String)
     authorizations = db.Column(db.String)
+
+    def get_id(self):
+        return unicode(self.id)
+
+    def has_confirmed_email(self):
+        return True
+
+    def is_authenticated(self):
+        return True
 
 
 class EventCode(db.Model):

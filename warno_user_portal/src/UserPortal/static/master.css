@@ -1,8 +1,27 @@
-﻿html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td,article,aside,canvas,details,embed,figure,figcaption,footer,header,hgroup,menu,nav,output,ruby,section,summary,time,mark,audio,video {
+﻿
+/***** Generic short helpers *****/
+.expanded {
+    width: 99%;
+}
+
+.ib {
+    display: inline-block;
+}
+
+.no_padding {
+    padding: 0px;
+}
+
+.text-right {
+    text-align: right;
+}
+
+/***** Base Template (header, navigation, content) *****/
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td,article,aside,canvas,details,embed,figure,figcaption,footer,header,hgroup,menu,nav,output,ruby,section,summary,time,mark,audio,video {
   margin: 0;
   padding: 0;
   border: 0;
-  vertical-align: baseline
+  vertical-align: baseline;
 }
 
 body {
@@ -24,16 +43,7 @@ div.content, div.head-title, div.head-title-wrapper, div.sub-title {
   margin-right: auto;
 }
 
-.histogram_box {
-    background: white;
-
-    overflow : hidden;
-    float: left;
-    padding: 30px;
-    margin: 20px;
-    border: 2px solid darkGray;
-}
-
+/*** Content ***/
 div.content {
     background: -moz-linear-gradient(left, #FCFCFC, #F4F4F4); /* FF3.6-15 */
     background: -webkit-linear-gradient(left, #FCFCFC, #F4F4F4); /* Chrome10-25,Safari5.1-6 */
@@ -46,6 +56,7 @@ div.content {
     border-right: solid 2px black;
 }
 
+/*** Head and Navigation***/
 div.head-title-wrapper {
     background: -moz-linear-gradient(left, #e5f2ff, #c0d0f5); /* FF3.6-15 */
     background: -webkit-linear-gradient(left, #e5f2ff, #c0d0f5); /* Chrome10-25,Safari5.1-6 */
@@ -64,7 +75,8 @@ div.head-title {
     padding-right: 10px;
     margin-left: auto;
     margin-right: auto;
-    background: url("tmp.png") no-repeat right 15px top;
+    background: url("warno_global_line_logo.png") no-repeat right top;
+    background-size: 125px;
 }
 
 div.head-title a{
@@ -90,15 +102,6 @@ div.sub-title {
     border-bottom: solid 2px black;
 }
 
-div.instrument_dygraph {
-    border: 2px solid darkGray;
-}
-
-div.info {
-    background:  lightBlue;
-    border: 1px solid black;
-}
-
 table.nav-table{
 	width: 50%;
 }
@@ -107,6 +110,126 @@ table.nav-table td {
 	text-align: center;
 }
 
+
+ul.nav-buttons {
+    display: block;
+    list-style: none;
+    overflow: hidden;
+    margin: 5px;
+    vertical-align: baseline;
+    font-size: 0;
+}
+
+ul.nav-buttons li{
+    color: black;
+    display: inline-block;
+    background: -moz-linear-gradient(top, #DDDDDD, #CCCCCC); /* FF3.6-15 */
+    background: -webkit-linear-gradient(top, #DDDDDD, #CCCCCC); /* Chrome10-25,Safari5.1-6 */
+    background: linear-gradient(to bottom, #DDDDDD, #CCCCCC); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+    width: 100px;
+    padding: 1px;
+    border: 1px solid black;
+    border-right: none;
+    font-size: 16px;
+}
+
+/** Navigation Buttons **/
+ul.nav-buttons a:first-child li{
+    border-radius: 8px 0 0 8px;
+}
+
+ul.nav-buttons a:last-child li {
+    border-radius: 0 8px 8px 0;
+    border-right: 1px solid black;
+}
+
+ul.nav-buttons a li:hover {
+    background: -moz-linear-gradient(top, #F4F4F4, #DDDDDD); /* FF3.6-15 */
+    background: -webkit-linear-gradient(top, #F4F4F4, #DDDDDD); /* Chrome10-25,Safari5.1-6 */
+    background: linear-gradient(to bottom, #DF4F4F4, #DDDDDD); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+}
+
+ul.nav-buttons a li:active{
+    background: -moz-linear-gradient(top, #DDDDDD, #FFFFFF); /* FF3.6-15 */
+    background: -webkit-linear-gradient(top, #DDDDDD, #FFFFFF); /* Chrome10-25,Safari5.1-6 */
+    background: linear-gradient(to bottom, #DDDDDD, #FFFFFF); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+}
+
+ul.nav-buttons a li.selected{
+    background: -moz-linear-gradient(left, #999999 0%, #DDDDDD 15%, #DDDDDD 85%, #999999 100%); /* FF3.6-15 */
+    background: -webkit-linear-gradient(left, #999999 0%, #DDDDDD 15%, #DDDDDD 85%, #999999 100%); /* Chrome10-25,Safari5.1-6 */
+    background: linear-gradient(to right, #999999 0%, #DDDDDD 15%, #DDDDDD 85%, #999999 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+}
+
+
+/***** Dygraphs and their containers *****/
+div.master_graphdiv {
+    display: flex;
+    flex-flow: row wrap;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+}
+
+div.instrument_dygraph {
+    border: 2px solid lightGray;
+    margin: 10px;
+}
+
+div.graph_setup_container {
+    vertical-align: top;
+    max-width: 520px;
+    /*margin-left: auto;
+    margin-right: auto; */
+
+    border: 2px solid darkGray;
+    padding: 5px;
+}
+
+div.graph_time_format {
+    padding-bottom: 10px;
+    padding-right: 100px;
+
+    font-size: 80%;
+    text-align: right;
+}
+
+.graph_setup_button {
+    background-color: #e0dfff;
+    border: 1px solid darkGray;
+    border-radius: 2px;
+
+    padding: 2px 8px;
+
+    text-decoration: none;
+    font-size: 80%;
+    cursor: pointer;
+}
+
+.graph_setup_button:hover {
+    background-color: #f3ecff;
+}
+
+.graph_setup_button:active {
+    background-color: #ccccdc;
+}
+
+select.attrSelect {
+    font-size:90%;
+    padding: 0;
+}
+
+/*** Dygraph stats ***/
+div.graph_stats {
+    margin: 10px;
+}
+
+div.graph_stats_half {
+    display: inline-block;
+    width: 49%;
+}
+
+
+/***** Listing Tables (instrument list, site list, etc.) *****/
 table.listing-table{
     width: 99%;
     margin: 5px;
@@ -134,53 +257,13 @@ table.listing-table a {
     color: darkBlue;
 }
 
-ul.nav-buttons {
-    display: block;
-    list-style: none;
-    overflow: hidden;
-    margin: 5px;
-    vertical-align: baseline;
-    font-size: 0;
-}
 
-ul.nav-buttons li{
-    color: black;
-    display: inline-block;
-    background: -moz-linear-gradient(top, #DDDDDD, #CCCCCC); /* FF3.6-15 */
-    background: -webkit-linear-gradient(top, #DDDDDD, #CCCCCC); /* Chrome10-25,Safari5.1-6 */
-    background: linear-gradient(to bottom, #DDDDDD, #CCCCCC); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-    width: 100px;
-    padding: 1px;
-    border: 1px solid black;
-    border-right: none;
-    font-size: 16px;
-}
-
-ul.nav-buttons a:first-child li{
-    border-radius: 8px 0 0 8px;
-}
-
-ul.nav-buttons a:last-child li {
-    border-radius: 0 8px 8px 0;
-    border-right: 1px solid black;
-}
-
-ul.nav-buttons a li:hover {
-    background: -moz-linear-gradient(top, #F4F4F4, #DDDDDD); /* FF3.6-15 */
-    background: -webkit-linear-gradient(top, #F4F4F4, #DDDDDD); /* Chrome10-25,Safari5.1-6 */
-    background: linear-gradient(to bottom, #DF4F4F4, #DDDDDD); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-}
-
-ul.nav-buttons a li:active{
-    background: -moz-linear-gradient(top, #DDDDDD, #FFFFFF); /* FF3.6-15 */
-    background: -webkit-linear-gradient(top, #DDDDDD, #FFFFFF); /* Chrome10-25,Safari5.1-6 */
-    background: linear-gradient(to bottom, #DDDDDD, #FFFFFF); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-}
-
-ul.nav-buttons a li.selected{
-    background: -moz-linear-gradient(left, #999999 0%, #DDDDDD 15%, #DDDDDD 85%, #999999 100%); /* FF3.6-15 */
-    background: -webkit-linear-gradient(left, #999999 0%, #DDDDDD 15%, #DDDDDD 85%, #999999 100%); /* Chrome10-25,Safari5.1-6 */
-    background: linear-gradient(to right, #999999 0%, #DDDDDD 15%, #DDDDDD 85%, #999999 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+/***** Dashboard widgets *****/
+div.widget_control {
+    margin: 20px;
+    padding: 10px;
+    width: 300px;
+    border: 2px solid darkGray;
 }
 
 div.log_widget {
@@ -211,6 +294,8 @@ div.wd {
     background-color: #e5f2ff;
 }
 
+
+/***** Status displays *****/
 div.status_page {
     background: -moz-linear-gradient(left, #DDDDDD, #CCCCCC); /* FF3.6-15 */
     background: -webkit-linear-gradient(left, #DDDDDD, #CCCCCC); /* Chrome10-25,Safari5.1-6 */
@@ -265,13 +350,6 @@ table.legend {
   align: center
 }
 
-.expanded {
-    width: 99%;
-}
-.ib {
-    display: inline-block;
-}
-
 div.round {
   border-radius: 50%;
   width: 18px;
@@ -285,56 +363,6 @@ div.rect {
     border: 2px solid black;
 }
 
-div.graph_setup_container {
-    vertical-align: top;
-    max-width: 520px;
-
-    border: 2px solid darkGray;
-    padding: 5px;
-}
-
-div.graph_time_format {
-    padding-bottom: 10px;
-    padding-right: 100px;
-
-    font-size: 80%;
-    text-align: right;
-}
-
-.graph_setup_button {
-    background-color: #e0dfff;
-    border: 1px solid darkGray;
-    border-radius: 2px;
-
-    padding: 2px 8px;
-
-    text-decoration: none;
-    font-size: 80%;
-    cursor: pointer;
-}
-
-.graph_setup_button:hover {
-    background-color: #f3ecff;
-}
-
-.graph_setup_button:active {
-    background-color: #ccccdc;
-}
-
-select.attrSelect {
-    font-size:90%;
-    padding: 0;
-}
-
-div.graph_stats {
-    margin: 10px;
-}
-
-div.graph_stats_half {
-    display: inline-block;
-    width: 49%;
-}
-
 button.site_toggle {
     border: 1px solid black;
     border-radius: 2px;
@@ -346,28 +374,7 @@ button.site_toggle:hover {
     background-color: moccasin;
 }
 
-div.devel_button {
-    display: inline-block;
-    background: #DDDDDD;
-    padding: 5px;
-
-    border-radius: 2px;
-    border: 2px solid darkGray;
-}
-
-div.devel_button:hover {
-    background: #F0F0F0;
-}
-
-div.devel_notification {
-    display: inline-block;
-    background: LavenderBlush;
-    padding: 10px;
-
-    border-radius: 5px;
-    border: 2px solid Salmon;
-}
-
+/*** Status types ***/
 .operational {
     background: -moz-linear-gradient(top, #90EEA0, #8AE98A); /* FF3.6-15 */
     background: -webkit-linear-gradient(top, #90EEA0, #8AE98A); /* Chrome10-25,Safari5.1-6 */
@@ -408,6 +415,8 @@ div.devel_notification {
     padding: 4px;
 }
 
+
+/***** Event Manager Dashboard *****/
 div.em_table_stats {
     border: 2px solid black;
     display: inline-block;
@@ -420,4 +429,130 @@ div.em_table_stats {
 table.em_status {
     border: none;
     width: 90%;
+}
+
+
+/***** Flask_User forms *****/
+div.flask_user_container {
+    text-align: center;
+}
+
+div.flask_user_content {
+    text-align: left;
+    background-color: #F4F4F4;
+
+    min-width: 400px;
+    min-height: 200px;
+    margin-top: 40px;
+    margin-bottom: 20px;
+    display: inline-block;
+
+    border: 2px solid darkGray;
+    border-radius: 20px;
+    padding: 15px;
+}
+
+.form-group {
+    font-size: 90%;
+    padding-top: 10px;
+}
+
+.form-control {
+    width: 100%;
+}
+
+/***** Devel Pages and Candidates *****/
+
+div.devel_button {
+    display: inline-block;
+    background: #DDDDDD;
+    padding: 5px;
+
+    border-radius: 2px;
+    border: 2px solid darkGray;
+}
+
+div.devel_button:hover {
+    background: #F0F0F0;
+}
+
+div.devel_notification {
+    display: inline-block;
+    background: LavenderBlush;
+    padding: 10px;
+
+    border-radius: 2px;
+    border: 2px solid Salmon;
+}
+
+/*** Histograms ***/
+
+.histogram_box {
+    background: white;
+
+    overflow : hidden;
+    float: left;
+    padding: 30px;
+    margin: 20px;
+    border: 2px solid darkGray;
+}
+
+/***** Grid and Column Framework *****/
+/* Base for custom grid, adapted from http://j4n.co/blog/Creating-your-own-css-grid-system */
+.grid-container{
+    width: 100%;
+    max-width: 1000px;
+}
+
+/*-- setting border box on all elements inside the grid --*/
+    .grid-container *{
+        box-sizing: border-box;
+    }
+
+/*-- our clearfix hack -- */
+.row:before,
+.row:after {
+    content:"";
+      display: table ;
+    clear:both;
+}
+
+[class*='col-'] {
+    float: left;
+    min-height: 1px;
+    width: 8.33%;
+}
+
+/*-- our gutter -- */
+.with_gutter {
+    padding: 12px;
+}
+
+.col-1 { width: 8.33%;  }
+.col-2 { width: 16.66%; }
+.col-3 { width: 25%;    }
+.col-4 { width: 33.33%; }
+.col-5 { width: 41.66%; }
+.col-6 { width: 50%;    }
+.col-7 { width: 58.33%; }
+.col-8 { width: 66.66%; }
+.col-9 { width: 75%;    }
+.col-10{ width: 83.33%; }
+.col-11{ width: 91.66%; }
+.col-12{ width: 100%;   }
+
+/*-- example: some extra column content styling --*/
+/*[class*='col-'] > p {
+ background-color: #FFC2C2;
+ padding: 0;
+ margin: 0;
+ text-align: center;
+ color: white;
+}*/
+
+/* Needs Classifying */
+
+div.info {
+    background:  lightBlue;
+    border: 1px solid black;
 }

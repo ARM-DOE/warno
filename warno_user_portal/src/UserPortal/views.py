@@ -1,17 +1,21 @@
 import logging
 import json
+import math
 import os
+
 
 from flask import g, render_template, request, redirect, url_for
 from werkzeug.contrib.fixers import ProxyFix
 from sqlalchemy import Float, Boolean, Integer, or_, and_
 from sqlalchemy.exc import ProgrammingError as SAProgrammingError
 from sqlalchemy.orm import aliased
-import math
+
+from flask_mail import Mail
+from flask_user import login_required, UserManager, SQLAlchemyAdapter, current_user
 
 from UserPortal import app
 from WarnoConfig import config
-from WarnoConfig.models import db
+from WarnoConfig.models import db, MyRegisterForm
 from WarnoConfig.models import PulseCapture, ProsensingPAF, Instrument, InstrumentLog, Site, User
 from WarnoConfig.utility import status_code_to_text
 
@@ -33,7 +37,26 @@ s_db_cfg = config.get_config_context()['s_database']
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://%s:%s@%s:%s/%s' % (db_cfg['DB_USER'], s_db_cfg['DB_PASS'],
                                                                          db_cfg['DB_HOST'], db_cfg['DB_PORT'],
                                                                          db_cfg['DB_NAME'])
+app.config['SECRET_KEY'] = "THIS IS AN INSECURE SECRET"
+app.config['CSRF_ENABLED'] = True
+
+app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME', '')
+app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD', '')
+app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER', '"WARNO" <noreply@relay.arm.gov>')
+app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'relay.arm.gov')
+app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', '465'))
+app.config['MAIL_USE_SSL'] = int(os.getenv('MAIL_USE_SSL', True))
+
+app.config['USER_APP_NAME'] = "WARNO"
+app.config['USER_SEND_PASSWORD_CHANGED_EMAIL'] = False
+app.config['USER_SEND_REGISTERED_EMAIL'] = False
+app.config['USER_SEND_USERNAME_CHANGED_EMAIL'] = False
+
 db.init_app(app)
+mail = Mail(app)
+
+db_adapter = SQLAlchemyAdapter(db, User)
+user_manager = UserManager(db_adapter, app, register_form=MyRegisterForm)
 
 
 # Logging Setup

@@ -1,4 +1,4 @@
-name,e-mail,location,position,password,authorizations
-Joseph C. Hardin, joseph.hardin@pnnl.gov, PNNL, Engineer, #@#ADS,None
-Nitin Bharadwaj, nitin@pnnl.gov, PNNL, Engineer, #$!,None
-John J. Technician, john@arm.gov, SGP, Technician, #!SA,None
+username,name,email,location,position,password,authorizations,is_active
+JHardin,Joseph C. Hardin, joseph.hardin@pnnl.gov, PNNL, Engineer,$2a$12$NlFqxeUtZF.sjO9B22MZT.F2e.4zAwcfE1OwebZKMaVjQSe4QO9MS,None,True
+NBharadwaj,Nitin Bharadwaj, nitin@pnnl.gov, PNNL, Engineer,$2a$12$NlFqxeUtZF.sjO9B22MZT.F2e.4zAwcfE1OwebZKMaVjQSe4QO9MS,None,True
+JTech,John J. Technician, john@arm.gov, SGP, Technician,$2a$12$NlFqxeUtZF.sjO9B22MZT.F2e.4zAwcfE1OwebZKMaVjQSe4QO9MS,None,True

@@ -1,36 +1,27 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>User Accounts on WARNO</title>
-<link rel=stylesheet type=text/css href="{{ url_for('static', filename='master.css') }}">
-<script src="{{ url_for('static', filename='sorttable.js')}}"></script>
+{% extends 'partials/site_base.html' %}
 
-</head>
-<body>
+{% block title %}
+Users
+{% endblock %}
 
-{% with title='Users' %}
-{% include 'partials/header_template.html' %}
-{% endwith %}
-
-<div class="content">
+{% block content %}
 <div>
 <table class="listing-table sortable" id='user-table'>
     <tr>
-        <th> User Name</th>
+        <th> Username</th>
+        <th> Name</th>
         <th> User E-mail</th>
         <th> User Location</th>
         <th> User Position</th>
-        <th> User ID </th>
         <th></th>
     </tr>
     {%  for user in users %}
     <tr>
+        <td>{{ user.username }}</td>
         <td>{{ user.name }}</td>
         <td>{{ user.email }}</td>
         <td>{{ user.location }}</td>
         <td>{{ user.position }}</td>
-        <td>{{ user.id }}</td>
         <td><a href="{{url_for('users.edit_user', user_id=user.id)}}">Edit</a></td>
     </tr>
     {% endfor %}
@@ -41,10 +32,7 @@
 <hr>
 <br>
 
-<form action="{{ url_for('users.new_user') }}" method="get">
-  <input type="submit" id="new-user-redirect-button"
-         value="Add New User"/>
+<form action="{{ url_for('user.register') }}" method="get">
+    <input type="submit" id="new-user-redirect-button" value="Register New User"/>
 </form>
-</div>
-</body>
-</html>
+{% endblock %}

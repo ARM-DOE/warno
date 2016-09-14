@@ -1,19 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Submit Log</title>
-    <link rel=stylesheet type=text/css href="{{ url_for('static', filename='master.css') }}">
-    <script type="text/javascript" src="{{ url_for('static', filename='jquery-2.1.4.js')}}"></script>
+{% extends 'partials/site_base.html' %}
 
-</head>
-<body>
+{% block title %}
+Submit Log
+{% endblock %}
 
-{% with title='Submit Log' %}
-{% include 'partials/header_template.html' %}
-{% endwith %}
-
-<div class="content">
+{% block content %}
 <div>
     <h1 class="title">Log Entry Submission</h1>
 </div>
@@ -55,8 +46,9 @@
         <input id="submit" type="submit" value="Submit Log">
     </p>
 </form>
-</div>
+{% endblock %}
 
+{% block script %}
 <script>
     //Catch the date as it's submitted and convert to UTC for the database.
     $(function() {$('#log-submit-form').submit(function()
@@ -82,6 +74,4 @@
     document.getElementById('datetime-input').value = current_time;
     document.getElementById('datetime-input').placeholder = current_time;
 </script>
-
-</body>
-</html>
+{% endblock %}

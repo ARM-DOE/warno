@@ -1,77 +1,71 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>WARNO: Radar Status</title>
-    <link rel=stylesheet type=text/css href="{{ url_for('static', filename='master.css') }}">
-<script src="{{ url_for('static', filename='sorttable.js')}}"></script>
-</head>
-<body>
-{% with title='Home' %}
-{% include 'partials/header_template.html' %}
-{% endwith %}
-    <div class="content">
+{% extends 'partials/site_base.html' %}
 
-        Status Legend:
+{% block title %}
+Status
+{% endblock %}
+
+{% block content %}
+
+    Status Legend:
+    <br>
+    <table class="legend">
+        <td class="operational ">OPERATIONAL</td>
+        <td class="not_working ">NOT WORKING</td>
+        <td class="testing ">TESTING</td>
+        <td class="in_upgrade ">IN UPGRADE</td>
+        <td class="transit ">TRANSIT</td>
+    </table>
+
+    <br>
+    <p style="font-size: .8em;">
+        NOTE: Status and plots are not to be taken as a reflection on the quality of the data in the ARM Archive.
+        Please pay attention to Data Quality Reports (DQRs) that come with the data. If you have questions,
+        contact one of the radar instrument mentors!!!
+
         <br>
-        <table class="legend">
-            <td class="operational ">OPERATIONAL</td>
-            <td class="not_working ">NOT WORKING</td>
-            <td class="testing ">TESTING</td>
-            <td class="in_upgrade ">IN UPGRADE</td>
-            <td class="transit ">TRANSIT</td>
+        <br>
+
+        Click on a status box to expand it, or on an instrument or site name to visit the details page for that item.
+    </p>
+
+    {% for site, site_id in sites.iteritems() %}
+    <div class="status_block">
+        <table class='status_plot'>
+            <th colspan="2">
+            <button type="button" class="site_toggle" onclick="toggleLogsForSite(this)">+</button>
+            <a href="{{url_for('sites.show_site', site_id=site_id)}}">{{ site }}</a>
+            </th>
+            {% set blarg = 0 %}
+            {% for instrument in instruments %}
+            {% if instrument.site == site %}
+            {% set blarg = blarg + 1 %}
+            {% if blarg % 2 == 1 %}
+            <tr>
+            {% endif %}
+            <td class="inst_status_td" style="float: left;">
+                <a href="{{url_for('instruments.instrument', instrument_id= instrument.id)}}">{{  instrument.instrument_name }}</a>
+                <br>
+                <div class="inst_status_div round {{instrument.status.replace(' ', '_').replace('-', '_').lower()}}" onclick="toggleShowLogs(this)">
+                    <div class="log_div" hidden>
+                    Last Author: {{ instrument.author }}
+                    <br>
+                    Last Log: {{ instrument.contents }}
+                </div>
+                </div>
+                <br>
+            </td>
+            {% if blarg % 2 == 0 %}
+            </tr>
+            {% endif %}
+            {% endif %}
+            {% endfor %}
         </table>
-
-        <br>
-        <p style="font-size: .8em;">
-            NOTE: Status and plots are not to be taken as a reflection on the quality of the data in the ARM Archive.
-            Please pay attention to Data Quality Reports (DQRs) that come with the data. If you have questions,
-            contact one of the radar instrument mentors!!!
-
-            <br>
-            <br>
-
-            Click on a status box to expand it, or on an instrument or site name to visit the details page for that item.
-        </p>
-
-        {% for site, site_id in sites.iteritems() %}
-        <div class="status_block">
-            <table class='status_plot'>
-                <th colspan="2">
-                <button type="button" class="site_toggle" onclick="toggleLogsForSite(this)">+</button>
-                <a href="{{url_for('sites.show_site', site_id=site_id)}}">{{ site }}</a>
-                </th>
-                {% set blarg = 0 %}
-                {% for instrument in instruments %}
-                {% if instrument.site == site %}
-                {% set blarg = blarg + 1 %}
-                {% if blarg % 2 == 1 %}
-                <tr>
-                {% endif %}
-                <td class="inst_status_td" style="float: left;">
-                    <a href="{{url_for('instruments.instrument', instrument_id= instrument.id)}}">{{  instrument.instrument_name }}</a>
-                    <br>
-                    <div class="inst_status_div round {{instrument.status.replace(' ', '_').replace('-', '_').lower()}}" onclick="toggleShowLogs(this)">
-                        <div class="log_div" hidden>
-                        Last Author: {{ instrument.author }}
-                        <br>
-                        Last Log: {{ instrument.contents }}
-                    </div>
-                    </div>
-                    <br>
-                </td>
-                {% if blarg % 2 == 0 %}
-                </tr>
-                {% endif %}
-                {% endif %}
-                {% endfor %}
-            </table>
-        </div>
-        {% endfor %}
     </div>
+    {% endfor %}
 
-</body>
+{% endblock %}
 
+{% block script %}
 <script>
     function toggleLogsForSite(element) {
         console.log("Toggled");
@@ -184,4 +178,4 @@
     }
 
 </script>
-</html>
+{% endblock %}
