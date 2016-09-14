@@ -1,0 +1,14 @@
+image: hardin/pydev:v1
+
+before_script:
+    - "$CI_PROJECT_DIR/continuous_integration/gitlab_ci_install.sh"
+test:
+  variables:
+    PYTHONPATH: "$CI_PROJECT_DIR/warno-vagrant/data_store/data"
+    DATA_STORE_PATH: "$CI_PROJECT_DIR/warno-vagrant/data_store/data/"
+    USER_PORTAL_PATH: "$CI_PROJECT_DIR/warno-vagrant/warno_user_portal/src/"
+  script:
+  - cd "$CI_PROJECT_DIR"
+  - source utility_setup_scripts/set_env_for_testing.sh
+  - nosetests --exclude-dir=selenium_tests --exclude-dir=warno_user_portal/src/tests --exclude-dir=warno_event_manager/src/tests --with-xunit
+
