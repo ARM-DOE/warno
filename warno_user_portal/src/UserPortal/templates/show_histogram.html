@@ -1,29 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Development: Histogram Plotting</title>
-<link rel=stylesheet type=text/css href="{{ url_for('static', filename='master.css') }}">
-</head>
-<body>
+{% extends 'partials/site_base.html' %}
 
-{% with title="Devel: Histogram Generation" %}
-{% include 'partials/header_template.html' %}
-{% endwith %}
+{% block title %}
+Devel: Histograms
+{% endblock %}
 
-<div class="content">
-
-    <div style="padding: 5px; display: inline-block; vertical-align: top;">
-            {% with instrument_list=instrument_list, instrument_id=1 %}
-            {% include 'instrument_histogram.html' %}
-            {% endwith %}
-    </div>
-
-        </div>
-
-    </div>
-
+{% block content %}
+<div style="padding: 5px; display: inline-block; vertical-align: top;">
+    {% with instrument_list=instrument_list, instrument_id=1 %}
+    {% include 'instrument_histogram.html' %}
+    {% endwith %}
 </div>
-
-</body>
-</html>
+{% endblock %}

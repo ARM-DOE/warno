@@ -1,5 +1,0 @@
-CREATE TABLE "public"."table_references" (
-    "instrument_id" INTEGER REFERENCES instruments (instrument_id) NOT NULL,
-    "referenced_tables" TEXT[],
-    PRIMARY KEY ("instrument_id")
-);

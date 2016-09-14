@@ -1,7 +1,0 @@
-CREATE TABLE "public"."instrument_data_references" (
-    "instrument_data_reference_id" serial NOT NULL,
-    "instrument_id" INTEGER REFERENCES instruments (instrument_id) NOT NULL,
-    "special" BOOLEAN NOT NULL,
-    "description" TEXT,
-    PRIMARY KEY ("instrument_data_reference_id")
-);

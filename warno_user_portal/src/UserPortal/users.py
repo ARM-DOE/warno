@@ -32,7 +32,7 @@ def list_users():
     """
 
     db_users = db.session.query(User).all()
-    users_dict = [dict(name=user.name, email=user.email, location=user.location, position=user.position, id=user.id)
+    users_dict = [dict(name=user.name, email=user.email, location=user.location, position=user.position, id=user.id, username=user.username, active=user.is_active, password=user.password)
                   for user in db_users]
 
     return render_template('users_template.html', users=users_dict)
@@ -99,11 +99,11 @@ def edit_user(user_id):
     if request.method == 'POST':
         # Get the user information from the request
         updated_user = db.session.query(User).filter(User.id == user_id).first()
+        updated_user.username = request.form.get('username')
         updated_user.name = request.form.get('name')
         updated_user.email = request.form.get('email')
         updated_user.location = request.form.get('location')
         updated_user.position = request.form.get('position')
-        updated_user.password = request.form.get('password')
 
         # Update user in the database
         db.session.commit()
@@ -114,6 +114,7 @@ def edit_user(user_id):
     # If the request is to get the form, get the user and pass it to fill default values.
     if request.method == 'GET':
         db_user = db.session.query(User).filter(User.id == user_id).first()
-        user = dict(name=db_user.name, email=db_user.email, location=db_user.location, position=db_user.position)
+        user = dict(username=db_user.username, name=db_user.name, email=db_user.email, location=db_user.location,
+                    position=db_user.position)
 
         return render_template('edit_user.html', user=user)
