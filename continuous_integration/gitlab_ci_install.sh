@@ -17,7 +17,6 @@ set -e
 # as well as use conda and binstar to install additional modules which are not
 # in the default repository.
 conda update --yes conda
-yum install -y git  #This shoudl already be in docker
 
 # Install dependencies
 conda install --yes numpy nose psutil netcdf4 psycopg2 pandas
