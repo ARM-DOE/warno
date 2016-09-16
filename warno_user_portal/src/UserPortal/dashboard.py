@@ -2,7 +2,7 @@ import logging
 import math
 import os
 
-from flask import Blueprint, render_template, request, redirect, url_for, jsonify
+from flask import Blueprint, render_template, request, jsonify
 from sqlalchemy import asc, or_, and_
 from sqlalchemy.orm import aliased
 

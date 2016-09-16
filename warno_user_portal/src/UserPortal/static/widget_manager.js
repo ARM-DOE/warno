@@ -5,7 +5,7 @@ function WidgetManager(containerDiv, controllerUrl) {
     this.newWidgetId = 0;
     this.widgets = [];
 
-    this.timer = setInterval(this.tick.bind(this), 5000)
+    this.timer = setInterval(this.tick.bind(this), 60000)
 };
 
 WidgetManager.prototype.tick = function(){
@@ -380,6 +380,10 @@ Histogram.prototype.generateHistogram = function() {
 
             var lowerBin = Math.min(...field1);
             var upperBin = Math.max(...field1);
+            if (upperBin == lowerBin) { // Kind of cheap way to prevent 0 bin sizes due to all data being same value
+                upperBin += 0.0000001;
+                lowerBin -= 0.0000001;
+            }
             var binSize = 0.25;
             var xbinDict = {};
 
