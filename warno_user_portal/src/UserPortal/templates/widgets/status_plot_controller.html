@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <link rel=stylesheet type=text/css href="{{ url_for('static', filename='master.css') }}">
+    <script type="text/javascript" src="{{ url_for('static', filename='jquery-2.1.4.js')}}"></script>
+</head>
+
+<body>
+    <p><label for="site_selector">Site:</label>
+        <select name="site_selector" id="status-plot-site-selector-{{id}}">
+            <option value="-1">All</option>
+            {% for site in sites %}
+            <option value="{{ site.id }}">{{ site.name }}</option>
+            {% endfor %}
+        </select>
+        <button type="button" id="add-status-plot-button-{{id}}">Display Status Plot</button>
+        <i style="font-size: 80%">
+            Updates every minute.
+        </i>
+        <button type="button" style="float: right;" id="remove-status-plot-button-{{id}}">X</button>
+    </p>
+    <div style="padding: 2px;" id="status-plot-container-{{id}}">
+
+    </div>
+</body>

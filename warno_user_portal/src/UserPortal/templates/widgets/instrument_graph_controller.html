@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <link rel=stylesheet type=text/css href="{{ url_for('static', filename='master.css') }}">
+    <script type="text/javascript" src="{{ url_for('static', filename='dygraph-combined-dev.js')}}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='jquery-2.1.4.js')}}"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+
+<body>
+    <div id="inst-graph-content-{{id}}">
+        <button type="button" id="inst-graph-config-open-button-{{id}}" title="Configuration">
+            <img src="{{url_for('static', filename='gear.png')}}" style="width: 16px; height: 16px;" alt="Config">
+        </button>
+        <button type="button" id="inst-graph-add-button-{{id}}">Graph Instrument Graph</button>
+        <input type="radio" name="inst-graph-size-{{id}}" value="small">Small
+        <input type="radio" name="inst-graph-size-{{id}}" value="medium" checked>Medium
+        <input type="radio" name="inst-graph-size-{{id}}" value="large">Large
+        <button type="button" style="float: right;" id="inst-graph-remove-button-{{id}}" title="Remove Graph Widget">X</button>
+
+        <div>
+            <button id="inst-hide-button-{{id}}" title="Hide Graph Data Settings">-</button>
+            <button id="inst-reveal-button-{{id}}" title="Show Graph Data Settings">+</button>
+        </div>
+
+
+        <div class="graph_setup_container" id="inst-graph-controller-{{id}}">
+
+            <p><label for="time">Start Date/Time in UTC:</label>
+                <input type="datetime" id="datetime-input-start-{{id}}" name="start" value="01/01/1970 12:27:31">
+            </p>
+            <div style="display: inline-block" class="graph_setup_button" onclick="updateStartTime({{id}}, 1)">Yesterday</div>
+            <div style="display: inline-block" class="graph_setup_button" onclick="updateStartTime({{id}}, 7)">Last Week</div>
+            <div style="display: inline-block" class="graph_setup_button" onclick="updateStartTime({{id}}, 14)">Fortnight</div>
+            <div style="display: inline-block" class="graph_setup_button" onclick="updateStartTime({{id}}, 30)">Last Month</div>
+            <div style="display: inline-block" class="graph_setup_button" onclick="updateStartTime({{id}}, 180)">Six Months</div>
+            <br>
+            <br>
+            <p><label for="time">End Date/Time in UTC:</label>
+                <input type="datetime" id="datetime-input-end-{{id}}" name="end" value="01/01/2170 12:27:31">
+                <br>
+                <div class="graph_time_format">
+                    <i>(MM/DD/YYYY HH:MM:SS)</i>
+                </div>
+                {% if error %}
+                    <div id="inst-graph-error-{{id}}" style="color: red">{{error}}</div>
+                {% endif %}
+            </p>
+            Instrument:
+            <select class="attrSelect" id="instrument-select-{{id}}">
+                {% for inst in instrument_list %}
+                <option value="{{inst.id}}">{{ inst.location }}:{{inst.abbv}}</option>
+                {% endfor %}
+            </select>
+            <button type="button" class="graph_setup_button" id="inst-add-attribute-button-{{id}}">Add Attribute</button>
+
+            <div id="attr-div-{{id}}-0">
+                <button type="button" id="inst-remove-attribute-button-{{id}}-0" title="Remove This Attribute">X
+                </button><span><select class="attribute_select" name="attribute-select-{{id}}" id="attribute-select-{{id}}-0">
+                        <option>Select an Instrument</option>
+                    </select>
+                </span>
+            </div>
+        </div>
+        <div class="histogram_widget" id="instrument-graph-container-{{id}}">
+
+        </div>
+    </div>
+
+    <div class="widget_config" id="inst-graph-config-{{id}}">
+        <h2>Graph Configuration</h2>
+        <hr>
+        <div class="grid-container">
+            <div class="row widget_config_row">
+                <div class="col-9">
+                    <label for="update-frequency">Graph Update Frequency in Minutes (+Integer): </label>
+                </div>
+
+                <div class="col-3" style="text-align: right;">
+                    <input type="text" name="update-frequency" class="short_input" id="inst-graph-update-frequency-{{id}}">
+                </div>
+            </div>
+
+            <hr>
+            <div class="row widget_config_row">
+                <div class="col-9">
+                    <label for="stat-frequency">Measurement Statistics Update Frequency in Graph Updates(+Integer): </label>
+                    <br>
+                    <i style="font-size: 80%;">
+                        Number of graph updates per statistics update. For example, if Graph Update Frequency is set
+                        to 5 minutes and this is set to 2, statistics will update every 2 graph updates (10 Minutes).
+                    </i>
+                </div>
+
+                <div class="col-3" style="text-align: right;">
+                    <input type="text" name="stat-frequency" class="short_input" id="inst-graph-stat-frequency-{{id}}">
+                </div>
+            </div>
+
+            <hr>
+            <div class="row widget_config_row">
+                <div class="col-9">
+                    <label for="roll-period">Graph Rolling Average Window (+Integer): </label>
+                </div>
+
+                <div class="col-3" style="text-align: right;">
+                    <input type="text" name="roll-period" class="short_input" id="inst-graph-roll-period-{{id}}">
+                </div>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="error_display" id="inst-graph-config-error-{{id}}"></div>
+        <div id="inst-graph-config-success-{{id}}"></div>
+
+        <div class="widget_config_controls">
+            <button type="button" id="inst-graph-config-close-button-{{id}}"><< Return</button>
+            <button type="button" id="inst-graph-config-apply-button-{{id}}">Apply Changes</button>
+        </div>
+    </div>
+</body>

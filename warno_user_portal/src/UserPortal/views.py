@@ -4,9 +4,9 @@ import math
 import os
 
 
-from flask import g, render_template, request, redirect, url_for
+from flask import g, render_template, request, redirect, url_for, jsonify
 from werkzeug.contrib.fixers import ProxyFix
-from sqlalchemy import Float, Boolean, Integer, or_, and_
+from sqlalchemy import Float, Boolean, Integer, or_, and_, asc
 from sqlalchemy.exc import ProgrammingError as SAProgrammingError
 from sqlalchemy.orm import aliased
 
@@ -16,7 +16,7 @@ from flask_user import login_required, UserManager, SQLAlchemyAdapter, current_u
 from UserPortal import app
 from WarnoConfig import config
 from WarnoConfig.models import db, MyRegisterForm
-from WarnoConfig.models import PulseCapture, ProsensingPAF, Instrument, InstrumentLog, Site, User
+from WarnoConfig.models import PulseCapture, ProsensingPAF, Instrument, InstrumentLog, Site, User, ValidColumn
 from WarnoConfig.utility import status_code_to_text
 
 is_central = 0
@@ -96,6 +96,9 @@ def show_dygraph():
     return render_template('instrument_dygraph.html', columns=columns)
 
 
+# vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+
+
 def widget_log_viewer_controller(widget_id):
     """
     Controller for the log viewing widget.  Allows the user to re-query the database by changing the selection
@@ -145,23 +148,50 @@ def widget_log_viewer():
         max_logs = 5
 
     if float(instrument_id) >= 0:
-        db_logs = db.session.query(InstrumentLog).filter(InstrumentLog.instrument_id == instrument_id).order_by(InstrumentLog.time.desc()).limit(max_logs).all()
+        db_logs = (db.session.query(InstrumentLog).filter(InstrumentLog.instrument_id == instrument_id)
+                   .order_by(InstrumentLog.time.desc()).limit(max_logs).all())
     else:
         db_logs = db.session.query(InstrumentLog).order_by(InstrumentLog.time.desc()).limit(max_logs).all()
 
     logs = [dict(time=log.time, contents=log.contents, status=status_code_to_text(log.status),
-                 supporting_images=log.supporting_images, author=log.author.name)
+                 supporting_images=log.supporting_images, author=log.author.name,
+                 instrument_name="%s:%s" % (log.instrument.site.name_short, log.instrument.name_short))
             for log in db_logs]
 
     return render_template('widgets/log_viewer.html', logs=logs)
 
 
+def widget_status_plot_controller(widget_id):
+    """
+    Controller for the status plot widget.  Allows the user to re-query the database by changing the selection
+    in the views.
+
+    Parameters
+    ----------
+    widget_id: integer
+        Allows for this widget to be dynamically created, tracked, and removed. Passed into the template and
+        incorporated in element ids.
+
+    Returns
+    -------
+    'widgets/status_plot_controller.html': HTML document
+        Renders the controller for the status_plot widget, passing in the list of sites available to select from as
+        well as the widget id that marks all elements as part of this same widget.
+
+    """
+
+    db_sites = db.session.query(Site)
+    sites = [dict(id=site.id, name=site.name_short) for site in db_sites]
+    return render_template('widgets/status_plot_controller.html', sites=sites, id=widget_id)
+
+
 @app.route('/widget/status_plot')
 def widget_status_plot():
     """
-    Gets all instruments, the most recent log for each instrument, and sets the instrument's status as the status of the
-    most recent log.  Then groups the instruments by which site they are at, passing all the information back to the
-    HTML template to render.
+    Gets all instruments with site id matching 'site_id' (if less than 0 or not integer, assume all sites),
+    the most recent log for each instrument, and sets the instrument's status as the status of the most recent log.
+    Then groups the instruments by which site they are at, passing all the information back to the HTML template to
+    render.
 
     Returns
     -------
@@ -169,13 +199,22 @@ def widget_status_plot():
         Returns an HTML document and passes in the instrument information and the widget id for the template generator.
 
     """
-    widget_id = request.args.get('widget_id')
+    site_id = request.args.get('site_id')
+
+    try:
+        int(site_id)
+    except ValueError:
+        site_id = -1
 
     # Get the most recent log for each instrument to determine its current status
     status = status_log_for_each_instrument()
 
     # Assume the instrument status is operational unless the status has changed, handled afterward
-    db_instruments = db.session.query(Instrument).join(Instrument.site).all()
+    if int(site_id) < 0:
+        db_instruments = db.session.query(Instrument).join(Instrument.site).all()
+    else:
+        db_instruments = (db.session.query(Instrument).join(Instrument.site)
+                          .filter(Instrument.site_id == int(site_id)).all())
     instruments = [dict(id=instrument.id, name=instrument.name_short, site_id=instrument.site.id,
                         site=instrument.site.name_short, status=1)
                    for instrument in db_instruments]
@@ -195,7 +234,7 @@ def widget_status_plot():
         else:
             instrument_groups[instrument['site']].append(instrument)
 
-    return render_template('widgets/status_plot.html', id=widget_id, instrument_groups=instrument_groups)
+    return render_template('widgets/status_plot.html', instrument_groups=instrument_groups)
 
 
 @app.route('/gen_widget')
@@ -214,7 +253,7 @@ def gen_widget():
     widget_name = request.args.get('widget_name')
     widget_id = request.args.get('widget_id')
     if widget_name == "instrument_dygraph":
-        return render_template('instrument_dygraph.html', columns=['fake_entry', 'fake_value', 'antenna_temperature'], instrument_id = 1)
+        return render_template('instrument_dygraph.html', columns=['fake_entry', 'fake_value', 'antenna_temperature'], instrument_id=1)
     if widget_name == "log_viewer":
         return widget_log_viewer_controller(widget_id)
     if widget_name == "status_plot":
@@ -227,7 +266,86 @@ def instrument_widget(columns, instrument_id):
     Placeholder to return just the basic instrument_dygraph html page with nothing extra added on.
 
     """
-    return render_template('instrument_dygraph.html', columns=['fake_entry', 'fake_value', 'antenna_temperature'], instrument_id = 1)
+    return render_template('instrument_dygraph.html', columns=['fake_entry', 'fake_value', 'antenna_temperature'], instrument_id=1)
+
+
+def widget_histogram_controller(widget_id):
+    """
+    This function has an unusual return, being both the rendered html and extra json data.  The response is designed to
+    be pulled apart on the receiving end.
+
+    Parameters
+    ----------
+    widget_id
+
+    Returns
+    -------
+
+    """
+    # We need to pass in a list of valid instruments:
+    db_instruments = db.session.query(Instrument).order_by(asc(Instrument.id)).all()
+    instrument_list = [dict(abbv=inst.name_short, name=inst.name_long, type=inst.type, vendor=inst.vendor,
+                            description=inst.description, frequency_band=inst.frequency_band,
+                            location=inst.site.name_short, site_id=inst.site_id, id=inst.id)
+                       for inst in db_instruments]
+    column_list = {}
+
+    for instrument in instrument_list:
+        db_valid_columns = db.session.query(ValidColumn).filter(ValidColumn.instrument_id == instrument['id']).all()
+        column_list[instrument['id']] = [column.column_name for column in db_valid_columns]
+
+    response_html = render_template("widgets/histogram_controller.html", instrument_list=instrument_list, id=widget_id)
+    response_json = dict(instrument_list=instrument_list, column_list=column_list)
+    return jsonify(dict(html=response_html, json=response_json))
+
+
+def widget_instrument_graph_controller(widget_id):
+    """
+    This function has an unusual return, being both the rendered html and extra json data.  The response is designed to
+    be pulled apart on the receiving end.
+
+    Parameters
+    ----------
+    widget_id
+
+    Returns
+    -------
+
+    """
+    # We need to pass in a list of valid instruments:
+    db_instruments = db.session.query(Instrument).order_by(asc(Instrument.id)).all()
+    instrument_list = [dict(abbv=inst.name_short, name=inst.name_long, type=inst.type, vendor=inst.vendor,
+                            description=inst.description, frequency_band=inst.frequency_band,
+                            location=inst.site.name_short, site_id=inst.site_id, id=inst.id)
+                       for inst in db_instruments]
+    column_list = {}
+
+    for instrument in instrument_list:
+        db_valid_columns = db.session.query(ValidColumn).filter(ValidColumn.instrument_id == instrument['id']).all()
+        column_list[instrument['id']] = [column.column_name for column in db_valid_columns]
+
+    response_html = render_template("widgets/instrument_graph_controller.html",
+                                    instrument_list=instrument_list, id=widget_id)
+    response_json = dict(instrument_list=instrument_list, column_list=column_list)
+    return jsonify(dict(html=response_html, json=response_json))
+
+
+@app.route('/widget_controller')
+def widget_controller():
+    widget_name = request.args.get('widget_name')
+    widget_id = request.args.get('widget_id')
+    if widget_name == 'log_viewer':
+        return widget_log_viewer_controller(widget_id)
+    if widget_name == "status_plot":
+        return widget_status_plot_controller(widget_id)
+        # return redirect(url_for('widget_status_plot', widget_id=widget_id))
+    if widget_name == "histogram":
+        return widget_histogram_controller(widget_id)
+    if widget_name == "instrument_graph":
+        return widget_instrument_graph_controller(widget_id)
+    return ""
+
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 @app.route('/pulse')

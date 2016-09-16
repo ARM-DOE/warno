@@ -266,6 +266,20 @@ div.widget_control {
     border: 2px solid darkGray;
 }
 
+div.widget_config {
+    display: none;
+    padding: 5px;
+}
+
+div.widget_config_row {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+div.widget_config_controls {
+    margin-top: 5px;
+}
+
 div.log_widget {
     background: -moz-linear-gradient(left, #FCFCFC, #F4F4F4); /* FF3.6-15 */
     background: -webkit-linear-gradient(left, #FCFCFC, #F4F4F4); /* Chrome10-25,Safari5.1-6 */
@@ -279,9 +293,29 @@ div.status_widget {
     background: -moz-linear-gradient(left, #FCFCFC, #F4F4F4); /* FF3.6-15 */
     background: -webkit-linear-gradient(left, #FCFCFC, #F4F4F4); /* Chrome10-25,Safari5.1-6 */
     background: linear-gradient(to right, #FCFCFC, #F4F4F4); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-    margin: 3px;
+    margin-top: 3px;
+    margin-bottom: 3px;
     border: 1px solid black;
     padding: 2px;
+}
+
+div.histogram_widget {
+    margin-left: auto;
+    margin-right: auto;
+    display: inline-block;
+
+    background: white;
+    border: 2px solid darkGray;
+}
+
+div.histogram_widget_controller {
+    vertical-align: top;
+    max-width: 520px;
+    /*margin-left: auto;
+    margin-right: auto; */
+
+    border: 2px solid darkGray;
+    padding: 5px;
 }
 
 div.wd {
@@ -292,6 +326,22 @@ div.wd {
     display: inline-block;
     vertical-align: top;
     background-color: #e5f2ff;
+}
+
+div.dashboard_graph_stats {
+    margin: 10px;
+    display: inline-block;
+}
+
+div.dashboard_instrument_dygraph {
+    border: 2px solid lightGray;
+    margin: 10px;
+
+    display: inline-block;
+}
+
+div.dashboard_graph_stats_half {
+    display: inline-block;
 }
 
 
@@ -555,4 +605,12 @@ div.devel_notification {
 div.info {
     background:  lightBlue;
     border: 1px solid black;
+}
+
+div.error_display {
+    color: red;
+}
+
+input.short_input {
+    width: 50px;
 }

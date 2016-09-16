@@ -399,6 +399,7 @@ def event():
         if not is_central:
             payload = json.loads(msg)
             requests.post(cf_url, json=payload, headers=headers, verify=cert_verify)
+        return "OK"
 
 
 def save_special_prosensing_paf(msg, msg_struct):
@@ -440,6 +441,7 @@ def save_special_prosensing_paf(msg, msg_struct):
     if not is_central:
         payload = json.loads(msg)
         requests.post(cf_url, json=payload, headers=headers, verify=cert_verify)
+    return "OK"
 
 
 def save_instrument_log(msg, msg_struct):
@@ -467,6 +469,8 @@ def save_instrument_log(msg, msg_struct):
 
     db.session.add(new_log)
     db.session.commit()
+
+    return "OK"
 
 
 def save_pulse_capture(msg, msg_struct):
@@ -496,6 +500,7 @@ def save_pulse_capture(msg, msg_struct):
     if not is_central:
         payload = json.loads(msg)
         requests.post(cf_url, json=payload, headers=headers, verify=cert_verify)
+    return "OK"
 
 
 def get_instrument_id(msg, msg_struct):

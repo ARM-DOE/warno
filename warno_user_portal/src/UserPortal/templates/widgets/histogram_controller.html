@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <link rel=stylesheet type=text/css href="{{ url_for('static', filename='master.css') }}">
+    <script type="text/javascript" src="{{ url_for('static', filename='jquery-2.1.4.js')}}"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+
+<body>
+    <div id="histogram-content-{{id}}">
+        <button type="button" id="histogram-config-open-button-{{id}}" title="Configuration">
+            <img src="{{url_for('static', filename='gear.png')}}" style="width: 16px; height: 16px;" alt="Config">
+        </button>
+        <button type="button" id="histogram-add-button-{{id}}">Graph Histogram</button>
+        <input type="radio" name="histogram-size-{{id}}" value="small">Small
+        <input type="radio" name="histogram-size-{{id}}" value="medium" checked>Medium
+        <input type="radio" name="histogram-size-{{id}}" value="large">Large
+        <button type="button" style="float: right;" id="histogram-remove-button-{{id}}">X</button>
+
+        <div>
+            <button id="histogram-hide-button-{{id}}">-</button>
+            <button id="histogram-reveal-button-{{id}}">+</button>
+        </div>
+
+        <div class="graph_setup_container" id="histogram-controller-{{id}}">
+
+            <p><label for="time">Start Date/Time in UTC:</label>
+                <input type="datetime" id="datetime-input-start-{{id}}" name="start" value="01/01/1970 12:27:31">
+            </p>
+            <div style="display: inline-block" class="graph_setup_button" onclick="updateStartTime({{id}}, 1)">Yesterday</div>
+            <div style="display: inline-block" class="graph_setup_button" onclick="updateStartTime({{id}}, 7)">Last Week</div>
+            <div style="display: inline-block" class="graph_setup_button" onclick="updateStartTime({{id}}, 14)">Fortnight</div>
+            <div style="display: inline-block" class="graph_setup_button" onclick="updateStartTime({{id}}, 30)">Last Month</div>
+            <div style="display: inline-block" class="graph_setup_button" onclick="updateStartTime({{id}}, 180)">Six Months</div>
+            <br>
+            <br>
+            <p><label for="time">End Date/Time in UTC:</label>
+                <input type="datetime" id="datetime-input-end-{{id}}" name="end" value="01/01/2170 12:27:31">
+                <br>
+                <div class="graph_time_format">
+                    <i>(MM/DD/YYYY HH:MM:SS)</i>
+                </div>
+                {% if error %}
+                    <div id="histogram-error-{{id}}" style="color: red">{{error}}</div>
+                {% endif %}
+            </p>
+            <div>
+                <label for="lower-limit">Lower Limit</label>
+                <input style="width: 70px;" type="text" name="lower-limit" id="histogram-lower-limit-{{id}}">
+                <label for="upper-limit">Upper Limit</label>
+                <input style="width: 70px;" type="text" name="upper-limit" id="histogram-upper-limit-{{id}}">
+                <br>
+                <i style="font-size: 80%">
+                    Both limits must be valid numbers to override automatic limits.
+                </i>
+            </div>
+            <div id="attr-div-{{id}}">
+                <span>
+                    <select class="attrSelect" id="instrument-select-{{id}}">
+                        {% for inst in instrument_list %}
+                        <option value="{{inst.id}}">{{ inst.location }}:{{inst.abbv}}</option>
+                        {% endfor %}
+                    </select>
+                </span>
+                <span>
+                    <select id="attribute-select-{{id}}">
+                        <option>Select an Instrument</option>
+                    </select>
+                </span>
+            </div>
+
+        </div>
+        <div class="histogram_widget" id="histogram-container-{{id}}"></div>
+    </div>
+    <div class="widget_config" id="histogram-config-{{id}}">
+        <h2>Histogram Configuration</h2>
+        <hr>
+        <div class="grid-container">
+            <div class="row widget_config_row">
+                <div class="col-9">
+                    <label for="update-frequency">Histogram Frequency in Minutes (+Integer): </label>
+                </div>
+
+                <div class="col-3" style="text-align: right;">
+                    <input type="text" name="update-frequency" class="short_input" id="histogram-update-frequency-{{id}}">
+                </div>
+            </div>
+
+            <hr>
+            <div class="row widget_config_row">
+                <div class="col-9">
+                    <label for="bin-number">Number of Bins (+Integer): </label>
+                    <br>
+                    <i style="font-size: 80%;">
+                        With this set to 0, the graph will attempt to automatically pick a good number of bins.
+                    </i>
+                </div>
+
+                <div class="col-3" style="text-align: right;">
+                    <input type="text" name="bin-number" class="short_input" id="histogram-bin-number-{{id}}">
+                </div>
+            </div>
+
+            <hr>
+            <div class="row widget_config_row">
+                <div class="col-6">
+                    Graph Color (Integer 0-255):
+                </div>
+
+                <div class="col-6" style="text-align: right;">
+                    <label for="color-red">Red: </label>
+                    <input type="text" name="color-red" class="short_input" id="histogram-color-red-{{id}}">
+                    <label for="color-green">Green: </label>
+                    <input type="text" name="color-green" class="short_input" id="histogram-color-green-{{id}}">
+                    <label for="color-blue">Blue: </label>
+                    <input type="text" name="color-blue" class="short_input" id="histogram-color-blue-{{id}}">
+                </div>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="error_display" id="histogram-config-error-{{id}}"></div>
+        <div id="histogram-config-success-{{id}}"></div>
+
+        <div class="widget_config_controls">
+            <button type="button" id="histogram-config-close-button-{{id}}"><< Return</button>
+            <button type="button" id="histogram-config-apply-button-{{id}}">Apply Changes</button>
+        </div>
+    </div>
+</body>

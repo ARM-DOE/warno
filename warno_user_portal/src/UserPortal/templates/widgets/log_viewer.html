@@ -13,6 +13,8 @@
             <b>No logs for instrument</b>
         {% endif %}
         {% for log in logs %}
+            <b>Instrument</b>: {{log.instrument_name}}
+            <br>
             <b>Logged By</b>: {{log.author}}
             <br>
             <b>Time</b>: {{log.time}}   <b>Status</b>: {{log.status}}
