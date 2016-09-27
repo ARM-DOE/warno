@@ -23,9 +23,12 @@
     <div class="transit"style="font-size: 15px; display: inline-block; center; border: 1px solid black; padding-left: 2px; padding-right: 2px;">
         TRANSIT
     </div>
-    <button type="button" style="float: right;" onclick="remove_status_plot({{id}})">X</button>
     <br>
-
+    {% if instrument_groups|length <= 0 %}
+    <div style="padding: 5px;">
+        No Instruments at this Site
+    </div>
+    {% endif %}
     {% for key in instrument_groups.keys() %}
         <div class="status_widget">
             <a href="{{url_for('sites.show_site', site_id=instrument_groups[key][0].site_id)}}">{{ key }}</a>

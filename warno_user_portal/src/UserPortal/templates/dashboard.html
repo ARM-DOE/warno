@@ -5,80 +5,49 @@ Dashboard
 {% endblock %}
 
 {% block content %}
-<div class="widget_control" id="widget_picker_div">
-    <h3>Widgets</h3>
-    <select id="select-widget" name="select-widget">
-        <option value="status_plot">Status Plot</option>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='dygraph-combined-dev.js')}}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='widget_manager.js')}}"></script>
+
+<div style="width: 400px; border: 2px solid black; background: lightGray; margin-left: auto; margin-right: auto; padding: 10px;" align="center">
+    Add a Widget:
+    <br>
+    <select id="widget-type" name="widget-type">
+        <option value="instrument_graph">Graph</option>
         <option value="log_viewer">Log Viewer</option>
-        <option value="instrument_dygraph">Instrument Dygraph</option>
+        <option value="status_plot">Status Plot</option>
+        <option value="histogram">Histogram</option>
     </select>
-    <button type="button" onclick="add_widget_to_collection()">Add Widget</button>
+    <button type="button" onclick="newWidget()">Add</button>
 </div>
 
-<div id="collection">
+<div id="widget-compendium">
 
 </div>
+
 {% endblock %}
 
 {% block script %}
 <script>
-    widget_index = 0
-    function add_widget_to_collection()
-    {
-        elem = document.getElementById("collection");
-        choice = document.getElementById("select-widget").value;
-        console.log(choice)
+    containerDiv = document.getElementById('widget-compendium');
+    widgetManager = new WidgetManager(containerDiv, "{{url_for('dashboard.widget_controller')}}");
+    widget_index = 0;
 
-        widget_div_id = choice + widget_index;
-        widget_div = document.createElement('div');
-        widget_div.id = widget_div_id;
-        widget_div.className = 'wd';
-
-        elem.insertBefore(widget_div, elem.firstChild);
-
-        ajax_load_url(widget_div, '{{url_for("gen_widget")}}?widget_name=' + choice + '&widget_id=' + widget_index);
-
-        widget_index += 1;
+    function newWidget() {
+        widType = document.getElementById('widget-type').value;
+        if (widType == 'instrument_graph') {
+            console.log("ALPHA STRIKE ON URL");
+            console.log("{{url_for('instruments.generate_instrument_graph')}}");
+            widgetManager.addInstrumentGraph("{{url_for('instruments.generate_instrument_graph')}}");
+        } else if (widType == 'log_viewer') {
+            widgetManager.addLogViewer('{{ url_for('dashboard.widget_log_viewer') }}');
+        } else if (widType == 'status_plot') {
+            widgetManager.addStatusPlot('{{ url_for('dashboard.widget_status_plot') }}');
+        } else if (widType == 'histogram') {
+            widgetManager.addHistogram();
+        }
     }
 
-    function log_viewer_list_logs(id)
-    {
-        var fill_element = document.getElementById("log_viewer_container" + id);
-        var max_logs = document.getElementById("log_viewer_max_logs" + id).value;
-        var instrument_id = document.getElementById("log_viewer_instrument_selector" + id).value;
-        var url = '{{url_for("widget_log_viewer")}}?instrument_id='+ instrument_id + '&max_logs=' + max_logs;
-
-        ajax_load_url(fill_element, url);
-    }
-
-    function ajax_load_url(element, url)
-    {
-        var xmlHttp = new XMLHttpRequest();
-
-        xmlHttp.onreadystatechange = function() {
-            if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
-            {
-               element.innerHTML = xmlHttp.responseText;
-            }
-        };
-
-        xmlHttp.open("GET", url, true); // true for asynchronous
-        xmlHttp.send();
-
-        //
-    }
-
-    function remove_log_viewer(id)
-    {
-        element = document.getElementById("log_viewer" + id)
-        element.parentNode.removeChild(element)
-    }
-
-    function remove_status_plot(id)
-    {
-        element = document.getElementById("status_plot" + id)
-        element.parentNode.removeChild(element)
-    }
 </script>
 
 {% endblock %}

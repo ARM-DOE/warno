@@ -4,7 +4,7 @@ function remove_graph(e)
     elem.parentNode.removeChild(elem);
 };
 
-function isSentinel(value){
+function isNotSentinel(value){
  if (value == -999){
      return false;
  }else{
@@ -12,7 +12,7 @@ function isSentinel(value){
  }
 };
 
-function create_histogram_div(div, instrument_id, instrument_name, field, start_utc, end_utc ) {
+function create_histogram_div(div, instrument_id, instrument_name, attribute, start_utc, end_utc ) {
     var x = [];
     var data1;
     var trace1;
@@ -22,8 +22,7 @@ function create_histogram_div(div, instrument_id, instrument_name, field, start_
         if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
             var response = JSON.parse(xmlhttp.responseText);
             var field1 = response.data.map(i => i[1]);
-            //field1 = field1.filter(isNaN)
-            field1.filter(isSentinel)
+            field1 = field1.filter(isNotSentinel)
             nbins = Math.sqrt(field1.length);
             var data = [
                 {
@@ -41,7 +40,7 @@ function create_histogram_div(div, instrument_id, instrument_name, field, start_
             margin: {t: 50, r: 50, b: 50, l: 50, pad:10},
             hovermode: 'closest',
             bargap: 0,
-            title: instrument_name + ":" + field,
+            title: instrument_name + ":" + attribute,
             xaxis: {
                 //domain: [-20, 30],
                 showgrid: true,
@@ -63,7 +62,7 @@ function create_histogram_div(div, instrument_id, instrument_name, field, start_
 
 
 var url = "/generate_instrument_graph" +
-          "?keys=" + field +
+          "?keys=" + attribute +
           "&instrument_id=" + instrument_id +
           "&start=" + start_utc +
           "&end=" + end_utc;

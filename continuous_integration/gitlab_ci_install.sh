@@ -19,8 +19,8 @@ set -e
 conda update --yes conda
 
 # Install dependencies
-conda install --yes numpy nose psutil netcdf4 psycopg2 pandas
-pip install pyyaml Flask requests selenium nose-cov nose-exclude mock sqlalchemy flask-testing blinker flask-sqlalchemy flask-migrate flask-fixtures ijson flask-user
+conda install --yes numpy nose psutil netcdf4 psycopg2 pandas backports
+pip install pyyaml Flask requests selenium nose-cov nose-exclude mock sqlalchemy flask-testing blinker flask-sqlalchemy flask-migrate flask-fixtures ijson flask-user configparser
 
 git clone http://overwatch.pnl.gov/hard505/pypro-aflib.git
 cd pypro-aflib
