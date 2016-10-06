@@ -1,5 +1,6 @@
 import logging
 import math
+import json
 import os
 
 from flask import Blueprint, render_template, request, jsonify
@@ -7,7 +8,7 @@ from sqlalchemy import asc, or_, and_
 from sqlalchemy.orm import aliased
 
 from WarnoConfig.utility import status_code_to_text
-from WarnoConfig.models import Instrument, InstrumentLog, Site, ValidColumn, db
+from WarnoConfig.models import Instrument, InstrumentLog, Site, ValidColumn, User, db
 
 dashboard = Blueprint('dashboard', __name__, template_folder='templates')
 
@@ -20,6 +21,22 @@ up_logger = logging.getLogger(__name__)
 up_handler = logging.FileHandler("%suser_portal_server.log" % log_path, mode="a")
 up_handler.setFormatter(logging.Formatter('%(levelname)s:%(asctime)s:%(module)s:%(lineno)d:  %(message)s'))
 up_logger.addHandler(up_handler)
+
+
+@dashboard.route('/save_dashboard/<user_id>', methods=["POST"])
+def save_dashboard(user_id):
+    dashboard_string = json.dumps(request.json)
+    user = User.query.filter_by(id=user_id).first()
+    user.dashboard = dashboard_string
+    db.session.commit()
+    return dashboard_string
+
+
+@dashboard.route('/load_dashboard/<user_id>', methods=["GET"])
+def load_dashboard(user_id):
+    user = User.query.filter_by(id=user_id).first()
+    dashboard_string = user.dashboard
+    return dashboard_string
 
 
 @dashboard.route('/widget_controller')

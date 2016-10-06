@@ -14,9 +14,9 @@
             <img src="{{url_for('static', filename='gear.png')}}" style="width: 16px; height: 16px;" alt="Config">
         </button>
         <button type="button" id="histogram-add-button-{{id}}">Graph Histogram</button>
-        <input type="radio" name="histogram-size-{{id}}" value="small">Small
-        <input type="radio" name="histogram-size-{{id}}" value="medium" checked>Medium
-        <input type="radio" name="histogram-size-{{id}}" value="large">Large
+        <input type="radio" id="histogram-size-button-small-{{id}}" name="histogram-size-{{id}}" value="small">Small
+        <input type="radio" id="histogram-size-button-medium-{{id}}" name="histogram-size-{{id}}" value="medium" checked>Medium
+        <input type="radio" id="histogram-size-button-large-{{id}}" name="histogram-size-{{id}}" value="large">Large
         <button type="button" style="float: right;" id="histogram-remove-button-{{id}}">X</button>
 
         <div>

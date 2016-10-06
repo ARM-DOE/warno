@@ -55,6 +55,7 @@ class User(db.Model, UserMixin):
     location = db.Column(db.String)
     position = db.Column(db.String)
     authorizations = db.Column(db.String)
+    dashboard = db.Column(db.String)
 
     def get_id(self):
         return unicode(self.id)

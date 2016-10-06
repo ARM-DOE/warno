@@ -15,9 +15,9 @@
             <img src="{{url_for('static', filename='gear.png')}}" style="width: 16px; height: 16px;" alt="Config">
         </button>
         <button type="button" id="inst-graph-add-button-{{id}}">Graph Instrument Graph</button>
-        <input type="radio" name="inst-graph-size-{{id}}" value="small">Small
-        <input type="radio" name="inst-graph-size-{{id}}" value="medium" checked>Medium
-        <input type="radio" name="inst-graph-size-{{id}}" value="large">Large
+        <input type="radio" id="instrument-size-button-small-{{id}}" name="inst-graph-size-{{id}}" value="small">Small
+        <input type="radio" id="instrument-size-button-medium-{{id}}" name="inst-graph-size-{{id}}" value="medium" checked>Medium
+        <input type="radio" id="instrument-size-button-large-{{id}}" name="inst-graph-size-{{id}}" value="large">Large
         <button type="button" style="float: right;" id="inst-graph-remove-button-{{id}}" title="Remove Graph Widget">X</button>
 
         <div>

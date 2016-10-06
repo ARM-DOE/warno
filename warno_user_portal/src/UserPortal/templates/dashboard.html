@@ -10,6 +10,10 @@ Dashboard
 <script type="text/javascript" src="{{ url_for('static', filename='widget_manager.js')}}"></script>
 
 <div style="width: 400px; border: 2px solid black; background: lightGray; margin-left: auto; margin-right: auto; padding: 10px;" align="center">
+    {% if current_user.is_active %}
+        Esteemed {{ current_user.username }}
+        <br>
+    {% endif %}
     Add a Widget:
     <br>
     <select id="widget-type" name="widget-type">
@@ -19,6 +23,11 @@ Dashboard
         <option value="histogram">Histogram</option>
     </select>
     <button type="button" onclick="newWidget()">Add</button>
+    {% if current_user.is_active %}
+        <br>
+        <button type="button" onclick="saveDashboard()">Save Dashboard</button>
+        <button type="button" onclick="loadDashboard()">Load Dashboard</button>
+    {% endif %}
 </div>
 
 <div id="widget-compendium">
@@ -30,22 +39,29 @@ Dashboard
 {% block script %}
 <script>
     containerDiv = document.getElementById('widget-compendium');
-    widgetManager = new WidgetManager(containerDiv, "{{url_for('dashboard.widget_controller')}}");
+    widgetManager = new WidgetManager(containerDiv, "{{url_for('dashboard.widget_controller')}}",
+                                      '{{ url_for('dashboard.widget_log_viewer') }}',
+                                      '{{ url_for('dashboard.widget_status_plot') }}',
+                                      "{{url_for('instruments.generate_instrument_graph')}}");
     widget_index = 0;
 
     function newWidget() {
         widType = document.getElementById('widget-type').value;
         if (widType == 'instrument_graph') {
-            console.log("ALPHA STRIKE ON URL");
-            console.log("{{url_for('instruments.generate_instrument_graph')}}");
-            widgetManager.addInstrumentGraph("{{url_for('instruments.generate_instrument_graph')}}");
+            widgetManager.addInstrumentGraph(null);
         } else if (widType == 'log_viewer') {
-            widgetManager.addLogViewer('{{ url_for('dashboard.widget_log_viewer') }}');
+            widgetManager.addLogViewer();
         } else if (widType == 'status_plot') {
-            widgetManager.addStatusPlot('{{ url_for('dashboard.widget_status_plot') }}');
+            widgetManager.addStatusPlot();
         } else if (widType == 'histogram') {
-            widgetManager.addHistogram();
+            widgetManager.addHistogram(null);
         }
+    }
+    function saveDashboard() {
+        widgetManager.saveDashboard('{{url_for('dashboard.save_dashboard', user_id=current_user.id)}}');
+    }
+    function loadDashboard() {
+        widgetManager.loadDashboard('{{url_for('dashboard.load_dashboard', user_id=current_user.id)}}');
     }
 
 </script>
