@@ -11,11 +11,14 @@ from sqlalchemy.orm import aliased
 from flask_mail import Mail
 from flask_user import UserManager, SQLAlchemyAdapter
 
+import flask.ext.restless
+
 from UserPortal import app
 from WarnoConfig import config
 from WarnoConfig.models import db, MyRegisterForm
 from WarnoConfig.models import PulseCapture, ProsensingPAF, Instrument, InstrumentLog, Site, User, ValidColumn
 from WarnoConfig.utility import status_code_to_text
+from WarnoConfig.models import EventWithText, EventWithValue
 
 is_central = 0
 
@@ -55,6 +58,16 @@ mail = Mail(app)
 
 db_adapter = SQLAlchemyAdapter(db, User)
 user_manager = UserManager(db_adapter, app, register_form=MyRegisterForm)
+
+## Register API...need to place this somewhere better.
+api_manager = flask.ext.restless.APIManager(app, flask_sqlalchemy_db=db)
+user_blueprint = api_manager.create_api(User, methods=['GET'], exclude_columns=['password'])
+site_blueprint = api_manager.create_api(Site, methods=['GET'])
+instrument_blueprint = api_manager.create_api(Instrument, methods=['GET'])
+log_blueprint = api_manager.create_api(InstrumentLog, methods=['GET'])
+event_with_text_blueprint = api_manager.create_api(EventWithText, methods=['GET'])
+event_with_value_blueprint = api_manager.create_api(EventWithValue, methods=['GET'])
+ProsensingPAF_blueprint = api_manager.create_api(ProsensingPAF, methods=['GET'])
 
 
 # Logging Setup
