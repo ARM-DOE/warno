@@ -66,6 +66,16 @@ class User(db.Model, UserMixin):
         return True
 
 
+class Dashboard(db.Model):
+    __tablename__ = "dashboards"
+    id = db.Column("dashboard_id", db.Integer, primary_key=True)
+    name = db.Column(db.String, nullable=False, default="")
+    schematic = db.Column(db.String, nullable=False, default="")
+    private = db.Column(db.Boolean, nullable=False, default=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.user_id"), nullable=True)
+    user = db.relationship(User)
+
+
 class EventCode(db.Model):
     __tablename__ = "event_codes"
 

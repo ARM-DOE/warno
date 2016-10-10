@@ -8,6 +8,8 @@ import os
 
 from flask import Flask, request, render_template, redirect, url_for
 from flask_migrate import Migrate, upgrade
+from flask_migrate import migrate as db_migrate
+from flask_migrate import downgrade
 
 from WarnoConfig import config
 from WarnoConfig import utility
@@ -776,6 +778,9 @@ def initialize_database():
             # If it is not a test database, first attempt to load database from an existing postgres dumpfile
 
         upgrade(directory=migration_path)
+        # db_migrate(directory=migration_path) # These functions can be used instead of upgrade for Flask Migrate
+        # downgrade(directory=migration_path)
+        # exit(0)
 
         # If there there are no users in the database (which any active db should have users) and it is not a test db,
         # attempt to load in a dumpfile.

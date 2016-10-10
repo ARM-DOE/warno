@@ -1,7 +1,10 @@
 // Contains, creates and removes different widgets.
-function WidgetManager(containerDiv, controllerUrl) {
+function WidgetManager(containerDiv, controllerUrl, logViewerURL, statusPlotURL, genGraphURL) {
     this.containerDiv = containerDiv;
     this.controllerUrl = controllerUrl;
+    this.logViewerURL = logViewerURL;
+    this.statusPlotURL = statusPlotURL;
+    this.genGraphURL = genGraphURL;
     this.newWidgetId = 0;
     this.widgets = [];
 
@@ -15,6 +18,40 @@ WidgetManager.prototype.tick = function(){
     }
 };
 
+WidgetManager.prototype.saveDashboard = function() {
+    this.removeInactive();
+
+    var payload = [];
+    for (i = 0; i < this.widgets.length; i++) {
+        payload.push(this.widgets[i].saveDashboard());
+    }
+    return JSON.stringify(payload);
+};
+
+WidgetManager.prototype.loadDashboard = function(dashboardSchematic) {
+    this.removeWidgets();
+    this.removeInactive();
+    // Build objects from the returned dashboard configuration
+    for (var i = 0; i < dashboardSchematic.length; i ++) {
+        if (dashboardSchematic[i]["type"] == "LogViewer") {
+            this.addLogViewer();
+            var newLogViewer = this.widgets[this.widgets.length - 1];
+            newLogViewer.loadDashboard(dashboardSchematic[i]["data"]);
+        }
+        if (dashboardSchematic[i]["type"] == "StatusPlot") {
+            this.addStatusPlot();
+            var newStatusPlot = this.widgets[this.widgets.length - 1];
+            newStatusPlot.loadDashboard(dashboardSchematic[i]["data"]);
+        }
+        if (dashboardSchematic[i]["type"] == "Histogram") {
+            this.addHistogram(dashboardSchematic[i]["data"]);
+        }
+        if (dashboardSchematic[i]["type"] == "InstrumentGraph") {
+            this.addInstrumentGraph(dashboardSchematic[i]["data"]);
+        }
+    }
+};
+
 WidgetManager.prototype.removeInactive = function() {
     for (i = 0; i < this.widgets.length; i++){
         if(!this.widgets[i].active){
@@ -24,29 +61,36 @@ WidgetManager.prototype.removeInactive = function() {
     }
 }
 
-WidgetManager.prototype.addLogViewer = function(logViewerURL) {
-    newLogViewer = new LogViewer(this.newWidgetId, this.containerDiv, this.controllerUrl, logViewerURL);
+WidgetManager.prototype.addLogViewer = function() {
+    newLogViewer = new LogViewer(this.newWidgetId, this.containerDiv, this.controllerUrl, this.logViewerURL);
     this.widgets.push(newLogViewer);
     this.newWidgetId += 1;
 };
 
-WidgetManager.prototype.addStatusPlot = function(statusPlotURL) {
-    newStatusPlot = new StatusPlot(this.newWidgetId, this.containerDiv, this.controllerUrl, statusPlotURL);
+WidgetManager.prototype.addStatusPlot = function() {
+    newStatusPlot = new StatusPlot(this.newWidgetId, this.containerDiv, this.controllerUrl, this.statusPlotURL);
     this.widgets.push(newStatusPlot);
     this.newWidgetId +=1;
 };
 
-WidgetManager.prototype.addHistogram = function() {
-    newHistogram = new Histogram(this.newWidgetId, this.containerDiv, this.controllerUrl);
+WidgetManager.prototype.addHistogram = function(schematic) {
+    newHistogram = new Histogram(this.newWidgetId, this.containerDiv, this.controllerUrl, schematic);
     this.widgets.push(newHistogram);
     this.newWidgetId +=1;
 };
 
-WidgetManager.prototype.addInstrumentGraph = function(genGraphURL) {
-    newInstrumentGraph = new InstrumentGraph(this.newWidgetId, this.containerDiv, this.controllerUrl, genGraphURL);
+WidgetManager.prototype.addInstrumentGraph = function(schematic) {
+    newInstrumentGraph = new InstrumentGraph(this.newWidgetId, this.containerDiv, this.controllerUrl, this.genGraphURL, schematic);
     this.widgets.push(newInstrumentGraph);
     this.newWidgetId += 1;
 };
+
+WidgetManager.prototype.removeWidgets = function() {
+    for (var i = this.widgets.length; i > 0; i--){
+        this.widgets[i - 1].remove();
+        this.widgets.splice(i - 1, 1);
+    }
+}
 
 
 
@@ -54,16 +98,20 @@ WidgetManager.prototype.addInstrumentGraph = function(genGraphURL) {
 
 // Log Display Section
 function LogViewer(id, containerDiv, controllerUrl, logViewerURL) {
+    this.finishedLoading = true;
     this.id = id;
-    this.active = true; // When no longer active, should be removed from the parent manager.
+    this.active = true;                       // When no longer active, should be removed from the parent manager.
     this.div = document.createElement('div');
     this.div.className = 'wd';
     this.div.innerHTML = "Log Viewer";
     this.div.id = "log-viewer-" + this.id;
-    this.logViewerURL = logViewerURL; // URL for updating the status plot.
-    this.updateFrequency = 1; // How often in minutes this object will update.
+    this.logViewerURL = logViewerURL;         // URL for updating the status plot.
+    this.updateFrequency = 1;                 // How often in minutes this object will update.
     this.updateCounter = 0;
+    this.instrumentId = -1;                   // -1 Translates to 'All' logs
+    this.maxLogs = 5;
     this.activeCounter = false;
+    this.quickDisplay = false;
 
 
     containerDiv.appendChild(this.div);
@@ -81,7 +129,27 @@ LogViewer.prototype.tick = function() {
     }
 };
 
-LogViewer.prototype.removeLogViewer = function() {
+LogViewer.prototype.saveDashboard = function() {
+    var data = {"instrumentId": this.instrumentId, "maxLogs": this.maxLogs}
+    return {"type": "LogViewer", "data": data}
+}
+
+LogViewer.prototype.loadDashboard = function(schematic) {
+    this.finishedLoading = false;
+    this.quickDisplay = true;  // Forces the full view generation in the ajaxLoadUrl from the LogViewer Creation
+    this.instrumentId = schematic["instrumentId"];
+    this.maxLogs = schematic["maxLogs"];
+    var instrumentIdSelect = document.getElementById("log-viewer-instrument-selector-" + this.id);
+    if (instrumentIdSelect) {  // If the element exists, update and generate, if not, should be taken care of by setting quickDisplay above.
+        var maxLogsInput = document.getElementById("log-viewer-max-logs-" + this.id);
+        instrumentIdSelect.value = this.instrumentId;
+        maxLogsInput.value = this.maxLogs;
+        this.generateLogViewer();
+    }
+
+}
+
+LogViewer.prototype.remove = function() {
     element = document.getElementById('log-viewer-' + this.id);
     element.parentNode.removeChild(element);
     this.active = false;
@@ -99,9 +167,17 @@ LogViewer.prototype.ajaxLoadUrl = function(element, url) {
             var addButton = document.getElementById("add-log-viewer-button-" + that.id);
             addButton.onclick = function () { that.generateLogViewer(); };
             var removeButton = document.getElementById("remove-log-viewer-button-" + that.id);
-            removeButton.onclick = function () { that.removeLogViewer(); };
-        }
+            removeButton.onclick = function () { that.remove(); };
 
+            var instrumentIdSelect = document.getElementById("log-viewer-instrument-selector-" + that.id);
+            var maxLogsInput = document.getElementById("log-viewer-max-logs-" + that.id);
+            instrumentIdSelect.value = that.instrumentId;
+            maxLogsInput.value = that.maxLogs;
+
+            if (that.quickDisplay === true) {  // If quick display was set, will immediately display with current setup.
+                that.generateLogViewer()       // It's an ugly workaround for ajax behaviour for dashboard loading
+            }
+        }
     };
 
     xmlHttp.open("GET", url, true); // true for asynchronous
@@ -114,9 +190,9 @@ LogViewer.prototype.generateLogViewer = function() {
     this.activeCounter = true;
 
     var fillElement = document.getElementById("log-viewer-container-" + this.id);
-    var instrumentId = document.getElementById("log-viewer-instrument-selector-" + this.id).value;
-    var maxLogs = document.getElementById("log-viewer-max-logs-" + this.id).value;
-    var url = this.logViewerURL + '?instrument_id=' + instrumentId + '&max_logs=' + maxLogs;
+    this.instrumentId = document.getElementById("log-viewer-instrument-selector-" + this.id).value;
+    this.maxLogs = document.getElementById("log-viewer-max-logs-" + this.id).value;
+    var url = this.logViewerURL + '?instrument_id=' + this.instrumentId + '&max_logs=' + this.maxLogs;
 
     ajaxLoadUrl(fillElement, url)
 };
@@ -128,15 +204,17 @@ LogViewer.prototype.generateLogViewer = function() {
 // Status Plot Section
 function StatusPlot(id, containerDiv, controllerUrl, statusPlotURL) {
     this.id = id;
-    this.active = true; // When no longer active, should be removed from the parent manager.
+    this.active = true;                       // When no longer active, should be removed from the parent manager.
     this.div = document.createElement('div');
     this.div.className = 'wd';
     this.div.innerHTML = "Status Plot";
     this.div.id = "status-plot-" + this.id;
-    this.statusPlotURL = statusPlotURL; // URL for updating the status plot.
-    this.updateFrequency = 1; // How often in minutes this object will update.
+    this.statusPlotURL = statusPlotURL;       // URL for updating the status plot.
+    this.updateFrequency = 1;                 // How often in minutes this object will update.
     this.updateCounter = 0;
+    this.siteId = -1;                         // Defaults to -1, meaning all sites
     this.activeCounter = false;
+    this.quickDisplay = false;                // quickDisplay allows for ajax friendly loading of the dashboard
 
     this.currentId = 0;
 
@@ -155,7 +233,23 @@ StatusPlot.prototype.tick = function() {
     }
 };
 
-StatusPlot.prototype.removeStatusPlot = function() {
+StatusPlot.prototype.saveDashboard = function() {
+    var data = {"siteId": this.siteId}
+    return {"type": "StatusPlot", "data": data}
+}
+
+StatusPlot.prototype.loadDashboard = function(schematic) {
+    this.quickDisplay = true;  // Forces the full view generation in the ajaxLoadUrl from the StatusPlot Creation
+    this.siteId = schematic["siteId"];
+    var siteIdSelect = document.getElementById("status-plot-site-selector-" + this.id);
+    if (siteIdSelect) {  // If the element exists, update and generate, if not, should be taken care of by setting quickDisplay above.
+        siteIdSelect.value = this.siteId;
+        this.generateStatusPlot();
+    }
+
+}
+
+StatusPlot.prototype.remove = function() {
     element = document.getElementById('status-plot-' + this.id);
     element.parentNode.removeChild(element);
     this.active = false;
@@ -173,7 +267,14 @@ StatusPlot.prototype.ajaxLoadUrl = function(element, url) {
             var addButton = document.getElementById("add-status-plot-button-" + that.id);
             addButton.onclick = function () { that.generateStatusPlot(); };
             var removeButton = document.getElementById("remove-status-plot-button-" + that.id);
-            removeButton.onclick = function () { that.removeStatusPlot(); };
+            removeButton.onclick = function () { that.remove(); };
+
+            var siteIdSelect = document.getElementById("status-plot-site-selector-" + that.id);
+            siteIdSelect.value = that.siteId;
+
+            if (that.quickDisplay === true) {  // If quick display was set, will immediately display with current setup.
+                that.generateStatusPlot()       // It's an ugly workaround for ajax behaviour for dashboard loading
+            }
         }
 
     };
@@ -188,8 +289,8 @@ StatusPlot.prototype.generateStatusPlot = function() {
     this.activeCounter = true;
 
     var fillElement = document.getElementById("status-plot-container-" + this.id);
-    var siteId = document.getElementById("status-plot-site-selector-" + this.id).value;
-    var url = this.statusPlotURL + '?site_id=' + siteId;
+    this.siteId = document.getElementById("status-plot-site-selector-" + this.id).value;
+    var url = this.statusPlotURL + '?site_id=' + this.siteId;
 
     ajaxLoadUrl(fillElement, url)
 };
@@ -198,7 +299,8 @@ StatusPlot.prototype.generateStatusPlot = function() {
 
 
 // Histogram Section
-function Histogram(id, containerDiv, controllerUrl) {
+// If schematic is null, loads up with defaults.  If schematic exists, loads the schematic and displays the histogram
+function Histogram(id, containerDiv, controllerUrl, schematic) {
     this.id = id;
     this.active = true;       // When no longer active, should be removed from the parent manager.
     this.div = document.createElement('div');
@@ -207,17 +309,52 @@ function Histogram(id, containerDiv, controllerUrl) {
     this.div.id = "histogram-" + this.id;
     this.instrumentList = []; // Filled by ajax request
     this.columnList = [];     // Filled by ajax request
-    this.updateFrequency = 5; // How often in minutes this object will update.
+
     this.updateCounter = 0;
     this.activeCounter = false;
-    this.binNumber = 0;
-    this.colorRed = 0;
-    this.colorGreen = 50;
-    this.colorBlue = 226;
+
+    var validSchematic = false;
+    if (schematic) {
+        validSchematic = true;
+        this.controllerHidden = schematic["controllerHidden"];
+        this.updateFrequency = schematic["updateFrequency"]; // How often in minutes this object will update.
+
+        this.binNumber = schematic["binNumber"];
+        this.colorRed = schematic["colorRed"];
+        this.colorGreen = schematic["colorGreen"];
+        this.colorBlue = schematic["colorBlue"];
+
+        this.startUTC = schematic["startUTC"];
+        this.endUTC = schematic["endUTC"];
+        this.lowerLimit = schematic["lowerLimit"];
+        this.upperLimit = schematic["upperLimit"];
+        this.graphSize = schematic["graphSize"];
+
+        this.instrumentId = schematic["instrumentId"];
+        this.attribute = schematic["attribute"];
+    } else {
+        this.controllerHidden = false;
+        this.updateFrequency = 5; // How often in minutes this object will update.
+
+        this.binNumber = 0;
+        this.colorRed = 0;
+        this.colorGreen = 50;
+        this.colorBlue = 226;
+
+        this.startUTC = "01/01/2000 00:00";
+        this.endUTC = "01/01/2170 00:00:00";
+        this.lowerLimit = "";
+        this.upperLimit = "";
+        this.graphSize = "medium";
+
+        this.instrumentId = null;
+        this.attribute = null;
+    }
 
     containerDiv.appendChild(this.div);
     var parameterizedUrl = controllerUrl + "?widget_name=histogram&widget_id=" + this.id;
-    this.ajaxLoadUrl(this.div, parameterizedUrl);
+    // If there was a valid schematic, ajaxLoadUrl will load from the schematic rather than set defaults.
+    this.ajaxLoadUrl(this.div, parameterizedUrl, validSchematic);
 };
 
 Histogram.prototype.tick = function() {
@@ -230,7 +367,27 @@ Histogram.prototype.tick = function() {
     }
 };
 
-Histogram.prototype.ajaxLoadUrl = function(element, url) {
+Histogram.prototype.saveDashboard = function() {
+    data = {
+        "controllerHidden": this.controllerHidden,
+        "binNumber": this.binNumber,
+        "colorRed": this.colorRed,
+        "colorGreen": this.colorGreen,
+        "colorBlue": this.colorBlue,
+        "startUTC": this.startUTC,
+        "endUTC": this.endUTC,
+        "lowerLimit": this.lowerLimit,
+        "upperLimit": this.upperLimit,
+        "graphSize": this.graphSize,
+        "instrumentId": this.instrumentId,
+        "attribute": this.attribute,
+        "updateFrequency": this.updateFrequency
+    }
+
+    return {"type": "Histogram", "data": data}
+}
+
+Histogram.prototype.ajaxLoadUrl = function(element, url, loadDashboard) {
     var xmlHttp = new XMLHttpRequest();
     var that = this;
     xmlHttp.onreadystatechange = function() {
@@ -243,7 +400,7 @@ Histogram.prototype.ajaxLoadUrl = function(element, url) {
             that.instrumentList = responseDict["json"]["instrument_list"];
             that.columnList = responseDict["json"]["column_list"];
 
-            that.initializeElements();
+            that.initializeElements(loadDashboard);
         }
 
     };
@@ -254,20 +411,36 @@ Histogram.prototype.ajaxLoadUrl = function(element, url) {
     //
 };
 
-Histogram.prototype.initializeElements = function () {
+Histogram.prototype.initializeElements = function (loadDashboard) {
     var that = this;  // Substitution allows inline function assignments to reference 'this' rather than themselves
 
-    // Defaults the graph beginning time to 7 days ago
-    updateStartTime(that.id, 7);
+
+    if (loadDashboard) {
+        document.getElementById("datetime-input-start-" + that.id).value = that.startUTC;
+        document.getElementById("datetime-input-end-" + that.id).value = that.endUTC;
+
+        document.getElementById("histogram-upper-limit-" + that.id).value = parseFloat(that.upperLimit);
+        document.getElementById("histogram-lower-limit-" + that.id).value = parseFloat(that.lowerLimit);
+
+        document.getElementById("histogram-size-button-" + that.graphSize + "-" + that.id).checked = true;
+
+        if (that.controllerHidden) {
+            that.hideController();
+        }
+    } else {
+        // Defaults the graph beginning time to 7 days ago
+        updateStartTime(that.id, 7);
+        document.getElementById("datetime-input-end-" + that.id).value = that.endUTC;
+    }
 
     // Selector for which instrument the attributes are for
     // When changed should update all options for attribute selector
     var selector = document.getElementById("instrument-select-" + that.id);
-    selector.onchange = function () { that.updateSelect(); };
+    selector.onchange = function () { that.updateSelect(false); };
 
     // Button to remove Histogram widget
     var removeButton = document.getElementById("histogram-remove-button-" + that.id);
-    removeButton.onclick = function () { that.removeHistogram(); };
+    removeButton.onclick = function () { that.remove(); };
 
     // Button to generate Histogram from data parameter controls
     var addButton = document.getElementById("histogram-add-button-" + that.id);
@@ -288,12 +461,22 @@ Histogram.prototype.initializeElements = function () {
     configApplyButton.onclick = function () { that.applyConfig(); };
 
     // Update attribute selector with options
-    that.updateSelect();
+    that.updateSelect(loadDashboard);
+
+    if (loadDashboard) {
+        that.generateHistogram()
+    }
 }
 
-Histogram.prototype.updateSelect = function() {
-    instrumentSelect = document.getElementById("instrument-select-" + this.id);
-    attributeSelect = document.getElementById("attribute-select-" + this.id);
+Histogram.prototype.updateSelect = function(loadDashboard) {
+    var instrumentSelect = document.getElementById("instrument-select-" + this.id);
+    var attributeSelect = document.getElementById("attribute-select-" + this.id);
+
+    if (loadDashboard){
+        if (this.instrumentId) {
+            instrumentSelect.value = this.instrumentId;
+        }
+    }
 
     removeOptions(attributeSelect);
     instrumentId = instrumentSelect.value;
@@ -306,9 +489,16 @@ Histogram.prototype.updateSelect = function() {
         newOption.text = instrumentValidColumns[i];
         attributeSelect.add(newOption);
     }
+
+    if (loadDashboard){
+        if (this.attribute) {
+            attributeSelect.value = this.attribute;
+        }
+    }
+
 }
 
-Histogram.prototype.removeHistogram = function () {
+Histogram.prototype.remove = function () {
     element = document.getElementById('histogram-' + this.id);
     element.parentNode.removeChild(element);
     this.active = false;
@@ -323,31 +513,30 @@ Histogram.prototype.generateHistogram = function() {
 
     var instrumentSelect = document.getElementById("instrument-select-" + this.id);
     var attributeSelect = document.getElementById("attribute-select-" + this.id);
-    var instrumentId = instrumentSelect.value;
+    this.instrumentId = instrumentSelect.value;
     var instrumentName = instrumentSelect.options[instrumentSelect.selectedIndex].text;
-    var attribute = attributeSelect.value;
-    var startUTC = document.getElementById("datetime-input-start-" + this.id).value;
-    var endUTC = document.getElementById("datetime-input-end-" + this.id).value;
-    var upperLimit = parseFloat(document.getElementById("histogram-upper-limit-" + this.id).value);
-    var lowerLimit = parseFloat(document.getElementById("histogram-lower-limit-" + this.id).value);
+    this.attribute = attributeSelect.value;
+    this.startUTC = document.getElementById("datetime-input-start-" + this.id).value;
+    this.endUTC = document.getElementById("datetime-input-end-" + this.id).value;
+    this.upperLimit = parseFloat(document.getElementById("histogram-upper-limit-" + this.id).value);
+    this.lowerLimit = parseFloat(document.getElementById("histogram-lower-limit-" + this.id).value);
 
     // Size from radio set
-    var graphSize = "medium";
     var graphWidth = 500;
     var graphHeight = 400;
     var graphSizeElement = document.querySelector('input[name="histogram-size-' + this.id + '"]:checked');
     if (graphSizeElement) {
-        graphSize = graphSizeElement.value;
+        this.graphSize = graphSizeElement.value;
     }
 
     // Set sizes according to selection
-    if (graphSize == "small") {
+    if (this.graphSize == "small") {
         graphWidth = 350;
         graphHeight = 280;
-    } else if (graphSize == "medium") {
+    } else if (this.graphSize == "medium") {
         graphWidth = 500;
         graphHeight = 400;
-    } else if (graphSize == "large") {
+    } else if (this.graphSize == "large") {
         graphWidth = 750;
         graphHeight = 600;
     }
@@ -358,11 +547,8 @@ Histogram.prototype.generateHistogram = function() {
         keys.push(key_elems[i].value);
     }
 
-    startStr = document.getElementById("datetime-input-start-" + this.id).value;
-    start = new Date(startStr + " UTC");
-
-    endStr = document.getElementById("datetime-input-end-" + this.id).value;
-    end = new Date(endStr + " UTC");
+    start = new Date(this.startUTC + " UTC");
+    end = new Date(this.endUTC + " UTC");
 
     var that = this; // Allows 'this' object to be accessed correctly within the xmlhttp function.
                      // Inside the function 'this' references the function rather than the Histogram object we want.
@@ -394,17 +580,15 @@ Histogram.prototype.generateHistogram = function() {
             }
 
             // If upper and lower limits are set and valid, set the bin and range limits to them
-            if (!isNaN(lowerLimit)
-                && lowerLimit != ""
-                && !isNaN(upperLimit)
-                && upperLimit != "")
+            if (!isNaN(that.lowerLimit)
+                && that.lowerLimit != ""
+                && !isNaN(that.upperLimit)
+                && that.upperLimit != "")
             {
-                histogramRange = [lowerLimit, upperLimit];
+                histogramRange = [that.lowerLimit, that.upperLimit];
                 useAutorange = false;
-                lowerBin = lowerLimit;
-                upperBin = upperLimit;
-
-
+                lowerBin = that.lowerLimit;
+                upperBin = that.upperLimit;
             }
 
             // Calculate bin size from either the default limits or the custom limits
@@ -418,7 +602,6 @@ Histogram.prototype.generateHistogram = function() {
                         color: 'rgba(' + that.colorRed + ', ' + that.colorGreen + ', ' + that.colorBlue + ', 0.7)',
                     },
 
-                    //nbinsx : nbins,
                     autobinx: false,
                     xbins: {
                         start: lowerBin,
@@ -435,7 +618,7 @@ Histogram.prototype.generateHistogram = function() {
             margin: {t: 50, r: 50, b: 50, l: 50, pad:10},
             hovermode: 'closest',
             bargap: 0,
-            title: instrumentName + ":" + attribute,
+            title: instrumentName + ":" + that.attribute,
             xaxis: {
                 //domain: [-20, 30],
                 autorange: useAutorange,
@@ -459,10 +642,10 @@ Histogram.prototype.generateHistogram = function() {
 
 
     var url = "/generate_instrument_graph" +
-              "?keys=" + attribute +
-              "&instrument_id=" + instrumentId +
-              "&start=" + startUTC +
-              "&end=" + endUTC;
+              "?keys=" + this.attribute +
+              "&instrument_id=" + this.instrumentId +
+              "&start=" + this.startUTC +
+              "&end=" + this.endUTC;
     xmlhttp.open("POST", url, true);
 
     //Send out the request
@@ -550,11 +733,13 @@ Histogram.prototype.applyConfig = function () {
 Histogram.prototype.hideController = function () {
     element = document.getElementById("histogram-controller-" + this.id);
     element.style.display = "none";
+    this.controllerHidden = true;
 };
 
 Histogram.prototype.revealController = function () {
     element = document.getElementById("histogram-controller-" + this.id);
     element.style.display = "";
+    this.controllerHidden = false;
 };
 
 Histogram.prototype.openConfig = function () {
@@ -594,7 +779,7 @@ Histogram.prototype.closeConfig = function () {
 
 
 // Instrument Graph Section
-function InstrumentGraph(id, containerDiv, controllerUrl, genGraphURL) {
+function InstrumentGraph(id, containerDiv, controllerUrl, genGraphURL, schematic) {
     this.id = id;
     this.active = true;            // When no longer active, should be removed from the parent manager.
     this.div = document.createElement('div');
@@ -603,23 +788,38 @@ function InstrumentGraph(id, containerDiv, controllerUrl, genGraphURL) {
     this.div.id = "instrument-graph-" + this.id;
     this.instrumentList = [];      // Filled by ajax request
     this.columnList = [];          // Filled by ajax request
-    this.graphSize = "medium";
-    this.graphWidth = 500;
-    this.graphHeight = 400;
     this.genGraphURL = genGraphURL;
-    this.updateFrequency = 1;      // How often in minutes this object will update.
     this.updateCounter = 0;
     this.nextAttributeId = 1;      // 0 is already taken by the template html.
-    this.instrumentSelect = null; //
-
-    this.keys = [];                // Given attribute keys to graph
-    this.beginningTime = null;     // Start time for the next data request. Updates each request to avoid duplicates
-    this.endTime = null;           // End time for the next data request
-    this.originTime = null;        // Origin time is the beginning time at graph creation, for aggregate stats
     this.graphData = [];
     this.graphTitle = null;
     this.dygraph = ""
-    this.rollPeriod = 3;           // Roll period for the Dygraph
+
+    var validSchematic = false;
+    if (schematic) {
+        validSchematic = true;
+        this.controllerHidden = schematic["controllerHidden"];
+        this.statFrequency = schematic["statFrequency"];
+        this.instrumentId = schematic["instrumentId"];
+        this.updateFrequency = schematic["updateFrequency"];
+        this.graphSize = schematic["graphSize"];
+        this.keys = schematic["attributes"];
+        this.beginningTime = new Date(schematic["beginningUTC"] + " UTC");
+        this.endTime = new Date(schematic["endUTC"] + " UTC");
+        this.originTime = this.beginningTime;
+        this.rollPeriod = schematic["rollPeriod"];
+    } else {
+        this.controllerHidden = false;
+        this.statFrequency = 10;       // How often the stats will be generated. Every X requests for data, update stats
+        this.instrumentId = null;      //
+        this.updateFrequency = 1;      // How often in minutes this object will update.
+        this.graphSize = "medium";     //
+        this.keys = [];                // Given attribute keys to graph
+        this.beginningTime = null;     // Start time for the next data request. Updates each request to avoid duplicates
+        this.endTime = null;           // End time for the next data request
+        this.originTime = null;        // Origin time is the beginning time at graph creation, for aggregate stats
+        this.rollPeriod = 3;           // Roll period for the Dygraph
+    }
 
     // Statistic fields, only handled if stats_enabled is true
     this.statsEnabled = false;
@@ -630,7 +830,6 @@ function InstrumentGraph(id, containerDiv, controllerUrl, genGraphURL) {
     this.median = 0;
     this.average = 0;
     this.stdDeviation = 0;
-    this.statFrequency = 10;  // How often the stats will be generated. Every X requests for data, update stats
     this.forceRedraw = false; // When set to true, redraws the whole Dygraph.  Used to update stat lines
     this.statCount = this.statFrequency - 1; // Counter for requests without stat generation.
                                              // Setting this way guarantees the first request generates stats
@@ -640,7 +839,7 @@ function InstrumentGraph(id, containerDiv, controllerUrl, genGraphURL) {
 
     containerDiv.appendChild(this.div);
     var parameterizedUrl = controllerUrl + "?widget_name=instrument_graph&widget_id=" + this.id;
-    this.ajaxLoadUrl(this.div, parameterizedUrl);
+    this.ajaxLoadUrl(this.div, parameterizedUrl, validSchematic);
 };
 
 InstrumentGraph.prototype.tick = function() {
@@ -654,7 +853,38 @@ InstrumentGraph.prototype.tick = function() {
 
 };
 
-InstrumentGraph.prototype.ajaxLoadUrl = function(element, url) {
+InstrumentGraph.prototype.saveDashboard = function() {
+
+    var day = this.originTime.getUTCDate();
+    var month = this.originTime.getUTCMonth() + 1;
+    var year = this.originTime.getUTCFullYear();
+    var hours = this.originTime.getUTCHours();
+    var minutes = this.originTime.getUTCMinutes();
+    var seconds = this.originTime.getUTCSeconds();
+    var beginningUTC = month + "/" + day + "/" + year + " " + hours + ":" + minutes + ":" + seconds;
+
+    var day = this.endTime.getUTCDate();
+    var month = this.endTime.getUTCMonth() + 1;
+    var year = this.endTime.getUTCFullYear();
+    var hours = this.endTime.getUTCHours();
+    var minutes = this.endTime.getUTCMinutes();
+    var seconds = this.endTime.getUTCSeconds();
+    var endUTC = month + "/" + day + "/" + year + " " + hours + ":" + minutes + ":" + seconds;
+    data = {
+        "controllerHidden": this.controllerHidden,
+        "instrumentId": this.instrumentId,
+        "attributes": this.keys,
+        "updateFrequency": this.updateFrequency,
+        "statFrequency": this.statFrequency,
+        "beginningUTC": beginningUTC,
+        "endUTC": endUTC,
+        "graphSize": this.graphSize,
+        "rollPeriod": this.rollPeriod,
+    }
+    return {"type": "InstrumentGraph", "data": data}
+}
+
+InstrumentGraph.prototype.ajaxLoadUrl = function(element, url, loadDashboard) {
     var xmlHttp = new XMLHttpRequest();
     var that = this;
     xmlHttp.onreadystatechange = function() {
@@ -667,9 +897,7 @@ InstrumentGraph.prototype.ajaxLoadUrl = function(element, url) {
             that.instrumentList = responseDict["json"]["instrument_list"];
             that.columnList = responseDict["json"]["column_list"];
 
-            that.initializeElements();
-
-            that.updateSelect();
+            that.initializeElements(loadDashboard);
         }
 
     };
@@ -680,15 +908,42 @@ InstrumentGraph.prototype.ajaxLoadUrl = function(element, url) {
     //
 };
 
-InstrumentGraph.prototype.initializeElements = function () {
+InstrumentGraph.prototype.initializeElements = function (loadDashboard) {
     var that = this;  // Substitution allows inline function assignments to reference 'this' rather than themselves
 
-    // Defaults the graph beginning time to 7 days ago
-    updateStartTime(that.id, 7);
+    if (loadDashboard) {
+        var day = this.beginningTime.getUTCDate();  // No good way to easily format datetime string
+        var month = this.beginningTime.getUTCMonth() + 1;
+        var year = this.beginningTime.getUTCFullYear();
+        var hours = this.beginningTime.getUTCHours();
+        var minutes = this.beginningTime.getUTCMinutes();
+        var seconds = this.beginningTime.getUTCSeconds();
+        var beginningUTC = month + "/" + day + "/" + year + " " + hours + ":" + minutes + ":" + seconds;
+        document.getElementById("datetime-input-start-" + that.id).value = beginningUTC;
+
+        var day = this.endTime.getUTCDate();       // No good way to easily format datetime string
+        var month = this.endTime.getUTCMonth() + 1;
+        var year = this.endTime.getUTCFullYear();
+        var hours = this.endTime.getUTCHours();
+        var minutes = this.endTime.getUTCMinutes();
+        var seconds = this.endTime.getUTCSeconds();
+        var endUTC = month + "/" + day + "/" + year + " " + hours + ":" + minutes + ":" + seconds;
+        document.getElementById("datetime-input-end-" + that.id).value = endUTC;
+        document.getElementById("instrument-select-" + that.id).value = that.instrumentId;
+
+        document.getElementById("instrument-size-button-" + that.graphSize + "-" + that.id).checked = true;
+
+        if (that.controllerHidden) {
+            that.hideController();
+        }
+    } else {
+        // Defaults the graph beginning time to 7 days ago
+        updateStartTime(that.id, 7);
+    }
 
     //Button to remove this widget
     var removeButton = document.getElementById("inst-graph-remove-button-" + that.id);
-    removeButton.onclick = function () { that.removeInstrumentGraph(); };
+    removeButton.onclick = function () { that.remove(); };
 
     // Button to generate graph from data parameter controls
     var addButton = document.getElementById("inst-graph-add-button-" + that.id);
@@ -696,8 +951,9 @@ InstrumentGraph.prototype.initializeElements = function () {
 
     // Selector for which instrument the attributes are for
     // When changed should update all options for attribute selectors
-    that.instrumentSelect = document.getElementById("instrument-select-" + that.id);
-    that.instrumentSelect.onchange = function () { that.updateSelect(); };
+    var instrumentSelect = document.getElementById("instrument-select-" + that.id);
+    instrumentSelect.onchange = function () { that.updateSelect(false); };
+    that.instrumentId = instrumentSelect.value;
 
     // Button to add another attribute to graph
     var attributeButton = document.getElementById("inst-add-attribute-button-" + that.id);
@@ -722,11 +978,23 @@ InstrumentGraph.prototype.initializeElements = function () {
     configCloseButton.onclick = function () { that.closeConfig(); };
     var configApplyButton = document.getElementById("inst-graph-config-apply-button-" + that.id);
     configApplyButton.onclick = function () { that.applyConfig(); };
+
+    that.updateSelect(loadDashboard);
+
+    if (loadDashboard) {
+        that.generateInstrumentGraph();
+    }
 }
 
-InstrumentGraph.prototype.updateSelect = function() {
-    var instrumentId = this.instrumentSelect.value;
-    var instrumentValidColumns = this.columnList[instrumentId];
+InstrumentGraph.prototype.updateSelect = function(loadDashboard) {
+    var instrumentSelect = document.getElementById("instrument-select-" + this.id);
+    if (loadDashboard) {
+        if (this.instrumentId) {
+            instrumentSelect.value = this.instrumentId;
+        }
+    }
+
+    var instrumentValidColumns = this.columnList[instrumentSelect.value];
     instrumentValidColumns.sort();
 
     for (var j = 0; j < this.selectPairList.length; j++){
@@ -740,9 +1008,22 @@ InstrumentGraph.prototype.updateSelect = function() {
             attributeSelect.add(newOption);
         }
     }
+
+    if (loadDashboard) {
+        if (this.keys) {
+            while (this.keys.length > this.selectPairList.length) {
+                this.addAttribute();
+            }
+            for (var i = 0; i < this.keys.length; i ++) {
+                this.selectPairList[i]["attributeSelect"].value = this.keys[i];
+            }
+        } else {
+            this.selectPairList = [];
+        }
+    }
 }
 
-InstrumentGraph.prototype.removeInstrumentGraph = function() {
+InstrumentGraph.prototype.remove = function() {
     var element = document.getElementById('instrument-graph-' + this.id);
     element.parentNode.removeChild(element);
     this.active = false;
@@ -769,7 +1050,6 @@ InstrumentGraph.prototype.generateInstrumentGraph = function(){
     this.median = 0;
     this.average = 0;
     this.stdDeviation = 0;
-    this.statFrequency = 10;   // How often the stats will be generated. Every X requests for data, update stats
     this.forceRedraw = false;  // When set to true, redraws the whole Dygraph.  Used to update stat lines
     this.statCount = this.statFrequency - 1; // Counter for requests without stat generation.
                                                // Setting this way guarantees the first request generates stats
@@ -779,8 +1059,8 @@ InstrumentGraph.prototype.generateInstrumentGraph = function(){
 
     // Size from radio set
     this.graphSize = "medium";
-    this.graphWidth = 500;
-    this.graphHeight = 400;
+    var graphWidth = 500;
+    var graphHeight = 400;
     var graphSizeElement = document.querySelector('input[name="inst-graph-size-' + this.id + '"]:checked');
 
     if (graphSizeElement) {
@@ -789,14 +1069,14 @@ InstrumentGraph.prototype.generateInstrumentGraph = function(){
 
     // Set sizes according to selection
     if (this.graphSize == "small") {
-        this.graphWidth = 350;
-        this.graphHeight = 280;
+        graphWidth = 350;
+        graphHeight = 280;
     } else if (this.graphSize == "medium") {
-        this.graphWidth = 500;
-        this.graphHeight = 400;
+        graphWidth = 500;
+        graphHeight = 400;
     } else if (this.graphSize == "large") {
-        this.graphWidth = 750;
-        this.graphHeight = 600;
+        graphWidth = 750;
+        graphHeight = 600;
     }
 
     var keyElems = document.getElementsByName("attribute-select-" + this.id);
@@ -823,16 +1103,19 @@ InstrumentGraph.prototype.generateInstrumentGraph = function(){
     this.graphDiv.className = "dashboard_instrument_dygraph";
     this.graphDiv.innerHTML = '<div id = "' + this.graphDivId + '-parent">' +
                          '<div id="' + this.graphDivId +
-                         '" style="width: ' + this.graphWidth + 'px; height: ' + this.graphHeight +
+                         '" style="width: ' + graphWidth + 'px; height: ' + graphHeight +
                          'px; display: inline-block;"></div></div>'
 
     this.dataDivId = "datadiv-" + this.id;
     this.dataDiv = document.createElement('div');
-    this.dataDiv.className = "dashboard_graph_stats"
+    this.dataDiv.className = "dashboard_graph_stats";
+
+    var instrumentSelect = document.getElementById("instrument-select-" + this.id)
+    this.instrumentId = instrumentSelect.value;
 
     // If there is only one attribute graphed, generate a button that allows the user to get stats for the attribute
     if (String(this.keys).split(",").length ==1){
-        this.graphTitle = this.instrumentSelect.options[this.instrumentSelect.selectedIndex].text
+        this.graphTitle = instrumentSelect.options[instrumentSelect.selectedIndex].text
                           + ":" + String(this.keys);
 
         // Clear anything that might be in there already
@@ -867,7 +1150,6 @@ InstrumentGraph.prototype.generateInstrumentGraph = function(){
     this.innerDiv.innerHTML = "<p><br><i>Loading Graph...</i></p>"
 
     this.dygraph = "";
-
     this.updateInstrumentGraph();
 }
 
@@ -904,6 +1186,20 @@ InstrumentGraph.prototype.addAttribute = function () {
     attributeDiv.appendChild(attributeSpan);
     attributeSpan.appendChild(attributeSelect);
 
+    // Pieces from updateSelect to update only the new attribute
+    instrumentSelect = document.getElementById("instrument-select-" + this.id);
+    var instrumentValidColumns = this.columnList[instrumentSelect.value];
+    instrumentValidColumns.sort();
+    removeOptions(attributeSelect);
+
+    for (var i = 0; i < instrumentValidColumns.length; i++){
+        newOption = document.createElement("option");
+        newOption.value = instrumentValidColumns[i];
+        newOption.text = instrumentValidColumns[i];
+        attributeSelect.add(newOption);
+    }
+
+
     removeButton.id = "inst-remove-attribute-button-" + this.id + "-" + this.nextAttributeId;
     var that = this;
     var functionParameter = that.nextAttributeId;
@@ -923,7 +1219,6 @@ InstrumentGraph.prototype.addAttribute = function () {
 
     this.selectPairList.push({ "id": this.nextAttributeId, "attributeSelect": attributeSelect,
                                "removeButton": removeButton });
-    this.updateSelect();
 
     this.nextAttributeId += 1;
 }
@@ -1052,7 +1347,7 @@ InstrumentGraph.prototype.updateInstrumentGraph = function() {
     var thisGraph = this;
     var xmlhttp = new XMLHttpRequest();
     xmlhttp.onreadystatechange = function() {
-        //After the asyncronous request successfully returns
+        //After the asynchronous request successfully returns
         if (xmlhttp.readyState == 4 && xmlhttp.status == 200)
         {
             //Pull out the response text from the request
@@ -1099,7 +1394,7 @@ InstrumentGraph.prototype.updateInstrumentGraph = function() {
 
     var url = this.genGraphURL +
               "?keys=" + this.keys +
-              "&instrument_id=" + this.instrumentSelect.value +
+              "&instrument_id=" + this.instrumentId +
               "&start=" + startUTC +
               "&end=" + endUTC +
               "&origin=" + originUTC +
@@ -1170,11 +1465,13 @@ InstrumentGraph.prototype.applyConfig = function () {
 InstrumentGraph.prototype.hideController = function () {
     var element = document.getElementById("inst-graph-controller-" + this.id);
     element.style.display = "none";
+    this.controllerHidden = true;
 };
 
 InstrumentGraph.prototype.revealController = function () {
     var element = document.getElementById("inst-graph-controller-" + this.id);
     element.style.display = "";
+    this.controllerHidden = false;
 };
 
 InstrumentGraph.prototype.openConfig = function () {

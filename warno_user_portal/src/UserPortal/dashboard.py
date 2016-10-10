@@ -1,13 +1,15 @@
 import logging
 import math
+import json
 import os
 
 from flask import Blueprint, render_template, request, jsonify
+from flask_user import current_user
 from sqlalchemy import asc, or_, and_
 from sqlalchemy.orm import aliased
 
 from WarnoConfig.utility import status_code_to_text
-from WarnoConfig.models import Instrument, InstrumentLog, Site, ValidColumn, db
+from WarnoConfig.models import Instrument, InstrumentLog, Site, ValidColumn, User, Dashboard, db
 
 dashboard = Blueprint('dashboard', __name__, template_folder='templates')
 
@@ -20,6 +22,102 @@ up_logger = logging.getLogger(__name__)
 up_handler = logging.FileHandler("%suser_portal_server.log" % log_path, mode="a")
 up_handler.setFormatter(logging.Formatter('%(levelname)s:%(asctime)s:%(module)s:%(lineno)d:  %(message)s'))
 up_logger.addHandler(up_handler)
+
+
+@dashboard.route('/save_dashboard', methods=["POST"])
+def save_dashboard():
+    """
+    Save a dashboard for a logged in user.  If the dashboard already exists with the same name and privacy, its
+    schematic is instead overwritten.
+
+    Parameters
+    ----------
+    dashboard_json: JSON object
+        Expects a JSON object describing the dashboard to be saved of the form {"name": *string name of the dashboard*,
+        "private": *true if dashboard is private, false if public*, schematic: *string JSON object describing the
+        dashboard to be saved*}
+
+    Returns
+    -------
+    Empty String
+
+    """
+    if current_user.is_anonymous:
+        return ""
+    else:
+        dashboard_json = request.json
+        if (dashboard_json["name"] is not None and
+                dashboard_json["schematic"] is not None and
+                dashboard_json["private"] is not None):
+            if dashboard_json["private"] is True:
+                db_dashboard = db.session.query(Dashboard).filter_by(user_id=current_user.id,
+                                                                     name=dashboard_json["name"],
+                                                                     private=True).first()
+            else:
+                db_dashboard = db.session.query(Dashboard).filter_by(name=dashboard_json["name"], private=False).first()
+
+            if not db_dashboard:
+                db_dashboard = Dashboard()
+            db_dashboard.user_id = current_user.id
+            db_dashboard.schematic = dashboard_json["schematic"]
+            db_dashboard.name = dashboard_json["name"]
+            db_dashboard.private = dashboard_json["private"]
+            db.session.add(db_dashboard)
+            db.session.commit()
+        return ""
+
+
+@dashboard.route('/load_dashboard', methods=["GET"])
+def load_dashboard():
+    """
+    Load a particular dashboard for the user.  When supplied a dashboard id from the database, returns the JSON
+    schematic for the dashboard.  Only works if there is a user currently signed in.
+
+    Parameters
+    ----------
+    dashboard_id: integer
+        Passed as a GET argument, the database id of the dashboard to be loaded.
+
+    Returns
+    -------
+    dashboard schematic: JSON object
+        A JSON object describing string that describes a dashboard, allowing the saved dashboard to be reconstructed.
+
+    """
+    if current_user.is_anonymous:
+        return json.dumps([])
+    else:
+        dashboard_id = request.args.get("dashboard_id")
+        if dashboard_id == "":
+            return json.dumps([])
+        db_dashboard = db.session.query(Dashboard).filter_by(id=dashboard_id).first()
+        if db_dashboard:
+            return str(db_dashboard.schematic)
+        else:
+            return json.dumps([])
+
+
+@dashboard.route('/dashboards', methods=["GET"])
+def available_dashboards():
+    """
+    Get a list of the available dashboards for a user: all private dashboards a user owns, and all public dashboards.
+    If a user is anonymous, just sends an empty json array.
+
+    Returns
+    -------
+    dashboards: JSON object
+        A list of available dashboards, each entry of the format: {"name": *dashboard name*,
+        "id": *database id of dashboard*, "private": *true if the dashboard private, false if public*}
+
+    """
+    if current_user.is_anonymous:
+        return json.dumps([])
+    else:
+        db_dashboards = (db.session.query(Dashboard)
+                         .filter(or_(Dashboard.private == False, Dashboard.user_id == current_user.id))
+                         .all())
+        dashes = [dict(name=dash.name, id=dash.id, private=dash.private) for dash in db_dashboards]
+        return json.dumps(dashes)
 
 
 @dashboard.route('/widget_controller')
