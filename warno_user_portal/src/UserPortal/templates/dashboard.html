@@ -10,10 +10,6 @@ Dashboard
 <script type="text/javascript" src="{{ url_for('static', filename='widget_manager.js')}}"></script>
 
 <div style="width: 400px; border: 2px solid black; background: lightGray; margin-left: auto; margin-right: auto; padding: 10px;" align="center">
-    {% if current_user.is_active %}
-        Esteemed {{ current_user.username }}
-        <br>
-    {% endif %}
     Add a Widget:
     <br>
     <select id="widget-type" name="widget-type">
@@ -25,8 +21,10 @@ Dashboard
     <button type="button" onclick="newWidget()">Add</button>
     {% if current_user.is_active %}
         <br>
-        <button type="button" onclick="saveDashboard()">Save Dashboard</button>
-        <button type="button" onclick="loadDashboard()">Load Dashboard</button>
+        <button type="button" onclick="openSaveModal()">Save Dashboard</button>
+        <button type="button" onclick="openLoadModal()">Load Dashboard</button>
+        <br>
+        <button type="button" onclick="clearAll()">Clear Dashboard</button>
     {% endif %}
 </div>
 
@@ -34,6 +32,40 @@ Dashboard
 
 </div>
 
+
+<div id="save-dashboard-modal" class="db_modal">
+    <div class="db_modal_content">
+        <div class="db_modal_header">
+            <span class="db_modal_close" onclick="closeSaveModal()">x</span>
+            <h2>Save Dashboard</h2>
+        </div>
+        <div class="db_modal_body">
+            <label for="name">Dashboard Name:</label>
+            <input type="text" name="name" id="save-dashboard-name">
+            <div>
+                <label for="private">Private:</label>
+                <input type="checkbox" name="private" id="save-dashboard-private" checked>
+                <button type="submit" class="experiment" style="float: right;" onclick="saveDashboard()">Save Dashboard</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div id="load-dashboard-modal" class="db_modal">
+    <div class="db_modal_content">
+        <div class="db_modal_header">
+            <span class="db_modal_close" onclick="closeLoadModal()">x</span>
+            <h2>Load Dashboard</h2>
+        </div>
+        <div class="db_modal_body">
+            <label for="name">Dashboard Name:</label>
+            <select name="name" id="dashboard-select"></select>
+            <br>
+            <button type="submit" class="experiment" onclick="loadDashboard()">Load Dashboard</button>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block script %}
@@ -57,11 +89,105 @@ Dashboard
             widgetManager.addHistogram(null);
         }
     }
+
+
+    var saveModal = document.getElementById("save-dashboard-modal");
+    var loadModal = document.getElementById("load-dashboard-modal");
+
     function saveDashboard() {
-        widgetManager.saveDashboard('{{url_for('dashboard.save_dashboard', user_id=current_user.id)}}');
+        closeSaveModal();
+        var schematic = widgetManager.saveDashboard();
+        var name = document.getElementById("save-dashboard-name").value;
+        var private = false;
+        if (document.getElementById("save-dashboard-private").checked) {
+            var private = true;
+        }
+
+        payload = {"name": name, "schematic": schematic, "private": private}
+
+        var xmlHttp = new XMLHttpRequest();
+
+        xmlHttp.open("POST", '{{url_for('dashboard.save_dashboard')}}', true); // true for asynchronous
+        xmlHttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        xmlHttp.send(JSON.stringify(payload));
     }
+    function openSaveModal() {
+        saveModal.style.display = "block";
+    }
+    function closeSaveModal() {
+        saveModal.style.display = "none";
+    }
+
+    function openLoadModal() {
+        var xmlHttp = new XMLHttpRequest();
+        xmlHttp.onreadystatechange = function() {
+            if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+                dashboards=JSON.parse(xmlHttp.responseText);
+
+                var dashSelect = document.getElementById("dashboard-select");
+                removeOptions(dashSelect);
+
+                var newOptgroup = document.createElement("optgroup");
+                newOptgroup.label = "Private";
+                dashSelect.add(newOptgroup);
+                for (var i = 0; i < dashboards.length; i++){
+                    if (dashboards[i]["private"]) {
+                        newOption = document.createElement("option");
+                        newOption.value = dashboards[i]["id"];
+                        newOption.text = dashboards[i]["name"];
+                        newOptgroup.appendChild(newOption);
+                    }
+                }
+                var newOptgroup = document.createElement("optgroup");
+                newOptgroup.label = "Public";
+                dashSelect.add(newOptgroup);
+                for (var i = 0; i < dashboards.length; i++){
+                    if (!dashboards[i]["private"]) {
+                        newOption = document.createElement("option");
+                        newOption.value = dashboards[i]["id"];
+                        newOption.text = dashboards[i]["name"];
+                        newOptgroup.appendChild(newOption);
+                    }
+                }
+
+                loadModal.style.display = "block";
+            }
+        };
+
+        xmlHttp.open("GET", '{{url_for('dashboard.available_dashboards')}}', true);
+        xmlHttp.send();
+    }
+
+    function closeLoadModal() {
+
+        loadModal.style.display = "none";
+    }
+
     function loadDashboard() {
-        widgetManager.loadDashboard('{{url_for('dashboard.load_dashboard', user_id=current_user.id)}}');
+        var xmlHttp = new XMLHttpRequest();
+        xmlHttp.onreadystatechange = function() {
+            if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+            {
+                closeLoadModal();
+                var dashboardSchematic = JSON.parse(xmlHttp.responseText);
+                widgetManager.loadDashboard(dashboardSchematic);
+            }
+        };
+
+        var dashboardId = document.getElementById("dashboard-select").value;
+        var url = '{{url_for('dashboard.load_dashboard')}}' + "?dashboard_id=" + dashboardId;
+        xmlHttp.open("GET", url, true); // true for asynchronous
+        xmlHttp.send();
+    }
+
+    function removeOptions(selectBox) {
+        while (selectBox.firstChild) {
+            selectBox.removeChild(selectBox.lastChild);
+        }
+    }
+
+    function clearAll() {
+        widgetManager.removeWidgets();
     }
 
 </script>

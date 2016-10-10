@@ -18,56 +18,38 @@ WidgetManager.prototype.tick = function(){
     }
 };
 
-WidgetManager.prototype.saveDashboard = function(userUrl) {
+WidgetManager.prototype.saveDashboard = function() {
     this.removeInactive();
 
     var payload = [];
     for (i = 0; i < this.widgets.length; i++) {
         payload.push(this.widgets[i].saveDashboard());
     }
-
-    var xmlHttp = new XMLHttpRequest();
-
-    xmlHttp.open("POST", userUrl, true); // true for asynchronous
-    xmlHttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-    xmlHttp.send(JSON.stringify(payload));
+    return JSON.stringify(payload);
 };
 
-WidgetManager.prototype.loadDashboard = function(userUrl) {
+WidgetManager.prototype.loadDashboard = function(dashboardSchematic) {
+    this.removeWidgets();
     this.removeInactive();
-
-    var xmlHttp = new XMLHttpRequest();
-    var that = this;  // Allows proper access of the WidgetManager object from within the onreadystatechange function
-    xmlHttp.onreadystatechange = function() {
-        if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
-        {
-            var dashboardSchematic = JSON.parse(xmlHttp.responseText);
-
-            // Build objects from the returned dashboard configuration
-            for (var i = 0; i < dashboardSchematic.length; i ++) {
-                if (dashboardSchematic[i]["type"] == "LogViewer") {
-                    that.addLogViewer();
-                    var newLogViewer = that.widgets[that.widgets.length - 1];
-                    newLogViewer.loadDashboard(dashboardSchematic[i]["data"]);
-                }
-                if (dashboardSchematic[i]["type"] == "StatusPlot") {
-                    that.addStatusPlot();
-                    var newStatusPlot = that.widgets[that.widgets.length - 1];
-                    newStatusPlot.loadDashboard(dashboardSchematic[i]["data"]);
-                }
-                if (dashboardSchematic[i]["type"] == "Histogram") {
-                    that.addHistogram(dashboardSchematic[i]["data"]);
-                }
-                if (dashboardSchematic[i]["type"] == "InstrumentGraph") {
-                    that.addInstrumentGraph(dashboardSchematic[i]["data"]);
-                }
-            }
-
+    // Build objects from the returned dashboard configuration
+    for (var i = 0; i < dashboardSchematic.length; i ++) {
+        if (dashboardSchematic[i]["type"] == "LogViewer") {
+            this.addLogViewer();
+            var newLogViewer = this.widgets[this.widgets.length - 1];
+            newLogViewer.loadDashboard(dashboardSchematic[i]["data"]);
         }
-    };
-
-    xmlHttp.open("GET", userUrl, true); // true for asynchronous
-    xmlHttp.send();
+        if (dashboardSchematic[i]["type"] == "StatusPlot") {
+            this.addStatusPlot();
+            var newStatusPlot = this.widgets[this.widgets.length - 1];
+            newStatusPlot.loadDashboard(dashboardSchematic[i]["data"]);
+        }
+        if (dashboardSchematic[i]["type"] == "Histogram") {
+            this.addHistogram(dashboardSchematic[i]["data"]);
+        }
+        if (dashboardSchematic[i]["type"] == "InstrumentGraph") {
+            this.addInstrumentGraph(dashboardSchematic[i]["data"]);
+        }
+    }
 };
 
 WidgetManager.prototype.removeInactive = function() {
@@ -102,6 +84,13 @@ WidgetManager.prototype.addInstrumentGraph = function(schematic) {
     this.widgets.push(newInstrumentGraph);
     this.newWidgetId += 1;
 };
+
+WidgetManager.prototype.removeWidgets = function() {
+    for (var i = this.widgets.length; i > 0; i--){
+        this.widgets[i - 1].remove();
+        this.widgets.splice(i - 1, 1);
+    }
+}
 
 
 
@@ -160,7 +149,7 @@ LogViewer.prototype.loadDashboard = function(schematic) {
 
 }
 
-LogViewer.prototype.removeLogViewer = function() {
+LogViewer.prototype.remove = function() {
     element = document.getElementById('log-viewer-' + this.id);
     element.parentNode.removeChild(element);
     this.active = false;
@@ -178,7 +167,7 @@ LogViewer.prototype.ajaxLoadUrl = function(element, url) {
             var addButton = document.getElementById("add-log-viewer-button-" + that.id);
             addButton.onclick = function () { that.generateLogViewer(); };
             var removeButton = document.getElementById("remove-log-viewer-button-" + that.id);
-            removeButton.onclick = function () { that.removeLogViewer(); };
+            removeButton.onclick = function () { that.remove(); };
 
             var instrumentIdSelect = document.getElementById("log-viewer-instrument-selector-" + that.id);
             var maxLogsInput = document.getElementById("log-viewer-max-logs-" + that.id);
@@ -260,7 +249,7 @@ StatusPlot.prototype.loadDashboard = function(schematic) {
 
 }
 
-StatusPlot.prototype.removeStatusPlot = function() {
+StatusPlot.prototype.remove = function() {
     element = document.getElementById('status-plot-' + this.id);
     element.parentNode.removeChild(element);
     this.active = false;
@@ -278,7 +267,7 @@ StatusPlot.prototype.ajaxLoadUrl = function(element, url) {
             var addButton = document.getElementById("add-status-plot-button-" + that.id);
             addButton.onclick = function () { that.generateStatusPlot(); };
             var removeButton = document.getElementById("remove-status-plot-button-" + that.id);
-            removeButton.onclick = function () { that.removeStatusPlot(); };
+            removeButton.onclick = function () { that.remove(); };
 
             var siteIdSelect = document.getElementById("status-plot-site-selector-" + that.id);
             siteIdSelect.value = that.siteId;
@@ -451,7 +440,7 @@ Histogram.prototype.initializeElements = function (loadDashboard) {
 
     // Button to remove Histogram widget
     var removeButton = document.getElementById("histogram-remove-button-" + that.id);
-    removeButton.onclick = function () { that.removeHistogram(); };
+    removeButton.onclick = function () { that.remove(); };
 
     // Button to generate Histogram from data parameter controls
     var addButton = document.getElementById("histogram-add-button-" + that.id);
@@ -509,7 +498,7 @@ Histogram.prototype.updateSelect = function(loadDashboard) {
 
 }
 
-Histogram.prototype.removeHistogram = function () {
+Histogram.prototype.remove = function () {
     element = document.getElementById('histogram-' + this.id);
     element.parentNode.removeChild(element);
     this.active = false;
@@ -954,7 +943,7 @@ InstrumentGraph.prototype.initializeElements = function (loadDashboard) {
 
     //Button to remove this widget
     var removeButton = document.getElementById("inst-graph-remove-button-" + that.id);
-    removeButton.onclick = function () { that.removeInstrumentGraph(); };
+    removeButton.onclick = function () { that.remove(); };
 
     // Button to generate graph from data parameter controls
     var addButton = document.getElementById("inst-graph-add-button-" + that.id);
@@ -1034,7 +1023,7 @@ InstrumentGraph.prototype.updateSelect = function(loadDashboard) {
     }
 }
 
-InstrumentGraph.prototype.removeInstrumentGraph = function() {
+InstrumentGraph.prototype.remove = function() {
     var element = document.getElementById('instrument-graph-' + this.id);
     element.parentNode.removeChild(element);
     this.active = false;

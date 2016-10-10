@@ -55,7 +55,6 @@ class User(db.Model, UserMixin):
     location = db.Column(db.String)
     position = db.Column(db.String)
     authorizations = db.Column(db.String)
-    dashboard = db.Column(db.String)
 
     def get_id(self):
         return unicode(self.id)
@@ -65,6 +64,16 @@ class User(db.Model, UserMixin):
 
     def is_authenticated(self):
         return True
+
+
+class Dashboard(db.Model):
+    __tablename__ = "dashboards"
+    id = db.Column("dashboard_id", db.Integer, primary_key=True)
+    name = db.Column(db.String, nullable=False, default="")
+    schematic = db.Column(db.String, nullable=False, default="")
+    private = db.Column(db.Boolean, nullable=False, default=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.user_id"), nullable=True)
+    user = db.relationship(User)
 
 
 class EventCode(db.Model):
