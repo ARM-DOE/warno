@@ -64,6 +64,9 @@ logging.getLogger("werkzeug").addHandler(up_handler)
 
 
 app = Flask(__name__)
+
+
+
 import UserPortal.views
 
 app.register_blueprint(users.users)

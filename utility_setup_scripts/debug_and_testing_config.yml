@@ -1,0 +1,55 @@
+setup:
+    site: ENA
+    cf_url: "http://130.20.119.70/eventmanager/event"
+    em_url: "http://localhost:8001/eventmanager/event"
+    # Path to default ssl cert location if applicable, false means always trust cert
+    cert_verify: False #VM standard: "/vagrant/data_store/data/rootCA.pem"
+    run_vm_agent: 1
+    run_vm_event_manager: 1
+    event_manager_port: 8001
+    run_vm_user_portal: 1
+    user_portal_port: 8002
+
+
+type:
+    central_facility: 1
+
+database:
+    test_db      : false
+    days_retained: 30
+    DB_HOST      : "192.168.50.100"
+    DB_NAME      : "warno"
+    DB_USER      : "warno"
+    DB_PORT      : "5432"
+    TEST_DB_NAME : "nosetests"
+
+debug:
+    no_gunicorn: 0
+
+agent:
+    local_debug: 1
+    dev_port: 6306
+    instrument_list:
+      KAZR2:
+        name: "KAZR"
+        base_url: "192.148.95.5"
+        base_port: 3000
+        sampling_interval: 60
+        ps_type: "KAZR2"
+      KaSACR2:
+        name: "KASACR"
+        base_url: "192.148.95.7"
+        base_port: 3000
+        sampling_interval: 60
+        ps_type: "SACR2"
+      WSACR2:
+        name: "WSACR"
+        base_url: "192.148.95.7"
+        base_port: 3001
+        sampling_interval: 60
+        ps_type: "SACR2"
+
+logging:
+
+
+
