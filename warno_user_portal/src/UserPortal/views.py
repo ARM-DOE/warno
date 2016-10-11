@@ -18,7 +18,7 @@ from WarnoConfig import config
 from WarnoConfig.models import db, MyRegisterForm
 from WarnoConfig.models import PulseCapture, ProsensingPAF, Instrument, InstrumentLog, Site, User, ValidColumn
 from WarnoConfig.utility import status_code_to_text
-from WarnoConfig.models import EventWithText, EventWithValue
+from WarnoConfig.models import EventWithText, EventWithValue, EventCode, ValidColumn
 
 is_central = 0
 
@@ -59,15 +59,23 @@ mail = Mail(app)
 db_adapter = SQLAlchemyAdapter(db, User)
 user_manager = UserManager(db_adapter, app, register_form=MyRegisterForm)
 
-## Register API...need to place this somewhere better.
+##################################################
+######     REST API Registration       ###########
+##################################################
+## TODO: Register API...need to place this somewhere better.
+## TODO: What is best practice on how to organize these?
+
 api_manager = flask.ext.restless.APIManager(app, flask_sqlalchemy_db=db)
-user_blueprint = api_manager.create_api(User, methods=['GET'], exclude_columns=['password'])
-site_blueprint = api_manager.create_api(Site, methods=['GET'])
-instrument_blueprint = api_manager.create_api(Instrument, methods=['GET'])
-log_blueprint = api_manager.create_api(InstrumentLog, methods=['GET'])
-event_with_text_blueprint = api_manager.create_api(EventWithText, methods=['GET'])
-event_with_value_blueprint = api_manager.create_api(EventWithValue, methods=['GET'])
-ProsensingPAF_blueprint = api_manager.create_api(ProsensingPAF, methods=['GET'])
+# TODO: Decide what all user information is appropriate to make available.
+user_blueprint = api_manager.create_api(User, methods=['GET'], exclude_columns=['password', 'reset_password_token'], url_prefix='/api/v1')
+site_blueprint = api_manager.create_api(Site, methods=['GET'], url_prefix='/api/v1')
+instrument_blueprint = api_manager.create_api(Instrument, methods=['GET'], url_prefix='/api/v1')
+log_blueprint = api_manager.create_api(InstrumentLog, methods=['GET'], url_prefix='/api/v1')
+event_with_text_blueprint = api_manager.create_api(EventWithText, methods=['GET'], url_prefix='/api/v1')
+event_with_value_blueprint = api_manager.create_api(EventWithValue, methods=['GET'], url_prefix='/api/v1', results_per_page=30)
+ProsensingPAF_blueprint = api_manager.create_api(ProsensingPAF, methods=['GET'], url_prefix='/api/v1')
+EventCode_blueprint = api_manager.create_api(EventCode, methods=['GET'], url_prefix='/api/v1', results_per_page=30)
+ValidColumn_blueprint = api_manager.create_api(ValidColumn, methods=['GET'], url_prefix='/api/v1', results_per_page=30)
 
 
 # Logging Setup
@@ -82,6 +90,22 @@ up_handler.setFormatter(logging.Formatter('%(levelname)s:%(asctime)s:%(module)s:
 up_logger.addHandler(up_handler)
 
 up_logger.info("Starting User Portal")
+
+@app.route('/api/v1')
+def top_level_rest_anchor():
+    result = {}
+    api_list = (("users",User),
+                  ("sites", Site),
+                  ("instruments", Instrument),
+                  ("instrument_log", InstrumentLog),
+                  ("events_with_text", EventWithText),
+                  ("events_with_value",EventWithValue),
+                  ("prosensing_paf",ProsensingPAF),
+                  ("event_codes",EventCode),
+                  ("valid_columns", ValidColumn))
+    for model in api_list:
+        result[model[0]] = api_manager.url_for(model[1])
+    return flask.jsonify(result)
 
 
 @app.route('/')
