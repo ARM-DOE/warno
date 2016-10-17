@@ -34,7 +34,7 @@
 <div class="sub-title" align="center">
     <div style="float: right; font-size: 80%;">
         {% if current_user.is_active %}
-            Logged In As: <a href="{{url_for('user.profile')}}">{{current_user.username}}</a> &nbsp <a href="{{url_for('user.logout')}}">Log Out</a>
+            Logged In As: <a href="{{url_for('user.profile')}}">{{current_user.username}}</a> &nbsp <a href="{{url_for('user.logout')}}">Sign Out</a>
         {% else %}
              You are not logged in. <a href="{{url_for('user.login')}}">Sign In</a>?
         {% endif %}
