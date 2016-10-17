@@ -5,7 +5,7 @@
 set -e
 
 cd "$TRAVIS_BUILD_DIR"
-source "$TRAVIS_BUILD_DIR"/utility_setup_scripts/set_env_for_testing.sh
+source "$TRAVIS_BUILD_DIR"/utility_setup_scripts/set_vagrant_env.sh
 
 echo "Building Docs"
 conda install --yes sphinx numpydoc

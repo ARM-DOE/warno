@@ -41,4 +41,4 @@ cd ..
 
 # install coverage modules
 # set up testing environment variables
-source utility_setup_scripts/set_env_for_testing.sh
+source utility_setup_scripts/set_vagrant_env.sh
