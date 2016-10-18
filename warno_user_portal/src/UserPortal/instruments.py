@@ -280,6 +280,80 @@ def db_recent_logs_by_instrument(instrument_id, maximum_number=5):
             for log in db_logs]
 
 
+@instruments.route('/recent_values', methods=['GET', 'POST'])
+def recent_values():
+    """
+    Get the most recent value for each given key for the given instrument, along with the time it was collected, as a
+    JSON object.  If the key is not a valid key for the instrument, the returned object will be an empty array.
+
+    Parameters
+    ----------
+    keys: comma separated string
+        Passed as an HTML query parameter, the names of the database columns
+            to plot against time.
+
+    instrument_id: integer
+        Passed as an HTML query parameter, the id of the instrument in the
+            database, indicates which instrument's data to use.
+
+    Returns
+    -------
+
+    message: JSON object
+        List of dictionaries, one for each attribute, each of the form {"key": **attribute name**, "data":
+        {"time": **ISO format UTC time that most recent value was collected**,
+        "value": **most recently collected value for attribute**} }
+
+    """
+    arg_keys = request.args.get("keys")
+    arg_keys = arg_keys.split(',')
+
+    instrument_id = request.args.get("instrument_id")
+
+    msg = "KEYS = %s" % arg_keys
+    msg += "<br>%s" % instrument_id
+
+    key_pairs = [dict(key=a_key, data=None) for a_key in arg_keys]
+
+    # If any key is invalid, sends a blank response
+    for key_pair in key_pairs:
+        if key_pair["key"] not in valid_columns_for_instrument(instrument_id):
+            up_logger.debug("key %s not in valid columns for instrument id %s", key_pair["key"], instrument_id)
+            return json.dumps([])
+    references = db_get_instrument_references(instrument_id)
+
+    for reference in references:
+        for key_pair in key_pairs:
+            sql_query = None
+            if reference.description == key_pair["key"]:
+                event_code = db.session.execute('SELECT event_code FROM event_codes WHERE description = :key',
+                                                dict(key=key_pair["key"])).fetchone()
+
+                sql_query = ('SELECT time, value FROM events_with_value WHERE instrument_id = :id '
+                             'ORDER BY time DESC LIMIT 1') % event_code[0]
+            elif reference.special is True:
+                rows = db.session.execute("SELECT column_name FROM information_schema.columns WHERE table_name = :table",
+                                          dict(table=reference.description)).fetchall()
+
+                columns = [row[0] for row in rows]
+                if key_pair["key"] in columns:
+                    sql_query = 'SELECT time, %s FROM %s WHERE instrument_id = :id ORDER BY time DESC LIMIT 1' % (
+                        key_pair["key"], reference.description)
+            # Selects the time and the "key" column from the data table
+            if sql_query:
+                try:
+                    key_pair["data"] = db.session.execute(sql_query, dict(id=instrument_id)).fetchone()
+                except Exception, e:
+                    print(e)
+                    return json.dumps([])
+
+    # Convert each data entry into a dictionary with ISO formatted time and current value
+    for key_pair in key_pairs:
+        key_pair["data"] = dict(time=key_pair["data"][0].isoformat(), value=key_pair["data"][1])
+
+    return json.dumps(key_pairs)
+
+
 @instruments.route('/generate_instrument_graph', methods=['GET', 'POST'])
 def generate_instrument_graph():
     """Generate graph data for a Dygraph for an instrument.

@@ -1,5 +1,6 @@
 import datetime
 import mock
+import json
 import os
 
 from flask.ext.testing import TestCase
@@ -171,6 +172,39 @@ class TestInstruments(TestCase, FixturesMixin):
 
         after_delete_count = db.session.query(Instrument).filter(Instrument.id == instrument_id).count()
         self.assertEqual(after_delete_count, 0, "The Instrument with id %s was not deleted." % instrument_id)
+
+    def test_recent_values_for_instrument_id_1_with_valid_key_antenna_humidity_returns_expected_object(self, logger):
+        instrument_id = 1
+        key = "antenna_humidity"
+        test_url = "/recent_values?instrument_id=%s&keys=%s" % (instrument_id, key)
+        result = self.client.get(test_url)
+        result_object = result.json
+
+        # Expected values are defined in the fixtures
+        expected_value = 75.0
+        expected_time = "2001-01-01T01:01:01"
+
+        # There should only be one key returned, so every access is index [0]
+        self.assertEqual(1, len(result_object),
+                         "Expected returned object to have a length of 1. Length is '%s'." % len(result_object))
+        self.assertEqual(key, result_object[0]["key"],
+                         "The returned object's key did not match the requested key '%s'." % key)
+        self.assertEqual(expected_value, result_object[0]["data"]["value"],
+                         "The returned objects first entry's data did not have a value of '%s'." % expected_value)
+        self.assertEqual(expected_time, result_object[0]["data"]["time"],
+                         "The returned objects first entry's data did not have a time of '%s'." % expected_time)
+
+    def test_recent_values_for_instrument_id_1_with_invalid_key_antenna_temp_returns_empty_object(self, logger):
+        instrument_id = 1
+        key = "antenna_temp"
+        test_url = "/recent_values?instrument_id=%s&keys=%s" % (instrument_id, key)
+        result = self.client.get(test_url)
+        result_object = result.json
+
+        # There should only be no keys returned, because the key is not in 'valid_columns' in the fixtures
+        self.assertEqual(0, len(result_object),
+                         "Expected returned object to have a length of 0. Length is '%s'." % len(result_object))
+
 
     # Database Helpers
     def test_db_get_instrument_references_returns_the_instrument_data_references_for_the_correct_instrument(self, logger):
