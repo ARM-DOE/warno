@@ -23,6 +23,9 @@
         <div>
             <button id="inst-hide-button-{{id}}" title="Hide Graph Data Settings">-</button>
             <button id="inst-reveal-button-{{id}}" title="Show Graph Data Settings">+</button>
+            <div class="db_receive_status" id="receive-status-{{id}}"></div>
+            Last Received (UTC):
+            <span id="last-received-{{id}}">No Data</span>
         </div>
 
 
@@ -107,6 +110,17 @@
 
                 <div class="col-3" style="text-align: right;">
                     <input type="text" name="roll-period" class="short_input" id="inst-graph-roll-period-{{id}}">
+                </div>
+            </div>
+
+            <hr>
+            <div class="row widget_config_row">
+                <div class="col-9">
+                    <label for="convert-to-dB">Convert Values to dB:</label>
+                </div>
+
+                <div class="col-3" style="text-align: right;">
+                    <input type="checkbox" name="convert-to-dB" id="convert-to-dB-{{id}}">
                 </div>
             </div>
         </div>
