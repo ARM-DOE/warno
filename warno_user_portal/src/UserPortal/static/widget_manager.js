@@ -130,8 +130,8 @@ LogViewer.prototype.tick = function() {
 };
 
 LogViewer.prototype.saveDashboard = function() {
-    var data = {"instrumentId": this.instrumentId, "maxLogs": this.maxLogs}
-    return {"type": "LogViewer", "data": data}
+    var data = {"instrumentId": this.instrumentId, "maxLogs": this.maxLogs};
+    return {"type": "LogViewer", "data": data};
 }
 
 LogViewer.prototype.loadDashboard = function(schematic) {
@@ -234,8 +234,8 @@ StatusPlot.prototype.tick = function() {
 };
 
 StatusPlot.prototype.saveDashboard = function() {
-    var data = {"siteId": this.siteId}
-    return {"type": "StatusPlot", "data": data}
+    var data = {"siteId": this.siteId};
+    return {"type": "StatusPlot", "data": data};
 }
 
 StatusPlot.prototype.loadDashboard = function(schematic) {
@@ -309,6 +309,7 @@ function Histogram(id, containerDiv, controllerUrl, schematic) {
     this.div.id = "histogram-" + this.id;
     this.instrumentList = []; // Filled by ajax request
     this.columnList = [];     // Filled by ajax request
+    this.lastReceived = null;      // The timestamp for the last data received
 
     this.updateCounter = 0;
     this.activeCounter = false;
@@ -384,7 +385,7 @@ Histogram.prototype.saveDashboard = function() {
         "updateFrequency": this.updateFrequency
     }
 
-    return {"type": "Histogram", "data": data}
+    return {"type": "Histogram", "data": data};
 }
 
 Histogram.prototype.ajaxLoadUrl = function(element, url, loadDashboard) {
@@ -508,6 +509,7 @@ Histogram.prototype.generateHistogram = function() {
     this.activeCounter = true;  // Activates the periodic update checks
 
     var xmlhttp = new XMLHttpRequest();
+    this.lastReceived = null;
 
     var div = document.getElementById('histogram-container-' + this.id)
 
@@ -557,6 +559,16 @@ Histogram.prototype.generateHistogram = function() {
     xmlhttp.onreadystatechange = function () {
         if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
             var response = JSON.parse(xmlhttp.responseText);
+
+            delete that.lastReceived;
+            if (response.data.length > 0) {
+                // Only works because received data is sorted by time with newest at the end.
+                // Timestamp from most recent data.  Adding Z tells Date it is UTC
+                that.lastReceived = new Date(response.data[response.data.length - 1][0] + "Z")
+            } else {
+                that.lastReceived = null;
+            }
+
             var field1 = response.data.map(function(i){ return i[1] });
 
             field1 = field1.filter(isNotSentinel)
@@ -638,6 +650,7 @@ Histogram.prototype.generateHistogram = function() {
         };
 
         Plotly.newPlot(div, data, layout);
+        that.updateLastReceived();
     }};
 
 
@@ -729,6 +742,38 @@ Histogram.prototype.applyConfig = function () {
         this.generateHistogram();
     }
 };
+
+
+Histogram.prototype.updateLastReceived = function() {
+    var statusBubble = document.getElementById("receive-status-" + this.id);
+    if (this.lastReceived == null) {
+        statusBubble.className = "db_receive_status";
+        document.getElementById("last-received-" + this.id).innerHTML = "No Data";
+        return;
+    }
+
+    // If lastReceived exists, display the time the last data was received and update status bubble depending on age.
+    var day = this.lastReceived.getUTCDate();
+    var month = this.lastReceived.getUTCMonth() + 1;
+    var year = this.lastReceived.getUTCFullYear();
+    var hours = this.lastReceived.getUTCHours();
+    var minutes = this.lastReceived.getUTCMinutes();
+    var seconds = this.lastReceived.getUTCSeconds();
+    var lastReceivedUTC = month + "/" + day + "/" + year + " " + hours + ":" + minutes + ":" + seconds;
+    document.getElementById("last-received-" + this.id).innerHTML = lastReceivedUTC;
+
+    var currentTime = new Date();
+    var differenceMinutes = (currentTime - this.lastReceived) / (60000); // Difference starts in milliseconds
+
+    if ((0 <= differenceMinutes) && (differenceMinutes < 5)) {
+        statusBubble.className = "db_receive_status db_status_good";
+    } else if ((5 <= differenceMinutes) && (differenceMinutes <= 15)) {
+        statusBubble.className = "db_receive_status db_status_weak";
+    } else {
+        statusBubble.className = "db_receive_status db_status_dead";
+    }
+
+}
 
 Histogram.prototype.hideController = function () {
     element = document.getElementById("histogram-controller-" + this.id);
@@ -1371,8 +1416,9 @@ InstrumentGraph.prototype.updateWithValues = function(values) {
 InstrumentGraph.prototype.updateLastReceived = function() {
     var statusBubble = document.getElementById("receive-status-" + this.id);
     if (this.lastReceived == null) {
-        statusBubble.className = "db_receive_status"
-        return
+        statusBubble.className = "db_receive_status";
+        document.getElementById("last-received-" + this.id).innerHTML = "No Data";
+        return;
     }
 
     // If lastReceived exists, display the time the last data was received and update status bubble depending on age.
