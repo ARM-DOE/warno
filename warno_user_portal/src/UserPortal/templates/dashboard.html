@@ -193,12 +193,9 @@ Dashboard
     }
 
     function updateBorders() {
-        console.log("Triggered")
         if (document.getElementById("tight-borders").checked) {
-            console.log("Tight");
             widgetManager.tightBorders();
         } else {
-            console.log("Wide");
             widgetManager.wideBorders();
         }
     }
