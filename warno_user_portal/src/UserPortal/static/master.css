@@ -431,6 +431,33 @@ button.experiment:focus {
     cursor: pointer;
 }
 
+div.db_receive_status {
+  border-radius: 50%;
+  background-color: black;
+  width: 10px;
+  height: 10px;
+  border: 1px solid black;
+  display: inline-block;
+}
+
+div.db_status_good {
+    background: -moz-linear-gradient(top, #90EEA0, #8AE98A); /* FF3.6-15 */
+    background: -webkit-linear-gradient(top, #90EEA0, #8AE98A); /* Chrome10-25,Safari5.1-6 */
+    background: linear-gradient(to bottom, #90EEA0, #8AE98A); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+}
+
+div.db_status_weak {
+    background: -moz-linear-gradient(top, #F3F35A, #E7E70A); /* FF3.6-15 */
+    background: -webkit-linear-gradient(top, #F3F35A, #E7E70A); /* Chrome10-25,Safari5.1-6 */
+    background: linear-gradient(to bottom, #F3F35A, #E7E70A); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+}
+
+div.db_status_dead {
+    background: -moz-linear-gradient(top, #F0A0A0, #F08080); /* FF3.6-15 */
+    background: -webkit-linear-gradient(top, #F0A0A0, #F08080); /* Chrome10-25,Safari5.1-6 */
+    background: linear-gradient(to bottom, #F0A0A0, #F08080); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+}
+
 /***** Status displays *****/
 div.status_page {
     background: -moz-linear-gradient(left, #DDDDDD, #CCCCCC); /* FF3.6-15 */

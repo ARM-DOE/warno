@@ -130,8 +130,8 @@ LogViewer.prototype.tick = function() {
 };
 
 LogViewer.prototype.saveDashboard = function() {
-    var data = {"instrumentId": this.instrumentId, "maxLogs": this.maxLogs}
-    return {"type": "LogViewer", "data": data}
+    var data = {"instrumentId": this.instrumentId, "maxLogs": this.maxLogs};
+    return {"type": "LogViewer", "data": data};
 }
 
 LogViewer.prototype.loadDashboard = function(schematic) {
@@ -234,8 +234,8 @@ StatusPlot.prototype.tick = function() {
 };
 
 StatusPlot.prototype.saveDashboard = function() {
-    var data = {"siteId": this.siteId}
-    return {"type": "StatusPlot", "data": data}
+    var data = {"siteId": this.siteId};
+    return {"type": "StatusPlot", "data": data};
 }
 
 StatusPlot.prototype.loadDashboard = function(schematic) {
@@ -309,6 +309,7 @@ function Histogram(id, containerDiv, controllerUrl, schematic) {
     this.div.id = "histogram-" + this.id;
     this.instrumentList = []; // Filled by ajax request
     this.columnList = [];     // Filled by ajax request
+    this.lastReceived = null;      // The timestamp for the last data received
 
     this.updateCounter = 0;
     this.activeCounter = false;
@@ -384,7 +385,7 @@ Histogram.prototype.saveDashboard = function() {
         "updateFrequency": this.updateFrequency
     }
 
-    return {"type": "Histogram", "data": data}
+    return {"type": "Histogram", "data": data};
 }
 
 Histogram.prototype.ajaxLoadUrl = function(element, url, loadDashboard) {
@@ -508,6 +509,7 @@ Histogram.prototype.generateHistogram = function() {
     this.activeCounter = true;  // Activates the periodic update checks
 
     var xmlhttp = new XMLHttpRequest();
+    this.lastReceived = null;
 
     var div = document.getElementById('histogram-container-' + this.id)
 
@@ -557,6 +559,16 @@ Histogram.prototype.generateHistogram = function() {
     xmlhttp.onreadystatechange = function () {
         if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
             var response = JSON.parse(xmlhttp.responseText);
+
+            delete that.lastReceived;
+            if (response.data.length > 0) {
+                // Only works because received data is sorted by time with newest at the end.
+                // Timestamp from most recent data.  Adding Z tells Date it is UTC
+                that.lastReceived = new Date(response.data[response.data.length - 1][0] + "Z")
+            } else {
+                that.lastReceived = null;
+            }
+
             var field1 = response.data.map(function(i){ return i[1] });
 
             field1 = field1.filter(isNotSentinel)
@@ -638,6 +650,7 @@ Histogram.prototype.generateHistogram = function() {
         };
 
         Plotly.newPlot(div, data, layout);
+        that.updateLastReceived();
     }};
 
 
@@ -730,6 +743,38 @@ Histogram.prototype.applyConfig = function () {
     }
 };
 
+
+Histogram.prototype.updateLastReceived = function() {
+    var statusBubble = document.getElementById("receive-status-" + this.id);
+    if (this.lastReceived == null) {
+        statusBubble.className = "db_receive_status";
+        document.getElementById("last-received-" + this.id).innerHTML = "No Data";
+        return;
+    }
+
+    // If lastReceived exists, display the time the last data was received and update status bubble depending on age.
+    var day = this.lastReceived.getUTCDate();
+    var month = this.lastReceived.getUTCMonth() + 1;
+    var year = this.lastReceived.getUTCFullYear();
+    var hours = this.lastReceived.getUTCHours();
+    var minutes = this.lastReceived.getUTCMinutes();
+    var seconds = this.lastReceived.getUTCSeconds();
+    var lastReceivedUTC = month + "/" + day + "/" + year + " " + hours + ":" + minutes + ":" + seconds;
+    document.getElementById("last-received-" + this.id).innerHTML = lastReceivedUTC;
+
+    var currentTime = new Date();
+    var differenceMinutes = (currentTime - this.lastReceived) / (60000); // Difference starts in milliseconds
+
+    if ((0 <= differenceMinutes) && (differenceMinutes < 5)) {
+        statusBubble.className = "db_receive_status db_status_good";
+    } else if ((5 <= differenceMinutes) && (differenceMinutes <= 15)) {
+        statusBubble.className = "db_receive_status db_status_weak";
+    } else {
+        statusBubble.className = "db_receive_status db_status_dead";
+    }
+
+}
+
 Histogram.prototype.hideController = function () {
     element = document.getElementById("histogram-controller-" + this.id);
     element.style.display = "none";
@@ -793,7 +838,8 @@ function InstrumentGraph(id, containerDiv, controllerUrl, genGraphURL, schematic
     this.nextAttributeId = 1;      // 0 is already taken by the template html.
     this.graphData = [];
     this.graphTitle = null;
-    this.dygraph = ""
+    this.dygraph = "";
+    this.lastReceived = null;      // The timestamp for the last data received
 
     var validSchematic = false;
     if (schematic) {
@@ -808,6 +854,11 @@ function InstrumentGraph(id, containerDiv, controllerUrl, genGraphURL, schematic
         this.endTime = new Date(schematic["endUTC"] + " UTC");
         this.originTime = this.beginningTime;
         this.rollPeriod = schematic["rollPeriod"];
+        if (schematic["convertToDB"]) {
+            this.convertToDB = schematic["convertToDB"];
+        } else {
+            this.convertToDB = false;
+        }
     } else {
         this.controllerHidden = false;
         this.statFrequency = 10;       // How often the stats will be generated. Every X requests for data, update stats
@@ -819,6 +870,7 @@ function InstrumentGraph(id, containerDiv, controllerUrl, genGraphURL, schematic
         this.endTime = null;           // End time for the next data request
         this.originTime = null;        // Origin time is the beginning time at graph creation, for aggregate stats
         this.rollPeriod = 3;           // Roll period for the Dygraph
+        this.convertToDB = false;      // Whether or not the data is converted to dB scale before graphing.
     }
 
     // Statistic fields, only handled if stats_enabled is true
@@ -880,6 +932,7 @@ InstrumentGraph.prototype.saveDashboard = function() {
         "endUTC": endUTC,
         "graphSize": this.graphSize,
         "rollPeriod": this.rollPeriod,
+        "convertToDB": this.convertToDB
     }
     return {"type": "InstrumentGraph", "data": data}
 }
@@ -932,6 +985,8 @@ InstrumentGraph.prototype.initializeElements = function (loadDashboard) {
         document.getElementById("instrument-select-" + that.id).value = that.instrumentId;
 
         document.getElementById("instrument-size-button-" + that.graphSize + "-" + that.id).checked = true;
+
+        document.getElementById("convert-to-dB-" + that.id).checked = that.convertToDB;
 
         if (that.controllerHidden) {
             that.hideController();
@@ -1040,6 +1095,7 @@ InstrumentGraph.prototype.generateInstrumentGraph = function(){
     this.graphTitle = null;
     this.dygraph = "";
     this.nextAttributeId = 1;  // 0 is already taken by the template html.
+    this.lastReceived = null;
 
     // Statistic fields, only handled if stats_enabled is true
     this.statsEnabled = false;
@@ -1092,6 +1148,8 @@ InstrumentGraph.prototype.generateInstrumentGraph = function(){
     endStr = document.getElementById("datetime-input-end-" + this.id).value;
     this.endTime = new Date(endStr + " UTC");
 
+    this.convertToDB = document.getElementById("convert-to-dB-" + this.id).checked;
+
     // Clear Master Div
     while (masterDiv.firstChild) {
         masterDiv.removeChild(masterDiv.lastChild)
@@ -1134,6 +1192,7 @@ InstrumentGraph.prototype.generateInstrumentGraph = function(){
 
     }
     else {
+        this.graphTitle = instrumentSelect.options[instrumentSelect.selectedIndex].text;
         // If there is more than one attribute graphed, display a list of the attributes being graphed
         htmlConstruct = "<b>Attributes: </b>";
         attributeList = String(this.keys).split(",");
@@ -1291,10 +1350,17 @@ InstrumentGraph.prototype.updateWithValues = function(values) {
         deviationCallback = null;
     }
     if (this.graphData.length <= 0 || this.forceRedraw === true) {
-        this.graphData = this.graphData.concat(values);
+        if (this.convertToDB) {
+            this.graphData = this.graphData.concat(values.filter(dataToDB));
+        } else {
+            this.graphData = this.graphData.concat(values);
+        }
         this.forceRedraw = false;
 
         if (this.graphData.length > 0){
+            delete this.lastReceived
+            this.lastReceived = new Date(this.graphData[this.graphData.length - 1][0]) // Timestamp from most recent data
+
             this.dygraph = new Dygraph(
             this.innerDiv,
             this.graphData,
@@ -1326,7 +1392,14 @@ InstrumentGraph.prototype.updateWithValues = function(values) {
     else
     {
         if (values.length > 0) {
-            this.graphData = this.graphData.concat(values);
+            delete this.lastReceived
+            this.lastReceived = new Date(values[values.length - 1][0]) // Timestamp from most recent data
+
+            if (this.convertToDB) {
+                this.graphData = this.graphData.concat(values.filter(dataToDB));
+            } else {
+                this.graphData = this.graphData.concat(values);
+            }
             this.dygraph.updateOptions({ 'file': this.graphData });
         }
     }
@@ -1338,6 +1411,37 @@ InstrumentGraph.prototype.updateWithValues = function(values) {
         //Tiny increment so it doesnt pull the same data repeatedly
         this.beginningTime.setUTCSeconds(this.beginningTime.getUTCSeconds() + 1);
     }
+}
+
+InstrumentGraph.prototype.updateLastReceived = function() {
+    var statusBubble = document.getElementById("receive-status-" + this.id);
+    if (this.lastReceived == null) {
+        statusBubble.className = "db_receive_status";
+        document.getElementById("last-received-" + this.id).innerHTML = "No Data";
+        return;
+    }
+
+    // If lastReceived exists, display the time the last data was received and update status bubble depending on age.
+    var day = this.lastReceived.getUTCDate();
+    var month = this.lastReceived.getUTCMonth() + 1;
+    var year = this.lastReceived.getUTCFullYear();
+    var hours = this.lastReceived.getUTCHours();
+    var minutes = this.lastReceived.getUTCMinutes();
+    var seconds = this.lastReceived.getUTCSeconds();
+    var lastReceivedUTC = month + "/" + day + "/" + year + " " + hours + ":" + minutes + ":" + seconds;
+    document.getElementById("last-received-" + this.id).innerHTML = lastReceivedUTC;
+
+    var currentTime = new Date();
+    var differenceMinutes = (currentTime - this.lastReceived) / (60000); // Difference starts in milliseconds
+
+    if ((0 <= differenceMinutes) && (differenceMinutes < 5)) {
+        statusBubble.className = "db_receive_status db_status_good";
+    } else if ((5 <= differenceMinutes) && (differenceMinutes <= 15)) {
+        statusBubble.className = "db_receive_status db_status_weak";
+    } else {
+        statusBubble.className = "db_receive_status db_status_dead";
+    }
+
 }
 
 InstrumentGraph.prototype.updateInstrumentGraph = function() {
@@ -1372,6 +1476,8 @@ InstrumentGraph.prototype.updateInstrumentGraph = function() {
                 thisGraph.stdDeviation = recMessage['std_deviation'];}
 
             thisGraph.updateWithValues(recMessage['data']);
+
+            thisGraph.updateLastReceived();
         }
     };
     //Send JSON POST XMLHTTPRequest to generator controller.
@@ -1536,6 +1642,12 @@ function isNotSentinel(value){
      return true;
  }
 };
+
+function dataToDB(inputData) {
+    for (var i = 1; i < inputData.length; i++)
+        inputData[i] = 10 * (Math.log(inputData[i]) / Math.LN10);
+    return inputData;
+}
 
 function updateStartTime(id, days) {
     temp = new Date()
