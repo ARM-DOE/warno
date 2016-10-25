@@ -67,7 +67,7 @@ WidgetManager.prototype.addLogViewer = function() {
     this.widgets.push(newLogViewer);
     this.newWidgetId += 1;
     if (this.hasTightBorders) {
-        newLogViewer.tightBorders;
+        newLogViewer.tightBorders();
     }
 };
 
