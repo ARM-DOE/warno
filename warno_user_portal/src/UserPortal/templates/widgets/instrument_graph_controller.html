@@ -30,27 +30,44 @@
 
 
         <div class="graph_setup_container" id="inst-graph-controller-{{id}}">
-
-            <p><label for="time">Start Date/Time in UTC:</label>
-                <input type="datetime" id="datetime-input-start-{{id}}" name="start" value="01/01/1970 12:27:31">
-            </p>
-            <div style="display: inline-block" class="graph_setup_button" onclick="updateStartTime({{id}}, 1)">Yesterday</div>
-            <div style="display: inline-block" class="graph_setup_button" onclick="updateStartTime({{id}}, 7)">Last Week</div>
-            <div style="display: inline-block" class="graph_setup_button" onclick="updateStartTime({{id}}, 14)">Fortnight</div>
-            <div style="display: inline-block" class="graph_setup_button" onclick="updateStartTime({{id}}, 30)">Last Month</div>
-            <div style="display: inline-block" class="graph_setup_button" onclick="updateStartTime({{id}}, 180)">Six Months</div>
-            <br>
-            <br>
-            <p><label for="time">End Date/Time in UTC:</label>
-                <input type="datetime" id="datetime-input-end-{{id}}" name="end" value="01/01/2170 12:27:31">
+            <button id="time-constraint-switch-{{id}}">Switch to Sliding Window</button>
+            <button id="controller-graph-add-{{id}}" style="float: right;">Apply</button>
+            <div id="custom-times-{{id}}">
+                Custom Time Range:
+                <p><label for="time">Start Date/Time in UTC:</label>
+                    <input type="datetime" id="datetime-input-start-{{id}}" name="start" value="01/01/1970 12:27:31">
+                </p>
+                <div style="display: inline-block" class="graph_setup_button" onclick="updateStartTime({{id}}, 1)">Yesterday</div>
+                <div style="display: inline-block" class="graph_setup_button" onclick="updateStartTime({{id}}, 7)">Last Week</div>
+                <div style="display: inline-block" class="graph_setup_button" onclick="updateStartTime({{id}}, 14)">Fortnight</div>
+                <div style="display: inline-block" class="graph_setup_button" onclick="updateStartTime({{id}}, 30)">Last Month</div>
+                <div style="display: inline-block" class="graph_setup_button" onclick="updateStartTime({{id}}, 180)">Six Months</div>
                 <br>
-                <div class="graph_time_format">
-                    <i>(MM/DD/YYYY HH:MM:SS)</i>
-                </div>
-                {% if error %}
-                    <div id="inst-graph-error-{{id}}" style="color: red">{{error}}</div>
-                {% endif %}
-            </p>
+                <br>
+                <p><label for="time">End Date/Time in UTC:</label>
+                    <input type="datetime" id="datetime-input-end-{{id}}" name="end" value="01/01/2170 12:27:31">
+                    <br>
+                    <div class="graph_time_format">
+                        <i>(MM/DD/YYYY HH:MM:SS)</i>
+                    </div>
+                    {% if error %}
+                        <div id="inst-graph-error-{{id}}" style="color: red">{{error}}</div>
+                    {% endif %}
+                </p>
+            </div>
+            <div id="auto-times-{{id}}" style="display: none;">
+                Sliding Time Window:
+                <br>
+                <input type="radio" id="time-range-tenminute-{{id}}" name="time-range-{{id}}" value="tenminute">Ten Minutes
+                <input type="radio" id="time-range-hour-{{id}}" name="time-range-{{id}}" value="hour">Hour
+                <input type="radio" id="time-range-sixhour-{{id}}" name="time-range-{{id}}" value="sixhour" checked>Six Hours
+                <input type="radio" id="time-range-day-{{id}}" name="time-range-{{id}}" value="day">Day
+                <br>
+                <input type="radio" id="time-range-week-{{id}}" name="time-range-{{id}}" value="week">Week
+                <input type="radio" id="time-range-fortnight-{{id}}" name="time-range-{{id}}" value="fortnight">Fortnight
+                <input type="radio" id="time-range-month-{{id}}" name="time-range-{{id}}" value="month">Month
+            </div>
+
             Instrument:
             <select class="attrSelect" id="instrument-select-{{id}}">
                 {% for inst in instrument_list %}

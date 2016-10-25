@@ -7,6 +7,7 @@ function WidgetManager(containerDiv, controllerUrl, logViewerURL, statusPlotURL,
     this.genGraphURL = genGraphURL;
     this.newWidgetId = 0;
     this.widgets = [];
+    this.hasTightBorders = false;
 
     this.timer = setInterval(this.tick.bind(this), 60000)
 };
@@ -65,24 +66,36 @@ WidgetManager.prototype.addLogViewer = function() {
     newLogViewer = new LogViewer(this.newWidgetId, this.containerDiv, this.controllerUrl, this.logViewerURL);
     this.widgets.push(newLogViewer);
     this.newWidgetId += 1;
+    if (this.hasTightBorders) {
+        newLogViewer.tightBorders;
+    }
 };
 
 WidgetManager.prototype.addStatusPlot = function() {
     newStatusPlot = new StatusPlot(this.newWidgetId, this.containerDiv, this.controllerUrl, this.statusPlotURL);
     this.widgets.push(newStatusPlot);
     this.newWidgetId +=1;
+    if (this.hasTightBorders) {
+        newStatusPlot.tightBorders();
+    }
 };
 
 WidgetManager.prototype.addHistogram = function(schematic) {
     newHistogram = new Histogram(this.newWidgetId, this.containerDiv, this.controllerUrl, schematic);
     this.widgets.push(newHistogram);
     this.newWidgetId +=1;
+    if (this.hasTightBorders) {
+        newHistogram.tightBorders();
+    }
 };
 
 WidgetManager.prototype.addInstrumentGraph = function(schematic) {
     newInstrumentGraph = new InstrumentGraph(this.newWidgetId, this.containerDiv, this.controllerUrl, this.genGraphURL, schematic);
     this.widgets.push(newInstrumentGraph);
     this.newWidgetId += 1;
+    if (this.hasTightBorders) {
+        newInstrumentGraph.tightBorders();
+    }
 };
 
 WidgetManager.prototype.removeWidgets = function() {
@@ -92,7 +105,19 @@ WidgetManager.prototype.removeWidgets = function() {
     }
 }
 
+WidgetManager.prototype.tightBorders = function() {
+    this.hasTightBorders = true;
+    for (var i = 0; i < this.widgets.length; i ++) {
+        this.widgets[i].tightBorders();
+    }
+}
 
+WidgetManager.prototype.wideBorders = function() {
+    this.hasTightBorders = false;
+    for (var i = 0; i < this.widgets.length; i ++) {
+        this.widgets[i].wideBorders();
+    }
+}
 
 
 
@@ -197,6 +222,14 @@ LogViewer.prototype.generateLogViewer = function() {
     ajaxLoadUrl(fillElement, url)
 };
 
+LogViewer.prototype.tightBorders = function() {
+    this.div.className = "wd_tight";
+}
+
+LogViewer.prototype.wideBorders = function() {
+    this.div.className = "wd";
+}
+
 
 
 
@@ -295,6 +328,14 @@ StatusPlot.prototype.generateStatusPlot = function() {
     ajaxLoadUrl(fillElement, url)
 };
 
+StatusPlot.prototype.tightBorders = function() {
+    this.div.className = "wd_tight";
+}
+
+StatusPlot.prototype.wideBorders = function() {
+    this.div.className = "wd";
+}
+
 
 
 
@@ -333,6 +374,18 @@ function Histogram(id, containerDiv, controllerUrl, schematic) {
 
         this.instrumentId = schematic["instrumentId"];
         this.attribute = schematic["attribute"];
+
+        // Need to perform checks now, because some previously saved dashboards will not have these new fields.
+        if (schematic["constraintStyle"]) {
+            this.constraintStyle = schematic["constraintStyle"];
+        } else {
+            this.constraintStyle = "custom";
+        }
+        if (schematic["constraintRange"]) {
+            this.constraintRange = schematic["constraintRange"];
+        } else {
+            this.constraintRange = "sixhour"
+        }
     } else {
         this.controllerHidden = false;
         this.updateFrequency = 5; // How often in minutes this object will update.
@@ -350,6 +403,8 @@ function Histogram(id, containerDiv, controllerUrl, schematic) {
 
         this.instrumentId = null;
         this.attribute = null;
+        this.constraintStyle = "custom";   // The data constraint controls available
+        this.constraintRange = "sixhour";  // If constraintStyle is 'auto', the range for the data displayed
     }
 
     containerDiv.appendChild(this.div);
@@ -382,7 +437,9 @@ Histogram.prototype.saveDashboard = function() {
         "graphSize": this.graphSize,
         "instrumentId": this.instrumentId,
         "attribute": this.attribute,
-        "updateFrequency": this.updateFrequency
+        "updateFrequency": this.updateFrequency,
+        "constraintStyle": this.constraintStyle,
+        "constraintRange": this.constraintRange
     }
 
     return {"type": "Histogram", "data": data};
@@ -425,13 +482,21 @@ Histogram.prototype.initializeElements = function (loadDashboard) {
 
         document.getElementById("histogram-size-button-" + that.graphSize + "-" + that.id).checked = true;
 
+        document.getElementById("time-range-" + that.constraintRange + "-" + that.id).checked = true;
+
         if (that.controllerHidden) {
             that.hideController();
+        }
+        if (that.constraintStyle == "auto") {
+            that.showConstraintAuto();
+        } else {
+            that.showConstraintCustom();
         }
     } else {
         // Defaults the graph beginning time to 7 days ago
         updateStartTime(that.id, 7);
         document.getElementById("datetime-input-end-" + that.id).value = that.endUTC;
+        that.showConstraintCustom();
     }
 
     // Selector for which instrument the attributes are for
@@ -446,6 +511,10 @@ Histogram.prototype.initializeElements = function (loadDashboard) {
     // Button to generate Histogram from data parameter controls
     var addButton = document.getElementById("histogram-add-button-" + that.id);
     addButton.onclick = function () { that.generateHistogram(); };
+
+    // Secondary generate Histogram button inside the controller
+    var controllerAddButton = document.getElementById("controller-histogram-add-" + that.id);
+    controllerAddButton.onclick = function () { that.generateHistogram(); };
 
     // Data parameter controls: Hide and Reveal
     var hideButton = document.getElementById("histogram-hide-button-" + that.id);
@@ -529,6 +598,12 @@ Histogram.prototype.generateHistogram = function() {
     var graphSizeElement = document.querySelector('input[name="histogram-size-' + this.id + '"]:checked');
     if (graphSizeElement) {
         this.graphSize = graphSizeElement.value;
+    }
+
+    var constraintRange = document.querySelector('input[name="time-range-' + this.id + '"]:checked');
+
+    if (constraintRange) {
+        this.constraintRange = constraintRange.value;
     }
 
     // Set sizes according to selection
@@ -653,12 +728,21 @@ Histogram.prototype.generateHistogram = function() {
         that.updateLastReceived();
     }};
 
+    if (this.constraintStyle == "auto") {
+        var startTime = this.getAutomaticBeginning();
+        var endTime = new Date();
+        var startUTCArg = startTime.toUTCString();
+        var endUTCArg = endTime.toUTCString();
+    } else {
+        var startUTCArg = this.startUTC;
+        var endUTCArg = this.endUTC;
+    }
 
     var url = "/generate_instrument_graph" +
               "?keys=" + this.attribute +
               "&instrument_id=" + this.instrumentId +
-              "&start=" + this.startUTC +
-              "&end=" + this.endUTC;
+              "&start=" + startUTCArg +
+              "&end=" + endUTCArg;
     xmlhttp.open("POST", url, true);
 
     //Send out the request
@@ -775,6 +859,30 @@ Histogram.prototype.updateLastReceived = function() {
 
 }
 
+
+Histogram.prototype.getAutomaticBeginning = function () {
+    var now = new Date();
+    if (this.constraintRange == "tenminute") {
+        return new Date(now.setMinutes(now.getMinutes() - 10));
+    } if (this.constraintRange == "hour") {
+        return new Date(now.setHours(now.getHours() - 1));
+    } else if (this.constraintRange == "sixhour") {
+        return new Date(now.setHours(now.getHours() - 6));
+    } else if (this.constraintRange == "day") {
+        return new Date(now.setDate(now.getDate() - 1));
+    } else if (this.constraintRange == "week") {
+        return new Date(now.setDate(now.getDate() - 7));
+    } else if (this.constraintRange == "fortnight") {
+        return new Date(now.setDate(now.getDate() - 14));
+    } else if (this.constraintRange == "month") {
+        return new Date(now.setMonth(now.getMonth() - 1));
+    } else {
+        // Default to six hours
+        return new Date(now.setHours(now.getHours() - 6));
+    }
+
+}
+
 Histogram.prototype.hideController = function () {
     element = document.getElementById("histogram-controller-" + this.id);
     element.style.display = "none";
@@ -820,6 +928,38 @@ Histogram.prototype.closeConfig = function () {
     contentElement.style.display = "";
 };
 
+Histogram.prototype.showConstraintAuto = function () {
+    var autoElement = document.getElementById("auto-times-" + this.id);
+    var customElement = document.getElementById("custom-times-" + this.id);
+    var constraintButton = document.getElementById("time-constraint-switch-" + this.id);
+    autoElement.style.display = "block";
+    customElement.style.display = "none";
+    var that = this;
+    constraintButton.onclick = function () { that.showConstraintCustom(); };
+    constraintButton.innerHTML = "Switch to Custom Range";
+    this.constraintStyle = "auto"
+}
+
+Histogram.prototype.showConstraintCustom = function () {
+    var autoElement = document.getElementById("auto-times-" + this.id);
+    var customElement = document.getElementById("custom-times-" + this.id);
+    var constraintButton = document.getElementById("time-constraint-switch-" + this.id);
+    autoElement.style.display = "none";
+    customElement.style.display = "block";
+    var that = this;
+    constraintButton.onclick = function () { that.showConstraintAuto(); };
+    constraintButton.innerHTML = "Switch to Sliding Window";
+    this.constraintStyle = "custom";
+}
+
+Histogram.prototype.tightBorders = function() {
+    this.div.className = "wd_tight";
+}
+
+Histogram.prototype.wideBorders = function() {
+    this.div.className = "wd";
+}
+
 
 
 
@@ -840,6 +980,7 @@ function InstrumentGraph(id, containerDiv, controllerUrl, genGraphURL, schematic
     this.graphTitle = null;
     this.dygraph = "";
     this.lastReceived = null;      // The timestamp for the last data received
+    this.statsHidden = true;
 
     var validSchematic = false;
     if (schematic) {
@@ -854,11 +995,23 @@ function InstrumentGraph(id, containerDiv, controllerUrl, genGraphURL, schematic
         this.endTime = new Date(schematic["endUTC"] + " UTC");
         this.originTime = this.beginningTime;
         this.rollPeriod = schematic["rollPeriod"];
+        // Need to perform checks now, because some previously saved dashboards will not have these new fields.
         if (schematic["convertToDB"]) {
             this.convertToDB = schematic["convertToDB"];
         } else {
             this.convertToDB = false;
         }
+        if (schematic["constraintStyle"]) {
+            this.constraintStyle = schematic["constraintStyle"];
+        } else {
+            this.constraintStyle = "custom";
+        }
+        if (schematic["constraintRange"]) {
+            this.constraintRange = schematic["constraintRange"];
+        } else {
+            this.constraintRange = "sixhour"
+        }
+
     } else {
         this.controllerHidden = false;
         this.statFrequency = 10;       // How often the stats will be generated. Every X requests for data, update stats
@@ -871,6 +1024,8 @@ function InstrumentGraph(id, containerDiv, controllerUrl, genGraphURL, schematic
         this.originTime = null;        // Origin time is the beginning time at graph creation, for aggregate stats
         this.rollPeriod = 3;           // Roll period for the Dygraph
         this.convertToDB = false;      // Whether or not the data is converted to dB scale before graphing.
+        this.constraintStyle = "custom";   // The data constraint controls available
+        this.constraintRange = "sixhour";  // If constraintStyle is 'auto', the range for the data displayed
     }
 
     // Statistic fields, only handled if stats_enabled is true
@@ -932,7 +1087,9 @@ InstrumentGraph.prototype.saveDashboard = function() {
         "endUTC": endUTC,
         "graphSize": this.graphSize,
         "rollPeriod": this.rollPeriod,
-        "convertToDB": this.convertToDB
+        "convertToDB": this.convertToDB,
+        "constraintStyle": this.constraintStyle,
+        "constraintRange": this.constraintRange
     }
     return {"type": "InstrumentGraph", "data": data}
 }
@@ -988,13 +1145,23 @@ InstrumentGraph.prototype.initializeElements = function (loadDashboard) {
 
         document.getElementById("convert-to-dB-" + that.id).checked = that.convertToDB;
 
+        document.getElementById("time-range-" + that.constraintRange + "-" + that.id).checked = true;
+
         if (that.controllerHidden) {
             that.hideController();
+        }
+        if (that.constraintStyle == "auto") {
+            that.showConstraintAuto();
+        } else {
+            that.showConstraintCustom();
         }
     } else {
         // Defaults the graph beginning time to 7 days ago
         updateStartTime(that.id, 7);
+        that.showConstraintCustom();
     }
+
+    this.statsHidden = true;
 
     //Button to remove this widget
     var removeButton = document.getElementById("inst-graph-remove-button-" + that.id);
@@ -1003,6 +1170,10 @@ InstrumentGraph.prototype.initializeElements = function (loadDashboard) {
     // Button to generate graph from data parameter controls
     var addButton = document.getElementById("inst-graph-add-button-" + that.id);
     addButton.onclick = function () { that.generateInstrumentGraph(); };
+
+    // Secondary graph button inside the controller
+    var controllerAddButton = document.getElementById("controller-graph-add-" + that.id);
+    controllerAddButton.onclick = function () { that.generateInstrumentGraph(); };
 
     // Selector for which instrument the attributes are for
     // When changed should update all options for attribute selectors
@@ -1113,6 +1284,12 @@ InstrumentGraph.prototype.generateInstrumentGraph = function(){
 
     var masterDiv = document.getElementById('instrument-graph-container-' + this.id)
 
+    var constraintRange = document.querySelector('input[name="time-range-' + this.id + '"]:checked');
+
+    if (constraintRange) {
+        this.constraintRange = constraintRange.value;
+    }
+
     // Size from radio set
     this.graphSize = "medium";
     var graphWidth = 500;
@@ -1142,11 +1319,21 @@ InstrumentGraph.prototype.generateInstrumentGraph = function(){
     }
 
     startStr = document.getElementById("datetime-input-start-" + this.id).value;
-    this.originTime = new Date(startStr + " UTC");
-    this.beginningTime = new Date(startStr + " UTC");
+    if (this.constraintStyle == "auto") {
+        this.originTime = this.getAutomaticBeginning();
+        this.beginningTime = this.getAutomaticBeginning();
+    } else {
+        this.originTime = new Date(startStr + " UTC");
+        this.beginningTime = new Date(startStr + " UTC");
+    }
 
     endStr = document.getElementById("datetime-input-end-" + this.id).value;
-    this.endTime = new Date(endStr + " UTC");
+    if (this.constraintStyle == "auto") {
+        delete this.endTime;
+        this.endTime = new Date();
+    } else {
+        this.endTime = new Date(endStr + " UTC");
+    }
 
     this.convertToDB = document.getElementById("convert-to-dB-" + this.id).checked;
 
@@ -1159,7 +1346,7 @@ InstrumentGraph.prototype.generateInstrumentGraph = function(){
     this.graphDivId = "graphdiv-" + this.id;
     this.graphDiv = document.createElement('div');
     this.graphDiv.className = "dashboard_instrument_dygraph";
-    this.graphDiv.innerHTML = '<div id = "' + this.graphDivId + '-parent">' +
+    this.graphDiv.innerHTML += '<div id = "' + this.graphDivId + '-parent">' +
                          '<div id="' + this.graphDivId +
                          '" style="width: ' + graphWidth + 'px; height: ' + graphHeight +
                          'px; display: inline-block;"></div></div>'
@@ -1204,7 +1391,25 @@ InstrumentGraph.prototype.generateInstrumentGraph = function(){
 
     masterDiv.insertBefore(this.graphDiv, masterDiv.firstChild);
     //Appending dataDiv onto this div assures that it will be removed with the Graph if the Graph is removed
-    this.graphDiv.firstChild.appendChild(this.dataDiv)
+    // Add button to hide or display stats
+    var statsHiddenButton = document.createElement('button');
+    statsHiddenButton.id = "stats-hidden-button-" + this.id;
+    var that = this;
+    statsHiddenButton.onclick = function () { that.toggleStatsHidden(); };
+    statsHiddenButton.innerHTML = "Stats";
+    this.dataDiv.style.display = "none";
+
+    var linebreak = document.createElement("br");
+
+    // Container div to hold all stats controls
+    var statsDiv = document.createElement("div");
+    statsDiv.style.display = "inline-block";
+    statsDiv.appendChild(statsHiddenButton);
+    statsDiv.appendChild(linebreak);
+    statsDiv.appendChild(this.dataDiv);
+
+    // Append container div
+    this.graphDiv.firstChild.appendChild(statsDiv);
     this.innerDiv = document.getElementById(this.graphDivId);
     this.innerDiv.innerHTML = "<p><br><i>Loading Graph...</i></p>"
 
@@ -1400,6 +1605,9 @@ InstrumentGraph.prototype.updateWithValues = function(values) {
             } else {
                 this.graphData = this.graphData.concat(values);
             }
+            if (this.constraintStyle == "auto") {
+                this.trimOldGraphData();
+            }
             this.dygraph.updateOptions({ 'file': this.graphData });
         }
     }
@@ -1483,9 +1691,12 @@ InstrumentGraph.prototype.updateInstrumentGraph = function() {
     //Send JSON POST XMLHTTPRequest to generator controller.
     //Include keys for the generated graph, and convert start and end datetimes to a valid argument format
     //Assume input is in UTC
-
     var originUTC = this.originTime.toUTCString();
     var startUTC = this.beginningTime.toUTCString();
+    if (this.constraintStyle == "auto") {
+        delete this.endTime;
+        this.endTime = new Date();
+    }
     var endUTC = this.endTime.toUTCString();
 
     var doStats = 0;
@@ -1509,6 +1720,44 @@ InstrumentGraph.prototype.updateInstrumentGraph = function() {
     //Send out the  request
     xmlhttp.send();
 };
+
+InstrumentGraph.prototype.trimOldGraphData = function () {
+    // This function assumes the data is ordered from oldest to newest data
+    // Removes all entries older than the automatic range's beginning.
+    var beginning = this.getAutomaticBeginning();
+    var countToRemove = 0;
+    for (var i = 0; i < this.graphData.length; i ++) {
+        if (beginning > this.graphData[i][0]) {
+            countToRemove += 1;
+        } else {
+            this.graphData.splice(0, countToRemove);
+            break;
+        }
+    }
+}
+
+InstrumentGraph.prototype.getAutomaticBeginning = function () {
+    var now = new Date();
+    if (this.constraintRange == "tenminute") {
+        return new Date(now.setMinutes(now.getMinutes() - 10));
+    } if (this.constraintRange == "hour") {
+        return new Date(now.setHours(now.getHours() - 1));
+    } else if (this.constraintRange == "sixhour") {
+        return new Date(now.setHours(now.getHours() - 6));
+    } else if (this.constraintRange == "day") {
+        return new Date(now.setDate(now.getDate() - 1));
+    } else if (this.constraintRange == "week") {
+        return new Date(now.setDate(now.getDate() - 7));
+    } else if (this.constraintRange == "fortnight") {
+        return new Date(now.setDate(now.getDate() - 14));
+    } else if (this.constraintRange == "month") {
+        return new Date(now.setMonth(now.getMonth() - 1));
+    } else {
+        // Default to six hours
+        return new Date(now.setHours(now.getHours() - 6));
+    }
+
+}
 
 InstrumentGraph.prototype.applyConfig = function () {
     var errorElement = document.getElementById("inst-graph-config-error-" + this.id);
@@ -1609,6 +1858,48 @@ InstrumentGraph.prototype.closeConfig = function () {
     contentElement.style.display = "";
 };
 
+InstrumentGraph.prototype.toggleStatsHidden = function () {
+    var statsHiddenButton = document.getElementById("stats-hidden-button-" + this.id);
+    if (this.dataDiv.style.display == "none") {
+        this.dataDiv.style.display = "";
+        statsHiddenButton.innerHTML = "Hide"
+    } else {
+        this.dataDiv.style.display = "none";
+        statsHiddenButton.innerHTML = "Stats";
+    }
+}
+
+InstrumentGraph.prototype.showConstraintAuto = function () {
+    var autoElement = document.getElementById("auto-times-" + this.id);
+    var customElement = document.getElementById("custom-times-" + this.id);
+    var constraintButton = document.getElementById("time-constraint-switch-" + this.id);
+    autoElement.style.display = "block";
+    customElement.style.display = "none";
+    var that = this;
+    constraintButton.onclick = function () { that.showConstraintCustom(); };
+    constraintButton.innerHTML = "Switch to Custom Range";
+    this.constraintStyle = "auto"
+}
+
+InstrumentGraph.prototype.showConstraintCustom = function () {
+    var autoElement = document.getElementById("auto-times-" + this.id);
+    var customElement = document.getElementById("custom-times-" + this.id);
+    var constraintButton = document.getElementById("time-constraint-switch-" + this.id);
+    autoElement.style.display = "none";
+    customElement.style.display = "block";
+    var that = this;
+    constraintButton.onclick = function () { that.showConstraintAuto(); };
+    constraintButton.innerHTML = "Switch to Sliding Window";
+    this.constraintStyle = "custom";
+}
+
+InstrumentGraph.prototype.tightBorders = function() {
+    this.div.className = "wd_tight";
+}
+
+InstrumentGraph.prototype.wideBorders = function() {
+    this.div.className = "wd";
+}
 
 
 // Helper functions

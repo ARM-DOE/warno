@@ -328,6 +328,16 @@ div.wd {
     background-color: #e5f2ff;
 }
 
+div.wd_tight {
+    border: 2px solid black;
+    width: auto%;
+    margin: 5px 0%;
+    padding: 2px;
+    display: inline-block;
+    vertical-align: top;
+    background-color: #e5f2ff;
+}
+
 div.dashboard_graph_stats {
     margin: 10px;
     display: inline-block;

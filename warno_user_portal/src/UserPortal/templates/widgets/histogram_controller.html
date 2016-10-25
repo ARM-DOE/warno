@@ -28,7 +28,9 @@
         </div>
 
         <div class="graph_setup_container" id="histogram-controller-{{id}}">
-
+            <button id="time-constraint-switch-{{id}}">Switch to Sliding Window</button>
+            <button id="controller-histogram-add-{{id}}" style="float: right;">Apply</button>
+            <div id="custom-times-{{id}}">
             <p><label for="time">Start Date/Time in UTC:</label>
                 <input type="datetime" id="datetime-input-start-{{id}}" name="start" value="01/01/1970 12:27:31">
             </p>
@@ -49,6 +51,19 @@
                     <div id="histogram-error-{{id}}" style="color: red">{{error}}</div>
                 {% endif %}
             </p>
+            </div>
+            <div id="auto-times-{{id}}" style="display: none;">
+                Sliding Time Window:
+                <br>
+                <input type="radio" id="time-range-tenminute-{{id}}" name="time-range-{{id}}" value="tenminute">Ten Minutes
+                <input type="radio" id="time-range-hour-{{id}}" name="time-range-{{id}}" value="hour">Hour
+                <input type="radio" id="time-range-sixhour-{{id}}" name="time-range-{{id}}" value="sixhour" checked>Six Hours
+                <input type="radio" id="time-range-day-{{id}}" name="time-range-{{id}}" value="day">Day
+                <br>
+                <input type="radio" id="time-range-week-{{id}}" name="time-range-{{id}}" value="week">Week
+                <input type="radio" id="time-range-fortnight-{{id}}" name="time-range-{{id}}" value="fortnight">Fortnight
+                <input type="radio" id="time-range-month-{{id}}" name="time-range-{{id}}" value="month">Month
+            </div>
             <div>
                 <label for="lower-limit">Lower Limit</label>
                 <input style="width: 70px;" type="text" name="lower-limit" id="histogram-lower-limit-{{id}}">
