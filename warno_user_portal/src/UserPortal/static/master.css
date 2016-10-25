@@ -693,6 +693,11 @@ div.info {
     border: 1px solid black;
 }
 
+div.info_white {
+    background-color: white;
+    border: 1px solid black;
+}
+
 div.error_display {
     color: red;
 }

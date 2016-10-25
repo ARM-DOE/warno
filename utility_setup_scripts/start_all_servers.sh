@@ -2,7 +2,7 @@
 
 # Otherwise config cannot be found (not set PYTHONPATH, DATA_STORE_PATH)
 echo "Start All Servers"
-source /vagrant/utility_setup_scripts/set_env_for_testing.sh
+source /vagrant/utility_setup_scripts/set_vagrant_env.sh
 
 # Postgres server is started in another script, as it requires sudo access
 bash /vagrant/warno_event_manager/start_event_manager.sh

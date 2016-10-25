@@ -16,11 +16,11 @@ class TestIndexFunctionality(TestCase):
     def tearDown(self):
         self.browser.quit()
 
-    def test_index_has_Status_in_title(self):
+    def test_index_has_status_in_title(self):
         """
         Test that visiting the home url displays the landing page.
         """
-    def test_index_has_Status_in_title(self):
+    def test_index_has_status_in_title(self):
         self.browser.get(self.warno_url)
         self.assertTrue('Status' in self.browser.title, '"Status" is not in index title.')
 
@@ -32,13 +32,13 @@ class TestIndexFunctionality(TestCase):
         self.browser.find_element_by_link_text("Sites").click()
         self.assertTrue('Site' in self.browser.title, 'Sites did not have "Site" in title.')
 
-    def test_pulses_has_pulses_in_title(self):
-        """
-        Test that clicking 'Pulses' button redirects to the correct page.
-        """
-        self.browser.get(self.warno_url)
-        self.browser.find_element_by_link_text("Pulses").click()
-        self.assertTrue('Pulse' in self.browser.title, 'Pulses did not have "Pulse" in title')
+    # def test_pulses_has_pulses_in_title(self):  TODO should there be a link to devel pages?  How to approach?
+    #     """
+    #     Test that clicking 'Pulses' button redirects to the correct page.
+    #     """
+    #     self.browser.get(self.warno_url)
+    #     self.browser.find_element_by_link_text("Pulses").click()
+    #     self.assertTrue('Pulse' in self.browser.title, 'Pulses did not have "Pulse" in title')
 
     def test_instruments_has_instruments_in_title(self):
         """
@@ -154,23 +154,17 @@ class TestIndexFunctionality(TestCase):
                         "Redirected page's subtitle did not contain the instrument name %s" %
                         test_log['instrument_name_only'])
 
-        info_boxes = self.browser.find_elements_by_class_name("info")
+        info_boxes = self.browser.find_elements_by_class_name("info_white")
         # Asserts that the test_log['status'] is in any element with the class name "info"
         self.assertTrue(True in [test_log['status'] in box.text for box in info_boxes],
                         "Log's status '%s' is not in the first info box" % test_log['status'])
 
-        # No id's or names for log entries displayed, so just do a general search for the div containing the author
         # TODO Figure out a way to test for time, even though it switches from local at input to utc at display
-        possible_divs = self.browser.find_elements_by_tag_name("div")
-        test_div = []
-        for div in possible_divs:
-            if test_log['user'] in div.text:
-                test_div = div
 
-        self.assertTrue(test_log['contents'] in test_div.text,
-                        "Log's contents not displayed in %s's log" % test_log['user'])
-        self.assertTrue(test_log['status'] in test_div.text,
-                        "Log's status %s not displayed in %s's log" % (test_log['status'], test_log['user']))
+        self.assertTrue(True in [test_log['contents'] in box.text for box in info_boxes],
+                        "Log's contents not displayed in %s's logs" % test_log['user'])
+        self.assertTrue(True in [test_log['status'] in box.text for box in info_boxes],
+                        "Log's status %s not displayed in %s's logs" % (test_log['status'], test_log['user']))
 
     def test_user_add_button_redirects_to_register_page(self):
         """
@@ -182,110 +176,134 @@ class TestIndexFunctionality(TestCase):
         contents = self.browser.find_element_by_class_name('sub-title')
         self.assertTrue('Register' in contents.text, "Redirected page's subtitle did not contain 'Register'")
 
-    def test_user_add_adds_user(self):
+    def test_sign_in_link_redirects_to_sign_in_page(self):
         """
-        Test user add adds user to database, and then makes the user visible in user listing with correct elements.
+        Test that clicking on the "Sign In" link redirects to the user sign in page.
         """
-        # TODO change this to testing user registration?
-        return
+        self.browser.get(self.warno_url)
+        self.browser.find_element_by_link_text("Sign In").click()
+        contents = self.browser.find_element_by_class_name("sub-title")
+        self.assertTrue("Sign In" in contents.text, "Redirected page's subtitle did not contain 'Sign In'")
 
-        test_user = {'name': 'TESTNAME',
-                     'email': 'TESTEMAIL@TESTHOST.com',
+    def test_register_link_in_sign_in_page_redirects_to_register_page(self):
+        """
+        Test that clicking on the "Register" link in the sign in page redirects to the new user form page.
+        """
+        self.browser.get(self.warno_url)
+        self.browser.find_element_by_link_text("Sign In").click()
+        contents = self.browser.find_element_by_class_name("sub-title")
+        self.assertTrue("Sign In" in contents.text, "Redirected page's subtitle did not contain 'Sign In'")
+
+        self.browser.find_element_by_link_text("New here? Register.").click()
+        contents = self.browser.find_element_by_class_name("sub-title")
+        self.assertTrue("Register" in contents.text, "Redirected page's subtitle did not contain 'Register'")
+
+    def test_forgot_password_link_in_sign_in_page_redirects_to_reset_password_page(self):
+        """
+        Test that clicking on the "Forgot your Password" link in the sign in page redirects to the password reset page.
+        """
+        self.browser.get(self.warno_url)
+        self.browser.find_element_by_link_text("Sign In").click()
+        contents = self.browser.find_element_by_class_name("sub-title")
+        self.assertTrue("Sign In" in contents.text, "Redirected page's subtitle did not contain 'Sign In'")
+
+        self.browser.find_element_by_link_text("Forgot your Password?").click()
+        contents = self.browser.find_element_by_class_name("sub-title")
+        self.assertTrue("Reset Password" in contents.text,
+                        "Redirected page's subtitle did not contain 'Reset Password'")
+
+    def sign_in_as_test_user_and_sign_out(self):
+        login_user = {'username': 'JTech',
+                      'password': 'Testpass1'}
+
+        self.browser.get(self.warno_url)
+        self.browser.find_element_by_link_text("Sign In").click()
+        username_input = self.browser.find_element_by_id("username")
+        password_input = self.browser.find_element_by_id("password")
+        username_input.send_keys(login_user['username'])
+        password_input.send_keys(login_user['password'])
+        password_input.submit()
+
+        sub_title = self.browser.find_element_by_class_name('sub-title')
+        self.assertTrue(login_user['username'] in sub_title.text,
+                       "Logged in username '%s' not in subtitle div." % login_user['username'])
+
+        self.browser.find_element_by_link_text("Sign Out").click()
+        sub_title = self.browser.find_element_by_class_name('sub-title')
+        self.assertTrue(login_user['username'] not in sub_title.text,
+                        "Username '%s' was in the subtitle div when it shouldn't be." % login_user['username'])
+
+    def signing_in_as_test_user_allows_more_dashboard_buttons(self):
+        login_user = {'username': 'JTech',
+                      'password': 'Testpass1'}
+
+        self.browser.get(self.warno_url)
+        self.browser.find_element_by_link_text("Dashboard").click()
+
+        buttons = self.browser.find_elements_by_tag_name("button")
+        button_count_before_login = len(buttons)
+
+        self.browser.find_element_by_link_text("Sign In").click()
+        username_input = self.browser.find_element_by_id("username")
+        password_input = self.browser.find_element_by_id("password")
+        username_input.send_keys(login_user['username'])
+        password_input.send_keys(login_user['password'])
+        password_input.submit()
+
+        self.browser.get(self.warno_url)
+        self.browser.find_element_by_link_text("Dashboard").click()
+
+        buttons = self.browser.find_elements_by_tag_name("button")
+        button_count_after_login = len(buttons)
+
+        print button_count_before_login
+        print button_count_after_login
+        self.assertGreater(button_count_after_login, button_count_before_login,
+                           "The number of available buttons on the Dashboard did not increase after logging in.")
+
+    def test_user_register_adds_a_user_to_list_of_users(self):
+        """
+        Test user register adds user to database, and then makes the user visible in user listing with correct elements.
+        """
+
+        user_randint = randint(0, 1000)
+        test_user = {'username': 'TESTUSERNAME%d' % user_randint,
+                     'name': 'TESTNAME',
+                     'email': 'TESTEMAIL%d@TESTHOST.com' % user_randint,
                      'location': 'TESTLOCATION',
                      'position': 'TESTPOSITION',
-                     'password': 'TESTPASSWORD'}
+                     'password': 'Testpass1'}
 
-        # Navigate to the new user form
+        # Navigate to registration form
         self.browser.get(self.warno_url)
+        self.browser.find_element_by_link_text("Sign In").click()
+        self.browser.find_element_by_link_text("New here? Register.").click()
+        contents = self.browser.find_element_by_class_name("sub-title")
+        self.assertTrue("Register" in contents.text, "Redirected page's subtitle did not contain 'Register'")
+
+        # Register as a new user with test information
+        self.browser.find_element_by_id("username").send_keys(test_user["username"])
+        self.browser.find_element_by_id("email").send_keys(test_user["email"])
+        self.browser.find_element_by_id("name").send_keys(test_user["name"])
+        self.browser.find_element_by_id("position").send_keys(test_user["position"])
+        self.browser.find_element_by_id("location").send_keys(test_user["location"])
+        self.browser.find_element_by_id("password").send_keys(test_user["password"])
+        final_element = self.browser.find_element_by_id("retype_password")
+        final_element.send_keys(test_user["password"])
+        final_element.submit()
+
+        # Navigate to user page, confirm new user is in list
         self.browser.find_element_by_link_text('Users').click()
-        self.browser.find_element_by_id('new-user-redirect-button').click()
+        contents = self.browser.find_element_by_class_name('sub-title')
+        self.assertTrue('User' in self.browser.title, 'Redirected page did not have "Users" in subtitle')
 
-        # Fill in the new user form
-        for key in test_user.keys():
-            element = self.browser.find_element_by_name(key)
-            element.send_keys(test_user[key])
+        user_table = self.browser.find_element_by_id("user-table")
+        print user_table.text
+        self.assertTrue(test_user["username"] in user_table.text,
+                        "List of users does not contain the new username '%s'" % test_user["username"])
 
-        # Should insert user and redirect to users page
-        self.browser.find_element_by_id('submit').click()
-
-        self.assertTrue('users' in self.browser.current_url, 'Did not redirect to users page after user insert')
-
-        table_id = self.browser.find_element_by_id('user-table')
-        rows = table_id.find_elements_by_tag_name('tr')
-        test_row = []
-        for row in rows[1:]:
-            if row.find_elements_by_tag_name("td")[0].text == test_user['name']:
-                test_row = row
-
-        # Now assert that the entered information is displayed
-        test_values = [td.text for td in test_row.find_elements_by_tag_name('td')]
-        for key in test_user.keys():
-            # You pretty much never display a password, so don't expect to see one
-            if key != 'password':
-                self.assertIn(test_user[key], test_values, 'Missing Value %s' % test_user[key])
-
-    def test_creating_a_user_and_editing_the_name_results_in_a_user_with_the_edited_name_in_the_user_list(self):
-        """
-        Test that editing an user name successfully edits the database entry by showing the edited user
-        in the users list.
-        """
-        # TODO Test needs to be updated to reflect that password is not updated here, but in its own page
-        # TODO Also need to add a 'username'.  The page has not been updated to allow this yet
-        return
-
-        test_user = {'name': 'TESTNAME%d' % randint(0, 100),
-                     'email': 'TESTEMAIL@TESTHOST.com',
-                     'location': 'TESTLOCATION',
-                     'position': 'TESTPOSITION',
-                     'password': 'TESTPASSWORD'}
-        new_name = "EDITEDNAME%d" % randint(0, 100)
-
-        # Navigate to the new user form
-        self.browser.get(self.warno_url)
-        self.browser.find_element_by_link_text('Users').click()
-        self.browser.find_element_by_id('new-user-redirect-button').click()
-
-        # Fill in the new user form
-        for key in test_user.keys():
-            element = self.browser.find_element_by_name(key)
-            element.send_keys(test_user[key])
-
-        # Should insert user and redirect to users page
-        self.browser.find_element_by_id('submit').click()
-
-        self.assertTrue('users' in self.browser.current_url, 'Did not redirect to users page after user insert')
-
-        # Find the row with the new user
-        table_id = self.browser.find_element_by_id('user-table')
-        rows = table_id.find_elements_by_tag_name('tr')
-        test_row = []
-        for row in rows[1:]:
-            if row.find_elements_by_tag_name("td")[0].text == test_user["name"]:
-                test_row = row
-
-        # In the row with the new user, find the 'Edit' link and click it
-        test_row_tds = test_row.find_elements_by_tag_name('td')
-
-        for td in test_row_tds:
-            if td.text == "Edit":
-                td.find_elements_by_tag_name('a')[0].click()
-
-        # It should redirect to the proper edit page
-        self.assertTrue('edit' in self.browser.current_url, 'Did not redirect to edit page.')
-
-        # Clear the name box and fill it with the edited name
-        name_field = self.browser.find_element_by_id("userNameBox")
-        name_field.clear()
-        name_field.send_keys(new_name)
-
-        # Submit the form.  Should redirect to the list of users
-        self.browser.find_element_by_id('submit').click()
-
-        self.assertTrue('users' in self.browser.current_url, 'Did not redirect to users page after user update')
-
-        # Make sure that the edited user now displays in the list of users.
-        test_values = [td.text for td in self.browser.find_elements_by_tag_name("td")]
-        self.assertIn(new_name, test_values, "Edited name not in table cells on page.")
+# TODO Tests for dashboard widgets (status plot in depth, maybe log viewer, controllers added for others)
+# TODO Tests for dashboard save/load? Include graphing?
 
     def test_instrument_add_button_redirects_to_new_instrument_page(self):
         """
