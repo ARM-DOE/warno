@@ -32,6 +32,11 @@ WidgetManager.prototype.saveDashboard = function() {
 WidgetManager.prototype.loadDashboard = function(dashboardSchematic) {
     this.removeWidgets();
     this.removeInactive();
+
+    this.buildFromSchematic(dashboardSchematic);
+};
+
+WidgetManager.prototype.buildFromSchematic = function(dashboardSchematic) {
     // Build objects from the returned dashboard configuration
     for (var i = 0; i < dashboardSchematic.length; i ++) {
         if (dashboardSchematic[i]["type"] == "LogViewer") {
@@ -51,7 +56,18 @@ WidgetManager.prototype.loadDashboard = function(dashboardSchematic) {
             this.addInstrumentGraph(dashboardSchematic[i]["data"]);
         }
     }
-};
+}
+
+WidgetManager.prototype.copyWidget = function(widgetId) {
+    for (i = 0; i < this.widgets.length; i++) {
+        if (this.widgets[i].id == widgetId) {
+            // Quick solution. Appends a schematic entry then builds the objects from it.
+            var schematic = [];
+            schematic.push(this.widgets[i].saveDashboard());
+            this.buildFromSchematic(schematic);
+        }
+    }
+}
 
 WidgetManager.prototype.removeInactive = function() {
     for (i = 0; i < this.widgets.length; i++){
@@ -63,7 +79,7 @@ WidgetManager.prototype.removeInactive = function() {
 }
 
 WidgetManager.prototype.addLogViewer = function() {
-    newLogViewer = new LogViewer(this.newWidgetId, this.containerDiv, this.controllerUrl, this.logViewerURL);
+    newLogViewer = new LogViewer(this, this.newWidgetId, this.containerDiv, this.controllerUrl, this.logViewerURL);
     this.widgets.push(newLogViewer);
     this.newWidgetId += 1;
     if (this.hasTightBorders) {
@@ -72,7 +88,7 @@ WidgetManager.prototype.addLogViewer = function() {
 };
 
 WidgetManager.prototype.addStatusPlot = function() {
-    newStatusPlot = new StatusPlot(this.newWidgetId, this.containerDiv, this.controllerUrl, this.statusPlotURL);
+    newStatusPlot = new StatusPlot(this, this.newWidgetId, this.containerDiv, this.controllerUrl, this.statusPlotURL);
     this.widgets.push(newStatusPlot);
     this.newWidgetId +=1;
     if (this.hasTightBorders) {
@@ -81,7 +97,7 @@ WidgetManager.prototype.addStatusPlot = function() {
 };
 
 WidgetManager.prototype.addHistogram = function(schematic) {
-    newHistogram = new Histogram(this.newWidgetId, this.containerDiv, this.controllerUrl, schematic);
+    newHistogram = new Histogram(this, this.newWidgetId, this.containerDiv, this.controllerUrl, schematic);
     this.widgets.push(newHistogram);
     this.newWidgetId +=1;
     if (this.hasTightBorders) {
@@ -90,7 +106,8 @@ WidgetManager.prototype.addHistogram = function(schematic) {
 };
 
 WidgetManager.prototype.addInstrumentGraph = function(schematic) {
-    newInstrumentGraph = new InstrumentGraph(this.newWidgetId, this.containerDiv, this.controllerUrl, this.genGraphURL, schematic);
+    newInstrumentGraph = new InstrumentGraph(this, this.newWidgetId, this.containerDiv, this.controllerUrl,
+                                             this.genGraphURL, schematic);
     this.widgets.push(newInstrumentGraph);
     this.newWidgetId += 1;
     if (this.hasTightBorders) {
@@ -122,7 +139,8 @@ WidgetManager.prototype.wideBorders = function() {
 
 
 // Log Display Section
-function LogViewer(id, containerDiv, controllerUrl, logViewerURL) {
+function LogViewer(manager, id, containerDiv, controllerUrl, logViewerURL) {
+    this.manager = manager;
     this.finishedLoading = true;
     this.id = id;
     this.active = true;                       // When no longer active, should be removed from the parent manager.
@@ -191,6 +209,8 @@ LogViewer.prototype.ajaxLoadUrl = function(element, url) {
 
             var addButton = document.getElementById("add-log-viewer-button-" + that.id);
             addButton.onclick = function () { that.generateLogViewer(); };
+            var copyButton = document.getElementById("copy-log-viewer-button-" + that.id);
+            copyButton.onclick = function () { that.manager.copyWidget(that.id); };
             var removeButton = document.getElementById("remove-log-viewer-button-" + that.id);
             removeButton.onclick = function () { that.remove(); };
 
@@ -235,7 +255,8 @@ LogViewer.prototype.wideBorders = function() {
 
 
 // Status Plot Section
-function StatusPlot(id, containerDiv, controllerUrl, statusPlotURL) {
+function StatusPlot(manager, id, containerDiv, controllerUrl, statusPlotURL) {
+    this.manager = manager;
     this.id = id;
     this.active = true;                       // When no longer active, should be removed from the parent manager.
     this.div = document.createElement('div');
@@ -299,6 +320,8 @@ StatusPlot.prototype.ajaxLoadUrl = function(element, url) {
 
             var addButton = document.getElementById("add-status-plot-button-" + that.id);
             addButton.onclick = function () { that.generateStatusPlot(); };
+            var copyButton = document.getElementById("copy-status-plot-button-" + that.id);
+            copyButton.onclick = function () { that.manager.copyWidget(that.id); };
             var removeButton = document.getElementById("remove-status-plot-button-" + that.id);
             removeButton.onclick = function () { that.remove(); };
 
@@ -341,7 +364,8 @@ StatusPlot.prototype.wideBorders = function() {
 
 // Histogram Section
 // If schematic is null, loads up with defaults.  If schematic exists, loads the schematic and displays the histogram
-function Histogram(id, containerDiv, controllerUrl, schematic) {
+function Histogram(manager, id, containerDiv, controllerUrl, schematic) {
+    this.manager = manager;
     this.id = id;
     this.active = true;       // When no longer active, should be removed from the parent manager.
     this.div = document.createElement('div');
@@ -504,6 +528,12 @@ Histogram.prototype.initializeElements = function (loadDashboard) {
     var selector = document.getElementById("instrument-select-" + that.id);
     selector.onchange = function () { that.updateSelect(false); };
 
+    // Button to copy Histogram widget. Disabled until data is graphed (or data will not properly copy)
+    var copyButton = document.getElementById("histogram-copy-button-" + that.id);
+    copyButton.onclick = function () { that.manager.copyWidget(that.id); };
+    copyButton.disabled = true;
+    copyButton.title = "Cannot Copy Until Graph Displayed";
+
     // Button to remove Histogram widget
     var removeButton = document.getElementById("histogram-remove-button-" + that.id);
     removeButton.onclick = function () { that.remove(); };
@@ -591,6 +621,11 @@ Histogram.prototype.generateHistogram = function() {
     this.endUTC = document.getElementById("datetime-input-end-" + this.id).value;
     this.upperLimit = parseFloat(document.getElementById("histogram-upper-limit-" + this.id).value);
     this.lowerLimit = parseFloat(document.getElementById("histogram-lower-limit-" + this.id).value);
+
+    // Enable copy button and change title to reflect functionality
+    var copyButton = document.getElementById("histogram-copy-button-" + this.id);
+    copyButton.disabled = false;
+    copyButton.title = "Copy This Widget";
 
     // Size from radio set
     var graphWidth = 500;
@@ -964,7 +999,8 @@ Histogram.prototype.wideBorders = function() {
 
 
 // Instrument Graph Section
-function InstrumentGraph(id, containerDiv, controllerUrl, genGraphURL, schematic) {
+function InstrumentGraph(manager, id, containerDiv, controllerUrl, genGraphURL, schematic) {
+    this.manager = manager;
     this.id = id;
     this.active = true;            // When no longer active, should be removed from the parent manager.
     this.div = document.createElement('div');
@@ -1163,6 +1199,12 @@ InstrumentGraph.prototype.initializeElements = function (loadDashboard) {
 
     this.statsHidden = true;
 
+    // Button to copy Instrument widget.  Disabled until data is graphed (or data will not properly copy)
+    var copyButton = document.getElementById("inst-graph-copy-button-" + that.id);
+    copyButton.onclick = function () { that.manager.copyWidget(that.id); };
+    copyButton.disabled = true;
+    copyButton.title = "Cannot Copy Until Graph Displayed";
+
     //Button to remove this widget
     var removeButton = document.getElementById("inst-graph-remove-button-" + that.id);
     removeButton.onclick = function () { that.remove(); };
@@ -1311,6 +1353,11 @@ InstrumentGraph.prototype.generateInstrumentGraph = function(){
         graphWidth = 750;
         graphHeight = 600;
     }
+
+    // Enable copy button and change title to reflect functionality
+    var copyButton = document.getElementById("inst-graph-copy-button-" + this.id);
+    copyButton.disabled = false;
+    copyButton.title = "Copy This Widget";
 
     var keyElems = document.getElementsByName("attribute-select-" + this.id);
     this.keys = [];
