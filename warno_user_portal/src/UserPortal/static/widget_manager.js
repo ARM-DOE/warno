@@ -410,6 +410,11 @@ function Histogram(manager, id, containerDiv, controllerUrl, schematic) {
         } else {
             this.constraintRange = "sixhour"
         }
+        if (schematic["convertToDB"]) {
+            this.convertToDB = schematic["convertToDB"];
+        } else {
+            this.convertToDB = false;
+        }
     } else {
         this.controllerHidden = false;
         this.updateFrequency = 5; // How often in minutes this object will update.
@@ -429,6 +434,7 @@ function Histogram(manager, id, containerDiv, controllerUrl, schematic) {
         this.attribute = null;
         this.constraintStyle = "custom";   // The data constraint controls available
         this.constraintRange = "sixhour";  // If constraintStyle is 'auto', the range for the data displayed
+        this.convertToDB = false;          // Whether or not the data is converted to dB scale before graphing.
     }
 
     containerDiv.appendChild(this.div);
@@ -463,7 +469,8 @@ Histogram.prototype.saveDashboard = function() {
         "attribute": this.attribute,
         "updateFrequency": this.updateFrequency,
         "constraintStyle": this.constraintStyle,
-        "constraintRange": this.constraintRange
+        "constraintRange": this.constraintRange,
+        "convertToDB": this.convertToDB
     }
 
     return {"type": "Histogram", "data": data};
@@ -507,6 +514,8 @@ Histogram.prototype.initializeElements = function (loadDashboard) {
         document.getElementById("histogram-size-button-" + that.graphSize + "-" + that.id).checked = true;
 
         document.getElementById("time-range-" + that.constraintRange + "-" + that.id).checked = true;
+
+        document.getElementById("convert-to-dB-" + that.id).checked = that.convertToDB;
 
         if (that.controllerHidden) {
             that.hideController();
@@ -627,6 +636,8 @@ Histogram.prototype.generateHistogram = function() {
     copyButton.disabled = false;
     copyButton.title = "Copy This Widget";
 
+    this.convertToDB = document.getElementById("convert-to-dB-" + this.id).checked;
+
     // Size from radio set
     var graphWidth = 500;
     var graphHeight = 400;
@@ -681,7 +692,10 @@ Histogram.prototype.generateHistogram = function() {
 
             var field1 = response.data.map(function(i){ return i[1] });
 
-            field1 = field1.filter(isNotSentinel)
+            field1 = field1.filter(isNotSentinel);
+            if (that.convertToDB) {
+                field1 = field1.map(toDB);
+            }
 
             var useAutorange = true;
             var histogramRange = [0,1];
@@ -2018,6 +2032,10 @@ function dataToDB(inputData) {
     for (var i = 1; i < inputData.length; i++)
         inputData[i] = 10 * (Math.log(inputData[i]) / Math.LN10);
     return inputData;
+}
+
+function toDB(inputData) {
+    return 10 * (Math.log(inputData) / Math.LN10);
 }
 
 function updateStartTime(id, days) {
