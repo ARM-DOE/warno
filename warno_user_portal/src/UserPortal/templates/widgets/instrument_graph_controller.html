@@ -15,9 +15,12 @@
             <img src="{{url_for('static', filename='gear.png')}}" style="width: 16px; height: 16px;" alt="Config">
         </button>
         <button type="button" id="inst-graph-add-button-{{id}}">Graph Instrument Graph</button>
-        <input type="radio" id="instrument-size-button-small-{{id}}" name="inst-graph-size-{{id}}" value="small">Small
-        <input type="radio" id="instrument-size-button-medium-{{id}}" name="inst-graph-size-{{id}}" value="medium" checked>Medium
-        <input type="radio" id="instrument-size-button-large-{{id}}" name="inst-graph-size-{{id}}" value="large">Large
+        <input type="radio" id="instrument-size-button-small-{{id}}" name="inst-graph-size-{{id}}" value="small">
+        <label for="instrument-size-button-small-{{id}}">Small</label>
+        <input type="radio" id="instrument-size-button-medium-{{id}}" name="inst-graph-size-{{id}}" value="medium" checked>
+        <label for="instrument-size-button-medium-{{id}}">Medium</label>
+        <input type="radio" id="instrument-size-button-large-{{id}}" name="inst-graph-size-{{id}}" value="large">
+        <label for="instrument-size-button-large-{{id}}">Large</label>
         <button type="button" style="float: right;" id="inst-graph-remove-button-{{id}}">X</button>
         <button type="button" style="float: right;" id="inst-graph-copy-button-{{id}}" title="Copy This Widget">||</button>
 
@@ -59,14 +62,21 @@
             <div id="auto-times-{{id}}" style="display: none;">
                 Sliding Time Window:
                 <br>
-                <input type="radio" id="time-range-tenminute-{{id}}" name="time-range-{{id}}" value="tenminute">Ten Minutes
-                <input type="radio" id="time-range-hour-{{id}}" name="time-range-{{id}}" value="hour">Hour
-                <input type="radio" id="time-range-sixhour-{{id}}" name="time-range-{{id}}" value="sixhour" checked>Six Hours
-                <input type="radio" id="time-range-day-{{id}}" name="time-range-{{id}}" value="day">Day
+                <input type="radio" id="time-range-tenminute-{{id}}" name="time-range-{{id}}" value="tenminute">
+                <label for="time-range-tenminute-{{id}}">Ten Minutes</label>
+                <input type="radio" id="time-range-hour-{{id}}" name="time-range-{{id}}" value="hour">
+                <label for="time-range-hour-{{id}}">Hour</label>
+                <input type="radio" id="time-range-sixhour-{{id}}" name="time-range-{{id}}" value="sixhour" checked>
+                <label for="time-range-sixhour-{{id}}">Six Hours</label>
+                <input type="radio" id="time-range-day-{{id}}" name="time-range-{{id}}" value="day">
+                <label for="time-range-day-{{id}}">Day</label>
                 <br>
-                <input type="radio" id="time-range-week-{{id}}" name="time-range-{{id}}" value="week">Week
-                <input type="radio" id="time-range-fortnight-{{id}}" name="time-range-{{id}}" value="fortnight">Fortnight
-                <input type="radio" id="time-range-month-{{id}}" name="time-range-{{id}}" value="month">Month
+                <input type="radio" id="time-range-week-{{id}}" name="time-range-{{id}}" value="week">
+                <label for="time-range-week-{{id}}">Week</label>
+                <input type="radio" id="time-range-fortnight-{{id}}" name="time-range-{{id}}" value="fortnight">
+                <label for="time-range-fortnight-{{id}}">Fortnight</label>
+                <input type="radio" id="time-range-month-{{id}}" name="time-range-{{id}}" value="month">
+                <label for="time-range-month-{{id}}">Month</label>
             </div>
 
             Instrument:
