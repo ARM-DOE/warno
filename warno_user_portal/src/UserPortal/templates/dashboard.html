@@ -97,22 +97,55 @@ Dashboard
     var loadModal = document.getElementById("load-dashboard-modal");
 
     function saveDashboard() {
-        closeSaveModal();
-        var schematic = widgetManager.saveDashboard();
+        var confirmedSave = true;
+
+
         var name = document.getElementById("save-dashboard-name").value;
         var private = false;
         if (document.getElementById("save-dashboard-private").checked) {
             var private = true;
         }
 
-        payload = {"name": name, "schematic": schematic, "private": private}
-
         var xmlHttp = new XMLHttpRequest();
+        xmlHttp.onreadystatechange = function() {
+            if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+                // Get a list of dashboards the user might modify.
+                dashboards=JSON.parse(xmlHttp.responseText);
 
-        xmlHttp.open("POST", '{{url_for('dashboard.save_dashboard')}}', true); // true for asynchronous
-        xmlHttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-        xmlHttp.send(JSON.stringify(payload));
+                // If a dashboard would be overwritten, display a warning and ask for confirmation
+                for (i = 0; i < dashboards.length; i++) {
+                    if ( private == dashboards[i]["private"] && name == dashboards[i]["name"]) {
+                        message = "";
+                        if (private) {
+                            message = "Saving private dashboard.  Will not affect other users.\nOverwrite?";
+                        } else {
+                            message = "Saving public dashboard. Will overwrite for all users!\nOverwrite?";
+                        }
+                        confirmedSave = confirm(message);
+                    }
+                }
+
+                // If either there is no dashboard with the name or if the overwrite was confirmed, save the dashboard
+                if (confirmedSave) {
+                    closeSaveModal();
+                    var schematic = widgetManager.saveDashboard();
+
+                    payload = {"name": name, "schematic": schematic, "private": private}
+
+                    var xmlHttpSave = new XMLHttpRequest();
+
+                    xmlHttpSave.open("POST", '{{url_for('dashboard.save_dashboard')}}', true); // true for asynchronous
+                    xmlHttpSave.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+                    xmlHttpSave.send(JSON.stringify(payload));
+                }
+            }
+        };
+
+        xmlHttp.open("GET", '{{url_for('dashboard.available_dashboards')}}', true);
+        xmlHttp.send();
     }
+
+
     function openSaveModal() {
         saveModal.style.display = "block";
     }
