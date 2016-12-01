@@ -1047,6 +1047,16 @@ function InstrumentGraph(manager, id, containerDiv, controllerUrl, genGraphURL, 
         } else {
             this.constraintRange = "sixhour"
         }
+        if (schematic["lowerLimit"]) {
+            this.lowerLimit = schematic["lowerLimit"];  // Lower y-value range bound
+        } else {
+            this.lowerLimit = null;                     // Null means automatic lower range
+        }
+        if (schematic["upperLimit"]) {
+            this.upperLimit = schematic["upperLimit"]   // Upper y-value range bound
+        } else {
+            this.upperLimit = null;                     // Null means automatic upper range
+        }
 
     } else {
         this.controllerHidden = false;
@@ -1062,6 +1072,8 @@ function InstrumentGraph(manager, id, containerDiv, controllerUrl, genGraphURL, 
         this.convertToDB = false;      // Whether or not the data is converted to dB scale before graphing.
         this.constraintStyle = "custom";   // The data constraint controls available
         this.constraintRange = "sixhour";  // If constraintStyle is 'auto', the range for the data displayed
+        this.lowerLimit = null;            // Lower y-value range bound.  Null means automatic lower range
+        this.upperLimit = null;            // Upper y-value range bound.  Null means automatic upper range
     }
 
     // Statistic fields, only handled if stats_enabled is true
@@ -1125,7 +1137,9 @@ InstrumentGraph.prototype.saveDashboard = function() {
         "rollPeriod": this.rollPeriod,
         "convertToDB": this.convertToDB,
         "constraintStyle": this.constraintStyle,
-        "constraintRange": this.constraintRange
+        "constraintRange": this.constraintRange,
+        "lowerLimit": this.lowerLimit,
+        "upperLimit": this.upperLimit
     }
     return {"type": "InstrumentGraph", "data": data}
 }
@@ -1178,6 +1192,9 @@ InstrumentGraph.prototype.initializeElements = function (loadDashboard) {
         document.getElementById("instrument-select-" + that.id).value = that.instrumentId;
 
         document.getElementById("instrument-size-button-" + that.graphSize + "-" + that.id).checked = true;
+
+        document.getElementById("inst-graph-upper-limit-" + that.id).value = parseFloat(that.upperLimit);
+        document.getElementById("inst-graph-lower-limit-" + that.id).value = parseFloat(that.lowerLimit);
 
         document.getElementById("convert-to-dB-" + that.id).checked = that.convertToDB;
 
@@ -1383,6 +1400,10 @@ InstrumentGraph.prototype.generateInstrumentGraph = function(){
     }
 
     this.convertToDB = document.getElementById("convert-to-dB-" + this.id).checked;
+
+    // Get y-axis range limits
+    this.upperLimit = parseFloat(document.getElementById("inst-graph-upper-limit-" + this.id).value);
+    this.lowerLimit = parseFloat(document.getElementById("inst-graph-lower-limit-" + this.id).value);
 
     // Clear Master Div
     while (masterDiv.firstChild) {
@@ -1613,6 +1634,17 @@ InstrumentGraph.prototype.updateWithValues = function(values) {
             delete this.lastReceived
             this.lastReceived = new Date(this.graphData[this.graphData.length - 1][0]) // Timestamp from most recent data
 
+            yRange = [null, null];   // Deafault is automatic ranging
+
+            // If the upper and lower limits are somewhat reasonable, use them instead for the y-axis range
+            if (!isNaN(this.lowerLimit)
+                && this.lowerLimit != ""
+                && !isNaN(this.upperLimit)
+                && this.upperLimit != "")
+            {
+                yRange = [this.lowerLimit, this.upperLimit];
+            }
+
             this.dygraph = new Dygraph(
             this.innerDiv,
             this.graphData,
@@ -1624,6 +1656,7 @@ InstrumentGraph.prototype.updateWithValues = function(values) {
                 rangeSelectorHeight: 20,
                 rangeSelectorPlotStrokeColor: 'darkred',
                 rangeSelectorPlotFillColor: 'lightgreen',
+                valueRange: yRange,
 
                 labelsUTC: true,
                 labels: ["Time"].concat(this.keys),
