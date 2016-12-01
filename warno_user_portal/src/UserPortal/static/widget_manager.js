@@ -580,6 +580,7 @@ Histogram.prototype.initializeElements = function (loadDashboard) {
 Histogram.prototype.updateSelect = function(loadDashboard) {
     var instrumentSelect = document.getElementById("instrument-select-" + this.id);
     var attributeSelect = document.getElementById("attribute-select-" + this.id);
+    var attributeInput = document.getElementById("attribute-input-" + this.id);
 
     if (loadDashboard){
         if (this.instrumentId) {
@@ -596,12 +597,12 @@ Histogram.prototype.updateSelect = function(loadDashboard) {
         newOption = document.createElement("option");
         newOption.value = instrumentValidColumns[i];
         newOption.text = instrumentValidColumns[i];
-        attributeSelect.add(newOption);
+        attributeSelect.appendChild(newOption);
     }
 
     if (loadDashboard){
         if (this.attribute) {
-            attributeSelect.value = this.attribute;
+            attributeInput.value = this.attribute;
         }
     }
 
@@ -622,10 +623,10 @@ Histogram.prototype.generateHistogram = function() {
     var div = document.getElementById('histogram-container-' + this.id)
 
     var instrumentSelect = document.getElementById("instrument-select-" + this.id);
-    var attributeSelect = document.getElementById("attribute-select-" + this.id);
+    var attributeInput = document.getElementById("attribute-input-" + this.id);
     this.instrumentId = instrumentSelect.value;
     var instrumentName = instrumentSelect.options[instrumentSelect.selectedIndex].text;
-    this.attribute = attributeSelect.value;
+    this.attribute = attributeInput.value;
     this.startUTC = document.getElementById("datetime-input-start-" + this.id).value;
     this.endUTC = document.getElementById("datetime-input-end-" + this.id).value;
     this.upperLimit = parseFloat(document.getElementById("histogram-upper-limit-" + this.id).value);
@@ -664,11 +665,11 @@ Histogram.prototype.generateHistogram = function() {
         graphHeight = 600;
     }
 
-    var key_elems = document.getElementById('attribute-select-' + this.id);
-    var keys = [];
-    for (var i = 0; i < key_elems.length; i++) {
-        keys.push(key_elems[i].value);
-    }
+//    var key_elems = document.getElementById('attribute-input-' + this.id);
+//    var keys = [];
+//    for (var i = 0; i < key_elems.length; i++) {
+//        keys.push(key_elems[i].value);
+//    }
 
     start = new Date(this.startUTC + " UTC");
     end = new Date(this.endUTC + " UTC");
@@ -682,100 +683,119 @@ Histogram.prototype.generateHistogram = function() {
             var response = JSON.parse(xmlhttp.responseText);
 
             delete that.lastReceived;
-            if (response.data.length > 0) {
-                // Only works because received data is sorted by time with newest at the end.
-                // Timestamp from most recent data.  Adding Z tells Date it is UTC
-                that.lastReceived = new Date(response.data[response.data.length - 1][0] + "Z")
+
+            if (response == "[]") {
+                // There was an error.  This is probably a very foolish way to indicate errors from server->client
+                var masterDiv = document.getElementById('histogram-container-' + that.id)
+                while (masterDiv.hasChildNodes()) {
+                    masterDiv.removeChild(masterDiv.firstChild);
+                }
+                var errorDiv = document.createElement("div");
+                errorDiv.style.color = "red";
+                errorDiv.innerHTML = "Could not retrieve Data.  Verify attribute is valid.";
+                masterDiv.appendChild(errorDiv);
+            }
+
+            if (response.data) {
+                if (response.data.length > 0) {
+                    // Only works because received data is sorted by time with newest at the end.
+                    // Timestamp from most recent data.  Adding Z tells Date it is UTC
+                    that.lastReceived = new Date(response.data[response.data.length - 1][0] + "Z")
+                } else {
+                    that.lastReceived = null;
+                }
+
+                var field1 = response.data.map(function(i){ return i[1] });
+
+                field1 = field1.filter(isNotSentinel);
+                if (that.convertToDB) {
+                    field1 = field1.map(toDB);
+                }
+
+                var useAutorange = true;
+                var histogramRange = [0,1];
+
+                var lowerBin = Math.min(...field1);
+                var upperBin = Math.max(...field1);
+                if (upperBin == lowerBin) { // Kind of cheap way to prevent 0 bin sizes due to all data being same value
+                    upperBin += 0.0000001;
+                    lowerBin -= 0.0000001;
+                }
+                var binSize = 0.25;
+                var xbinDict = {};
+
+                if (that.binNumber > 0) {
+                    nbins = that.binNumber;
+                } else {
+                    nbins = Math.sqrt(field1.length);
+                }
+
+                // If upper and lower limits are set and valid, set the bin and range limits to them
+                if (!isNaN(that.lowerLimit)
+                    && that.lowerLimit != ""
+                    && !isNaN(that.upperLimit)
+                    && that.upperLimit != "")
+                {
+                    histogramRange = [that.lowerLimit, that.upperLimit];
+                    useAutorange = false;
+                    lowerBin = that.lowerLimit;
+                    upperBin = that.upperLimit;
+                }
+
+                // Calculate bin size from either the default limits or the custom limits
+                binSize = (upperBin - lowerBin) / nbins;
+
+                var data = [
+                    {
+                        x: field1,
+                        type: 'histogram',
+                        marker: {
+                            color: 'rgba(' + that.colorRed + ', ' + that.colorGreen + ', ' + that.colorBlue + ', 0.7)',
+                        },
+
+                        autobinx: false,
+                        xbins: {
+                            start: lowerBin,
+                            end: upperBin,
+                            size: binSize
+                        }
+                    }]
+
+                var layout = {
+                    showlegend: false,
+                    autosize: false,
+                    width: graphWidth,
+                    height: graphHeight,
+                    margin: {t: 50, r: 50, b: 50, l: 50, pad:10},
+                    hovermode: 'closest',
+                    bargap: 0,
+                    title: instrumentName + ":" + that.attribute,
+                    xaxis: {
+                        //domain: [-20, 30],
+                        autorange: useAutorange,
+                        range: histogramRange,
+                        showgrid: true,
+                        zeroline: false,
+                        title: "Value",
+                    },
+                    yaxis: {
+                        //domain: [0, 0.85],
+                        showgrid: true,
+                        zeroline: true,
+                        title: "Occurences",
+                        gridwidth: 3,
+                        gridcolor: "#rgb(200,200,200,0.7)"
+                    },
+                };
+
+                Plotly.newPlot(div, data, layout);
+                that.updateLastReceived();
+
             } else {
                 that.lastReceived = null;
             }
-
-            var field1 = response.data.map(function(i){ return i[1] });
-
-            field1 = field1.filter(isNotSentinel);
-            if (that.convertToDB) {
-                field1 = field1.map(toDB);
-            }
-
-            var useAutorange = true;
-            var histogramRange = [0,1];
-
-            var lowerBin = Math.min(...field1);
-            var upperBin = Math.max(...field1);
-            if (upperBin == lowerBin) { // Kind of cheap way to prevent 0 bin sizes due to all data being same value
-                upperBin += 0.0000001;
-                lowerBin -= 0.0000001;
-            }
-            var binSize = 0.25;
-            var xbinDict = {};
-
-            if (that.binNumber > 0) {
-                nbins = that.binNumber;
-            } else {
-                nbins = Math.sqrt(field1.length);
-            }
-
-            // If upper and lower limits are set and valid, set the bin and range limits to them
-            if (!isNaN(that.lowerLimit)
-                && that.lowerLimit != ""
-                && !isNaN(that.upperLimit)
-                && that.upperLimit != "")
-            {
-                histogramRange = [that.lowerLimit, that.upperLimit];
-                useAutorange = false;
-                lowerBin = that.lowerLimit;
-                upperBin = that.upperLimit;
-            }
-
-            // Calculate bin size from either the default limits or the custom limits
-            binSize = (upperBin - lowerBin) / nbins;
-
-            var data = [
-                {
-                    x: field1,
-                    type: 'histogram',
-                    marker: {
-                        color: 'rgba(' + that.colorRed + ', ' + that.colorGreen + ', ' + that.colorBlue + ', 0.7)',
-                    },
-
-                    autobinx: false,
-                    xbins: {
-                        start: lowerBin,
-                        end: upperBin,
-                        size: binSize
-                    }
-                }]
-
-        var layout = {
-            showlegend: false,
-            autosize: false,
-            width: graphWidth,
-            height: graphHeight,
-            margin: {t: 50, r: 50, b: 50, l: 50, pad:10},
-            hovermode: 'closest',
-            bargap: 0,
-            title: instrumentName + ":" + that.attribute,
-            xaxis: {
-                //domain: [-20, 30],
-                autorange: useAutorange,
-                range: histogramRange,
-                showgrid: true,
-                zeroline: false,
-                title: "Value",
-            },
-            yaxis: {
-                //domain: [0, 0.85],
-                showgrid: true,
-                zeroline: true,
-                title: "Occurences",
-                gridwidth: 3,
-                gridcolor: "#rgb(200,200,200,0.7)"
-            },
-        };
-
-        Plotly.newPlot(div, data, layout);
-        that.updateLastReceived();
-    }};
+        }
+    };
 
     if (this.constraintStyle == "auto") {
         var startTime = this.getAutomaticBeginning();
@@ -1258,11 +1278,13 @@ InstrumentGraph.prototype.initializeElements = function (loadDashboard) {
     var attributeButton = document.getElementById("inst-add-attribute-button-" + that.id);
     attributeButton.onclick = function () { that.addAttribute(); };
 
-    // Each added attribute has a pair that is tracked: a selector for the attribute and a button to remove it
+    // Each added attribute has a set that is tracked: a selector for the attribute, an input, and a button to remove it
     var removeButton = document.getElementById("inst-remove-attribute-button-" + that.id + "-0");
     removeButton.onclick = function () { that.removeAttribute(0) };
     var attributeSelect = document.getElementById("attribute-select-" + that.id + "-0");
-    that.selectPairList = [{ "id": 0, "attributeSelect": attributeSelect , "removeButton": removeButton }];
+    var attributeInput = document.getElementById("attribute-input-" + that.id + "-0");
+    that.selectPairList = [{ "id": 0, "attributeSelect": attributeSelect, "attributeInput": attributeInput,
+                             "removeButton": removeButton }];
 
     // Data parameter controls: Hide and Reveal
     var hideButton = document.getElementById("inst-hide-button-" + that.id);
@@ -1304,7 +1326,7 @@ InstrumentGraph.prototype.updateSelect = function(loadDashboard) {
             newOption = document.createElement("option");
             newOption.value = instrumentValidColumns[i];
             newOption.text = instrumentValidColumns[i];
-            attributeSelect.add(newOption);
+            attributeSelect.appendChild(newOption);
         }
     }
 
@@ -1314,7 +1336,7 @@ InstrumentGraph.prototype.updateSelect = function(loadDashboard) {
                 this.addAttribute();
             }
             for (var i = 0; i < this.keys.length; i ++) {
-                this.selectPairList[i]["attributeSelect"].value = this.keys[i];
+                this.selectPairList[i]["attributeInput"].value = this.keys[i];
             }
         } else {
             this.selectPairList = [];
@@ -1390,7 +1412,7 @@ InstrumentGraph.prototype.generateInstrumentGraph = function(){
     copyButton.disabled = false;
     copyButton.title = "Copy This Widget";
 
-    var keyElems = document.getElementsByName("attribute-select-" + this.id);
+    var keyElems = document.getElementsByName("attribute-input-" + this.id);
     this.keys = [];
     for (var i = 0; i < keyElems.length; i++) {
         this.keys.push(keyElems[i].value);
@@ -1527,23 +1549,14 @@ InstrumentGraph.prototype.addAttribute = function () {
 
     var removeButton = document.createElement('button');
     var attributeSpan = document.createElement('span');
-    var attributeSelect = document.createElement('select');
-    attributeDiv.appendChild(removeButton);
-    attributeDiv.appendChild(attributeSpan);
-    attributeSpan.appendChild(attributeSelect);
+    var attributeInput = document.createElement('input');
+    var attributeSelect = document.createElement('datalist');
 
     // Pieces from updateSelect to update only the new attribute
     instrumentSelect = document.getElementById("instrument-select-" + this.id);
     var instrumentValidColumns = this.columnList[instrumentSelect.value];
     instrumentValidColumns.sort();
     removeOptions(attributeSelect);
-
-    for (var i = 0; i < instrumentValidColumns.length; i++){
-        newOption = document.createElement("option");
-        newOption.value = instrumentValidColumns[i];
-        newOption.text = instrumentValidColumns[i];
-        attributeSelect.add(newOption);
-    }
 
 
     removeButton.id = "inst-remove-attribute-button-" + this.id + "-" + this.nextAttributeId;
@@ -1557,14 +1570,31 @@ InstrumentGraph.prototype.addAttribute = function () {
     attributeSelect.id = "attribute-select-" + this.id + "-" + this.nextAttributeId;
     attributeSelect.name = "attribute-select-" + this.id;
 
+    attributeInput.id = "attribute-input-" + this.id + "-" + this.nextAttributeId;
+    attributeInput.name = "attribute-input-" + this.id;
+    attributeInput.setAttribute("list", attributeSelect.id);  // Have to set list attribute this way for some reason.
+
+    // Options must be added after the list is tied to the input
+    for (var i = 0; i < instrumentValidColumns.length; i++){
+        newOption = document.createElement("option");
+        newOption.value = instrumentValidColumns[i];
+        //newOption.text = instrumentValidColumns[i];
+        attributeSelect.appendChild(newOption);
+    }
+
     var placeholderOption = document.createElement("option");
-    placeholderOption.text = "Select an Instrument";
-    attributeSelect.add(placeholderOption);
+    placeholderOption.value = "Select an Instrument";
+    attributeSelect.appendChild(placeholderOption);
+
+    attributeDiv.appendChild(removeButton);
+    attributeDiv.appendChild(attributeSpan);
+    attributeSpan.appendChild(attributeInput);
+    attributeSpan.appendChild(attributeSelect);
 
     masterDiv.appendChild(attributeDiv);
 
     this.selectPairList.push({ "id": this.nextAttributeId, "attributeSelect": attributeSelect,
-                               "removeButton": removeButton });
+                               "attributeInput": attributeInput, "removeButton": removeButton });
 
     this.nextAttributeId += 1;
 }
@@ -1758,28 +1788,43 @@ InstrumentGraph.prototype.updateInstrumentGraph = function() {
         {
             //Pull out the response text from the request
             var recMessage = JSON.parse(xmlhttp.responseText);
-            for (i = 0; i < recMessage['data'].length; i ++)
-            {
-                // Have add a Z to the given UTC time to convert in JavaScript
-                recMessage['data'][i][0] = new Date(recMessage['data'][i][0] + "Z");
+
+            if (recMessage == "[]") {
+                // There was an error.  This is probably a very foolish way to indicate errors from server->client
+                var masterDiv = document.getElementById('instrument-graph-container-' + thisGraph.id)
+                while (masterDiv.hasChildNodes()) {
+                    masterDiv.removeChild(masterDiv.firstChild);
+                }
+                var errorDiv = document.createElement("div");
+                errorDiv.style.color = "red";
+                errorDiv.innerHTML = "Could not retrieve Data.  Verify all attributes are valid.";
+                masterDiv.appendChild(errorDiv);
+            } else {
+                // Process the data
+                for (i = 0; i < recMessage['data'].length; i ++)
+                {
+                    // Have add a Z to the given UTC time to convert in JavaScript
+                    recMessage['data'][i][0] = new Date(recMessage['data'][i][0] + "Z");
+                }
+
+                thisGraph.selUpperDeviation = recMessage['upper_deviation'];
+                thisGraph.selLowerDeviation = recMessage['lower_deviation'];
+                if (recMessage['min']){
+                    thisGraph.minimum = recMessage['min'];}
+                if (recMessage['max']){
+                    thisGraph.maximum = recMessage['max'];}
+                if (recMessage['median']){
+                    thisGraph.median = recMessage['median'];}
+                if (recMessage['average']){
+                    thisGraph.average = recMessage['average'];}
+                if (recMessage['std_deviation']){
+                    thisGraph.stdDeviation = recMessage['std_deviation'];}
+
+                thisGraph.updateWithValues(recMessage['data']);
+
+                thisGraph.updateLastReceived();
             }
 
-            thisGraph.selUpperDeviation = recMessage['upper_deviation'];
-            thisGraph.selLowerDeviation = recMessage['lower_deviation'];
-            if (recMessage['min']){
-                thisGraph.minimum = recMessage['min'];}
-            if (recMessage['max']){
-                thisGraph.maximum = recMessage['max'];}
-            if (recMessage['median']){
-                thisGraph.median = recMessage['median'];}
-            if (recMessage['average']){
-                thisGraph.average = recMessage['average'];}
-            if (recMessage['std_deviation']){
-                thisGraph.stdDeviation = recMessage['std_deviation'];}
-
-            thisGraph.updateWithValues(recMessage['data']);
-
-            thisGraph.updateLastReceived();
         }
     };
     //Send JSON POST XMLHTTPRequest to generator controller.
