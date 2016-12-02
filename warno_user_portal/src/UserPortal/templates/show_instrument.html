@@ -39,62 +39,42 @@
 
                 </div>
 
-                <div class="info">
-
-                    <h3 style="text-align: center;">Recent Logs:</h3>
-                </div>
-
-                <div class="info_white">
+            </div>
+        </div>
+        <div style="display: inline-block; vertical-align: top; width: -webkit-calc(100% - 340px); width: -moz-calc(100% - 340px); width: calc(100% - 340px); background-color: yellow;">
+            <div class="info_white">
                     {% for log in recent_logs %}
-                    <div style="border: 2px solid black; padding: 5px; margin: 5px; font-size: 80%;">
-                        <div class="grid_container">
-                            <div class="row">
-                                <div class="col-6">
-                                    <b>Logged By</b>:
-                                </div>
-                                <div class="col-6">
-                                    {{log.author}}
-                                </div>
-                            </div>
+                    <div style="border: 2px solid black; margin: 5px; display: flex;">
+                        <div class="{{log.status.replace(' ', '_').replace('-', '_').lower()}}"
+                             style="border-right: 2px solid black; flex: 0 0 170px; vertical-align: middle;">
+                            {{log.author}}
                             <hr>
-                            <div class="row">
-                                <div class="col-6">
-                                    <b>Time</b>:
-                                </div>
-                                <div class="col-6">
-                                    {{log.time}}
-                                </div>
-                            </div>
+                            {{log.time}}
                             <hr>
-                            <div class="row">
-                                <div class="col-6">
-                                    <b>Status</b>:
-                                </div>
-                                <div class="col-6">
-                                    {{log.status}}
-                                </div>
-                            </div>
+                            {{log.status}}
                             <hr>
                         </div>
-                        <b>Comments</b>:
-                        <br>
-                        {{log.contents}}
-                        <hr>
-                        <b>Supporting Images</b>:
-                        <br>
-                        {{log.supporting_images}}
+                        <div style="padding: 5px; vertical-align: top; flex: 1;">
+                            <b>Comments</b>:
+                            <br>
+                            {{log.contents}}
+                            <hr>
+                            <b>Supporting Images</b>:
+                            <br>
+                            {{log.supporting_images}}
+                        </div>
                     </div>
                     {% endfor %}
 
                 </div>
+        </div>
 
-            </div>
-        </div><div style="display: inline-block; vertical-align: top; width: calc(100% - 320px);">
-            <div style="padding: 5px; display: vertical-align: top;">
-                    {% with columns=columns, instrument_id=instrument.id %}
-                    {% include 'instrument_dygraph.html' %}
-                    {% endwith %}
-            </div>
+<!--<div style="display: inline-block; vertical-align: top; width: calc(100% - 320px);">-->
+            <!--<div style="padding: 5px; display: vertical-align: top;">-->
+                    <!--{% with columns=columns, instrument_id=instrument.id %}-->
+                    <!--{% include 'instrument_dygraph.html' %}-->
+                    <!--{% endwith %}-->
+            <!--</div>-->
         </div>
 
 
