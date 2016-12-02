@@ -12,8 +12,12 @@
                 </div>
 
                 <div>
-                    <div class="info" style="text-align: center;">
-                        <h3>STATUS: {{status}}</h3>
+                    {% if recent_logs|length > 0 %}
+                    <div class="{{recent_logs[0].status.replace(' ', '_').replace('-', '_').lower()}}" style="text-align: center; border: 1px solid black;">
+                    {% else %}
+                    <div class="operational" style="text-align: center; border: 1px solid black;">
+                    {% endif %}
+                        <h3>{{status}}</h3>
                     </div>
 
                     <div class="info">
