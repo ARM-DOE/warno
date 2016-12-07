@@ -13,7 +13,6 @@ Users
         <th> User E-mail</th>
         <th> User Location</th>
         <th> User Position</th>
-        <th></th>
     </tr>
     {%  for user in users %}
     <tr>
@@ -22,7 +21,6 @@ Users
         <td>{{ user.email }}</td>
         <td>{{ user.location }}</td>
         <td>{{ user.position }}</td>
-        <td><a href="{{url_for('users.edit_user', user_id=user.id)}}">Edit</a></td>
     </tr>
     {% endfor %}
 </table>
