@@ -32,6 +32,11 @@ WidgetManager.prototype.saveDashboard = function() {
 WidgetManager.prototype.loadDashboard = function(dashboardSchematic) {
     this.removeWidgets();
     this.removeInactive();
+
+    this.buildFromSchematic(dashboardSchematic);
+};
+
+WidgetManager.prototype.buildFromSchematic = function(dashboardSchematic) {
     // Build objects from the returned dashboard configuration
     for (var i = 0; i < dashboardSchematic.length; i ++) {
         if (dashboardSchematic[i]["type"] == "LogViewer") {
@@ -51,7 +56,18 @@ WidgetManager.prototype.loadDashboard = function(dashboardSchematic) {
             this.addInstrumentGraph(dashboardSchematic[i]["data"]);
         }
     }
-};
+}
+
+WidgetManager.prototype.copyWidget = function(widgetId) {
+    for (i = 0; i < this.widgets.length; i++) {
+        if (this.widgets[i].id == widgetId) {
+            // Quick solution. Appends a schematic entry then builds the objects from it.
+            var schematic = [];
+            schematic.push(this.widgets[i].saveDashboard());
+            this.buildFromSchematic(schematic);
+        }
+    }
+}
 
 WidgetManager.prototype.removeInactive = function() {
     for (i = 0; i < this.widgets.length; i++){
@@ -63,7 +79,7 @@ WidgetManager.prototype.removeInactive = function() {
 }
 
 WidgetManager.prototype.addLogViewer = function() {
-    newLogViewer = new LogViewer(this.newWidgetId, this.containerDiv, this.controllerUrl, this.logViewerURL);
+    newLogViewer = new LogViewer(this, this.newWidgetId, this.containerDiv, this.controllerUrl, this.logViewerURL);
     this.widgets.push(newLogViewer);
     this.newWidgetId += 1;
     if (this.hasTightBorders) {
@@ -72,7 +88,7 @@ WidgetManager.prototype.addLogViewer = function() {
 };
 
 WidgetManager.prototype.addStatusPlot = function() {
-    newStatusPlot = new StatusPlot(this.newWidgetId, this.containerDiv, this.controllerUrl, this.statusPlotURL);
+    newStatusPlot = new StatusPlot(this, this.newWidgetId, this.containerDiv, this.controllerUrl, this.statusPlotURL);
     this.widgets.push(newStatusPlot);
     this.newWidgetId +=1;
     if (this.hasTightBorders) {
@@ -81,7 +97,7 @@ WidgetManager.prototype.addStatusPlot = function() {
 };
 
 WidgetManager.prototype.addHistogram = function(schematic) {
-    newHistogram = new Histogram(this.newWidgetId, this.containerDiv, this.controllerUrl, schematic);
+    newHistogram = new Histogram(this, this.newWidgetId, this.containerDiv, this.controllerUrl, schematic);
     this.widgets.push(newHistogram);
     this.newWidgetId +=1;
     if (this.hasTightBorders) {
@@ -90,7 +106,8 @@ WidgetManager.prototype.addHistogram = function(schematic) {
 };
 
 WidgetManager.prototype.addInstrumentGraph = function(schematic) {
-    newInstrumentGraph = new InstrumentGraph(this.newWidgetId, this.containerDiv, this.controllerUrl, this.genGraphURL, schematic);
+    newInstrumentGraph = new InstrumentGraph(this, this.newWidgetId, this.containerDiv, this.controllerUrl,
+                                             this.genGraphURL, schematic);
     this.widgets.push(newInstrumentGraph);
     this.newWidgetId += 1;
     if (this.hasTightBorders) {
@@ -122,7 +139,8 @@ WidgetManager.prototype.wideBorders = function() {
 
 
 // Log Display Section
-function LogViewer(id, containerDiv, controllerUrl, logViewerURL) {
+function LogViewer(manager, id, containerDiv, controllerUrl, logViewerURL) {
+    this.manager = manager;
     this.finishedLoading = true;
     this.id = id;
     this.active = true;                       // When no longer active, should be removed from the parent manager.
@@ -191,6 +209,8 @@ LogViewer.prototype.ajaxLoadUrl = function(element, url) {
 
             var addButton = document.getElementById("add-log-viewer-button-" + that.id);
             addButton.onclick = function () { that.generateLogViewer(); };
+            var copyButton = document.getElementById("copy-log-viewer-button-" + that.id);
+            copyButton.onclick = function () { that.manager.copyWidget(that.id); };
             var removeButton = document.getElementById("remove-log-viewer-button-" + that.id);
             removeButton.onclick = function () { that.remove(); };
 
@@ -235,7 +255,8 @@ LogViewer.prototype.wideBorders = function() {
 
 
 // Status Plot Section
-function StatusPlot(id, containerDiv, controllerUrl, statusPlotURL) {
+function StatusPlot(manager, id, containerDiv, controllerUrl, statusPlotURL) {
+    this.manager = manager;
     this.id = id;
     this.active = true;                       // When no longer active, should be removed from the parent manager.
     this.div = document.createElement('div');
@@ -299,6 +320,8 @@ StatusPlot.prototype.ajaxLoadUrl = function(element, url) {
 
             var addButton = document.getElementById("add-status-plot-button-" + that.id);
             addButton.onclick = function () { that.generateStatusPlot(); };
+            var copyButton = document.getElementById("copy-status-plot-button-" + that.id);
+            copyButton.onclick = function () { that.manager.copyWidget(that.id); };
             var removeButton = document.getElementById("remove-status-plot-button-" + that.id);
             removeButton.onclick = function () { that.remove(); };
 
@@ -341,7 +364,8 @@ StatusPlot.prototype.wideBorders = function() {
 
 // Histogram Section
 // If schematic is null, loads up with defaults.  If schematic exists, loads the schematic and displays the histogram
-function Histogram(id, containerDiv, controllerUrl, schematic) {
+function Histogram(manager, id, containerDiv, controllerUrl, schematic) {
+    this.manager = manager;
     this.id = id;
     this.active = true;       // When no longer active, should be removed from the parent manager.
     this.div = document.createElement('div');
@@ -386,6 +410,11 @@ function Histogram(id, containerDiv, controllerUrl, schematic) {
         } else {
             this.constraintRange = "sixhour"
         }
+        if (schematic["convertToDB"]) {
+            this.convertToDB = schematic["convertToDB"];
+        } else {
+            this.convertToDB = false;
+        }
     } else {
         this.controllerHidden = false;
         this.updateFrequency = 5; // How often in minutes this object will update.
@@ -405,6 +434,7 @@ function Histogram(id, containerDiv, controllerUrl, schematic) {
         this.attribute = null;
         this.constraintStyle = "custom";   // The data constraint controls available
         this.constraintRange = "sixhour";  // If constraintStyle is 'auto', the range for the data displayed
+        this.convertToDB = false;          // Whether or not the data is converted to dB scale before graphing.
     }
 
     containerDiv.appendChild(this.div);
@@ -439,7 +469,8 @@ Histogram.prototype.saveDashboard = function() {
         "attribute": this.attribute,
         "updateFrequency": this.updateFrequency,
         "constraintStyle": this.constraintStyle,
-        "constraintRange": this.constraintRange
+        "constraintRange": this.constraintRange,
+        "convertToDB": this.convertToDB
     }
 
     return {"type": "Histogram", "data": data};
@@ -484,6 +515,8 @@ Histogram.prototype.initializeElements = function (loadDashboard) {
 
         document.getElementById("time-range-" + that.constraintRange + "-" + that.id).checked = true;
 
+        document.getElementById("convert-to-dB-" + that.id).checked = that.convertToDB;
+
         if (that.controllerHidden) {
             that.hideController();
         }
@@ -503,6 +536,12 @@ Histogram.prototype.initializeElements = function (loadDashboard) {
     // When changed should update all options for attribute selector
     var selector = document.getElementById("instrument-select-" + that.id);
     selector.onchange = function () { that.updateSelect(false); };
+
+    // Button to copy Histogram widget. Disabled until data is graphed (or data will not properly copy)
+    var copyButton = document.getElementById("histogram-copy-button-" + that.id);
+    copyButton.onclick = function () { that.manager.copyWidget(that.id); };
+    copyButton.disabled = true;
+    copyButton.title = "Cannot Copy Until Graph Displayed";
 
     // Button to remove Histogram widget
     var removeButton = document.getElementById("histogram-remove-button-" + that.id);
@@ -541,6 +580,7 @@ Histogram.prototype.initializeElements = function (loadDashboard) {
 Histogram.prototype.updateSelect = function(loadDashboard) {
     var instrumentSelect = document.getElementById("instrument-select-" + this.id);
     var attributeSelect = document.getElementById("attribute-select-" + this.id);
+    var attributeInput = document.getElementById("attribute-input-" + this.id);
 
     if (loadDashboard){
         if (this.instrumentId) {
@@ -557,12 +597,12 @@ Histogram.prototype.updateSelect = function(loadDashboard) {
         newOption = document.createElement("option");
         newOption.value = instrumentValidColumns[i];
         newOption.text = instrumentValidColumns[i];
-        attributeSelect.add(newOption);
+        attributeSelect.appendChild(newOption);
     }
 
     if (loadDashboard){
         if (this.attribute) {
-            attributeSelect.value = this.attribute;
+            attributeInput.value = this.attribute;
         }
     }
 
@@ -583,14 +623,21 @@ Histogram.prototype.generateHistogram = function() {
     var div = document.getElementById('histogram-container-' + this.id)
 
     var instrumentSelect = document.getElementById("instrument-select-" + this.id);
-    var attributeSelect = document.getElementById("attribute-select-" + this.id);
+    var attributeInput = document.getElementById("attribute-input-" + this.id);
     this.instrumentId = instrumentSelect.value;
     var instrumentName = instrumentSelect.options[instrumentSelect.selectedIndex].text;
-    this.attribute = attributeSelect.value;
+    this.attribute = attributeInput.value;
     this.startUTC = document.getElementById("datetime-input-start-" + this.id).value;
     this.endUTC = document.getElementById("datetime-input-end-" + this.id).value;
     this.upperLimit = parseFloat(document.getElementById("histogram-upper-limit-" + this.id).value);
     this.lowerLimit = parseFloat(document.getElementById("histogram-lower-limit-" + this.id).value);
+
+    // Enable copy button and change title to reflect functionality
+    var copyButton = document.getElementById("histogram-copy-button-" + this.id);
+    copyButton.disabled = false;
+    copyButton.title = "Copy This Widget";
+
+    this.convertToDB = document.getElementById("convert-to-dB-" + this.id).checked;
 
     // Size from radio set
     var graphWidth = 500;
@@ -618,11 +665,11 @@ Histogram.prototype.generateHistogram = function() {
         graphHeight = 600;
     }
 
-    var key_elems = document.getElementById('attribute-select-' + this.id);
-    var keys = [];
-    for (var i = 0; i < key_elems.length; i++) {
-        keys.push(key_elems[i].value);
-    }
+//    var key_elems = document.getElementById('attribute-input-' + this.id);
+//    var keys = [];
+//    for (var i = 0; i < key_elems.length; i++) {
+//        keys.push(key_elems[i].value);
+//    }
 
     start = new Date(this.startUTC + " UTC");
     end = new Date(this.endUTC + " UTC");
@@ -636,97 +683,119 @@ Histogram.prototype.generateHistogram = function() {
             var response = JSON.parse(xmlhttp.responseText);
 
             delete that.lastReceived;
-            if (response.data.length > 0) {
-                // Only works because received data is sorted by time with newest at the end.
-                // Timestamp from most recent data.  Adding Z tells Date it is UTC
-                that.lastReceived = new Date(response.data[response.data.length - 1][0] + "Z")
+
+            if (response == "[]") {
+                // There was an error.  This is probably a very foolish way to indicate errors from server->client
+                var masterDiv = document.getElementById('histogram-container-' + that.id)
+                while (masterDiv.hasChildNodes()) {
+                    masterDiv.removeChild(masterDiv.firstChild);
+                }
+                var errorDiv = document.createElement("div");
+                errorDiv.style.color = "red";
+                errorDiv.innerHTML = "Could not retrieve Data.  Verify attribute is valid.";
+                masterDiv.appendChild(errorDiv);
+            }
+
+            if (response.data) {
+                if (response.data.length > 0) {
+                    // Only works because received data is sorted by time with newest at the end.
+                    // Timestamp from most recent data.  Adding Z tells Date it is UTC
+                    that.lastReceived = new Date(response.data[response.data.length - 1][0] + "Z")
+                } else {
+                    that.lastReceived = null;
+                }
+
+                var field1 = response.data.map(function(i){ return i[1] });
+
+                field1 = field1.filter(isNotSentinel);
+                if (that.convertToDB) {
+                    field1 = field1.map(toDB);
+                }
+
+                var useAutorange = true;
+                var histogramRange = [0,1];
+
+                var lowerBin = Math.min(...field1);
+                var upperBin = Math.max(...field1);
+                if (upperBin == lowerBin) { // Kind of cheap way to prevent 0 bin sizes due to all data being same value
+                    upperBin += 0.0000001;
+                    lowerBin -= 0.0000001;
+                }
+                var binSize = 0.25;
+                var xbinDict = {};
+
+                if (that.binNumber > 0) {
+                    nbins = that.binNumber;
+                } else {
+                    nbins = Math.sqrt(field1.length);
+                }
+
+                // If upper and lower limits are set and valid, set the bin and range limits to them
+                if (!isNaN(that.lowerLimit)
+                    && that.lowerLimit != ""
+                    && !isNaN(that.upperLimit)
+                    && that.upperLimit != "")
+                {
+                    histogramRange = [that.lowerLimit, that.upperLimit];
+                    useAutorange = false;
+                    lowerBin = that.lowerLimit;
+                    upperBin = that.upperLimit;
+                }
+
+                // Calculate bin size from either the default limits or the custom limits
+                binSize = (upperBin - lowerBin) / nbins;
+
+                var data = [
+                    {
+                        x: field1,
+                        type: 'histogram',
+                        marker: {
+                            color: 'rgba(' + that.colorRed + ', ' + that.colorGreen + ', ' + that.colorBlue + ', 0.7)',
+                        },
+
+                        autobinx: false,
+                        xbins: {
+                            start: lowerBin,
+                            end: upperBin,
+                            size: binSize
+                        }
+                    }]
+
+                var layout = {
+                    showlegend: false,
+                    autosize: false,
+                    width: graphWidth,
+                    height: graphHeight,
+                    margin: {t: 50, r: 50, b: 50, l: 50, pad:10},
+                    hovermode: 'closest',
+                    bargap: 0,
+                    title: instrumentName + ":" + that.attribute,
+                    xaxis: {
+                        //domain: [-20, 30],
+                        autorange: useAutorange,
+                        range: histogramRange,
+                        showgrid: true,
+                        zeroline: false,
+                        title: "Value",
+                    },
+                    yaxis: {
+                        //domain: [0, 0.85],
+                        showgrid: true,
+                        zeroline: true,
+                        title: "Occurences",
+                        gridwidth: 3,
+                        gridcolor: "#rgb(200,200,200,0.7)"
+                    },
+                };
+
+                Plotly.newPlot(div, data, layout);
+                that.updateLastReceived();
+
             } else {
                 that.lastReceived = null;
             }
-
-            var field1 = response.data.map(function(i){ return i[1] });
-
-            field1 = field1.filter(isNotSentinel)
-
-            var useAutorange = true;
-            var histogramRange = [0,1];
-
-            var lowerBin = Math.min(...field1);
-            var upperBin = Math.max(...field1);
-            if (upperBin == lowerBin) { // Kind of cheap way to prevent 0 bin sizes due to all data being same value
-                upperBin += 0.0000001;
-                lowerBin -= 0.0000001;
-            }
-            var binSize = 0.25;
-            var xbinDict = {};
-
-            if (that.binNumber > 0) {
-                nbins = that.binNumber;
-            } else {
-                nbins = Math.sqrt(field1.length);
-            }
-
-            // If upper and lower limits are set and valid, set the bin and range limits to them
-            if (!isNaN(that.lowerLimit)
-                && that.lowerLimit != ""
-                && !isNaN(that.upperLimit)
-                && that.upperLimit != "")
-            {
-                histogramRange = [that.lowerLimit, that.upperLimit];
-                useAutorange = false;
-                lowerBin = that.lowerLimit;
-                upperBin = that.upperLimit;
-            }
-
-            // Calculate bin size from either the default limits or the custom limits
-            binSize = (upperBin - lowerBin) / nbins;
-
-            var data = [
-                {
-                    x: field1,
-                    type: 'histogram',
-                    marker: {
-                        color: 'rgba(' + that.colorRed + ', ' + that.colorGreen + ', ' + that.colorBlue + ', 0.7)',
-                    },
-
-                    autobinx: false,
-                    xbins: {
-                        start: lowerBin,
-                        end: upperBin,
-                        size: binSize
-                    }
-                }]
-
-        var layout = {
-            showlegend: false,
-            autosize: false,
-            width: graphWidth,
-            height: graphHeight,
-            margin: {t: 50, r: 50, b: 50, l: 50, pad:10},
-            hovermode: 'closest',
-            bargap: 0,
-            title: instrumentName + ":" + that.attribute,
-            xaxis: {
-                //domain: [-20, 30],
-                autorange: useAutorange,
-                range: histogramRange,
-                showgrid: true,
-                zeroline: false,
-                title: "Value",
-            },
-            yaxis: {
-                //domain: [0, 0.85],
-                showgrid: true,
-                zeroline: true,
-                title: "Occurences",
-                gridwidth: 3,
-                gridcolor: "#rgb(200,200,200,0.7)"
-            },
-        };
-
-        Plotly.newPlot(div, data, layout);
-        that.updateLastReceived();
-    }};
+        }
+    };
 
     if (this.constraintStyle == "auto") {
         var startTime = this.getAutomaticBeginning();
@@ -964,7 +1033,8 @@ Histogram.prototype.wideBorders = function() {
 
 
 // Instrument Graph Section
-function InstrumentGraph(id, containerDiv, controllerUrl, genGraphURL, schematic) {
+function InstrumentGraph(manager, id, containerDiv, controllerUrl, genGraphURL, schematic) {
+    this.manager = manager;
     this.id = id;
     this.active = true;            // When no longer active, should be removed from the parent manager.
     this.div = document.createElement('div');
@@ -1011,6 +1081,16 @@ function InstrumentGraph(id, containerDiv, controllerUrl, genGraphURL, schematic
         } else {
             this.constraintRange = "sixhour"
         }
+        if (schematic["lowerLimit"]) {
+            this.lowerLimit = schematic["lowerLimit"];  // Lower y-value range bound
+        } else {
+            this.lowerLimit = null;                     // Null means automatic lower range
+        }
+        if (schematic["upperLimit"]) {
+            this.upperLimit = schematic["upperLimit"]   // Upper y-value range bound
+        } else {
+            this.upperLimit = null;                     // Null means automatic upper range
+        }
 
     } else {
         this.controllerHidden = false;
@@ -1026,6 +1106,8 @@ function InstrumentGraph(id, containerDiv, controllerUrl, genGraphURL, schematic
         this.convertToDB = false;      // Whether or not the data is converted to dB scale before graphing.
         this.constraintStyle = "custom";   // The data constraint controls available
         this.constraintRange = "sixhour";  // If constraintStyle is 'auto', the range for the data displayed
+        this.lowerLimit = null;            // Lower y-value range bound.  Null means automatic lower range
+        this.upperLimit = null;            // Upper y-value range bound.  Null means automatic upper range
     }
 
     // Statistic fields, only handled if stats_enabled is true
@@ -1089,7 +1171,9 @@ InstrumentGraph.prototype.saveDashboard = function() {
         "rollPeriod": this.rollPeriod,
         "convertToDB": this.convertToDB,
         "constraintStyle": this.constraintStyle,
-        "constraintRange": this.constraintRange
+        "constraintRange": this.constraintRange,
+        "lowerLimit": this.lowerLimit,
+        "upperLimit": this.upperLimit
     }
     return {"type": "InstrumentGraph", "data": data}
 }
@@ -1143,6 +1227,9 @@ InstrumentGraph.prototype.initializeElements = function (loadDashboard) {
 
         document.getElementById("instrument-size-button-" + that.graphSize + "-" + that.id).checked = true;
 
+        document.getElementById("inst-graph-upper-limit-" + that.id).value = parseFloat(that.upperLimit);
+        document.getElementById("inst-graph-lower-limit-" + that.id).value = parseFloat(that.lowerLimit);
+
         document.getElementById("convert-to-dB-" + that.id).checked = that.convertToDB;
 
         document.getElementById("time-range-" + that.constraintRange + "-" + that.id).checked = true;
@@ -1162,6 +1249,12 @@ InstrumentGraph.prototype.initializeElements = function (loadDashboard) {
     }
 
     this.statsHidden = true;
+
+    // Button to copy Instrument widget.  Disabled until data is graphed (or data will not properly copy)
+    var copyButton = document.getElementById("inst-graph-copy-button-" + that.id);
+    copyButton.onclick = function () { that.manager.copyWidget(that.id); };
+    copyButton.disabled = true;
+    copyButton.title = "Cannot Copy Until Graph Displayed";
 
     //Button to remove this widget
     var removeButton = document.getElementById("inst-graph-remove-button-" + that.id);
@@ -1185,11 +1278,13 @@ InstrumentGraph.prototype.initializeElements = function (loadDashboard) {
     var attributeButton = document.getElementById("inst-add-attribute-button-" + that.id);
     attributeButton.onclick = function () { that.addAttribute(); };
 
-    // Each added attribute has a pair that is tracked: a selector for the attribute and a button to remove it
+    // Each added attribute has a set that is tracked: a selector for the attribute, an input, and a button to remove it
     var removeButton = document.getElementById("inst-remove-attribute-button-" + that.id + "-0");
     removeButton.onclick = function () { that.removeAttribute(0) };
     var attributeSelect = document.getElementById("attribute-select-" + that.id + "-0");
-    that.selectPairList = [{ "id": 0, "attributeSelect": attributeSelect , "removeButton": removeButton }];
+    var attributeInput = document.getElementById("attribute-input-" + that.id + "-0");
+    that.selectPairList = [{ "id": 0, "attributeSelect": attributeSelect, "attributeInput": attributeInput,
+                             "removeButton": removeButton }];
 
     // Data parameter controls: Hide and Reveal
     var hideButton = document.getElementById("inst-hide-button-" + that.id);
@@ -1231,7 +1326,7 @@ InstrumentGraph.prototype.updateSelect = function(loadDashboard) {
             newOption = document.createElement("option");
             newOption.value = instrumentValidColumns[i];
             newOption.text = instrumentValidColumns[i];
-            attributeSelect.add(newOption);
+            attributeSelect.appendChild(newOption);
         }
     }
 
@@ -1241,7 +1336,7 @@ InstrumentGraph.prototype.updateSelect = function(loadDashboard) {
                 this.addAttribute();
             }
             for (var i = 0; i < this.keys.length; i ++) {
-                this.selectPairList[i]["attributeSelect"].value = this.keys[i];
+                this.selectPairList[i]["attributeInput"].value = this.keys[i];
             }
         } else {
             this.selectPairList = [];
@@ -1312,7 +1407,12 @@ InstrumentGraph.prototype.generateInstrumentGraph = function(){
         graphHeight = 600;
     }
 
-    var keyElems = document.getElementsByName("attribute-select-" + this.id);
+    // Enable copy button and change title to reflect functionality
+    var copyButton = document.getElementById("inst-graph-copy-button-" + this.id);
+    copyButton.disabled = false;
+    copyButton.title = "Copy This Widget";
+
+    var keyElems = document.getElementsByName("attribute-input-" + this.id);
     this.keys = [];
     for (var i = 0; i < keyElems.length; i++) {
         this.keys.push(keyElems[i].value);
@@ -1336,6 +1436,10 @@ InstrumentGraph.prototype.generateInstrumentGraph = function(){
     }
 
     this.convertToDB = document.getElementById("convert-to-dB-" + this.id).checked;
+
+    // Get y-axis range limits
+    this.upperLimit = parseFloat(document.getElementById("inst-graph-upper-limit-" + this.id).value);
+    this.lowerLimit = parseFloat(document.getElementById("inst-graph-lower-limit-" + this.id).value);
 
     // Clear Master Div
     while (masterDiv.firstChild) {
@@ -1445,23 +1549,14 @@ InstrumentGraph.prototype.addAttribute = function () {
 
     var removeButton = document.createElement('button');
     var attributeSpan = document.createElement('span');
-    var attributeSelect = document.createElement('select');
-    attributeDiv.appendChild(removeButton);
-    attributeDiv.appendChild(attributeSpan);
-    attributeSpan.appendChild(attributeSelect);
+    var attributeInput = document.createElement('input');
+    var attributeSelect = document.createElement('datalist');
 
     // Pieces from updateSelect to update only the new attribute
     instrumentSelect = document.getElementById("instrument-select-" + this.id);
     var instrumentValidColumns = this.columnList[instrumentSelect.value];
     instrumentValidColumns.sort();
     removeOptions(attributeSelect);
-
-    for (var i = 0; i < instrumentValidColumns.length; i++){
-        newOption = document.createElement("option");
-        newOption.value = instrumentValidColumns[i];
-        newOption.text = instrumentValidColumns[i];
-        attributeSelect.add(newOption);
-    }
 
 
     removeButton.id = "inst-remove-attribute-button-" + this.id + "-" + this.nextAttributeId;
@@ -1475,14 +1570,31 @@ InstrumentGraph.prototype.addAttribute = function () {
     attributeSelect.id = "attribute-select-" + this.id + "-" + this.nextAttributeId;
     attributeSelect.name = "attribute-select-" + this.id;
 
+    attributeInput.id = "attribute-input-" + this.id + "-" + this.nextAttributeId;
+    attributeInput.name = "attribute-input-" + this.id;
+    attributeInput.setAttribute("list", attributeSelect.id);  // Have to set list attribute this way for some reason.
+
+    // Options must be added after the list is tied to the input
+    for (var i = 0; i < instrumentValidColumns.length; i++){
+        newOption = document.createElement("option");
+        newOption.value = instrumentValidColumns[i];
+        //newOption.text = instrumentValidColumns[i];
+        attributeSelect.appendChild(newOption);
+    }
+
     var placeholderOption = document.createElement("option");
-    placeholderOption.text = "Select an Instrument";
-    attributeSelect.add(placeholderOption);
+    placeholderOption.value = "Select an Instrument";
+    attributeSelect.appendChild(placeholderOption);
+
+    attributeDiv.appendChild(removeButton);
+    attributeDiv.appendChild(attributeSpan);
+    attributeSpan.appendChild(attributeInput);
+    attributeSpan.appendChild(attributeSelect);
 
     masterDiv.appendChild(attributeDiv);
 
     this.selectPairList.push({ "id": this.nextAttributeId, "attributeSelect": attributeSelect,
-                               "removeButton": removeButton });
+                               "attributeInput": attributeInput, "removeButton": removeButton });
 
     this.nextAttributeId += 1;
 }
@@ -1566,6 +1678,17 @@ InstrumentGraph.prototype.updateWithValues = function(values) {
             delete this.lastReceived
             this.lastReceived = new Date(this.graphData[this.graphData.length - 1][0]) // Timestamp from most recent data
 
+            yRange = [null, null];   // Deafault is automatic ranging
+
+            // If the upper and lower limits are somewhat reasonable, use them instead for the y-axis range
+            if (!isNaN(this.lowerLimit)
+                && this.lowerLimit != ""
+                && !isNaN(this.upperLimit)
+                && this.upperLimit != "")
+            {
+                yRange = [this.lowerLimit, this.upperLimit];
+            }
+
             this.dygraph = new Dygraph(
             this.innerDiv,
             this.graphData,
@@ -1577,6 +1700,7 @@ InstrumentGraph.prototype.updateWithValues = function(values) {
                 rangeSelectorHeight: 20,
                 rangeSelectorPlotStrokeColor: 'darkred',
                 rangeSelectorPlotFillColor: 'lightgreen',
+                valueRange: yRange,
 
                 labelsUTC: true,
                 labels: ["Time"].concat(this.keys),
@@ -1664,28 +1788,43 @@ InstrumentGraph.prototype.updateInstrumentGraph = function() {
         {
             //Pull out the response text from the request
             var recMessage = JSON.parse(xmlhttp.responseText);
-            for (i = 0; i < recMessage['data'].length; i ++)
-            {
-                // Have add a Z to the given UTC time to convert in JavaScript
-                recMessage['data'][i][0] = new Date(recMessage['data'][i][0] + "Z");
+
+            if (recMessage == "[]") {
+                // There was an error.  This is probably a very foolish way to indicate errors from server->client
+                var masterDiv = document.getElementById('instrument-graph-container-' + thisGraph.id)
+                while (masterDiv.hasChildNodes()) {
+                    masterDiv.removeChild(masterDiv.firstChild);
+                }
+                var errorDiv = document.createElement("div");
+                errorDiv.style.color = "red";
+                errorDiv.innerHTML = "Could not retrieve Data.  Verify all attributes are valid.";
+                masterDiv.appendChild(errorDiv);
+            } else {
+                // Process the data
+                for (i = 0; i < recMessage['data'].length; i ++)
+                {
+                    // Have add a Z to the given UTC time to convert in JavaScript
+                    recMessage['data'][i][0] = new Date(recMessage['data'][i][0] + "Z");
+                }
+
+                thisGraph.selUpperDeviation = recMessage['upper_deviation'];
+                thisGraph.selLowerDeviation = recMessage['lower_deviation'];
+                if (recMessage['min']){
+                    thisGraph.minimum = recMessage['min'];}
+                if (recMessage['max']){
+                    thisGraph.maximum = recMessage['max'];}
+                if (recMessage['median']){
+                    thisGraph.median = recMessage['median'];}
+                if (recMessage['average']){
+                    thisGraph.average = recMessage['average'];}
+                if (recMessage['std_deviation']){
+                    thisGraph.stdDeviation = recMessage['std_deviation'];}
+
+                thisGraph.updateWithValues(recMessage['data']);
+
+                thisGraph.updateLastReceived();
             }
 
-            thisGraph.selUpperDeviation = recMessage['upper_deviation'];
-            thisGraph.selLowerDeviation = recMessage['lower_deviation'];
-            if (recMessage['min']){
-                thisGraph.minimum = recMessage['min'];}
-            if (recMessage['max']){
-                thisGraph.maximum = recMessage['max'];}
-            if (recMessage['median']){
-                thisGraph.median = recMessage['median'];}
-            if (recMessage['average']){
-                thisGraph.average = recMessage['average'];}
-            if (recMessage['std_deviation']){
-                thisGraph.stdDeviation = recMessage['std_deviation'];}
-
-            thisGraph.updateWithValues(recMessage['data']);
-
-            thisGraph.updateLastReceived();
         }
     };
     //Send JSON POST XMLHTTPRequest to generator controller.
@@ -1938,6 +2077,10 @@ function dataToDB(inputData) {
     for (var i = 1; i < inputData.length; i++)
         inputData[i] = 10 * (Math.log(inputData[i]) / Math.LN10);
     return inputData;
+}
+
+function toDB(inputData) {
+    return 10 * (Math.log(inputData) / Math.LN10);
 }
 
 function updateStartTime(id, days) {
