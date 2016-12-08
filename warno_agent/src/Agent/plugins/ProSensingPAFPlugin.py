@@ -38,13 +38,13 @@ class ProSensingPAFPlugin(Plugin):
         base_url = self.config_ctxt['agent']['instrument_list'][self.config_id]['base_url']
         base_port = self.config_ctxt['agent']['instrument_list'][self.config_id]['base_port']
         fmt = self.config_ctxt['agent']['instrument_list'][self.config_id]['ps_type']
-        pafc = PAFClient(base_url, base_port, fmt=fmt)
 
         # Counter for the 'non_paf_event'
         i = 1
         while True:
             timestamp = self.get_timestamp()
             try:
+                pafc = PAFClient(base_url, base_port, fmt=fmt)
                 pafc.connect()
                 events = pafc.get_all_text_dict()
                 events_payload = json.dumps(events)
