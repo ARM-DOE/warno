@@ -1064,51 +1064,6 @@ Histogram.prototype.wideBorders = function() {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // DualHistogram Section
 // If schematic is null, loads up with defaults.  If schematic exists, loads the schematic and displays the histogram
 function DualHistogram(manager, id, containerDiv, controllerUrl, schematic) {
@@ -1132,7 +1087,6 @@ function DualHistogram(manager, id, containerDiv, controllerUrl, schematic) {
         this.controllerHidden = schematic["controllerHidden"];
         this.updateFrequency = schematic["updateFrequency"]; // How often in minutes this object will update.
 
-        this.binNumber = schematic["binNumber"];
         this.colorRed = schematic["colorRed"];
         this.colorGreen = schematic["colorGreen"];
         this.colorBlue = schematic["colorBlue"];
@@ -1156,7 +1110,6 @@ function DualHistogram(manager, id, containerDiv, controllerUrl, schematic) {
         this.controllerHidden = false;
         this.updateFrequency = 5; // How often in minutes this object will update.
 
-        this.binNumber = 0;
         this.colorRed = 0;
         this.colorGreen = 50;
         this.colorBlue = 226;
@@ -1196,7 +1149,6 @@ DualHistogram.prototype.tick = function() {
 DualHistogram.prototype.saveDashboard = function() {
     data = {
         "controllerHidden": this.controllerHidden,
-        "binNumber": this.binNumber,
         "colorRed": this.colorRed,
         "colorGreen": this.colorGreen,
         "colorBlue": this.colorBlue,
@@ -1679,7 +1631,6 @@ DualHistogram.prototype.applyConfig = function () {
         errorElement.innerHTML = errorMessage;
     } else {
         this.updateFrequency = inputUpdateFrequency;
-        this.binNumber = inputBinNumber;
         this.colorRed = inputColorRed;
         this.colorGreen = inputColorGreen;
         this.colorBlue = inputColorBlue;
@@ -1767,9 +1718,6 @@ DualHistogram.prototype.openConfig = function () {
     var frequencyInput = document.getElementById("histogram-update-frequency-" + this.id);
     frequencyInput.value = this.updateFrequency;
 
-    var binNumberInput = document.getElementById("histogram-bin-number-" + this.id);
-    binNumberInput.value = this.binNumber;
-
     var colorRedInput = document.getElementById("histogram-color-red-" + this.id);
     colorRedInput.value = this.colorRed;
     var colorGreenInput = document.getElementById("histogram-color-green-" + this.id);
@@ -1821,29 +1769,6 @@ DualHistogram.prototype.tightBorders = function() {
 DualHistogram.prototype.wideBorders = function() {
     this.div.className = "wd";
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
