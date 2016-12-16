@@ -130,6 +130,8 @@ def widget_controller():
         return widget_status_plot_controller(widget_id)
     if widget_name == "histogram":
         return widget_histogram_controller(widget_id)
+    if widget_name == "dual_histogram":
+        return widget_histogram_controller(widget_id, dual=True)
     if widget_name == "instrument_graph":
         return widget_instrument_graph_controller(widget_id)
     return ""
@@ -273,7 +275,7 @@ def widget_status_plot():
     return render_template('widgets/status_plot.html', instrument_groups=instrument_groups)
 
 
-def widget_histogram_controller(widget_id):
+def widget_histogram_controller(widget_id, dual=False):
     """
     This function has an unusual return, being both the rendered html and extra json data.  The response is designed to
     be pulled apart on the receiving end.  This allows the calling widget to build the histogram correctly.
@@ -283,6 +285,8 @@ def widget_histogram_controller(widget_id):
     widget_id: integer
         Allows for this widget to be dynamically created, tracked, and removed. Passed into the template and
         incorporated in element ids.
+    dual: boolean
+        Default False, if this is True then this request is for a dual histogram, and the column names returned differ.
 
     Returns
     -------
@@ -298,10 +302,17 @@ def widget_histogram_controller(widget_id):
     column_list = {}
 
     for instrument in instrument_list:
-        db_valid_columns = db.session.query(ValidColumn).filter(ValidColumn.instrument_id == instrument['id']).all()
+        if dual:
+            # If it is a Dual Histogram, all entries (at least for now) must be from the same table.  This ensures that
+            # each set of data arrived at the same time, making the comparison of points possible.
+            db_valid_columns = (db.session.query(ValidColumn).filter(ValidColumn.instrument_id == instrument['id'])
+                                .filter(ValidColumn.table_name == "prosensing_paf").all())
+        else:
+            db_valid_columns = db.session.query(ValidColumn).filter(ValidColumn.instrument_id == instrument['id']).all()
         column_list[instrument['id']] = [column.column_name for column in db_valid_columns]
 
-    response_html = render_template("widgets/histogram_controller.html", instrument_list=instrument_list, id=widget_id)
+    response_html = render_template("widgets/histogram_controller.html", instrument_list=instrument_list, id=widget_id,
+                                    dual=dual)
     response_json = dict(instrument_list=instrument_list, column_list=column_list)
     return jsonify(dict(html=response_html, json=response_json))
 

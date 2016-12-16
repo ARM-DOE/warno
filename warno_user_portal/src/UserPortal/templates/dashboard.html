@@ -19,6 +19,7 @@ Dashboard
         <option value="log_viewer">Log Viewer</option>
         <option value="status_plot">Status Plot</option>
         <option value="histogram">Histogram</option>
+        <option value="dual_histogram">Dual Histogram</option>
     </select>
     <button type="button" onclick="newWidget()">Add</button>
     {% if current_user.is_active %}
@@ -89,6 +90,8 @@ Dashboard
             widgetManager.addStatusPlot();
         } else if (widType == 'histogram') {
             widgetManager.addHistogram(null);
+        } else if (widType == 'dual_histogram') {
+            widgetManager.addDualHistogram(null);
         }
     }
 
