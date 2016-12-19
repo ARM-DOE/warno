@@ -146,7 +146,33 @@
                     <input type="text" name="update-frequency" class="short_input" id="histogram-update-frequency-{{id}}">
                 </div>
             </div>
-            {% if not dual %}
+            {# Configuration options specific either to dual histograms or single histograms #}
+            {% if dual %}
+            <hr>
+            <div class="row widget_config_row">
+                <div class="col-9">
+                    <label for="color-scale">Heat Map Color Scale: </label>
+                </div>
+
+                <div class="col-3" style="text-align: right;">
+                    <select name="color-scale" id="color-scale-{{id}}">
+                        <option value="Hot">Hot</option>
+                        <option value="Jet">Jet</option>
+                        <option value="Earth">Earth</option>
+                        <option value="Blackbody">Blackbody</option>
+                        <option value="Portland">Portland</option>
+                        <option value="Electric">Electric</option>
+                        <option value="Picnic">Picnic</option>
+                        <option value="Greys">Greys</option>
+                        <option value="Greens">Greens</option>
+                        <option value="Bluered">Blue Red</option>
+                        <option value="RdBu">Red Blue</option>
+                        <option value="YIOrRd">Yellow Orange Red</option>
+                        <option value="YIGnBu">Yellow Green Blue</option>
+                    </select>
+                </div>
+            </div>
+            {% else %}
             <hr>
             <div class="row widget_config_row">
                 <div class="col-9">

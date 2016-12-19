@@ -1106,6 +1106,8 @@ function DualHistogram(manager, id, containerDiv, controllerUrl, schematic) {
         this.constraintStyle = schematic["constraintStyle"];
         this.constraintRange = schematic["constraintRange"];
         this.convertToDB = schematic["convertToDB"];
+
+        this.colorScale = schematic["colorScale"];  // Color scale for histogram heat map
     } else {
         this.controllerHidden = false;
         this.updateFrequency = 5; // How often in minutes this object will update.
@@ -1128,6 +1130,8 @@ function DualHistogram(manager, id, containerDiv, controllerUrl, schematic) {
         this.constraintStyle = "custom";   // The data constraint controls available
         this.constraintRange = "sixhour";  // If constraintStyle is 'auto', the range for the data displayed
         this.convertToDB = false;          // Whether or not the data is converted to dB scale before graphing.
+
+        this.colorScale = "Hot";           // Color scale for histogram heat map
     }
 
     containerDiv.appendChild(this.div);
@@ -1165,7 +1169,8 @@ DualHistogram.prototype.saveDashboard = function() {
         "updateFrequency": this.updateFrequency,
         "constraintStyle": this.constraintStyle,
         "constraintRange": this.constraintRange,
-        "convertToDB": this.convertToDB
+        "convertToDB": this.convertToDB,
+        "colorScale": this.colorScale
     }
 
     return {"type": "DualHistogram", "data": data};
@@ -1229,6 +1234,8 @@ DualHistogram.prototype.initializeElements = function (loadDashboard) {
         that.showConstraintCustom();
     }
 
+    document.getElementById("color-scale-" + that.id).value = that.colorScale;
+
     // Selector for which instrument the attributes are for
     // When changed should update all options for attribute selector
     var selector = document.getElementById("instrument-select-" + that.id);
@@ -1277,11 +1284,9 @@ DualHistogram.prototype.initializeElements = function (loadDashboard) {
 DualHistogram.prototype.updateSelect = function(loadDashboard) {
     var instrumentSelect = document.getElementById("instrument-select-" + this.id);
     var attributeSelect1 = document.getElementById("attribute-select-1-" + this.id);
-    // TODO: Update to handle two attributes
     var attributeInput1 = document.getElementById("attribute-input-1-" + this.id);
 
     var attributeSelect2 = document.getElementById("attribute-select-2-" + this.id);
-    // TODO: Update to handle two attributes
     var attributeInput2 = document.getElementById("attribute-input-2-" + this.id);
 
     if (loadDashboard){
@@ -1382,12 +1387,6 @@ DualHistogram.prototype.generateDualHistogram = function() {
         graphHeight = 600;
     }
 
-//    var key_elems = document.getElementById('attribute-input-' + this.id);
-//    var keys = [];
-//    for (var i = 0; i < key_elems.length; i++) {
-//        keys.push(key_elems[i].value);
-//    }
-
     start = new Date(this.startUTC + " UTC");
     end = new Date(this.endUTC + " UTC");
 
@@ -1477,7 +1476,7 @@ DualHistogram.prototype.generateDualHistogram = function() {
                     y: y,
                     name: 'density',
                     ncontours: 20,
-                    colorscale: 'Hot',
+                    colorscale: that.colorScale,
                     reversescale: true,
                     showscale: false,
                     type: 'histogram2dcontour'
@@ -1573,6 +1572,8 @@ DualHistogram.prototype.applyConfig = function () {
     var errorOccurred = false;
     var errorMessage = ""
 
+    var colorScale = document.getElementById("color-scale-" + this.id).value;
+
     // Validate Update Frequency
     // Cast value to an integer if possible.  If it fails, get NaN
     var inputUpdateFrequency = +(document.getElementById("histogram-update-frequency-" + this.id).value);
@@ -1583,13 +1584,6 @@ DualHistogram.prototype.applyConfig = function () {
         }
     } else {
         errorMessage += "Update Frequency must be positive integer.<br>";
-        errorOccurred = true;
-    }
-
-    // Validate Bin Number
-    var inputBinNumber = +(document.getElementById("histogram-bin-number-" + this.id).value);
-    if (isNaN(inputBinNumber) || !isNormalInteger(String(inputBinNumber))){
-        errorMessage += "Number of Bins must be positive integer or 0.<br>";
         errorOccurred = true;
     }
 
@@ -1634,6 +1628,7 @@ DualHistogram.prototype.applyConfig = function () {
         this.colorRed = inputColorRed;
         this.colorGreen = inputColorGreen;
         this.colorBlue = inputColorBlue;
+        this.colorScale = colorScale;
 
         successElement.innerHTML = "Configuration Updated.";
         this.generateDualHistogram();
