@@ -8,6 +8,9 @@ Dashboard
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='dygraph-combined-dev.js')}}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='widget_manager.js')}}"></script>
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/highcharts-more.js"></script>
+<script src="https://code.highcharts.com/modules/solid-gauge.js"></script>
 
 <div style="width: 400px; border: 2px solid black; background: lightGray; margin-left: auto; margin-right: auto; padding: 10px;" align="center">
     Tight Borders: <input type="checkbox" name="tight" id="tight-borders" onclick="updateBorders()">
@@ -20,6 +23,7 @@ Dashboard
         <option value="status_plot">Status Plot</option>
         <option value="histogram">Histogram</option>
         <option value="dual_histogram">Dual Histogram</option>
+        <option value="real_time_gauge">Real Time Gauge</option>
     </select>
     <button type="button" onclick="newWidget()">Add</button>
     {% if current_user.is_active %}
@@ -92,6 +96,8 @@ Dashboard
             widgetManager.addHistogram(null);
         } else if (widType == 'dual_histogram') {
             widgetManager.addDualHistogram(null);
+        } else if (widType == 'real_time_gauge') {
+            widgetManager.addRealTimeGauge(null);
         }
     }
 

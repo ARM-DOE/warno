@@ -63,6 +63,11 @@ def histogram_page():
     return render_template('show_histogram.html', instrument_list=instrument_list, column_list = json.dumps(column_list))
 
 
+@devel.route('/devel/solid_gauge')
+def solid_gauge():
+    return render_template("solid_gauge.html")
+
+
 @devel.route('/devel', methods=['GET'])
 def devel_front():
     return render_template('devel_front.html')

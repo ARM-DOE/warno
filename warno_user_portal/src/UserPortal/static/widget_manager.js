@@ -58,6 +58,9 @@ WidgetManager.prototype.buildFromSchematic = function(dashboardSchematic) {
         if (dashboardSchematic[i]["type"] == "InstrumentGraph") {
             this.addInstrumentGraph(dashboardSchematic[i]["data"]);
         }
+        if (dashboardSchematic[i]["type"] == "RealTimeGauge") {
+            this.addRealTimeGauge(dashboardSchematic[i]["data"]);
+        }
     }
 }
 
@@ -126,6 +129,15 @@ WidgetManager.prototype.addInstrumentGraph = function(schematic) {
         newInstrumentGraph.tightBorders();
     }
 };
+
+WidgetManager.prototype.addRealTimeGauge = function(schematic) {
+    newRealTimeGauge = new RealTimeGauge(this, this.newWidgetId, this.containerDiv, this.controllerUrl, schematic);
+    this.widgets.push(newRealTimeGauge);
+    this.newWidgetId += 1;
+    if (this.hasTightBorders) {
+        newRealTimeGauge.tightBorders();
+    }
+}
 
 WidgetManager.prototype.removeWidgets = function() {
     for (var i = this.widgets.length; i > 0; i--){
@@ -373,12 +385,192 @@ StatusPlot.prototype.wideBorders = function() {
 
 
 
+// Real Time Gauge section
+function RealTimeGauge(manager, id, containerDiv, controllerUrl, schematic) {
+    this.manager = manager;
+    this.id = id;
+    this.active = true;            // When no longer active, should be removed from the parent manager
+    this.div = document.createElement('div');
+    this.div.className = 'wd';
+    this.div.innerHTML = "Histogram";
+    this.div.id = "real-time-gauge-" + this.id;
+
+    this.instrument_list = [];
+    this.column_list = [];
+
+    var validSchematic = false;
+    if (schematic) {
+        validSchematic = true;
+        this.instrumentId = schematic["instrumentId"];
+        this.attribute = schematic["attribute"];
+        this.controllerHidden = schematic["controllerHidden"];
+        this.graphSize = schematic["graphSize"];
+    } else {
+        this.instrumentId = null;
+        this.attribute = null;
+        this.controllerHidden = false;
+        this.graphSize = "medium";
+    }
+
+    containerDiv.appendChild(this.div);
+    var parameterizedUrl = controllerUrl + "?widget_name=real_time_gauge&widget_id=" + this.id;
+    // If there was a valid schematic, ajaxLoadUrl will load from the schematic rather than set defaults.
+    this.ajaxLoadUrl(this.div, parameterizedUrl, validSchematic);
+}
+
+RealTimeGauge.prototype.tick = function() {
+    this.updateGauge();
+};
+
+RealTimeGauge.prototype.saveDashboard = function() {
+    data = {
+        "controllerHidden": this.controllerHidden,
+        "graphSize": this.graphSize,
+        "instrumentId": this.instrumentId,
+        "attribute": this.attribute
+    }
+
+    return {"type": "RealTimeGauge", "data": data};
+}
+
+RealTimeGauge.prototype.remove = function () {
+    element = document.getElementById('real-time-gauge-' + this.id);
+    element.parentNode.removeChild(element);
+    this.active = false;
+};
+
+RealTimeGauge.prototype.ajaxLoadUrl = function(element, url, loadDashboard) {
+    var xmlHttp = new XMLHttpRequest();
+    var that = this;
+    xmlHttp.onreadystatechange = function() {
+        if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+        {
+                        // To get JSON and HTML parts, need to do custom extraction.
+            var responseDict = JSON.parse(xmlHttp.responseText);
+            element.innerHTML = responseDict["html"];
+            // Updates the instrument and column lists for the update function to populate properly.
+            that.instrumentList = responseDict["json"]["instrument_list"];
+            that.columnList = responseDict["json"]["column_list"];
+
+            that.initializeElements(loadDashboard);
+        }
+
+    };
+
+    xmlHttp.open("GET", url, true); // true for asynchronous
+    xmlHttp.send();
+
+    //
+};
+
+RealTimeGauge.prototype.initializeElements = function (loadDashboard) {
+    var that = this;
+
+    if (loadDashboard) {
 
 
+        // TODO set graph size?
+        document.getElementById("real-time-gauge-size-button-" + that.graphSize + "-" + that.id).checked = true;
 
+        if (that.controllerHidden) {
+            that.hideController();
+        }
+        if (that.constraintStyle == "auto") {
+            that.showConstraintAuto();
+        } else {
+            that.showConstraintCustom();
+        }
+    } else {
 
+    }
 
+    // Selector for which instrument the attributes are for
+    // When changed should update all options for attribute selector
+    var selector = document.getElementById("instrument-select-" + that.id);
+    selector.onchange = function () { that.updateSelect(false); };
 
+    // Button to copy Histogram widget. Disabled until data is graphed (or data will not properly copy)
+    var copyButton = document.getElementById("real-time-gauge-copy-button-" + that.id);
+    copyButton.onclick = function () { that.manager.copyWidget(that.id); };
+    copyButton.disabled = true;
+    copyButton.title = "Cannot Copy Until Gauge Displayed";
+
+    // Button to remove Histogram widget
+    var removeButton = document.getElementById("real-time-gauge-remove-button-" + that.id);
+    removeButton.onclick = function () { that.remove(); };
+
+    // Button to generate Histogram from data parameter controls
+    var addButton = document.getElementById("real-time-gauge-add-button-" + that.id);
+    addButton.onclick = function () { that.generateRealTimeGauge(); };
+
+    // Data parameter controls: Hide and Reveal
+    var hideButton = document.getElementById("real-time-gauge-hide-button-" + that.id);
+    hideButton.onclick = function () { that.hideController(); };
+    var revealButton = document.getElementById("real-time-gauge-reveal-button-" + that.id);
+    revealButton.onclick = function () { that.revealController(); };
+
+    // Update attribute selector with options
+    that.updateSelect(loadDashboard);
+}
+
+RealTimeGauge.prototype.updateSelect = function(loadDashboard) {
+    var instrumentSelect = document.getElementById("instrument-select-" + this.id);
+    var attributeSelect = document.getElementById("attribute-select-" + this.id);
+    var attributeInput = document.getElementById("attribute-input-" + this.id);
+
+    if (loadDashboard){
+        if (this.instrumentId) {
+            instrumentSelect.value = this.instrumentId;
+        }
+    }
+
+    removeOptions(attributeSelect);
+    instrumentId = instrumentSelect.value;
+    var instrumentValidColumns = this.columnList[instrumentId];
+    instrumentValidColumns.sort()
+
+    for (var i =0; i< instrumentValidColumns.length; i++){
+        newOption = document.createElement("option");
+        newOption.value = instrumentValidColumns[i];
+        newOption.text = instrumentValidColumns[i];
+        attributeSelect.appendChild(newOption);
+    }
+
+    if (loadDashboard){
+        if (this.attribute) {
+            attributeInput.value = this.attribute;
+        }
+    }
+
+}
+
+RealTimeGauge.prototype.generateRealTimeGauge = function () {
+    console.log("Generated");
+}
+
+RealTimeGauge.prototype.updateRealTimeGauge = function () {
+    console.log("Trigger");
+}
+
+RealTimeGauge.prototype.hideController = function () {
+    element = document.getElementById("real-time-gauge-controller-" + this.id);
+    element.style.display = "none";
+    this.controllerHidden = true;
+};
+
+RealTimeGauge.prototype.revealController = function () {
+    element = document.getElementById("real-time-gauge-controller-" + this.id);
+    element.style.display = "";
+    this.controllerHidden = false;
+};
+
+RealTimeGauge.prototype.tightBorders = function() {
+    this.div.className = "wd_tight";
+}
+
+RealTimeGauge.prototype.wideBorders = function() {
+    this.div.className = "wd";
+}
 
 
 
