@@ -383,8 +383,6 @@ StatusPlot.prototype.wideBorders = function() {
     this.div.className = "wd";
 }
 
-
-
 // Real Time Gauge section
 function RealTimeGauge(manager, id, containerDiv, controllerUrl, schematic) {
     this.manager = manager;
@@ -395,8 +393,14 @@ function RealTimeGauge(manager, id, containerDiv, controllerUrl, schematic) {
     this.div.innerHTML = "Histogram";
     this.div.id = "real-time-gauge-" + this.id;
 
+    this.minimum = 0;
+    this.maximum = 0;
+    this.currentValue = null;
+
     this.instrument_list = [];
     this.column_list = [];
+
+    this.gauge = null;
 
     var validSchematic = false;
     if (schematic) {
@@ -404,12 +408,12 @@ function RealTimeGauge(manager, id, containerDiv, controllerUrl, schematic) {
         this.instrumentId = schematic["instrumentId"];
         this.attribute = schematic["attribute"];
         this.controllerHidden = schematic["controllerHidden"];
-        this.graphSize = schematic["graphSize"];
+        this.gaugeSize = schematic["gaugeSize"];
     } else {
         this.instrumentId = null;
         this.attribute = null;
         this.controllerHidden = false;
-        this.graphSize = "medium";
+        this.gaugeSize = "medium";
     }
 
     containerDiv.appendChild(this.div);
@@ -419,13 +423,13 @@ function RealTimeGauge(manager, id, containerDiv, controllerUrl, schematic) {
 }
 
 RealTimeGauge.prototype.tick = function() {
-    this.updateGauge();
+    this.updateRealTimeGauge();
 };
 
 RealTimeGauge.prototype.saveDashboard = function() {
     data = {
         "controllerHidden": this.controllerHidden,
-        "graphSize": this.graphSize,
+        "gaugeSize": this.gaugeSize,
         "instrumentId": this.instrumentId,
         "attribute": this.attribute
     }
@@ -468,18 +472,12 @@ RealTimeGauge.prototype.initializeElements = function (loadDashboard) {
 
     if (loadDashboard) {
 
-
-        // TODO set graph size?
-        document.getElementById("real-time-gauge-size-button-" + that.graphSize + "-" + that.id).checked = true;
+        document.getElementById("real-time-gauge-size-button-" + that.gaugeSize + "-" + that.id).checked = true;
 
         if (that.controllerHidden) {
             that.hideController();
         }
-        if (that.constraintStyle == "auto") {
-            that.showConstraintAuto();
-        } else {
-            that.showConstraintCustom();
-        }
+
     } else {
 
     }
@@ -511,6 +509,10 @@ RealTimeGauge.prototype.initializeElements = function (loadDashboard) {
 
     // Update attribute selector with options
     that.updateSelect(loadDashboard);
+
+    if (loadDashboard) {
+        that.generateRealTimeGauge();
+    }
 }
 
 RealTimeGauge.prototype.updateSelect = function(loadDashboard) {
@@ -545,11 +547,249 @@ RealTimeGauge.prototype.updateSelect = function(loadDashboard) {
 }
 
 RealTimeGauge.prototype.generateRealTimeGauge = function () {
-    console.log("Generated");
+
+    var gauge_div = document.getElementById("real-time-gauge-container-" + this.id);
+
+    var instrumentSelect = document.getElementById("instrument-select-" + this.id);
+    var attributeInput = document.getElementById("attribute-input-" + this.id);
+
+    var instrumentName = instrumentSelect.options[instrumentSelect.selectedIndex].text;
+    this.instrumentId = instrumentSelect.value;
+
+    this.attribute = attributeInput.value;
+
+    // Enable copy button and change title to reflect functionality
+    var copyButton = document.getElementById("real-time-gauge-copy-button-" + this.id);
+    copyButton.disabled = false;
+    copyButton.title = "Copy This Widget";
+
+    var gaugeSize = '140%';
+    var gaugeHeight = 300;
+    var gaugeWidth = 300;
+    var gaugeFontSize = '24px';
+    var gaugeSizeElement = document.querySelector('input[name="real-time-gauge-size-' + this.id + '"]:checked');
+    if (gaugeSizeElement) {
+        this.gaugeSize = gaugeSizeElement.value;
+    }
+
+    if (this.gaugeSize == "small") {
+        gaugeHeight = 100;
+        gaugeWidth = 150;
+        gaugeFontSize = '12px';
+    } else if (this.gaugeSize == "medium") {
+        gaugeHeight = 200;
+        gaugeWidth = 300;
+        gaugeFontSize = '24px';
+    } else if (this.gaugeSize == "large") {
+        gaugeHeight = 400;
+        gaugeWidth = 600;
+        gaugeFontSize = '36px';
+    }
+
+    var that = this;  // Allows 'this' object to be accessed correctly within the XMLHttpRequest state change function.
+
+    // The request for the initial data also gets statistics for the entry, for the min/max of the gauge
+    var xmlhttp = new XMLHttpRequest();
+
+    xmlhttp.onreadystatechange = function() {
+        if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+            recMessage = JSON.parse(xmlhttp.responseText);
+            // TODO update last received here
+
+            if (recMessage.length > 0) {
+                // Only should be one value returned per attribute
+                var responseDict = recMessage[0];
+
+                var newTime = new Date(responseDict["data"]["time"] + "Z");
+                that.lastReceived = newTime;
+                that.updateLastReceived();
+
+                that.updateTitle();
+
+                that.minimum = responseDict["data"]["stats"]["min"];
+                that.maximum = responseDict["data"]["stats"]["max"];
+                that.currentValue = responseDict["data"]["value"]
+                if (that.minimum == that.maximum) {
+                    that.minimum -= 0.00000001;
+                }
+
+                var gaugeOptions = {
+                    chart: {
+                        type: 'solidgauge',
+                        height: gaugeHeight,
+                        width: gaugeWidth
+                    },
+
+                    title: null,
+
+                    pane: {
+                        center: ['50%', '85%'],
+                        size: gaugeSize,
+                        startAngle: -90,
+                        endAngle: 90,
+                        background: {
+                            backgroundColor: (Highcharts.theme && Highcharts.theme.background2) || '#EEE',
+                            innerRadius: '60%',
+                            outerRadius: '100%',
+                            shape: 'arc'
+                        }
+                    },
+
+                    tooltip: {
+                        enabled: false
+                    },
+
+                    yAxis: {
+                        stops: [
+                            [0.1, '#55BF3B'], //green
+                            [0.5, '#DDDF0D'], //yellow
+                            [0.9, '#DF5353']  //red
+                        ],
+                        lineWidth: 0,
+                        minortickInterval: null,
+                        tickAmount: 2,
+                        title: {
+                            y: 0
+                        },
+                        labels: {
+                            y: 16,
+//                            style: {
+//                                fontSize: '8px'
+//                            }
+                        }
+                    },
+
+                    plotOptions: {
+                        solidgauge: {
+                            dataLabels: {
+                               y: 5,
+                               borderWidth: 0,
+                               useHTML: true
+                            }
+                        }
+                    }
+
+                };
+
+                that.gauge = Highcharts.chart(gauge_div, Highcharts.merge(gaugeOptions, {
+                    yAxis: {
+                        min: that.minimum,
+                        max: that.maximum
+                    },
+
+                    credits: {
+                        enabled: false
+                    },
+
+                    series: [{
+                        name: instrumentName + ":" + that.attribute,
+                        data: [that.currentValue],
+                        dataLabels: {
+                            format: '<div style="text-align:center;"><span style="font-size:' + gaugeFontSize + ';color:' +
+                                ((Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black') + '">{y}</span><br/>' +
+                                   '<span style="font-size:12px;color:silver"></span></div>'
+                        },
+                    }]
+                }));
+
+            }
+        }
+    }
+
+    var url = "/recent_values" +
+              "?keys=" + this.attribute +
+              "&instrument_id=" + this.instrumentId +
+              "&do_stats=1";
+
+    xmlhttp.open("POST", url, true);
+    xmlhttp.send();
+
 }
 
 RealTimeGauge.prototype.updateRealTimeGauge = function () {
-    console.log("Trigger");
+
+    if (this.gauge) {
+        var that = this;  // Allows 'this' object to be accessed correctly within the XMLHttpRequest state change function
+
+        // Don't get stats every time.  If the value is outside min/max, handled here
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.onreadystatechange = function() {
+            if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                recMessage = JSON.parse(xmlhttp.responseText);
+                // TODO update last received here
+
+                if (recMessage.length > 0) {
+                    // Only should be one value returned per attribute
+                    var responseDict = recMessage[0];
+
+                    var newTime = new Date(responseDict["data"]["time"] + "Z");
+                    that.lastReceived = newTime;
+                    that.updateLastReceived();
+
+                    that.updateTitle();
+
+                    that.currentValue = responseDict["data"]["value"];
+                    if (that.currentValue > that.maximum) {
+                        that.maximum = that.currentValue;
+                    } else if (that.currentValue < that.minimum) {
+                        that.minimum = that.currentValue;
+                    }
+
+                    gaugeValue = that.gauge.series[0].points[0];
+                    gaugeValue.update(that.currentValue);
+                }
+
+            }
+
+        }
+
+        var url = "/recent_values" +
+                  "?keys=" + this.attribute +
+                  "&instrument_id=" + this.instrumentId;
+
+            xmlhttp.open("POST", url, true);
+            xmlhttp.send();
+
+    }
+}
+
+RealTimeGauge.prototype.updateLastReceived = function() {
+    var statusBubble = document.getElementById("receive-status-" + this.id);
+    if (this.lastReceived == null) {
+        statusBubble.className = "db_receive_status";
+        document.getElementById("last-received-" + this.id).innerHTML = "No Data";
+        return;
+    }
+
+    // If lastReceived exists, display the time the last data was received and update status bubble depending on age.
+    var day = this.lastReceived.getUTCDate();
+    var month = this.lastReceived.getUTCMonth() + 1;
+    var year = this.lastReceived.getUTCFullYear();
+    var hours = this.lastReceived.getUTCHours();
+    var minutes = this.lastReceived.getUTCMinutes();
+    var seconds = this.lastReceived.getUTCSeconds();
+    var lastReceivedUTC = month + "/" + day + "/" + year + " " + hours + ":" + minutes + ":" + seconds;
+    // Extra spaces for padding looks nice in the finished result
+    document.getElementById("last-received-" + this.id).innerHTML = "&nbsp &nbsp " + lastReceivedUTC;
+
+    var currentTime = new Date();
+    var differenceMinutes = (currentTime - this.lastReceived) / (60000); // Difference starts in milliseconds
+
+    if ((0 <= differenceMinutes) && (differenceMinutes < 5)) {
+        statusBubble.className = "db_receive_status db_status_good";
+    } else if ((5 <= differenceMinutes) && (differenceMinutes <= 15)) {
+        statusBubble.className = "db_receive_status db_status_weak";
+    } else {
+        statusBubble.className = "db_receive_status db_status_dead";
+    }
+
+}
+
+RealTimeGauge.prototype.updateTitle = function() {
+    var titleDiv = document.getElementById("real-time-gauge-title-" + this.id);
+    var instrumentSelect = document.getElementById("instrument-select-" + this.id);
+    var instrumentName = instrumentSelect.options[instrumentSelect.selectedIndex].text;
+    titleDiv.innerHTML = instrumentName + "<br>" + this.attribute;
 }
 
 RealTimeGauge.prototype.hideController = function () {
@@ -571,20 +811,6 @@ RealTimeGauge.prototype.tightBorders = function() {
 RealTimeGauge.prototype.wideBorders = function() {
     this.div.className = "wd";
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 // Histogram Section
@@ -842,7 +1068,6 @@ Histogram.prototype.remove = function () {
 Histogram.prototype.generateHistogram = function() {
     this.activeCounter = true;  // Activates the periodic update checks
 
-    var xmlhttp = new XMLHttpRequest();
     this.lastReceived = null;
 
     var div = document.getElementById('histogram-container-' + this.id)
@@ -890,27 +1115,64 @@ Histogram.prototype.generateHistogram = function() {
         graphHeight = 600;
     }
 
-//    var key_elems = document.getElementById('attribute-input-' + this.id);
-//    var keys = [];
-//    for (var i = 0; i < key_elems.length; i++) {
-//        keys.push(key_elems[i].value);
-//    }
-
     start = new Date(this.startUTC + " UTC");
     end = new Date(this.endUTC + " UTC");
 
-    var that = this; // Allows 'this' object to be accessed correctly within the xmlhttp function.
+    var that = this; // Allows 'this' object to be accessed correctly within the XMLHttpRequest state change functions.
                      // Inside the function 'this' references the function rather than the Histogram object we want.
 
-    // Setup AJAX message and send.
-    xmlhttp.onreadystatechange = function () {
-        if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-            var response = JSON.parse(xmlhttp.responseText);
+    // Request for most recent data
+    var lastReceivedXmlhttp = new XMLHttpRequest();
+
+    lastReceivedXmlhttp.onreadystatechange = function() {
+        //After the asynchronous request successfully returns
+        if (lastReceivedXmlhttp.readyState == 4 && lastReceivedXmlhttp.status == 200)
+        {
+            recMessage = JSON.parse(lastReceivedXmlhttp.responseText);
+            var recMessageKeys = Object.keys(recMessage);
+
+            for (var i = 0; i < recMessageKeys.length; i ++)
+            {
+                if (recMessage[recMessageKeys[i]]["data"]["time"])
+                {
+                    var newTime = new Date(recMessage[recMessageKeys[i]]["data"]["time"] + "Z");
+                    if (that.lastReceived) {
+                        if (newTime > that.lastReceived)
+                        {
+                            that.lastReceived = newTime;
+                        }
+                    }
+                    else
+                    {
+                        that.lastReceived = newTime;
+                    }
+                }
+            }
+
+            // Forces the HTML to update immediately, rather than after all data comes in
+            that.updateLastReceived();
+        }
+    }
+
+    var url = "/recent_values" +
+              "?keys=" + this.attribute +
+              "&instrument_id=" + this.instrumentId;
+
+    lastReceivedXmlhttp.open("POST", url, true);
+    //Send out the  request
+    lastReceivedXmlhttp.send();
+
+    // Request for histogram data
+    var dataXmlhttp = new XMLHttpRequest();
+
+    dataXmlhttp.onreadystatechange = function () {
+        if (dataXmlhttp.readyState == 4 && dataXmlhttp.status == 200) {
+            var response = JSON.parse(dataXmlhttp.responseText);
 
             delete that.lastReceived;
 
             if (response == "[]") {
-                // There was an error.  This is probably a very foolish way to indicate errors from server->client
+                // There was an error.  This is probably a poor way to indicate errors from server->client
                 var masterDiv = document.getElementById('histogram-container-' + that.id)
                 while (masterDiv.hasChildNodes()) {
                     masterDiv.removeChild(masterDiv.firstChild);
@@ -1037,10 +1299,10 @@ Histogram.prototype.generateHistogram = function() {
               "&instrument_id=" + this.instrumentId +
               "&start=" + startUTCArg +
               "&end=" + endUTCArg;
-    xmlhttp.open("POST", url, true);
+    dataXmlhttp.open("POST", url, true);
 
     //Send out the request
-    xmlhttp.send();
+    dataXmlhttp.send();
 
 };
 
@@ -1526,7 +1788,7 @@ DualHistogram.prototype.remove = function () {
 DualHistogram.prototype.generateDualHistogram = function() {
     this.activeCounter = true;  // Activates the periodic update checks
 
-    var xmlhttp = new XMLHttpRequest();
+
     this.lastReceived = null;
 
     var div = document.getElementById('histogram-container-' + this.id)
@@ -1582,18 +1844,61 @@ DualHistogram.prototype.generateDualHistogram = function() {
     start = new Date(this.startUTC + " UTC");
     end = new Date(this.endUTC + " UTC");
 
-    var that = this; // Allows 'this' object to be accessed correctly within the xmlhttp function.
+    var that = this; // Allows 'this' object to be accessed correctly within the XMLHttpRequest state change functions.
                      // Inside the function 'this' references the function rather than the Histogram object we want.
 
-    // Setup AJAX message and send.
-    xmlhttp.onreadystatechange = function () {
-        if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-            var response = JSON.parse(xmlhttp.responseText);
+    // Request for most recent data
+    var lastReceivedXmlhttp = new XMLHttpRequest();
+
+    lastReceivedXmlhttp.onreadystatechange = function() {
+        //After the asynchronous request successfully returns
+        if (lastReceivedXmlhttp.readyState == 4 && lastReceivedXmlhttp.status == 200)
+        {
+            recMessage = JSON.parse(lastReceivedXmlhttp.responseText);
+            var recMessageKeys = Object.keys(recMessage);
+
+            for (var i = 0; i < recMessageKeys.length; i ++)
+            {
+                if (recMessage[recMessageKeys[i]]["data"]["time"])
+                {
+                    var newTime = new Date(recMessage[recMessageKeys[i]]["data"]["time"] + "Z");
+                    if (that.lastReceived) {
+                        if (newTime > that.lastReceived)
+                        {
+                            that.lastReceived = newTime;
+                        }
+                    }
+                    else
+                    {
+                        that.lastReceived = newTime;
+                    }
+                }
+            }
+
+            // Forces the HTML to update immediately, rather than after all data comes in
+            that.updateLastReceived();
+        }
+    }
+
+    var url = "/recent_values" +
+              "?keys=" + this.attribute1 + "," + this.attribute2 +
+              "&instrument_id=" + this.instrumentId;
+
+    lastReceivedXmlhttp.open("POST", url, true);
+    //Send out the  request
+    lastReceivedXmlhttp.send();
+
+    // Request for the histogram data
+    var dataXmlhttp = new XMLHttpRequest();
+
+    dataXmlhttp.onreadystatechange = function () {
+        if (dataXmlhttp.readyState == 4 && dataXmlhttp.status == 200) {
+            var response = JSON.parse(dataXmlhttp.responseText);
 
             delete that.lastReceived;
 
             if (response == "[]") {
-                // There was an error.  This is probably a very foolish way to indicate errors from server->client
+                // There was an error.  This is probably a poor way to indicate errors from server->client
                 var masterDiv = document.getElementById('histogram-container-' + that.id)
                 while (masterDiv.hasChildNodes()) {
                     masterDiv.removeChild(masterDiv.firstChild);
@@ -1748,10 +2053,10 @@ DualHistogram.prototype.generateDualHistogram = function() {
               "&instrument_id=" + this.instrumentId +
               "&start=" + startUTCArg +
               "&end=" + endUTCArg;
-    xmlhttp.open("POST", url, true);
+    dataXmlhttp.open("POST", url, true);
 
     //Send out the request
-    xmlhttp.send();
+    dataXmlhttp.send();
 
 };
 
@@ -2444,6 +2749,49 @@ InstrumentGraph.prototype.generateInstrumentGraph = function(){
     this.innerDiv = document.getElementById(this.graphDivId);
     this.innerDiv.innerHTML = "<p><br><i>Loading Graph...</i></p>"
 
+    // Get the most recent values for the selected attributes
+    var that = this;
+    var xmlhttp = new XMLHttpRequest();
+
+    xmlhttp.onreadystatechange = function() {
+        //After the asynchronous request successfully returns
+        if (xmlhttp.readyState == 4 && xmlhttp.status == 200)
+        {
+            recMessage = JSON.parse(xmlhttp.responseText);
+            var recMessageKeys = Object.keys(recMessage);
+
+            for (var i = 0; i < recMessageKeys.length; i ++)
+            {
+                if (recMessage[recMessageKeys[i]]["data"]["time"])
+                {
+                    var newTime = new Date(recMessage[recMessageKeys[i]]["data"]["time"] + "Z");
+                    if (that.lastReceived) {
+                        if (newTime > that.lastReceived)
+                        {
+                            that.lastReceived = newTime;
+                        }
+                    }
+                    else
+                    {
+                        that.lastReceived = newTime;
+                    }
+                }
+            }
+
+            // Forces the HTML to update immediately, rather than after all data comes in
+            that.updateLastReceived();
+        }
+    }
+
+    var url = "/recent_values" +
+              "?keys=" + this.keys +
+              "&instrument_id=" + this.instrumentId;
+
+    xmlhttp.open("POST", url, true);
+    //Send out the  request
+    xmlhttp.send();
+
+
     this.dygraph = "";
     this.updateInstrumentGraph();
 }
@@ -2717,7 +3065,7 @@ InstrumentGraph.prototype.updateInstrumentGraph = function() {
             var recMessage = JSON.parse(xmlhttp.responseText);
 
             if (recMessage == "[]") {
-                // There was an error.  This is probably a very foolish way to indicate errors from server->client
+                // There was an error.  This is probably a poor way to indicate errors from server->client
                 var masterDiv = document.getElementById('instrument-graph-container-' + thisGraph.id)
                 while (masterDiv.hasChildNodes()) {
                     masterDiv.removeChild(masterDiv.firstChild);

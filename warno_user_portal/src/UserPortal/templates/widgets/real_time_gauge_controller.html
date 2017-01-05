@@ -17,7 +17,7 @@
     <div>
         <div class="db_receive_status" id="receive-status-{{id}}"></div>
             Last Received (UTC):
-        <span id="last-received-{{id}}">No Data</span>
+        <div id="last-received-{{id}}">No Data</div>
     </div>
     <div id="real-time-gauge-controller-{{id}}">
         <button type="button" id="real-time-gauge-add-button-{{id}}">Start Real Time Gauge</button>
@@ -45,6 +45,9 @@
                 </datalist>
             </span>
         </div>
+    </div>
+    <div id="real-time-gauge-title-{{id}}" style="font-weight: bold;">
+        No attribute graphed.
     </div>
     <div style="padding: 2px;" id="real-time-gauge-container-{{id}}">
 
