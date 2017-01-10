@@ -75,6 +75,8 @@
                 <input type="radio" id="time-range-month-{{id}}" name="time-range-{{id}}" value="month">
                 <label for="time-range-month-{{id}}">Month</label>
             </div>
+            {# Controller is structured differently if the histogram requested is a 'Dual' histogram #}
+            {% if not dual %}
             <div>
                 <label for="lower-limit">Lower Limit</label>
                 <input style="width: 70px;" type="text" name="lower-limit" id="histogram-lower-limit-{{id}}">
@@ -85,6 +87,7 @@
                     Both limits must be valid numbers to override automatic limits.
                 </i>
             </div>
+            {% endif %}
             <div id="attr-div-{{id}}">
                 <span>
                     <select class="attrSelect" id="instrument-select-{{id}}">
@@ -93,12 +96,38 @@
                         {% endfor %}
                     </select>
                 </span>
+                {% if dual %}
+                <br>
+                <span>
+                    <input list="attribute-select-1-{{id}}" id="attribute-input-1-{{id}}">
+                    <datalist id="attribute-select-1-{{id}}">
+                        <option>Select an Instrument</option>
+                    </datalist>
+                </span>
+                <label for="x-lower-limit">Range:</label>
+                <input style="width: 70px;" type="text" name="x-lower-limit" id="histogram-x-lower-limit-{{id}}">
+                <label for="x-upper-limit"> To </label>
+                <input style="width: 70px;" type="text" name="x-upper-limit" id="histogram-x-upper-limit-{{id}}">
+                <br>
+                <span>
+                    <input list="attribute-select-2-{{id}}" id="attribute-input-2-{{id}}">
+                    <datalist id="attribute-select-2-{{id}}">
+                        <option>Select an Instrument</option>
+                    </datalist>
+                </span>
+                <label for="y-lower-limit">Range:</label>
+                <input style="width: 70px;" type="text" name="y-lower-limit" id="histogram-y-lower-limit-{{id}}">
+                <label for="y-upper-limit"> To </label>
+                <input style="width: 70px;" type="text" name="y-upper-limit" id="histogram-y-upper-limit-{{id}}">
+
+                {% else %}
                 <span>
                     <input list="attribute-select-{{id}}" id="attribute-input-{{id}}">
                     <datalist id="attribute-select-{{id}}">
                         <option>Select an Instrument</option>
                     </datalist>
                 </span>
+                {% endif %}
             </div>
 
         </div>
@@ -117,7 +146,33 @@
                     <input type="text" name="update-frequency" class="short_input" id="histogram-update-frequency-{{id}}">
                 </div>
             </div>
+            {# Configuration options specific either to dual histograms or single histograms #}
+            {% if dual %}
+            <hr>
+            <div class="row widget_config_row">
+                <div class="col-9">
+                    <label for="color-scale">Heat Map Color Scale: </label>
+                </div>
 
+                <div class="col-3" style="text-align: right;">
+                    <select name="color-scale" id="color-scale-{{id}}">
+                        <option value="Hot">Hot</option>
+                        <option value="Jet">Jet</option>
+                        <option value="Earth">Earth</option>
+                        <option value="Blackbody">Blackbody</option>
+                        <option value="Portland">Portland</option>
+                        <option value="Electric">Electric</option>
+                        <option value="Picnic">Picnic</option>
+                        <option value="Greys">Greys</option>
+                        <option value="Greens">Greens</option>
+                        <option value="Bluered">Blue Red</option>
+                        <option value="RdBu">Red Blue</option>
+                        <option value="YIOrRd">Yellow Orange Red</option>
+                        <option value="YIGnBu">Yellow Green Blue</option>
+                    </select>
+                </div>
+            </div>
+            {% else %}
             <hr>
             <div class="row widget_config_row">
                 <div class="col-9">
@@ -132,6 +187,7 @@
                     <input type="text" name="bin-number" class="short_input" id="histogram-bin-number-{{id}}">
                 </div>
             </div>
+            {% endif %}
 
             <hr>
             <div class="row widget_config_row">

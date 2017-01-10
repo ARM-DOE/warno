@@ -10,6 +10,11 @@ setup:
     run_vm_user_portal: 1
     user_portal_port: 8002
 
+vagrant:
+    # Physical CPUs
+    cpus: 2
+    # Memory is defined in Megabytes
+    memory: 8192
 
 type:
     central_facility: 1

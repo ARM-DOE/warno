@@ -296,6 +296,9 @@ def recent_values():
         Passed as an HTML query parameter, the id of the instrument in the
             database, indicates which instrument's data to use.
 
+    do_stats: integer
+        Passed as an HTML query parameter, indicates whether to do aggregates stats for an attribute (1=true, 0=false).
+
     Returns
     -------
 
@@ -309,9 +312,7 @@ def recent_values():
     arg_keys = arg_keys.split(',')
 
     instrument_id = request.args.get("instrument_id")
-
-    msg = "KEYS = %s" % arg_keys
-    msg += "<br>%s" % instrument_id
+    do_stats = request.args.get("do_stats")
 
     key_pairs = [dict(key=a_key, data=None) for a_key in arg_keys]
 
@@ -350,6 +351,9 @@ def recent_values():
     # Convert each data entry into a dictionary with ISO formatted time and current value
     for key_pair in key_pairs:
         key_pair["data"] = dict(time=key_pair["data"][0].isoformat(), value=key_pair["data"][1])
+        if (do_stats):
+            stats_json = get_attribute_stats(key_pair["key"], instrument_id)
+            key_pair["data"]["stats"] = dict(json.loads(stats_json))
 
     return json.dumps(key_pairs)
 
@@ -381,6 +385,7 @@ def generate_instrument_graph():
 
     do_stats: integer
         Passed as an HTML query parameter, indicates whether to do aggregates stats for an attribute (1=true, 0=false).
+
     Returns
     -------
     message: JSON object

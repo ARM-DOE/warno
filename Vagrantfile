@@ -12,7 +12,30 @@ script = <<SCRIPT
 #{env_var_cmd}
 SCRIPT
 
+def convert_to_number(string)
+  Integer(string || "")
+rescue ArgumentError
+  nil
+end
 
+# Default CPU and Memory configurations.
+VM_CPUS = 1       # Physical CPUs
+VM_MEMORY = 2048  # Megabytes
+
+# Loads CPU and Memory configuration from the generic configuration file if parameters exist
+yaml_config = YAML.load_file('data_store/data/config.yml')
+
+
+if yaml_config["vagrant"]
+  config_cpus = convert_to_number(yaml_config["vagrant"]["cpus"])
+  if config_cpus
+    VM_CPUS = config_cpus
+  end
+  config_memory = convert_to_number(yaml_config["vagrant"]["memory"])
+  if config_memory
+    VM_MEMORY = config_memory
+  end
+end
 
 Vagrant.configure(2) do |config|
   ## Custom Local Image ##
@@ -31,8 +54,8 @@ Vagrant.configure(2) do |config|
   ## VirtualBox ##
   config.vm.provider "virtualbox" do |v|
     v.name = "warno"
-    v.memory = 2048   # Megabytes
-    v.cpus = 1        # Physical CPUs
+    v.memory = VM_MEMORY   # Megabytes
+    v.cpus = VM_CPUS       # Physical CPUs
   end
 
   ## Set up NFS shared folders ##

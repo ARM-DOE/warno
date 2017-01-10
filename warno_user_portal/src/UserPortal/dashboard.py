@@ -128,8 +128,12 @@ def widget_controller():
         return widget_log_viewer_controller(widget_id)
     if widget_name == "status_plot":
         return widget_status_plot_controller(widget_id)
+    if widget_name == "real_time_gauge":
+        return widget_real_time_gauge_controller(widget_id)
     if widget_name == "histogram":
         return widget_histogram_controller(widget_id)
+    if widget_name == "dual_histogram":
+        return widget_histogram_controller(widget_id, dual=True)
     if widget_name == "instrument_graph":
         return widget_instrument_graph_controller(widget_id)
     return ""
@@ -273,10 +277,52 @@ def widget_status_plot():
     return render_template('widgets/status_plot.html', instrument_groups=instrument_groups)
 
 
-def widget_histogram_controller(widget_id):
+def widget_histogram_controller(widget_id, dual=False):
     """
     This function has an unusual return, being both the rendered html and extra json data.  The response is designed to
     be pulled apart on the receiving end.  This allows the calling widget to build the histogram correctly.
+
+    Parameters
+    ----------
+    widget_id: integer
+        Allows for this widget to be dynamically created, tracked, and removed. Passed into the template and
+        incorporated in element ids.
+    dual: boolean
+        Default False, if this is True then this request is for a dual histogram, and the column names returned differ.
+
+    Returns
+    -------
+    JSON dictionary of the form { "html": "*html for page generation*", "json": "*json for the widget to internalize*" }
+
+    """
+    # We need to pass in a list of valid instruments:
+    db_instruments = db.session.query(Instrument).order_by(asc(Instrument.id)).all()
+    instrument_list = [dict(abbv=inst.name_short, name=inst.name_long, type=inst.type, vendor=inst.vendor,
+                            description=inst.description, frequency_band=inst.frequency_band,
+                            location=inst.site.name_short, site_id=inst.site_id, id=inst.id)
+                       for inst in db_instruments]
+    column_list = {}
+
+    for instrument in instrument_list:
+        if dual:
+            # If it is a Dual Histogram, all entries (at least for now) must be from the same table.  This ensures that
+            # each set of data arrived at the same time, making the comparison of points possible.
+            db_valid_columns = (db.session.query(ValidColumn).filter(ValidColumn.instrument_id == instrument['id'])
+                                .filter(ValidColumn.table_name == "prosensing_paf").all())
+        else:
+            db_valid_columns = db.session.query(ValidColumn).filter(ValidColumn.instrument_id == instrument['id']).all()
+        column_list[instrument['id']] = [column.column_name for column in db_valid_columns]
+
+    response_html = render_template("widgets/histogram_controller.html", instrument_list=instrument_list, id=widget_id,
+                                    dual=dual)
+    response_json = dict(instrument_list=instrument_list, column_list=column_list)
+    return jsonify(dict(html=response_html, json=response_json))
+
+
+def widget_real_time_gauge_controller(widget_id):
+    """
+    This function has an unusual return, being both the rendered html and extra json data.  The response is designed to
+    be pulled apart on the receiving end.  This allows the calling widget to build the real time gauge correctly.
 
     Parameters
     ----------
@@ -301,7 +347,8 @@ def widget_histogram_controller(widget_id):
         db_valid_columns = db.session.query(ValidColumn).filter(ValidColumn.instrument_id == instrument['id']).all()
         column_list[instrument['id']] = [column.column_name for column in db_valid_columns]
 
-    response_html = render_template("widgets/histogram_controller.html", instrument_list=instrument_list, id=widget_id)
+    response_html = render_template("widgets/real_time_gauge_controller.html",
+                                    instrument_list=instrument_list, id=widget_id)
     response_json = dict(instrument_list=instrument_list, column_list=column_list)
     return jsonify(dict(html=response_html, json=response_json))
 

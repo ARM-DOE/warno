@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <link rel=stylesheet type=text/css href="{{ url_for('static', filename='master.css') }}">
+    <script type="text/javascript" src="{{ url_for('static', filename='jquery-2.1.4.js')}}"></script>
+</head>
+
+<body>
+    <p>
+        <button id="real-time-gauge-hide-button-{{id}}" title="Hide Gauge Data Settings">-</button>
+        <button id="real-time-gauge-reveal-button-{{id}}" title="Show Gauge Data Settings">+</button>
+        <button type="button" style="float: right;" id="real-time-gauge-remove-button-{{id}}">X</button>
+        <button type="button" style="float: right;" id="real-time-gauge-copy-button-{{id}}" title="Copy This Widget">||</button>
+    </p>
+    <div>
+        <div class="db_receive_status" id="receive-status-{{id}}"></div>
+            Last Received (UTC):
+        <div id="last-received-{{id}}">No Data</div>
+    </div>
+    <div id="real-time-gauge-controller-{{id}}">
+        <button type="button" id="real-time-gauge-add-button-{{id}}">Start Real Time Gauge</button>
+        <br>
+        <input type="radio" id="real-time-gauge-size-button-small-{{id}}" name="real-time-gauge-size-{{id}}" value="small">
+        <label for="real-time-gauge-size-button-small-{{id}}">Small</label>
+        <input type="radio" id="real-time-gauge-size-button-medium-{{id}}" name="real-time-gauge-size-{{id}}" value="medium" checked>
+        <label for="real-time-gauge-size-button-medium-{{id}}">Medium</label>
+        <input type="radio" id="real-time-gauge-size-button-large-{{id}}" name="real-time-gauge-size-{{id}}" value="large">
+        <label for="real-time-gauge-size-button-large-{{id}}">Large</label>
+        <div>
+            Instrument:
+            <select class="attrSelect" id="instrument-select-{{id}}">
+                {% for inst in instrument_list %}
+                <option value="{{inst.id}}">{{ inst.location }}:{{inst.abbv}}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+
+        <div id="attr-div-{{id}}">
+            <span><input list="attribute-select-{{id}}" name="attribute-input-{{id}}" id="attribute-input-{{id}}">
+            <datalist class="attribute_select" name="attribute-select-{{id}}" id="attribute-select-{{id}}">
+                    <option>Select an Instrument</option>
+                </datalist>
+            </span>
+        </div>
+    </div>
+    <div id="real-time-gauge-title-{{id}}" style="font-weight: bold;">
+        No attribute graphed.
+    </div>
+    <div style="padding: 2px;" id="real-time-gauge-container-{{id}}">
+
+    </div>
+</body>

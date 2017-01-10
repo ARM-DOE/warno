@@ -52,8 +52,14 @@ WidgetManager.prototype.buildFromSchematic = function(dashboardSchematic) {
         if (dashboardSchematic[i]["type"] == "Histogram") {
             this.addHistogram(dashboardSchematic[i]["data"]);
         }
+        if (dashboardSchematic[i]["type"] == "DualHistogram") {
+            this.addDualHistogram(dashboardSchematic[i]["data"]);
+        }
         if (dashboardSchematic[i]["type"] == "InstrumentGraph") {
             this.addInstrumentGraph(dashboardSchematic[i]["data"]);
+        }
+        if (dashboardSchematic[i]["type"] == "RealTimeGauge") {
+            this.addRealTimeGauge(dashboardSchematic[i]["data"]);
         }
     }
 }
@@ -105,6 +111,15 @@ WidgetManager.prototype.addHistogram = function(schematic) {
     }
 };
 
+WidgetManager.prototype.addDualHistogram = function(schematic) {
+    newDualHistogram = new DualHistogram(this, this.newWidgetId, this.containerDiv, this.controllerUrl, schematic);
+    this.widgets.push(newDualHistogram);
+    this.newWidgetId +=1;
+    if (this.hasTightBorders) {
+        newDualHistogram.tightBorders();
+    }
+};
+
 WidgetManager.prototype.addInstrumentGraph = function(schematic) {
     newInstrumentGraph = new InstrumentGraph(this, this.newWidgetId, this.containerDiv, this.controllerUrl,
                                              this.genGraphURL, schematic);
@@ -114,6 +129,15 @@ WidgetManager.prototype.addInstrumentGraph = function(schematic) {
         newInstrumentGraph.tightBorders();
     }
 };
+
+WidgetManager.prototype.addRealTimeGauge = function(schematic) {
+    newRealTimeGauge = new RealTimeGauge(this, this.newWidgetId, this.containerDiv, this.controllerUrl, schematic);
+    this.widgets.push(newRealTimeGauge);
+    this.newWidgetId += 1;
+    if (this.hasTightBorders) {
+        newRealTimeGauge.tightBorders();
+    }
+}
 
 WidgetManager.prototype.removeWidgets = function() {
     for (var i = this.widgets.length; i > 0; i--){
@@ -359,7 +383,434 @@ StatusPlot.prototype.wideBorders = function() {
     this.div.className = "wd";
 }
 
+// Real Time Gauge section
+function RealTimeGauge(manager, id, containerDiv, controllerUrl, schematic) {
+    this.manager = manager;
+    this.id = id;
+    this.active = true;            // When no longer active, should be removed from the parent manager
+    this.div = document.createElement('div');
+    this.div.className = 'wd';
+    this.div.innerHTML = "Histogram";
+    this.div.id = "real-time-gauge-" + this.id;
 
+    this.minimum = 0;
+    this.maximum = 0;
+    this.currentValue = null;
+
+    this.instrument_list = [];
+    this.column_list = [];
+
+    this.gauge = null;
+
+    var validSchematic = false;
+    if (schematic) {
+        validSchematic = true;
+        this.instrumentId = schematic["instrumentId"];
+        this.attribute = schematic["attribute"];
+        this.controllerHidden = schematic["controllerHidden"];
+        this.gaugeSize = schematic["gaugeSize"];
+    } else {
+        this.instrumentId = null;
+        this.attribute = null;
+        this.controllerHidden = false;
+        this.gaugeSize = "medium";
+    }
+
+    containerDiv.appendChild(this.div);
+    var parameterizedUrl = controllerUrl + "?widget_name=real_time_gauge&widget_id=" + this.id;
+    // If there was a valid schematic, ajaxLoadUrl will load from the schematic rather than set defaults.
+    this.ajaxLoadUrl(this.div, parameterizedUrl, validSchematic);
+}
+
+RealTimeGauge.prototype.tick = function() {
+    this.updateRealTimeGauge();
+};
+
+RealTimeGauge.prototype.saveDashboard = function() {
+    data = {
+        "controllerHidden": this.controllerHidden,
+        "gaugeSize": this.gaugeSize,
+        "instrumentId": this.instrumentId,
+        "attribute": this.attribute
+    }
+
+    return {"type": "RealTimeGauge", "data": data};
+}
+
+RealTimeGauge.prototype.remove = function () {
+    element = document.getElementById('real-time-gauge-' + this.id);
+    element.parentNode.removeChild(element);
+    this.active = false;
+};
+
+RealTimeGauge.prototype.ajaxLoadUrl = function(element, url, loadDashboard) {
+    var xmlHttp = new XMLHttpRequest();
+    var that = this;
+    xmlHttp.onreadystatechange = function() {
+        if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+        {
+                        // To get JSON and HTML parts, need to do custom extraction.
+            var responseDict = JSON.parse(xmlHttp.responseText);
+            element.innerHTML = responseDict["html"];
+            // Updates the instrument and column lists for the update function to populate properly.
+            that.instrumentList = responseDict["json"]["instrument_list"];
+            that.columnList = responseDict["json"]["column_list"];
+
+            that.initializeElements(loadDashboard);
+        }
+
+    };
+
+    xmlHttp.open("GET", url, true); // true for asynchronous
+    xmlHttp.send();
+
+    //
+};
+
+RealTimeGauge.prototype.initializeElements = function (loadDashboard) {
+    var that = this;
+
+    if (loadDashboard) {
+
+        document.getElementById("real-time-gauge-size-button-" + that.gaugeSize + "-" + that.id).checked = true;
+
+        if (that.controllerHidden) {
+            that.hideController();
+        }
+
+    } else {
+
+    }
+
+    // Selector for which instrument the attributes are for
+    // When changed should update all options for attribute selector
+    var selector = document.getElementById("instrument-select-" + that.id);
+    selector.onchange = function () { that.updateSelect(false); };
+
+    // Button to copy Histogram widget. Disabled until data is graphed (or data will not properly copy)
+    var copyButton = document.getElementById("real-time-gauge-copy-button-" + that.id);
+    copyButton.onclick = function () { that.manager.copyWidget(that.id); };
+    copyButton.disabled = true;
+    copyButton.title = "Cannot Copy Until Gauge Displayed";
+
+    // Button to remove Histogram widget
+    var removeButton = document.getElementById("real-time-gauge-remove-button-" + that.id);
+    removeButton.onclick = function () { that.remove(); };
+
+    // Button to generate Histogram from data parameter controls
+    var addButton = document.getElementById("real-time-gauge-add-button-" + that.id);
+    addButton.onclick = function () { that.generateRealTimeGauge(); };
+
+    // Data parameter controls: Hide and Reveal
+    var hideButton = document.getElementById("real-time-gauge-hide-button-" + that.id);
+    hideButton.onclick = function () { that.hideController(); };
+    var revealButton = document.getElementById("real-time-gauge-reveal-button-" + that.id);
+    revealButton.onclick = function () { that.revealController(); };
+
+    // Update attribute selector with options
+    that.updateSelect(loadDashboard);
+
+    if (loadDashboard) {
+        that.generateRealTimeGauge();
+    }
+}
+
+RealTimeGauge.prototype.updateSelect = function(loadDashboard) {
+    var instrumentSelect = document.getElementById("instrument-select-" + this.id);
+    var attributeSelect = document.getElementById("attribute-select-" + this.id);
+    var attributeInput = document.getElementById("attribute-input-" + this.id);
+
+    if (loadDashboard){
+        if (this.instrumentId) {
+            instrumentSelect.value = this.instrumentId;
+        }
+    }
+
+    removeOptions(attributeSelect);
+    instrumentId = instrumentSelect.value;
+    var instrumentValidColumns = this.columnList[instrumentId];
+    instrumentValidColumns.sort()
+
+    for (var i =0; i< instrumentValidColumns.length; i++){
+        newOption = document.createElement("option");
+        newOption.value = instrumentValidColumns[i];
+        newOption.text = instrumentValidColumns[i];
+        attributeSelect.appendChild(newOption);
+    }
+
+    if (loadDashboard){
+        if (this.attribute) {
+            attributeInput.value = this.attribute;
+        }
+    }
+
+}
+
+RealTimeGauge.prototype.generateRealTimeGauge = function () {
+
+    var gauge_div = document.getElementById("real-time-gauge-container-" + this.id);
+
+    var instrumentSelect = document.getElementById("instrument-select-" + this.id);
+    var attributeInput = document.getElementById("attribute-input-" + this.id);
+
+    var instrumentName = instrumentSelect.options[instrumentSelect.selectedIndex].text;
+    this.instrumentId = instrumentSelect.value;
+
+    this.attribute = attributeInput.value;
+
+    // Enable copy button and change title to reflect functionality
+    var copyButton = document.getElementById("real-time-gauge-copy-button-" + this.id);
+    copyButton.disabled = false;
+    copyButton.title = "Copy This Widget";
+
+    var gaugeSize = '140%';
+    var gaugeHeight = 300;
+    var gaugeWidth = 300;
+    var gaugeFontSize = '24px';
+    var gaugeSizeElement = document.querySelector('input[name="real-time-gauge-size-' + this.id + '"]:checked');
+    if (gaugeSizeElement) {
+        this.gaugeSize = gaugeSizeElement.value;
+    }
+
+    if (this.gaugeSize == "small") {
+        gaugeHeight = 100;
+        gaugeWidth = 150;
+        gaugeFontSize = '12px';
+    } else if (this.gaugeSize == "medium") {
+        gaugeHeight = 200;
+        gaugeWidth = 300;
+        gaugeFontSize = '24px';
+    } else if (this.gaugeSize == "large") {
+        gaugeHeight = 400;
+        gaugeWidth = 600;
+        gaugeFontSize = '36px';
+    }
+
+    var that = this;  // Allows 'this' object to be accessed correctly within the XMLHttpRequest state change function.
+
+    // The request for the initial data also gets statistics for the entry, for the min/max of the gauge
+    var xmlhttp = new XMLHttpRequest();
+
+    xmlhttp.onreadystatechange = function() {
+        if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+            recMessage = JSON.parse(xmlhttp.responseText);
+            // TODO update last received here
+
+            if (recMessage.length > 0) {
+                // Only should be one value returned per attribute
+                var responseDict = recMessage[0];
+
+                var newTime = new Date(responseDict["data"]["time"] + "Z");
+                that.lastReceived = newTime;
+                that.updateLastReceived();
+
+                that.updateTitle();
+
+                that.minimum = responseDict["data"]["stats"]["min"];
+                that.maximum = responseDict["data"]["stats"]["max"];
+                that.currentValue = responseDict["data"]["value"]
+                if (that.minimum == that.maximum) {
+                    that.minimum -= 0.00000001;
+                }
+
+                var gaugeOptions = {
+                    chart: {
+                        type: 'solidgauge',
+                        height: gaugeHeight,
+                        width: gaugeWidth
+                    },
+
+                    title: null,
+
+                    pane: {
+                        center: ['50%', '85%'],
+                        size: gaugeSize,
+                        startAngle: -90,
+                        endAngle: 90,
+                        background: {
+                            backgroundColor: (Highcharts.theme && Highcharts.theme.background2) || '#EEE',
+                            innerRadius: '60%',
+                            outerRadius: '100%',
+                            shape: 'arc'
+                        }
+                    },
+
+                    tooltip: {
+                        enabled: false
+                    },
+
+                    yAxis: {
+                        stops: [
+                            [0.1, '#55BF3B'], //green
+                            [0.5, '#DDDF0D'], //yellow
+                            [0.9, '#DF5353']  //red
+                        ],
+                        lineWidth: 0,
+                        minortickInterval: null,
+                        tickAmount: 2,
+                        title: {
+                            y: 0
+                        },
+                        labels: {
+                            y: 16,
+//                            style: {
+//                                fontSize: '8px'
+//                            }
+                        }
+                    },
+
+                    plotOptions: {
+                        solidgauge: {
+                            dataLabels: {
+                               y: 5,
+                               borderWidth: 0,
+                               useHTML: true
+                            }
+                        }
+                    }
+
+                };
+
+                that.gauge = Highcharts.chart(gauge_div, Highcharts.merge(gaugeOptions, {
+                    yAxis: {
+                        min: that.minimum,
+                        max: that.maximum
+                    },
+
+                    credits: {
+                        enabled: false
+                    },
+
+                    series: [{
+                        name: instrumentName + ":" + that.attribute,
+                        data: [that.currentValue],
+                        dataLabels: {
+                            format: '<div style="text-align:center;"><span style="font-size:' + gaugeFontSize + ';color:' +
+                                ((Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black') + '">{y}</span><br/>' +
+                                   '<span style="font-size:12px;color:silver"></span></div>'
+                        },
+                    }]
+                }));
+
+            }
+        }
+    }
+
+    var url = "/recent_values" +
+              "?keys=" + this.attribute +
+              "&instrument_id=" + this.instrumentId +
+              "&do_stats=1";
+
+    xmlhttp.open("POST", url, true);
+    xmlhttp.send();
+
+}
+
+RealTimeGauge.prototype.updateRealTimeGauge = function () {
+
+    if (this.gauge) {
+        var that = this;  // Allows 'this' object to be accessed correctly within the XMLHttpRequest state change function
+
+        // Don't get stats every time.  If the value is outside min/max, handled here
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.onreadystatechange = function() {
+            if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                recMessage = JSON.parse(xmlhttp.responseText);
+                // TODO update last received here
+
+                if (recMessage.length > 0) {
+                    // Only should be one value returned per attribute
+                    var responseDict = recMessage[0];
+
+                    var newTime = new Date(responseDict["data"]["time"] + "Z");
+                    that.lastReceived = newTime;
+                    that.updateLastReceived();
+
+                    that.updateTitle();
+
+                    that.currentValue = responseDict["data"]["value"];
+                    if (that.currentValue > that.maximum) {
+                        that.maximum = that.currentValue;
+                    } else if (that.currentValue < that.minimum) {
+                        that.minimum = that.currentValue;
+                    }
+
+                    gaugeValue = that.gauge.series[0].points[0];
+                    gaugeValue.update(that.currentValue);
+                }
+
+            }
+
+        }
+
+        var url = "/recent_values" +
+                  "?keys=" + this.attribute +
+                  "&instrument_id=" + this.instrumentId;
+
+            xmlhttp.open("POST", url, true);
+            xmlhttp.send();
+
+    }
+}
+
+RealTimeGauge.prototype.updateLastReceived = function() {
+    var statusBubble = document.getElementById("receive-status-" + this.id);
+    if (this.lastReceived == null) {
+        statusBubble.className = "db_receive_status";
+        document.getElementById("last-received-" + this.id).innerHTML = "No Data";
+        return;
+    }
+
+    // If lastReceived exists, display the time the last data was received and update status bubble depending on age.
+    var day = this.lastReceived.getUTCDate();
+    var month = this.lastReceived.getUTCMonth() + 1;
+    var year = this.lastReceived.getUTCFullYear();
+    var hours = this.lastReceived.getUTCHours();
+    var minutes = this.lastReceived.getUTCMinutes();
+    var seconds = this.lastReceived.getUTCSeconds();
+    var lastReceivedUTC = month + "/" + day + "/" + year + " " + hours + ":" + minutes + ":" + seconds;
+    // Extra spaces for padding looks nice in the finished result
+    document.getElementById("last-received-" + this.id).innerHTML = "&nbsp &nbsp " + lastReceivedUTC;
+
+    var currentTime = new Date();
+    var differenceMinutes = (currentTime - this.lastReceived) / (60000); // Difference starts in milliseconds
+
+    if ((0 <= differenceMinutes) && (differenceMinutes < 5)) {
+        statusBubble.className = "db_receive_status db_status_good";
+    } else if ((5 <= differenceMinutes) && (differenceMinutes <= 15)) {
+        statusBubble.className = "db_receive_status db_status_weak";
+    } else {
+        statusBubble.className = "db_receive_status db_status_dead";
+    }
+
+}
+
+RealTimeGauge.prototype.updateTitle = function() {
+    var titleDiv = document.getElementById("real-time-gauge-title-" + this.id);
+    var instrumentSelect = document.getElementById("instrument-select-" + this.id);
+    var instrumentName = instrumentSelect.options[instrumentSelect.selectedIndex].text;
+    titleDiv.innerHTML = instrumentName + "<br>" + this.attribute;
+}
+
+RealTimeGauge.prototype.hideController = function () {
+    element = document.getElementById("real-time-gauge-controller-" + this.id);
+    element.style.display = "none";
+    this.controllerHidden = true;
+};
+
+RealTimeGauge.prototype.revealController = function () {
+    element = document.getElementById("real-time-gauge-controller-" + this.id);
+    element.style.display = "";
+    this.controllerHidden = false;
+};
+
+RealTimeGauge.prototype.tightBorders = function() {
+    this.div.className = "wd_tight";
+}
+
+RealTimeGauge.prototype.wideBorders = function() {
+    this.div.className = "wd";
+}
 
 
 // Histogram Section
@@ -617,7 +1068,6 @@ Histogram.prototype.remove = function () {
 Histogram.prototype.generateHistogram = function() {
     this.activeCounter = true;  // Activates the periodic update checks
 
-    var xmlhttp = new XMLHttpRequest();
     this.lastReceived = null;
 
     var div = document.getElementById('histogram-container-' + this.id)
@@ -665,27 +1115,64 @@ Histogram.prototype.generateHistogram = function() {
         graphHeight = 600;
     }
 
-//    var key_elems = document.getElementById('attribute-input-' + this.id);
-//    var keys = [];
-//    for (var i = 0; i < key_elems.length; i++) {
-//        keys.push(key_elems[i].value);
-//    }
-
     start = new Date(this.startUTC + " UTC");
     end = new Date(this.endUTC + " UTC");
 
-    var that = this; // Allows 'this' object to be accessed correctly within the xmlhttp function.
+    var that = this; // Allows 'this' object to be accessed correctly within the XMLHttpRequest state change functions.
                      // Inside the function 'this' references the function rather than the Histogram object we want.
 
-    // Setup AJAX message and send.
-    xmlhttp.onreadystatechange = function () {
-        if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-            var response = JSON.parse(xmlhttp.responseText);
+    // Request for most recent data
+    var lastReceivedXmlhttp = new XMLHttpRequest();
+
+    lastReceivedXmlhttp.onreadystatechange = function() {
+        //After the asynchronous request successfully returns
+        if (lastReceivedXmlhttp.readyState == 4 && lastReceivedXmlhttp.status == 200)
+        {
+            recMessage = JSON.parse(lastReceivedXmlhttp.responseText);
+            var recMessageKeys = Object.keys(recMessage);
+
+            for (var i = 0; i < recMessageKeys.length; i ++)
+            {
+                if (recMessage[recMessageKeys[i]]["data"]["time"])
+                {
+                    var newTime = new Date(recMessage[recMessageKeys[i]]["data"]["time"] + "Z");
+                    if (that.lastReceived) {
+                        if (newTime > that.lastReceived)
+                        {
+                            that.lastReceived = newTime;
+                        }
+                    }
+                    else
+                    {
+                        that.lastReceived = newTime;
+                    }
+                }
+            }
+
+            // Forces the HTML to update immediately, rather than after all data comes in
+            that.updateLastReceived();
+        }
+    }
+
+    var url = "/recent_values" +
+              "?keys=" + this.attribute +
+              "&instrument_id=" + this.instrumentId;
+
+    lastReceivedXmlhttp.open("POST", url, true);
+    //Send out the  request
+    lastReceivedXmlhttp.send();
+
+    // Request for histogram data
+    var dataXmlhttp = new XMLHttpRequest();
+
+    dataXmlhttp.onreadystatechange = function () {
+        if (dataXmlhttp.readyState == 4 && dataXmlhttp.status == 200) {
+            var response = JSON.parse(dataXmlhttp.responseText);
 
             delete that.lastReceived;
 
             if (response == "[]") {
-                // There was an error.  This is probably a very foolish way to indicate errors from server->client
+                // There was an error.  This is probably a poor way to indicate errors from server->client
                 var masterDiv = document.getElementById('histogram-container-' + that.id)
                 while (masterDiv.hasChildNodes()) {
                     masterDiv.removeChild(masterDiv.firstChild);
@@ -812,10 +1299,10 @@ Histogram.prototype.generateHistogram = function() {
               "&instrument_id=" + this.instrumentId +
               "&start=" + startUTCArg +
               "&end=" + endUTCArg;
-    xmlhttp.open("POST", url, true);
+    dataXmlhttp.open("POST", url, true);
 
     //Send out the request
-    xmlhttp.send();
+    dataXmlhttp.send();
 
 };
 
@@ -1029,6 +1516,751 @@ Histogram.prototype.wideBorders = function() {
     this.div.className = "wd";
 }
 
+
+
+// DualHistogram Section
+// If schematic is null, loads up with defaults.  If schematic exists, loads the schematic and displays the histogram
+function DualHistogram(manager, id, containerDiv, controllerUrl, schematic) {
+    this.manager = manager;
+    this.id = id;
+    this.active = true;       // When no longer active, should be removed from the parent manager.
+    this.div = document.createElement('div');
+    this.div.className = 'wd';
+    this.div.innerHTML = "Dual Histogram";
+    this.div.id = "histogram-" + this.id;
+    this.instrumentList = []; // Filled by ajax request
+    this.columnList = [];     // Filled by ajax request
+    this.lastReceived = null;      // The timestamp for the last data received
+
+    this.updateCounter = 0;
+    this.activeCounter = false;
+
+    var validSchematic = false;
+    if (schematic) {
+        validSchematic = true;
+        this.controllerHidden = schematic["controllerHidden"];
+        this.updateFrequency = schematic["updateFrequency"]; // How often in minutes this object will update.
+
+        this.colorRed = schematic["colorRed"];
+        this.colorGreen = schematic["colorGreen"];
+        this.colorBlue = schematic["colorBlue"];
+
+        this.startUTC = schematic["startUTC"];
+        this.endUTC = schematic["endUTC"];
+        this.xLowerLimit = schematic["xLowerLimit"];
+        this.xUpperLimit = schematic["xUpperLimit"];
+        this.yLowerLimit = schematic["yLowerLimit"];
+        this.yUpperLimit = schematic["yUpperLimit"];
+        this.graphSize = schematic["graphSize"];
+
+        this.instrumentId = schematic["instrumentId"];
+        this.attribute1 = schematic["attribute1"];
+        this.attribute2 = schematic["attribute2"];
+
+        this.constraintStyle = schematic["constraintStyle"];
+        this.constraintRange = schematic["constraintRange"];
+        this.convertToDB = schematic["convertToDB"];
+
+        this.colorScale = schematic["colorScale"];  // Color scale for histogram heat map
+    } else {
+        this.controllerHidden = false;
+        this.updateFrequency = 5; // How often in minutes this object will update.
+
+        this.colorRed = 0;
+        this.colorGreen = 50;
+        this.colorBlue = 226;
+
+        this.startUTC = "01/01/2000 00:00";
+        this.endUTC = "01/01/2170 00:00:00";
+        this.xLowerLimit = "";
+        this.xUpperLimit = "";
+        this.yLowerLimit = "";
+        this.yUpperLimit = "";
+        this.graphSize = "medium";
+
+        this.instrumentId = null;
+        this.attribute1 = null;
+        this.attribute2 = null;
+        this.constraintStyle = "custom";   // The data constraint controls available
+        this.constraintRange = "sixhour";  // If constraintStyle is 'auto', the range for the data displayed
+        this.convertToDB = false;          // Whether or not the data is converted to dB scale before graphing.
+
+        this.colorScale = "Hot";           // Color scale for histogram heat map
+    }
+
+    containerDiv.appendChild(this.div);
+    var parameterizedUrl = controllerUrl + "?widget_name=dual_histogram&widget_id=" + this.id;
+    // If there was a valid schematic, ajaxLoadUrl will load from the schematic rather than set defaults.
+    this.ajaxLoadUrl(this.div, parameterizedUrl, validSchematic);
+};
+
+DualHistogram.prototype.tick = function() {
+    if (this.activeCounter === true) {
+        this.updateCounter += 1;
+        if (this.updateCounter >= this.updateFrequency){
+            this.updateCounter = 0;
+            this.generateDualHistogram();
+        }
+    }
+};
+
+DualHistogram.prototype.saveDashboard = function() {
+    data = {
+        "controllerHidden": this.controllerHidden,
+        "colorRed": this.colorRed,
+        "colorGreen": this.colorGreen,
+        "colorBlue": this.colorBlue,
+        "startUTC": this.startUTC,
+        "endUTC": this.endUTC,
+        "xLowerLimit": this.xLowerLimit,
+        "xUpperLimit": this.xUpperLimit,
+        "yLowerLimit": this.yLowerLimit,
+        "yUpperLimit": this.yUpperLimit,
+        "graphSize": this.graphSize,
+        "instrumentId": this.instrumentId,
+        "attribute1": this.attribute1,
+        "attribute2": this.attribute2,
+        "updateFrequency": this.updateFrequency,
+        "constraintStyle": this.constraintStyle,
+        "constraintRange": this.constraintRange,
+        "convertToDB": this.convertToDB,
+        "colorScale": this.colorScale
+    }
+
+    return {"type": "DualHistogram", "data": data};
+}
+
+DualHistogram.prototype.ajaxLoadUrl = function(element, url, loadDashboard) {
+    var xmlHttp = new XMLHttpRequest();
+    var that = this;
+    xmlHttp.onreadystatechange = function() {
+        if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+        {
+            // To get JSON and HTML parts, need to do custom extraction.
+            var responseDict = JSON.parse(xmlHttp.responseText);
+            element.innerHTML = responseDict["html"];
+            // Updates the instrument and column lists for the update function to populate properly.
+            that.instrumentList = responseDict["json"]["instrument_list"];
+            that.columnList = responseDict["json"]["column_list"];
+
+            that.initializeElements(loadDashboard);
+        }
+
+    };
+
+    xmlHttp.open("GET", url, true); // true for asynchronous
+    xmlHttp.send();
+
+    //
+};
+
+DualHistogram.prototype.initializeElements = function (loadDashboard) {
+    var that = this;  // Substitution allows inline function assignments to reference 'this' rather than themselves
+
+
+    if (loadDashboard) {
+        document.getElementById("datetime-input-start-" + that.id).value = that.startUTC;
+        document.getElementById("datetime-input-end-" + that.id).value = that.endUTC;
+
+        document.getElementById("histogram-x-upper-limit-" + that.id).value = parseFloat(that.xUpperLimit);
+        document.getElementById("histogram-x-lower-limit-" + that.id).value = parseFloat(that.xLowerLimit);
+        document.getElementById("histogram-y-upper-limit-" + that.id).value = parseFloat(that.yUpperLimit);
+        document.getElementById("histogram-y-lower-limit-" + that.id).value = parseFloat(that.yLowerLimit);
+
+        document.getElementById("histogram-size-button-" + that.graphSize + "-" + that.id).checked = true;
+
+        document.getElementById("time-range-" + that.constraintRange + "-" + that.id).checked = true;
+
+        document.getElementById("convert-to-dB-" + that.id).checked = that.convertToDB;
+
+        if (that.controllerHidden) {
+            that.hideController();
+        }
+        if (that.constraintStyle == "auto") {
+            that.showConstraintAuto();
+        } else {
+            that.showConstraintCustom();
+        }
+    } else {
+        // Defaults the graph beginning time to 7 days ago
+        updateStartTime(that.id, 7);
+        document.getElementById("datetime-input-end-" + that.id).value = that.endUTC;
+        that.showConstraintCustom();
+    }
+
+    document.getElementById("color-scale-" + that.id).value = that.colorScale;
+
+    // Selector for which instrument the attributes are for
+    // When changed should update all options for attribute selector
+    var selector = document.getElementById("instrument-select-" + that.id);
+    selector.onchange = function () { that.updateSelect(false); };
+
+    // Button to copy Histogram widget. Disabled until data is graphed (or data will not properly copy)
+    var copyButton = document.getElementById("histogram-copy-button-" + that.id);
+    copyButton.onclick = function () { that.manager.copyWidget(that.id); };
+    copyButton.disabled = true;
+    copyButton.title = "Cannot Copy Until Graph Displayed";
+
+    // Button to remove Histogram widget
+    var removeButton = document.getElementById("histogram-remove-button-" + that.id);
+    removeButton.onclick = function () { that.remove(); };
+
+    // Button to generate Histogram from data parameter controls
+    var addButton = document.getElementById("histogram-add-button-" + that.id);
+    addButton.onclick = function () { that.generateDualHistogram(); };
+
+    // Secondary generate Histogram button inside the controller
+    var controllerAddButton = document.getElementById("controller-histogram-add-" + that.id);
+    controllerAddButton.onclick = function () { that.generateDualHistogram(); };
+
+    // Data parameter controls: Hide and Reveal
+    var hideButton = document.getElementById("histogram-hide-button-" + that.id);
+    hideButton.onclick = function () { that.hideController(); };
+    var revealButton = document.getElementById("histogram-reveal-button-" + that.id);
+    revealButton.onclick = function () { that.revealController(); };
+
+    // Config control bindings: Hide, Reveal, Apply
+    var configOpenButton = document.getElementById("histogram-config-open-button-" + that.id);
+    configOpenButton.onclick = function () { that.openConfig(); };
+    var configCloseButton = document.getElementById("histogram-config-close-button-" + that.id);
+    configCloseButton.onclick = function () { that.closeConfig(); };
+    var configApplyButton = document.getElementById("histogram-config-apply-button-" + that.id);
+    configApplyButton.onclick = function () { that.applyConfig(); };
+
+    // Update attribute selector with options
+    that.updateSelect(loadDashboard);
+
+    if (loadDashboard) {
+        that.generateDualHistogram()
+    }
+}
+
+DualHistogram.prototype.updateSelect = function(loadDashboard) {
+    var instrumentSelect = document.getElementById("instrument-select-" + this.id);
+    var attributeSelect1 = document.getElementById("attribute-select-1-" + this.id);
+    var attributeInput1 = document.getElementById("attribute-input-1-" + this.id);
+
+    var attributeSelect2 = document.getElementById("attribute-select-2-" + this.id);
+    var attributeInput2 = document.getElementById("attribute-input-2-" + this.id);
+
+    if (loadDashboard){
+        if (this.instrumentId) {
+            instrumentSelect.value = this.instrumentId;
+        }
+    }
+
+    removeOptions(attributeSelect1);
+    removeOptions(attributeSelect2)
+    instrumentId = instrumentSelect.value;
+    var instrumentValidColumns = this.columnList[instrumentId];
+    instrumentValidColumns.sort()
+
+    for (var i =0; i< instrumentValidColumns.length; i++){
+        // Attribute 1
+        newOption = document.createElement("option");
+        newOption.value = instrumentValidColumns[i];
+        newOption.text = instrumentValidColumns[i];
+        attributeSelect1.appendChild(newOption);
+        // Attribute 2
+        newOption = document.createElement("option");
+        newOption.value = instrumentValidColumns[i];
+        newOption.text = instrumentValidColumns[i];
+        attributeSelect2.appendChild(newOption);
+    }
+
+    if (loadDashboard){
+        if (this.attribute1) {
+            attributeInput1.value = this.attribute1;
+        }
+        if (this.attribute2) {
+            attributeInput2.value = this.attribute2;
+        }
+    }
+
+}
+
+DualHistogram.prototype.remove = function () {
+    element = document.getElementById('histogram-' + this.id);
+    element.parentNode.removeChild(element);
+    this.active = false;
+};
+
+DualHistogram.prototype.generateDualHistogram = function() {
+    this.activeCounter = true;  // Activates the periodic update checks
+
+
+    this.lastReceived = null;
+
+    var div = document.getElementById('histogram-container-' + this.id)
+
+    var instrumentSelect = document.getElementById("instrument-select-" + this.id);
+    var attributeInput1 = document.getElementById("attribute-input-1-" + this.id);
+    var attributeInput2 = document.getElementById("attribute-input-2-" + this.id);
+    this.instrumentId = instrumentSelect.value;
+    this.instrumentId = instrumentSelect.value;
+    var instrumentName = instrumentSelect.options[instrumentSelect.selectedIndex].text;
+    this.attribute1 = attributeInput1.value;
+    this.attribute2 = attributeInput2.value;
+    this.startUTC = document.getElementById("datetime-input-start-" + this.id).value;
+    this.endUTC = document.getElementById("datetime-input-end-" + this.id).value;
+    this.xUpperLimit = parseFloat(document.getElementById("histogram-x-upper-limit-" + this.id).value);
+    this.xLowerLimit = parseFloat(document.getElementById("histogram-x-lower-limit-" + this.id).value);
+    this.yUpperLimit = parseFloat(document.getElementById("histogram-y-upper-limit-" + this.id).value);
+    this.yLowerLimit = parseFloat(document.getElementById("histogram-y-lower-limit-" + this.id).value);
+
+    // Enable copy button and change title to reflect functionality
+    var copyButton = document.getElementById("histogram-copy-button-" + this.id);
+    copyButton.disabled = false;
+    copyButton.title = "Copy This Widget";
+
+    this.convertToDB = document.getElementById("convert-to-dB-" + this.id).checked;
+
+    // Size from radio set
+    var graphWidth = 500;
+    var graphHeight = 400;
+    var graphSizeElement = document.querySelector('input[name="histogram-size-' + this.id + '"]:checked');
+    if (graphSizeElement) {
+        this.graphSize = graphSizeElement.value;
+    }
+
+    var constraintRange = document.querySelector('input[name="time-range-' + this.id + '"]:checked');
+
+    if (constraintRange) {
+        this.constraintRange = constraintRange.value;
+    }
+
+    // Set sizes according to selection
+    if (this.graphSize == "small") {
+        graphWidth = 350;
+        graphHeight = 280;
+    } else if (this.graphSize == "medium") {
+        graphWidth = 500;
+        graphHeight = 400;
+    } else if (this.graphSize == "large") {
+        graphWidth = 750;
+        graphHeight = 600;
+    }
+
+    start = new Date(this.startUTC + " UTC");
+    end = new Date(this.endUTC + " UTC");
+
+    var that = this; // Allows 'this' object to be accessed correctly within the XMLHttpRequest state change functions.
+                     // Inside the function 'this' references the function rather than the Histogram object we want.
+
+    // Request for most recent data
+    var lastReceivedXmlhttp = new XMLHttpRequest();
+
+    lastReceivedXmlhttp.onreadystatechange = function() {
+        //After the asynchronous request successfully returns
+        if (lastReceivedXmlhttp.readyState == 4 && lastReceivedXmlhttp.status == 200)
+        {
+            recMessage = JSON.parse(lastReceivedXmlhttp.responseText);
+            var recMessageKeys = Object.keys(recMessage);
+
+            for (var i = 0; i < recMessageKeys.length; i ++)
+            {
+                if (recMessage[recMessageKeys[i]]["data"]["time"])
+                {
+                    var newTime = new Date(recMessage[recMessageKeys[i]]["data"]["time"] + "Z");
+                    if (that.lastReceived) {
+                        if (newTime > that.lastReceived)
+                        {
+                            that.lastReceived = newTime;
+                        }
+                    }
+                    else
+                    {
+                        that.lastReceived = newTime;
+                    }
+                }
+            }
+
+            // Forces the HTML to update immediately, rather than after all data comes in
+            that.updateLastReceived();
+        }
+    }
+
+    var url = "/recent_values" +
+              "?keys=" + this.attribute1 + "," + this.attribute2 +
+              "&instrument_id=" + this.instrumentId;
+
+    lastReceivedXmlhttp.open("POST", url, true);
+    //Send out the  request
+    lastReceivedXmlhttp.send();
+
+    // Request for the histogram data
+    var dataXmlhttp = new XMLHttpRequest();
+
+    dataXmlhttp.onreadystatechange = function () {
+        if (dataXmlhttp.readyState == 4 && dataXmlhttp.status == 200) {
+            var response = JSON.parse(dataXmlhttp.responseText);
+
+            delete that.lastReceived;
+
+            if (response == "[]") {
+                // There was an error.  This is probably a poor way to indicate errors from server->client
+                var masterDiv = document.getElementById('histogram-container-' + that.id)
+                while (masterDiv.hasChildNodes()) {
+                    masterDiv.removeChild(masterDiv.firstChild);
+                }
+                var errorDiv = document.createElement("div");
+                errorDiv.style.color = "red";
+                errorDiv.innerHTML = "Could not retrieve Data.  Verify attributes are valid.";
+                masterDiv.appendChild(errorDiv);
+            }
+
+            if (response.data) {
+                if (response.data.length > 0) {
+                    // Only works because received data is sorted by time with newest at the end.
+                    // Timestamp from most recent data.  Adding Z tells Date it is UTC
+                    that.lastReceived = new Date(response.data[response.data.length - 1][0] + "Z")
+                } else {
+                    that.lastReceived = null;
+                }
+                var t = response.data.map(function(i){ return i[0] });
+                var x = response.data.map(function(i){ return i[1] });
+                var y = response.data.map(function(i){ return i[2] })
+
+                if (that.convertToDB) {
+                    x = x.map(toDB);
+                    y = y.map(toDB);
+                }
+
+                // If upper and lower limits are set and valid, set the bin and range limits to them
+                // For X
+                var xUseAutorange = true;
+                var xRange = [0, 1]
+
+                if (!isNaN(that.xLowerLimit)
+                    && that.xLowerLimit != ""
+                    && !isNaN(that.xUpperLimit)
+                    && that.xUpperLimit != "")
+                {
+                    xRange = [that.xLowerLimit, that.xUpperLimit];
+                    xUseAutorange = false;
+                    lowerBin = that.xLowerLimit;
+                    upperBin = that.xUpperLimit;
+                }
+
+                // For Y
+                var yUseAutorange = true;
+                var yRange = [0, 1]
+
+                if (!isNaN(that.yLowerLimit)
+                    && that.yLowerLimit != ""
+                    && !isNaN(that.yUpperLimit)
+                    && that.yUpperLimit != "")
+                {
+                    yRange = [that.yLowerLimit, that.yUpperLimit];
+                    yUseAutorange = false;
+                    lowerBin = that.yLowerLimit;
+                    upperBin = that.yUpperLimit;
+                }
+                var trace1 = {
+                    x: x,
+                    y: y,
+                    mode: 'markers',
+                    name: 'points',
+                    marker: {
+                        color: 'rgb(' + that.colorRed + ', ' + that.colorGreen + ', ' + that.colorBlue + ')',
+                        size: 2,
+                        opacity: 0.4
+                    },
+                    type: 'scatter'
+                };
+                var trace2 = {
+                    x: x,
+                    y: y,
+                    name: 'density',
+                    ncontours: 20,
+                    colorscale: that.colorScale,
+                    reversescale: true,
+                    showscale: false,
+                    type: 'histogram2dcontour'
+                };
+                var trace3 = {
+                    x: x,
+                    name: 'x density',
+                    marker: {color: 'rgb(' + that.colorRed + ', ' + that.colorGreen + ', ' + that.colorBlue + ')'},
+                    yaxis: 'y2',
+                    type: 'histogram'
+                };
+                var trace4 = {
+                    y: y,
+                    name: 'ydensity',
+                    marker: {color: 'rgb(' + that.colorRed + ', ' + that.colorGreen + ', ' + that.colorBlue + ')'},
+                    xaxis: 'x2',
+                    type: 'histogram'
+                };
+                var data = [trace1, trace2, trace3, trace4];
+                var layout = {
+                    showlegend: false,
+                    autosize: false,
+                    width: graphWidth,
+                    height: graphHeight,
+                    margin: {t: 50},
+                    hovermode: 'closest',
+                    bargap: 0,
+                    xaxis: {
+                        title: that.attribute1,
+                        domain: [0, 0.85],
+                        autorange: xUseAutorange,
+                        range: xRange,
+                        showgrid: false,
+                        zeroline: false
+                    },
+                    yaxis: {
+                        title: that.attribute2,
+                        domain: [0, 0.85],
+                        autorange: yUseAutorange,
+                        range: yRange,
+                        showgrid: false,
+                        zeroline: false
+                    },
+                    xaxis2: {
+                        domain: [0.85, 1],
+                        showgrid: false,
+                        zeroline: false
+                    },
+                    yaxis2: {
+                        domain: [0.85, 1],
+                        showgrid: false,
+                        zeroline: false
+                    }
+                };
+
+                Plotly.newPlot(div, data, layout);
+                that.updateLastReceived();
+
+            } else {
+                that.lastReceived = null;
+            }
+        }
+    };
+
+    if (this.constraintStyle == "auto") {
+        var startTime = this.getAutomaticBeginning();
+        var endTime = new Date();
+        var startUTCArg = startTime.toUTCString();
+        var endUTCArg = endTime.toUTCString();
+    } else {
+        var startUTCArg = this.startUTC;
+        var endUTCArg = this.endUTC;
+    }
+
+    var url = "/generate_instrument_graph" +
+              "?keys=" + this.attribute1 + "," + this.attribute2 +
+              "&instrument_id=" + this.instrumentId +
+              "&start=" + startUTCArg +
+              "&end=" + endUTCArg;
+    dataXmlhttp.open("POST", url, true);
+
+    //Send out the request
+    dataXmlhttp.send();
+
+};
+
+DualHistogram.prototype.applyConfig = function () {
+    var errorElement = document.getElementById("histogram-config-error-" + this.id);
+    var successElement = document.getElementById("histogram-config-success-" + this.id);
+    errorElement.innerHTML = "";
+    successElement.innerHTML = "";
+
+    var errorOccurred = false;
+    var errorMessage = ""
+
+    var colorScale = document.getElementById("color-scale-" + this.id).value;
+
+    // Validate Update Frequency
+    // Cast value to an integer if possible.  If it fails, get NaN
+    var inputUpdateFrequency = +(document.getElementById("histogram-update-frequency-" + this.id).value);
+    if (!isNaN(inputUpdateFrequency) && isNormalInteger(String(inputUpdateFrequency))){
+        if (inputUpdateFrequency <= 0){
+            errorMessage += "Update Frequency must be positive integer.<br>";
+            errorOccurred = true;
+        }
+    } else {
+        errorMessage += "Update Frequency must be positive integer.<br>";
+        errorOccurred = true;
+    }
+
+    // Validate Colors
+    var inputColorRed = +(document.getElementById("histogram-color-red-" + this.id).value);
+    if (!isNaN(inputColorRed) && isNormalInteger(String(inputColorRed))){
+        if (inputColorRed > 255) {
+            errorMessage += "Graph Color Red must be an integer from 0 to 255.<br>";
+            errorOccurred = true;
+        }
+    } else {
+        errorMessage += "Graph Color Red must be an integer from 0 to 255.<br>";
+        errorOccurred = true;
+    }
+
+    var inputColorGreen = +(document.getElementById("histogram-color-green-" + this.id).value);
+    if (!isNaN(inputColorGreen) && isNormalInteger(String(inputColorGreen))){
+        if (inputColorGreen > 255) {
+            errorMessage += "Graph Color Green must be an integer from 0 to 255.<br>";
+            errorOccurred = true;
+        }
+    } else {
+        errorMessage += "Graph Color Green must be an integer from 0 to 255.<br>";
+        errorOccurred = true;
+    }
+
+    var inputColorBlue = +(document.getElementById("histogram-color-blue-" + this.id).value);
+    if (!isNaN(inputColorBlue) && isNormalInteger(String(inputColorBlue))){
+        if (inputColorBlue > 255) {
+            errorMessage += "Graph Color Blue must be an integer from 0 to 255.<br>";
+            errorOccurred = true;
+        }
+    } else {
+        errorMessage += "Graph Color Blue must be an integer from 0 to 255.<br>";
+        errorOccurred = true;
+    }
+
+    if (errorOccurred) {
+        errorElement.innerHTML = errorMessage;
+    } else {
+        this.updateFrequency = inputUpdateFrequency;
+        this.colorRed = inputColorRed;
+        this.colorGreen = inputColorGreen;
+        this.colorBlue = inputColorBlue;
+        this.colorScale = colorScale;
+
+        successElement.innerHTML = "Configuration Updated.";
+        this.generateDualHistogram();
+    }
+};
+
+
+DualHistogram.prototype.updateLastReceived = function() {
+    var statusBubble = document.getElementById("receive-status-" + this.id);
+    if (this.lastReceived == null) {
+        statusBubble.className = "db_receive_status";
+        document.getElementById("last-received-" + this.id).innerHTML = "No Data";
+        return;
+    }
+
+    // If lastReceived exists, display the time the last data was received and update status bubble depending on age.
+    var day = this.lastReceived.getUTCDate();
+    var month = this.lastReceived.getUTCMonth() + 1;
+    var year = this.lastReceived.getUTCFullYear();
+    var hours = this.lastReceived.getUTCHours();
+    var minutes = this.lastReceived.getUTCMinutes();
+    var seconds = this.lastReceived.getUTCSeconds();
+    var lastReceivedUTC = month + "/" + day + "/" + year + " " + hours + ":" + minutes + ":" + seconds;
+    document.getElementById("last-received-" + this.id).innerHTML = lastReceivedUTC;
+
+    var currentTime = new Date();
+    var differenceMinutes = (currentTime - this.lastReceived) / (60000); // Difference starts in milliseconds
+
+    if ((0 <= differenceMinutes) && (differenceMinutes < 5)) {
+        statusBubble.className = "db_receive_status db_status_good";
+    } else if ((5 <= differenceMinutes) && (differenceMinutes <= 15)) {
+        statusBubble.className = "db_receive_status db_status_weak";
+    } else {
+        statusBubble.className = "db_receive_status db_status_dead";
+    }
+
+}
+
+
+DualHistogram.prototype.getAutomaticBeginning = function () {
+    var now = new Date();
+    if (this.constraintRange == "tenminute") {
+        return new Date(now.setMinutes(now.getMinutes() - 10));
+    } if (this.constraintRange == "hour") {
+        return new Date(now.setHours(now.getHours() - 1));
+    } else if (this.constraintRange == "sixhour") {
+        return new Date(now.setHours(now.getHours() - 6));
+    } else if (this.constraintRange == "day") {
+        return new Date(now.setDate(now.getDate() - 1));
+    } else if (this.constraintRange == "week") {
+        return new Date(now.setDate(now.getDate() - 7));
+    } else if (this.constraintRange == "fortnight") {
+        return new Date(now.setDate(now.getDate() - 14));
+    } else if (this.constraintRange == "month") {
+        return new Date(now.setMonth(now.getMonth() - 1));
+    } else {
+        // Default to six hours
+        return new Date(now.setHours(now.getHours() - 6));
+    }
+
+}
+
+DualHistogram.prototype.hideController = function () {
+    element = document.getElementById("histogram-controller-" + this.id);
+    element.style.display = "none";
+    this.controllerHidden = true;
+};
+
+DualHistogram.prototype.revealController = function () {
+    element = document.getElementById("histogram-controller-" + this.id);
+    element.style.display = "";
+    this.controllerHidden = false;
+};
+
+DualHistogram.prototype.openConfig = function () {
+    var contentElement = document.getElementById("histogram-content-" + this.id);
+    var configElement = document.getElementById("histogram-config-" + this.id);
+    contentElement.style.display = "none";
+    configElement.style.display = "block";
+
+    // Clear and reset input values and messages
+    var frequencyInput = document.getElementById("histogram-update-frequency-" + this.id);
+    frequencyInput.value = this.updateFrequency;
+
+    var colorRedInput = document.getElementById("histogram-color-red-" + this.id);
+    colorRedInput.value = this.colorRed;
+    var colorGreenInput = document.getElementById("histogram-color-green-" + this.id);
+    colorGreenInput.value = this.colorGreen;
+    var colorBlueInput = document.getElementById("histogram-color-blue-" + this.id);
+    colorBlueInput.value = this.colorBlue;
+
+    var errorElement = document.getElementById("histogram-config-error-" + this.id);
+    var successElement = document.getElementById("histogram-config-success-" + this.id);
+    errorElement.innerHTML = "";
+    successElement.innerHTML = "";
+};
+
+DualHistogram.prototype.closeConfig = function () {
+    var contentElement = document.getElementById("histogram-content-" + this.id);
+    var configElement = document.getElementById("histogram-config-" + this.id);
+    configElement.style.display = "";
+    contentElement.style.display = "";
+};
+
+DualHistogram.prototype.showConstraintAuto = function () {
+    var autoElement = document.getElementById("auto-times-" + this.id);
+    var customElement = document.getElementById("custom-times-" + this.id);
+    var constraintButton = document.getElementById("time-constraint-switch-" + this.id);
+    autoElement.style.display = "block";
+    customElement.style.display = "none";
+    var that = this;
+    constraintButton.onclick = function () { that.showConstraintCustom(); };
+    constraintButton.innerHTML = "Switch to Custom Range";
+    this.constraintStyle = "auto"
+}
+
+DualHistogram.prototype.showConstraintCustom = function () {
+    var autoElement = document.getElementById("auto-times-" + this.id);
+    var customElement = document.getElementById("custom-times-" + this.id);
+    var constraintButton = document.getElementById("time-constraint-switch-" + this.id);
+    autoElement.style.display = "none";
+    customElement.style.display = "block";
+    var that = this;
+    constraintButton.onclick = function () { that.showConstraintAuto(); };
+    constraintButton.innerHTML = "Switch to Sliding Window";
+    this.constraintStyle = "custom";
+}
+
+DualHistogram.prototype.tightBorders = function() {
+    this.div.className = "wd_tight";
+}
+
+DualHistogram.prototype.wideBorders = function() {
+    this.div.className = "wd";
+}
 
 
 
@@ -1517,6 +2749,49 @@ InstrumentGraph.prototype.generateInstrumentGraph = function(){
     this.innerDiv = document.getElementById(this.graphDivId);
     this.innerDiv.innerHTML = "<p><br><i>Loading Graph...</i></p>"
 
+    // Get the most recent values for the selected attributes
+    var that = this;
+    var xmlhttp = new XMLHttpRequest();
+
+    xmlhttp.onreadystatechange = function() {
+        //After the asynchronous request successfully returns
+        if (xmlhttp.readyState == 4 && xmlhttp.status == 200)
+        {
+            recMessage = JSON.parse(xmlhttp.responseText);
+            var recMessageKeys = Object.keys(recMessage);
+
+            for (var i = 0; i < recMessageKeys.length; i ++)
+            {
+                if (recMessage[recMessageKeys[i]]["data"]["time"])
+                {
+                    var newTime = new Date(recMessage[recMessageKeys[i]]["data"]["time"] + "Z");
+                    if (that.lastReceived) {
+                        if (newTime > that.lastReceived)
+                        {
+                            that.lastReceived = newTime;
+                        }
+                    }
+                    else
+                    {
+                        that.lastReceived = newTime;
+                    }
+                }
+            }
+
+            // Forces the HTML to update immediately, rather than after all data comes in
+            that.updateLastReceived();
+        }
+    }
+
+    var url = "/recent_values" +
+              "?keys=" + this.keys +
+              "&instrument_id=" + this.instrumentId;
+
+    xmlhttp.open("POST", url, true);
+    //Send out the  request
+    xmlhttp.send();
+
+
     this.dygraph = "";
     this.updateInstrumentGraph();
 }
@@ -1790,7 +3065,7 @@ InstrumentGraph.prototype.updateInstrumentGraph = function() {
             var recMessage = JSON.parse(xmlhttp.responseText);
 
             if (recMessage == "[]") {
-                // There was an error.  This is probably a very foolish way to indicate errors from server->client
+                // There was an error.  This is probably a poor way to indicate errors from server->client
                 var masterDiv = document.getElementById('instrument-graph-container-' + thisGraph.id)
                 while (masterDiv.hasChildNodes()) {
                     masterDiv.removeChild(masterDiv.firstChild);
