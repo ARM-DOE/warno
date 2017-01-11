@@ -23,7 +23,9 @@ VM_CPUS = 1       # Physical CPUs
 VM_MEMORY = 2048  # Megabytes
 
 # Loads CPU and Memory configuration from the generic configuration file if parameters exist
-yaml_config = YAML.load_file('data_store/data/config.yml')
+# Path is relative to Vagrantfile location
+vagrant_root = File.dirname(__FILE__)
+yaml_config = YAML.load_file(vagrant_root + '/data_store/data/config.yml')
 
 
 if yaml_config["vagrant"]
