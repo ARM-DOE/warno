@@ -362,25 +362,33 @@ def load_json_data(filename):
 
     [
         {
-            "definition": {
-                "table_name":  *database table name*,
-                "num_entries": *number of data rows to be added to this table*,
-                "columns":     [(column_name_1, column_type_1), ..., (column_name_N, column_type_N)]
-            }
-            "data": [
+            "definition":
+                {
+
+                    "table_name":
+                        *database table name*,
+
+                    "columns":
+                        [(column_name_1, column_type_1), ..., (column_name_N, column_type_N)]
+
+                }
+
+            "data":
+                [
                 [val_1, val_2, ..., val_N],
                 [val_1, val_2, ..., val_N],
                 ...,
-                [val_1, val_2, ..., val_N]
-            ]
-        },
-        { *table_2*
-        },
-        ...,
-        { *table_N*
-        }
-    ]
+                [val_1, val_2, ..., val_N] ]
 
+            },
+
+            { *table_2* },
+
+            ...,
+
+            { *table_N* }
+
+        ]
 
     Parameters
     ----------

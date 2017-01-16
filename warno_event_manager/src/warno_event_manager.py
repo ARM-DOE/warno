@@ -108,23 +108,33 @@ def save_json_db_info():
 
     [
         {
-            "definition": {
-                "table_name":  *database table name*,
-                "columns":     [(column_name_1, column_type_1), ..., (column_name_N, column_type_N)]
-            }
-            "data": [
+            "definition":
+                {
+
+                    "table_name":
+                        *database table name*,
+
+                    "columns":
+                        [(column_name_1, column_type_1), ..., (column_name_N, column_type_N)]
+
+                }
+
+            "data":
+                [
                 [val_1, val_2, ..., val_N],
                 [val_1, val_2, ..., val_N],
                 ...,
-                [val_1, val_2, ..., val_N]
-            ]
-        },
-        { *table_2*
-        },
-        ...,
-        { *table_N*
-        }
-    ]
+                [val_1, val_2, ..., val_N] ]
+
+            },
+
+            { *table_2* },
+
+            ...,
+
+            { *table_N* }
+
+        ]
 
     """
 
@@ -190,24 +200,33 @@ def save_json_db_data():
 
     [
         {
-            "definition": {
-                "table_name":  *database table name*,
-                "num_entries": *number of data rows to be added to this table*,
-                "columns":     [(column_name_1, column_type_1), ..., (column_name_N, column_type_N)]
-            }
-            "data": [
+            "definition":
+                {
+
+                    "table_name":
+                        *database table name*,
+
+                    "columns":
+                        [(column_name_1, column_type_1), ..., (column_name_N, column_type_N)]
+
+                }
+
+            "data":
+                [
                 [val_1, val_2, ..., val_N],
                 [val_1, val_2, ..., val_N],
                 ...,
-                [val_1, val_2, ..., val_N]
-            ]
-        },
-        { *table_2*
-        },
-        ...,
-        { *table_N*
-        }
-    ]
+                [val_1, val_2, ..., val_N] ]
+
+            },
+
+            { *table_2* },
+
+            ...,
+
+            { *table_N* }
+
+        ]
 
     """
     # Get the cutoff time for the data.  Any data recorded before this time will be saved to json and deleted from the
@@ -476,16 +495,18 @@ def save_instrument_log(msg, msg_struct):
 
 
 def save_pulse_capture(msg, msg_struct):
-    """Inserts the information given in 'msg_struct' into the database 'pulse_captures' table, with all of the values
+    """
+    Inserts the information given in 'msg_struct' into the database 'pulse_captures' table, with all of the values
     being mapped into columns for the database.  If the 'is_central' flag is not set, it then forwards the packet on
     to the 'cf_url' (both specified in *config.yml*).
 
     Parameters
     ----------
     msg: JSON
-        JSON message structure, expected format:
-        {event_code: *code*, data: {time: *ISO DateTime*, site_id: *Integer*, instrument_id: *Integer*,
+        JSON message structure, expected format: \
+        {event_code: *code*, data: {time: *ISO DateTime*, site_id: *Integer*, instrument_id: *Integer*, \
         values: *Array of Floats*}}
+
     msg_struct: dictionary
         Decoded version of msg, converted to python dictionary.
 
