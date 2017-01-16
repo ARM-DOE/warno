@@ -1,3 +1,5 @@
+require 'yaml'
+
 VAGRANTFILE_API_VERSION = "2"
 
 env_var_cmd = ""
