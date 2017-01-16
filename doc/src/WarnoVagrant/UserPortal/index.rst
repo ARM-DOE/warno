@@ -7,6 +7,8 @@ The User Portal is responsible for managing web and api access to the stored dat
 .. toctree::
     :maxdepth: 2
 
+    dashboard
+    devel
     instruments
     logs
     sites
