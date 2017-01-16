@@ -1,185 +1,242 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>Welcome to WARNO’s documentation! &mdash; WARNO 0.1 documentation</title>
-    
-    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
-        VERSION:     '0.1',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
-      };
-    </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="WARNO 0.1 documentation" href="#" />
-    <link rel="next" title="Introduction" href="introduction.html" />
-   
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+  <title>Welcome to WARNO’s documentation! &mdash; WARNO 0.1 documentation</title>
+  
 
-  </head>
-  <body role="document">  
+  
+  
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
-            
-  <div class="section" id="welcome-to-warno-s-documentation">
-<h1>Welcome to WARNO&#8217;s documentation!<a class="headerlink" href="#welcome-to-warno-s-documentation" title="Permalink to this headline">¶</a></h1>
-<p>WARNO uses microservices working in concert to monitor and pull metadata from ARM radars across the world,
-process the information, and aggregate it in a central location for long term storage and retrieval.</p>
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Slab:400,700|Inconsolata:400,700&subset=latin,cyrillic' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="WARNO 0.1 documentation" href="#"/>
+        <link rel="next" title="Getting Started" href="WarnoIntroduction/index.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+          <a href="#" class="fa fa-home"> WARNO</a>
+        
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
 </div>
-<div class="section" id="table-of-contents">
-<h1>Table of Contents<a class="headerlink" href="#table-of-contents" title="Permalink to this headline">¶</a></h1>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="design.html">Design</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
-<li class="toctree-l1"><a class="reference internal" href="WarnoVagrant/index.html">Welcome to WARNO&#8217;s documentation!</a></li>
-<li class="toctree-l1"><a class="reference internal" href="WarnoVagrant/index.html#latest-release">Latest Release</a><ul>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="WarnoIntroduction/index.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="WarnoIntroduction/index.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WarnoIntroduction/index.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WarnoIntroduction/index.html#fabric">Fabric</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WarnoIntroduction/index.html#design">Design</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="WarnoIntroduction/installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="WarnoIntroduction/installation.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WarnoIntroduction/installation.html#before-you-start">Before you Start</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WarnoIntroduction/installation.html#start-up-configuration">Start Up Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WarnoIntroduction/installation.html#nfs-permissions">NFS Permissions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WarnoIntroduction/installation.html#multiple-vm-s-one-one-machine">Multiple VM&#8217;s one one machine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WarnoIntroduction/installation.html#start-up">Start Up</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WarnoIntroduction/installation.html#demo-data">Demo Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WarnoIntroduction/installation.html#user-portal-access">User Portal Access</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WarnoIntroduction/installation.html#valid-columns-for-graphs">Valid Columns for graphs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="WarnoIntroduction/tutorial.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="WarnoVagrant/index.html">Latest Release</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="WarnoVagrant/WarnoConfig/index.html">WARNO Config</a></li>
 <li class="toctree-l2"><a class="reference internal" href="WarnoVagrant/Agent/index.html">Agent</a></li>
 <li class="toctree-l2"><a class="reference internal" href="WarnoVagrant/UserPortal/index.html">User Portal</a></li>
 <li class="toctree-l2"><a class="reference internal" href="WarnoVagrant/EventManager/index.html">Event Manager</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="WarnoVagrant/index.html#indices-and-tables">Indices and tables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="indices.html">Indices and tables</a></li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="#">WARNO</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="#">Docs</a> &raquo;</li>
+      
+    <li>Welcome to WARNO&#8217;s documentation!</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="_sources/index.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <div class="section" id="welcome-to-warno-s-documentation">
+<h1>Welcome to WARNO&#8217;s documentation!<a class="headerlink" href="#welcome-to-warno-s-documentation" title="Permalink to this headline">¶</a></h1>
+<p>WARNO uses microservices working in concert to monitor and pull metadata from ARM radars across the world,
+process the information, and aggregate it in a central location for long term storage and retrieval.</p>
+<div class="section" id="table-of-contents">
+<h2>Table of Contents<a class="headerlink" href="#table-of-contents" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="WarnoIntroduction/index.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="WarnoIntroduction/index.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WarnoIntroduction/index.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WarnoIntroduction/index.html#fabric">Fabric</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WarnoIntroduction/index.html#design">Design</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="WarnoIntroduction/installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="WarnoIntroduction/installation.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WarnoIntroduction/installation.html#before-you-start">Before you Start</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WarnoIntroduction/installation.html#start-up-configuration">Start Up Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WarnoIntroduction/installation.html#nfs-permissions">NFS Permissions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WarnoIntroduction/installation.html#multiple-vm-s-one-one-machine">Multiple VM&#8217;s one one machine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WarnoIntroduction/installation.html#start-up">Start Up</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WarnoIntroduction/installation.html#demo-data">Demo Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WarnoIntroduction/installation.html#user-portal-access">User Portal Access</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WarnoIntroduction/installation.html#valid-columns-for-graphs">Valid Columns for graphs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="WarnoIntroduction/tutorial.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="WarnoVagrant/index.html">Latest Release</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="WarnoVagrant/WarnoConfig/index.html">WARNO Config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WarnoVagrant/Agent/index.html">Agent</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WarnoVagrant/UserPortal/index.html">User Portal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WarnoVagrant/EventManager/index.html">Event Manager</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="indices.html">Indices and tables</a></li>
 </ul>
 </div>
 </div>
 <div class="section" id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><a class="reference internal" href="genindex.html"><span>Index</span></a></li>
 <li><a class="reference internal" href="py-modindex.html"><span>Module Index</span></a></li>
 <li><a class="reference internal" href="search.html"><span>Search Page</span></a></li>
 </ul>
 </div>
-<div class="section" id="introduction">
-<h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
-<p>WARNO is designed to allow communication and management of data between machines.  It is used primarily for the
-acquisition and processing of instrument status information. An &#8216;Agent&#8217; VM uses plugins to process data from an
-instrument, generalizes the information, and passes it along to an &#8216;Event Manager&#8217;.</p>
-<p>The Event Manager then saves the
-data locally and passes the information on to a central Event Manager.  The end result of this is that one or more
-Agents can gather and process data from their respective instruments and then all nearby agents can pass their information
-one Event Manager.</p>
-<p>All of the Event Managers, each managing the messages from one or more Agents, can then pass on their
-messages onto the central Event Manager, which will receive, process, and store all of the data from all instruments.
-Users can then browse to a &#8216;User Portal&#8217; from any VM with an Event Manager to view data or modify they system, such as
-submitting an instrument log.</p>
-</div>
-<div class="section" id="design">
-<h1>Design<a class="headerlink" href="#design" title="Permalink to this headline">¶</a></h1>
-<p>WARNO uses a Vagrant VM (Virtual Machine) to create a uniform environment regardless of what OS it is on, and within that VM
-starts and manages multiple Docker containers, each of them providing their own service to the other containers
-or to the user.</p>
-<p>Current services include:</p>
-<ul class="simple">
-<li>Agent: Gathers, processes, and passes information to the Event Manager (localhost or remote)</li>
-<li>Event Manager: Gathers data passed from multiple agents and either passes it to a more comprehensive Event Manager or stores it in database.</li>
-<li>User Portal:  Web server allowing users to either visit the web site to access data or to pull out data through a set of API hooks.</li>
-<li>Postgresql:  A database server.</li>
-<li>Data Store:  The physical location for database files, configuration, tool installations, and more to be shared between containers.</li>
-<li>Proxy:  An NGINX proxy server responsible for determining whether requests should be passed to the User Portal or the Event Manager running within the same VM.</li>
-</ul>
-<p>WARNO is designed as such that each VM uses the exact same code base, and the difference in roles and functionality is
-specified by configuration.  For example, an Agent would likely have the Event Manager disabled on the same VM, and the
-destination set for its messages to be passed along to a site Event Manager.  This site Event Manager would have no need
-for an Agent to be running, seeing as it is not directly pulling data from an instrument but instead gathering the data
-from Agents.</p>
-<p>It is however possible to set the destination for an Agent to be an Event Manager on the same VM, for when
-it is beneficial to have both on the same server.  In this case, internally the Agent would communicate with this local
-Event Manager, and then it would attempt to connect to the configured destination for the central Event Manager.</p>
-<p>Another service on the same VM is a User Portal.  This is a running web server that has access to the information that
-the Event Manager has been saving on the VM.  This allows someone to either see the information for all instruments that
-communicate with that Event Manager, or if they connect to the central User Portal, to see the information for all
-instruments.  If a user were to make changes at a site, for example submitting a log for one of the instruments, the log
-is then transferred to the central Event Manager for any user to access.</p>
-<div class="figure" id="id1">
-<img alt="_images/warno_network.png" src="_images/warno_network.png" />
-<p class="caption"><span class="caption-text">Figure: Example WARNO network. Each rectangle represents a copy of the WARNO VM, with the only differences being
-configuration and the plugins supplied.  Different configurations determine whether Agent, User Portal,
-and Event Manager are run. Arrows represent data flow.</span></p>
-</div>
-<p>The User Portal will also include API hooks that will allow other programs (not just browsers) to grab information from
-WARNO.</p>
 </div>
 
 
           </div>
-        </div>
-      </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-  <h3><a href="#">Table Of Contents</a></h3>
-  <ul>
-<li><a class="reference internal" href="#">Welcome to WARNO&#8217;s documentation!</a></li>
-<li><a class="reference internal" href="#table-of-contents">Table of Contents</a></li>
-<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
-<li><a class="reference internal" href="#introduction">Introduction</a></li>
-<li><a class="reference internal" href="#design">Design</a></li>
-</ul>
-<div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="#">Documentation overview</a><ul>
-      <li>Next: <a href="introduction.html" title="next chapter">Introduction</a></li>
-  </ul></li>
-</ul>
-</div>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/index.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="WarnoIntroduction/index.html" class="btn btn-neutral float-right" title="Getting Started">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Joseph Hardin.
     </p>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+  </div>
+
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  
+</footer>
         </div>
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="footer">
-      &copy;2016, Joseph Hardin.
-      
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
-      
-      |
-      <a href="_sources/index.txt"
-          rel="nofollow">Page source</a>
-    </div>
 
-    
+    </section>
 
-    
-  </body>
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
 </html>

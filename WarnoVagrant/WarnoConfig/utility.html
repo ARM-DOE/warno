@@ -1,43 +1,136 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>WarnoConfig.utility &mdash; WARNO 0.1 documentation</title>
-    
-    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../../',
-        VERSION:     '0.1',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
-      };
-    </script>
-    <script type="text/javascript" src="../../_static/jquery.js"></script>
-    <script type="text/javascript" src="../../_static/underscore.js"></script>
-    <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <link rel="top" title="WARNO 0.1 documentation" href="../../index.html" />
-    <link rel="up" title="WARNO Config" href="index.html" />
-    <link rel="next" title="Agent" href="../Agent/index.html" />
-    <link rel="prev" title="WarnoConfig.config" href="config.html" />
-   
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+  <title>WarnoConfig.utility &mdash; WARNO 0.1 documentation</title>
+  
 
-  </head>
-  <body role="document">  
+  
+  
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Slab:400,700|Inconsolata:400,700&subset=latin,cyrillic' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="WARNO 0.1 documentation" href="../../index.html"/>
+        <link rel="up" title="WARNO Config" href="index.html"/>
+        <link rel="next" title="Agent" href="../Agent/index.html"/>
+        <link rel="prev" title="WarnoConfig.config" href="config.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+          <a href="../../index.html" class="fa fa-home"> WARNO</a>
+        
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../WarnoIntroduction/index.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../WarnoIntroduction/index.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../WarnoIntroduction/index.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../WarnoIntroduction/index.html#fabric">Fabric</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../WarnoIntroduction/index.html#design">Design</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../WarnoIntroduction/installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../WarnoIntroduction/installation.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../WarnoIntroduction/installation.html#before-you-start">Before you Start</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../WarnoIntroduction/installation.html#start-up-configuration">Start Up Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../WarnoIntroduction/installation.html#nfs-permissions">NFS Permissions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../WarnoIntroduction/installation.html#multiple-vm-s-one-one-machine">Multiple VM&#8217;s one one machine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../WarnoIntroduction/installation.html#start-up">Start Up</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../WarnoIntroduction/installation.html#demo-data">Demo Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../WarnoIntroduction/installation.html#user-portal-access">User Portal Access</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../WarnoIntroduction/installation.html#valid-columns-for-graphs">Valid Columns for graphs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../WarnoIntroduction/tutorial.html">Tutorials</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Latest Release</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">WARNO Config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Agent/index.html">Agent</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../UserPortal/index.html">User Portal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../EventManager/index.html">Event Manager</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../indices.html">Indices and tables</a></li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">WARNO</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../index.html">Latest Release</a> &raquo;</li>
+      
+          <li><a href="index.html">WARNO Config</a> &raquo;</li>
+      
+    <li><code class="docutils literal"><span class="pre">WarnoConfig.utility</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="../../_sources/WarnoVagrant/WarnoConfig/utility.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
             
   <div class="section" id="warnoconfig-utility">
 <h1><a class="reference internal" href="#module-WarnoConfig.utility" title="WarnoConfig.utility"><code class="xref py py-mod docutils literal"><span class="pre">WarnoConfig.utility</span></code></a><a class="headerlink" href="#warnoconfig-utility" title="Permalink to this headline">¶</a></h1>
@@ -50,7 +143,7 @@
 <dd><p>Connects to the default WARNO database server.
 Returns
 &#8212;&#8212;-
-psychopg2 connection object for the WARNO database server.</p>
+psycopg2 connection object for the WARNO database server.</p>
 </dd></dl>
 
 <dl class="function">
@@ -94,7 +187,8 @@ psychopg2 connection object for the WARNO database server.</p>
 <dl class="function">
 <dt id="WarnoConfig.utility.dump_table_to_csv">
 <code class="descclassname">WarnoConfig.utility.</code><code class="descname">dump_table_to_csv</code><span class="sig-paren">(</span><em>filename</em>, <em>table</em>, <em>server=None</em><span class="sig-paren">)</span><a class="headerlink" href="#WarnoConfig.utility.dump_table_to_csv" title="Permalink to this definition">¶</a></dt>
-<dd><p>Dumps the database table named &#8216;table&#8217; as a comma separated file into &#8216;filename&#8217;, from database server &#8216;server&#8217; if supplied.</p>
+<dd><p>Dumps the database table named &#8216;table&#8217; as a comma separated file into &#8216;filename&#8217;,
+from database server &#8216;server&#8217; if supplied.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -109,7 +203,8 @@ psychopg2 connection object for the WARNO database server.</p>
 </div></blockquote>
 <p><strong>server: sqlalchemy engine, optional</strong></p>
 <blockquote class="last">
-<div><p>A sqlalchemy engine for whichever database server the data will be read from, defaults to the default WARNO server.</p>
+<div><p>A sqlalchemy engine for whichever database server the data will be read from,
+defaults to the default WARNO server.</p>
 </div></blockquote>
 </td>
 </tr>
@@ -182,7 +277,7 @@ psychopg2 connection object for the WARNO database server.</p>
 
 <dl class="function">
 <dt id="WarnoConfig.utility.load_data_into_table">
-<code class="descclassname">WarnoConfig.utility.</code><code class="descname">load_data_into_table</code><span class="sig-paren">(</span><em>filename</em>, <em>table</em>, <em>conn</em><span class="sig-paren">)</span><a class="headerlink" href="#WarnoConfig.utility.load_data_into_table" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">WarnoConfig.utility.</code><code class="descname">load_data_into_table</code><span class="sig-paren">(</span><em>filename</em>, <em>table</em><span class="sig-paren">)</span><a class="headerlink" href="#WarnoConfig.utility.load_data_into_table" title="Permalink to this definition">¶</a></dt>
 <dd><p>Loads a comma separated (no spaces) file &#8216;filename&#8217; into the database table &#8216;table&#8217;.</p>
 <p>Example data file &#8220;table_name.schema&#8221;:</p>
 <div class="line-block">
@@ -201,10 +296,9 @@ psychopg2 connection object for the WARNO database server.</p>
 <div><p>Name of the file to load into the table.</p>
 </div></blockquote>
 <p><strong>table: string</strong></p>
-<blockquote>
+<blockquote class="last">
 <div><p>Name of the table to load the file into.</p>
 </div></blockquote>
-<p class="last"><strong>conn: database connection</strong></p>
 </td>
 </tr>
 </tbody>
@@ -216,6 +310,97 @@ psychopg2 connection object for the WARNO database server.</p>
 <code class="descclassname">WarnoConfig.utility.</code><code class="descname">load_dumpfile</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#WarnoConfig.utility.load_dumpfile" title="Permalink to this definition">¶</a></dt>
 <dd><p>Runs the &#8216;db_load&#8217; script in a subprocess to load a postgresql database dump into the database, and waits for the
 subprocess to finish.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="WarnoConfig.utility.load_json_data">
+<code class="descclassname">WarnoConfig.utility.</code><code class="descname">load_json_data</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="headerlink" href="#WarnoConfig.utility.load_json_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load json data from &#8216;filename&#8217; into the database. Each file should have a list of &#8216;definition&#8217;/&#8217;data&#8217; pairs, one
+for each database table to have data loaded in.  Each definition should at least have: &#8216;table_name&#8217;, &#8216;num_entries&#8217;,
+and &#8216;columns&#8217;.</p>
+<p>Example File (indentation unnecessary):</p>
+<dl class="docutils">
+<dt>[</dt>
+<dd><dl class="first docutils">
+<dt>{</dt>
+<dd><dl class="first docutils">
+<dt>&#8220;definition&#8221;:</dt>
+<dd><p class="first">{</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>&#8220;table_name&#8221;:</dt>
+<dd><em>database table name</em>,</dd>
+<dt>&#8220;columns&#8221;:</dt>
+<dd>[(column_name_1, column_type_1), ..., (column_name_N, column_type_N)]</dd>
+</dl>
+</div></blockquote>
+<p class="last">}</p>
+</dd>
+<dt>&#8220;data&#8221;:</dt>
+<dd>[
+[val_1, val_2, ..., val_N],
+[val_1, val_2, ..., val_N],
+...,
+[val_1, val_2, ..., val_N] ]</dd>
+</dl>
+<p>},</p>
+<p>{ <em>table_2</em> },</p>
+<p>...,</p>
+<p class="last">{ <em>table_N</em> }</p>
+</dd>
+</dl>
+<p class="last">]</p>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename: string</strong></p>
+<blockquote class="last">
+<div><p>Name of the file to be loaded into the database.  Must be proper JSON.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="WarnoConfig.utility.reset_db_keys">
+<code class="descclassname">WarnoConfig.utility.</code><code class="descname">reset_db_keys</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#WarnoConfig.utility.reset_db_keys" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs the &#8216;db_sequence_reset&#8217; script in a subprocess to reset the postgres primary keys, and waits for the
+subprocess to finish. Without this reset, inserts that insert at a certain ID do not properly update the keys, so
+the next inserts will sometimes attempt to insert on the same id, which fails.  This approach may lead to some gaps
+in ids, but it will be more fault tolerant than it is currently.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="WarnoConfig.utility.save_rows_to_table">
+<code class="descclassname">WarnoConfig.utility.</code><code class="descname">save_rows_to_table</code><span class="sig-paren">(</span><em>table</em>, <em>columns</em>, <em>data</em><span class="sig-paren">)</span><a class="headerlink" href="#WarnoConfig.utility.save_rows_to_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves the list of database values in &#8216;data&#8217; into the &#8216;columns&#8217; for the specified &#8216;table&#8217;.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>table: string</strong></p>
+<blockquote>
+<div><p>Name of the database table to save the entries into.</p>
+</div></blockquote>
+<p><strong>columns: list of strings</strong></p>
+<blockquote>
+<div><p>List of column names to save the database entries into.  Length of list should match the length of each element
+of &#8216;data&#8217;, as each value in a &#8216;data&#8217; row maps to the corresponding column in &#8216;columns&#8217;.</p>
+</div></blockquote>
+<p><strong>data: list of value lists</strong></p>
+<blockquote class="last">
+<div><p>&#8216;data&#8217; is effectively a list of database table rows, with each row having the same number of elements as
+&#8216;columns&#8217;, and each element being the proper type for the column (not enforced here).</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -290,79 +475,73 @@ subprocess to finish.</p>
 </table>
 </dd></dl>
 
-<dl class="function">
-<dt id="WarnoConfig.utility.upgrade_db">
-<code class="descclassname">WarnoConfig.utility.</code><code class="descname">upgrade_db</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#WarnoConfig.utility.upgrade_db" title="Permalink to this definition">¶</a></dt>
-<dd><p>Runs the &#8216;db_migrate&#8217; script in a subprocess to migrate the database using &#8216;alembic&#8217;.</p>
-</dd></dl>
-
 </div>
 </div>
 
 
           </div>
-        </div>
-      </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-  <h3><a href="../../index.html">Table Of Contents</a></h3>
-  <ul>
-<li><a class="reference internal" href="#"><code class="docutils literal"><span class="pre">WarnoConfig.utility</span></code></a><ul>
-<li><a class="reference internal" href="#module-WarnoConfig.utility">Module Contents</a></li>
-</ul>
-</li>
-</ul>
-<div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="../../index.html">Documentation overview</a><ul>
-  <li><a href="../index.html">Welcome to WARNO&#8217;s documentation!</a><ul>
-  <li><a href="index.html">WARNO Config</a><ul>
-      <li>Previous: <a href="config.html" title="previous chapter"><code class="docutils literal"><span class="pre">WarnoConfig.config</span></code></a></li>
-      <li>Next: <a href="../Agent/index.html" title="next chapter">Agent</a></li>
-  </ul></li>
-  </ul></li>
-  </ul></li>
-</ul>
-</div>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="../../_sources/WarnoVagrant/WarnoConfig/utility.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <form class="search" action="../../search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../Agent/index.html" class="btn btn-neutral float-right" title="Agent">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="config.html" class="btn btn-neutral" title="WarnoConfig.config"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Joseph Hardin.
     </p>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+  </div>
+
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  
+</footer>
         </div>
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="footer">
-      &copy;2016, Joseph Hardin.
-      
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
-      
-      |
-      <a href="../../_sources/WarnoVagrant/WarnoConfig/utility.txt"
-          rel="nofollow">Page source</a>
-    </div>
 
-    
+    </section>
 
-    
-  </body>
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
 </html>

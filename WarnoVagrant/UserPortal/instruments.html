@@ -1,43 +1,136 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>UserPortal.instruments &mdash; WARNO 0.1 documentation</title>
-    
-    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../../',
-        VERSION:     '0.1',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
-      };
-    </script>
-    <script type="text/javascript" src="../../_static/jquery.js"></script>
-    <script type="text/javascript" src="../../_static/underscore.js"></script>
-    <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <link rel="top" title="WARNO 0.1 documentation" href="../../index.html" />
-    <link rel="up" title="User Portal" href="index.html" />
-    <link rel="next" title="UserPortal.logs" href="logs.html" />
-    <link rel="prev" title="User Portal" href="index.html" />
-   
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+  <title>UserPortal.instruments &mdash; WARNO 0.1 documentation</title>
+  
 
-  </head>
-  <body role="document">  
+  
+  
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Slab:400,700|Inconsolata:400,700&subset=latin,cyrillic' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="WARNO 0.1 documentation" href="../../index.html"/>
+        <link rel="up" title="User Portal" href="index.html"/>
+        <link rel="next" title="UserPortal.logs" href="logs.html"/>
+        <link rel="prev" title="UserPortal.devel" href="devel.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+          <a href="../../index.html" class="fa fa-home"> WARNO</a>
+        
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../WarnoIntroduction/index.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../WarnoIntroduction/index.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../WarnoIntroduction/index.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../WarnoIntroduction/index.html#fabric">Fabric</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../WarnoIntroduction/index.html#design">Design</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../WarnoIntroduction/installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../WarnoIntroduction/installation.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../WarnoIntroduction/installation.html#before-you-start">Before you Start</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../WarnoIntroduction/installation.html#start-up-configuration">Start Up Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../WarnoIntroduction/installation.html#nfs-permissions">NFS Permissions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../WarnoIntroduction/installation.html#multiple-vm-s-one-one-machine">Multiple VM&#8217;s one one machine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../WarnoIntroduction/installation.html#start-up">Start Up</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../WarnoIntroduction/installation.html#demo-data">Demo Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../WarnoIntroduction/installation.html#user-portal-access">User Portal Access</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../WarnoIntroduction/installation.html#valid-columns-for-graphs">Valid Columns for graphs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../WarnoIntroduction/tutorial.html">Tutorials</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Latest Release</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../WarnoConfig/index.html">WARNO Config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Agent/index.html">Agent</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">User Portal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../EventManager/index.html">Event Manager</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../indices.html">Indices and tables</a></li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">WARNO</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../index.html">Latest Release</a> &raquo;</li>
+      
+          <li><a href="index.html">User Portal</a> &raquo;</li>
+      
+    <li><code class="docutils literal"><span class="pre">UserPortal.instruments</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="../../_sources/WarnoVagrant/UserPortal/instruments.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
             
   <div class="section" id="userportal-instruments">
 <h1><a class="reference internal" href="#module-UserPortal.instruments" title="UserPortal.instruments"><code class="xref py py-mod docutils literal"><span class="pre">UserPortal.instruments</span></code></a><a class="headerlink" href="#userportal-instruments" title="Permalink to this headline">¶</a></h1>
@@ -139,7 +232,13 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">new_instrument.html: HTML document</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>instrument_id: integer</strong></p>
+<blockquote>
+<div><p>Database id for the instrument entry to be updated.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">new_instrument.html: HTML document</p>
 <blockquote>
 <div><p>If the request method is &#8216;GET&#8217;, returns a form to update instrument .</p>
 </div></blockquote>
@@ -162,19 +261,19 @@
 <code class="descclassname">UserPortal.instruments.</code><code class="descname">generate_instrument_graph</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#UserPortal.instruments.generate_instrument_graph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate graph data for a Dygraph for an instrument.</p>
 <dl class="docutils">
-<dt>Uses the supplied key and instrument_id to get all data from the &#8216;time&#8217; and</dt>
+<dt>Uses the supplied keys and instrument_id to get all data from the &#8216;time&#8217; and</dt>
 <dd>specified &#8216;key&#8217; column for the instrument with &#8216;instrument_id&#8217;, passing them
-as &#8216;x&#8217; and &#8216;y&#8217; values to be graphed together.  Limits range to those with
+into a sorting function to get the values at each point in time.  Limits range to those with
 timestamps between &#8216;start&#8217; and &#8216;end&#8217; time</dd>
 </dl>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>key: string</strong></p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>keys: comma separated string</strong></p>
 <blockquote>
 <div><dl class="docutils">
-<dt>Passed as an HTML query parameter, the name of the database column</dt>
+<dt>Passed as an HTML query parameter, the names of the database columns</dt>
 <dd><p class="first last">to plot against time.</p>
 </dd>
 </dl>
@@ -195,11 +294,55 @@ timestamps between &#8216;start&#8217; and &#8216;end&#8217; time</dd>
 <blockquote>
 <div><p>Passed as an HTML query parameter, the end time to limit results to.</p>
 </div></blockquote>
+<p><strong>do_stats: integer</strong></p>
+<blockquote>
+<div><p>Passed as an HTML query parameter, indicates whether to do aggregates stats for an attribute (1=true, 0=false).</p>
+</div></blockquote>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">message: JSON object</p>
 <blockquote class="last">
-<div><p>Returns a JSON object with a list of &#8216;x&#8217; values corresponding to a list of &#8216;y&#8217; values.</p>
+<div><p>Returns a JSON object as a list of attribute values at points in time, of the form:
+{data: [[Time0, Attribute0, Attribute1, ... AttributeN], [T1, A0, A1, ...AN], ... [TN, A0, A1, ... AN]],
+lower_deviation: (average for attribute if only one was given - 3 standard deviations),
+upper_deviation: (average for attribute if only one was given + 3 standard deviations)
+}</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="UserPortal.instruments.get_attribute_stats">
+<code class="descclassname">UserPortal.instruments.</code><code class="descname">get_attribute_stats</code><span class="sig-paren">(</span><em>attribute=None</em>, <em>instrument_id=None</em><span class="sig-paren">)</span><a class="headerlink" href="#UserPortal.instruments.get_attribute_stats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates aggregate data on an attribute for an instrument (min, max, mean, standard deviation)
+and returns it in a JSON dictionary.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>attribute: string</strong></p>
+<blockquote>
+<div><p>Can be passed as an HTML query parameter, the name of the database column to get aggregate data for.</p>
+</div></blockquote>
+<p><strong>instrument_id: integer</strong></p>
+<blockquote>
+<div><dl class="docutils">
+<dt>Can be passed as an HTML query parameter, the id of the instrument in the</dt>
+<dd><p class="first last">database, indicates which instrument&#8217;s data to use.</p>
+</dd>
+</dl>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">message: JSON object</p>
+<blockquote class="last">
+<div><p>Returns a JSON object as a list of the attribute&#8217;s aggregate data, of the form:
+{&#8216;min&#8217;: (minimum of all values), &#8216;max&#8217;: (maximum of all values), &#8216;average&#8217;: (average of all values),
+&#8216;std_deviation&#8217;: (standard deviation for the data set)
+}</p>
 </div></blockquote>
 </td>
 </tr>
@@ -233,6 +376,28 @@ instrument id and any table entries that reference that instrument.</dd>
 instrument information, the 5 most recent log entries, the status of the instrument,
 and the list of columns for available data to plot on graphs.</p>
 </div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="UserPortal.instruments.iso_first_element">
+<code class="descclassname">UserPortal.instruments.</code><code class="descname">iso_first_element</code><span class="sig-paren">(</span><em>input_list</em><span class="sig-paren">)</span><a class="headerlink" href="#UserPortal.instruments.iso_first_element" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update first element of input list from a python datetime object into an ISO formatted time.
+(Used as map function).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>input_list: list</strong></p>
+<blockquote>
+<div><p>First element of &#8216;input_list&#8217; is a python datetime object.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">No actual return, but updates list in place.</p>
 </td>
 </tr>
 </tbody>
@@ -284,6 +449,132 @@ and the list of columns for available data to plot on graphs.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="UserPortal.instruments.recent_values">
+<code class="descclassname">UserPortal.instruments.</code><code class="descname">recent_values</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#UserPortal.instruments.recent_values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the most recent value for each given key for the given instrument, along with the time it was collected, as a
+JSON object.  If the key is not a valid key for the instrument, the returned object will be an empty array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>keys: comma separated string</strong></p>
+<blockquote>
+<div><dl class="docutils">
+<dt>Passed as an HTML query parameter, the names of the database columns</dt>
+<dd><p class="first last">to plot against time.</p>
+</dd>
+</dl>
+</div></blockquote>
+<p><strong>instrument_id: integer</strong></p>
+<blockquote>
+<div><dl class="docutils">
+<dt>Passed as an HTML query parameter, the id of the instrument in the</dt>
+<dd><p class="first last">database, indicates which instrument&#8217;s data to use.</p>
+</dd>
+</dl>
+</div></blockquote>
+<p><strong>do_stats: integer</strong></p>
+<blockquote>
+<div><p>Passed as an HTML query parameter, indicates whether to do aggregates stats for an attribute (1=true, 0=false).</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">message: JSON object</p>
+<blockquote class="last">
+<div><p>List of dictionaries, one for each attribute, each of the form {&#8220;key&#8221;: <strong>attribute name</strong>, &#8220;data&#8221;:
+{&#8220;time&#8221;: <strong>ISO format UTC time that most recent value was collected</strong>,
+&#8220;value&#8221;: <strong>most recently collected value for attribute</strong>} }</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="UserPortal.instruments.synchronize_sort">
+<code class="descclassname">UserPortal.instruments.</code><code class="descname">synchronize_sort</code><span class="sig-paren">(</span><em>dataset_dict</em><span class="sig-paren">)</span><a class="headerlink" href="#UserPortal.instruments.synchronize_sort" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sorts a dictionary of data sets to be consistent in time.  Each iteration, it checks the earliest time of each
+data set, gets the earliest time from among them, then sets that as the time for the next return element.  It then
+checks the earliest element of each data set to see which data set elements match, removing matching elements and
+placing their values in the set&#8217;s place in the resulting element.  The process iterates until all data sets are
+empty, and then returns the list of the merged time/value sets.</p>
+<p>Starts with data sets:</p>
+<p><em>Set 0</em>                 <em>Set 1</em>                   <em>Set 2</em>
+[                       [                       [
+(2015-05-11 02:00, 03), (2015-05-11 03:00, 13), (2015-05-11 02:30, 23),
+(2015-05-11 01:30, 02), (2015-05-11 02:30, 12), (2015-05-11 02:00, 22),
+(2015-05-11 01:00, 01)] (2015-05-11 02:00, 11)] (2015-05-11 01:00, 21)]</p>
+<p>Ends with a sorted list:
+[
+[2015-05-11 01:00,   01, None,   21],
+[2015-05-11 01:30,   02, None, None],
+[2015-05-11 02:00,   03,   11,   22],
+[2015-05-11 02:30, None,   12,   23],
+[2015-05-11 03:00, None,   13, None]]</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>dataset_dict: dictionary to be sorted</strong></p>
+<p><strong>Dictionary for the algorithm to sort.  Of the form {**integer</strong> set number: {&#8216;data&#8217;:**</p>
+<blockquote>
+<div><p>[(<strong>Datetime</strong> time1, <strong>float/int</strong> value1), (time2, value2) ... (timeN, valueN)]}}</p>
+</div></blockquote>
+<p><strong>The set numbers must increment as integers from 1 to N, but can be in any order (dictionaries are unsorted).</strong></p>
+<p><strong>Each data set should be sorted from latest to earliest time.</strong></p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Sorted list, of form [<strong>Datetime</strong> 2015-05-11 02:00, 15, None, 12, ...], [2015-05-11 01:00, None, 30, None, ...],</p>
+<blockquote class="last">
+<div><p>...[Earliest Datetime, Dataset0 Value, Dataset1 Value, Dataset2 Value, ... AttributeN Value]]</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="UserPortal.instruments.update_all_valid_columns">
+<code class="descclassname">UserPortal.instruments.</code><code class="descname">update_all_valid_columns</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#UserPortal.instruments.update_all_valid_columns" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates the &#8216;valid_columns&#8217; table for each instrument with all data attributes that are no longer exclusively null</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">HTML displaying how many entries have been updated per instrument.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="UserPortal.instruments.update_valid_columns_for_instrument">
+<code class="descclassname">UserPortal.instruments.</code><code class="descname">update_valid_columns_for_instrument</code><span class="sig-paren">(</span><em>instrument_id</em><span class="sig-paren">)</span><a class="headerlink" href="#UserPortal.instruments.update_valid_columns_for_instrument" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates the &#8216;valid_columns&#8217; table for the instrument matching &#8216;instrument_id&#8217;.  Checks through all references for
+the instrument, filtering out the attributes that are already represented in the &#8216;valid_columns&#8217; table.  All entries
+left are entries that need to be checked.  For the check, the attribute&#8217;s column in its respective table is summed,
+and if that sum is no longer NULL (e.g. there is at least one valid data entry in that column) that attribute is
+added to the &#8216;valid_columns&#8217; table for the instrument.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>instrument_id: integer</strong></p>
+<blockquote>
+<div><p>Database id of the instrument whose attributes are to be checked.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">HTML displaying how many entries have been updated for this instrument.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="UserPortal.instruments.valid_columns_for_instrument">
 <code class="descclassname">UserPortal.instruments.</code><code class="descname">valid_columns_for_instrument</code><span class="sig-paren">(</span><em>instrument_id</em><span class="sig-paren">)</span><a class="headerlink" href="#UserPortal.instruments.valid_columns_for_instrument" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a list of columns of data for an instrument that is suitable for plotting.</p>
@@ -312,60 +603,68 @@ data value for the instrument that is suitable for plotting.</p>
 
 
           </div>
-        </div>
-      </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper"><div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="../../index.html">Documentation overview</a><ul>
-  <li><a href="../index.html">Welcome to WARNO&#8217;s documentation!</a><ul>
-  <li><a href="index.html">User Portal</a><ul>
-      <li>Previous: <a href="index.html" title="previous chapter">User Portal</a></li>
-      <li>Next: <a href="logs.html" title="next chapter"><code class="docutils literal"><span class="pre">UserPortal.logs</span></code></a></li>
-  </ul></li>
-  </ul></li>
-  </ul></li>
-</ul>
-</div>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="../../_sources/WarnoVagrant/UserPortal/instruments.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <form class="search" action="../../search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="logs.html" class="btn btn-neutral float-right" title="UserPortal.logs">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="devel.html" class="btn btn-neutral" title="UserPortal.devel"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Joseph Hardin.
     </p>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+  </div>
+
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  
+</footer>
         </div>
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="footer">
-      &copy;2016, Joseph Hardin.
-      
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
-      
-      |
-      <a href="../../_sources/WarnoVagrant/UserPortal/instruments.txt"
-          rel="nofollow">Page source</a>
-    </div>
 
-    
+    </section>
 
-    
-  </body>
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
 </html>
