@@ -15,7 +15,6 @@ Sites
         <th> Mobile</th>
         <th> Location Name</th>
         <th> Site ID </th>
-        <th></th>
     </tr>
     {%  for site in sites %}
     <tr>
@@ -31,7 +30,6 @@ Sites
         {% endif %}
         <td>{{ site.location_name }}</td>
         <td>{{ site.id }}</td>
-        <td><a href="{{url_for('sites.edit_site', site_id=site.id)}}">Edit</a></td>
     </tr>
     {% endfor %}
 </table>
