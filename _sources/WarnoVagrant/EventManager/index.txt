@@ -36,7 +36,7 @@ The Event Manager also saves events that come to it.  This information can be ac
 Because the Event Manager handles this database work, it is also responsible for initializing and prepping the database
 when the WARNO system starts up.
 
-Depending on the configuration in the Data Store container, the Event Manager can start
+Depending on the configuration in the Data Store directory, the Event Manager can start
 up a normal or a test database.  For a normal database, it will attempt to use an existing database.  If none is set up,
 it instead initializes the database and fills it with basic static values, such as basic event codes and sites.  If the
 database is designated as a test database, it instead will wipe the database every time it starts up and fill it with

@@ -1,0 +1,463 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>UserPortal.dashboard &mdash; WARNO 0.1 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Slab:400,700|Inconsolata:400,700&subset=latin,cyrillic' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="WARNO 0.1 documentation" href="../../index.html"/>
+        <link rel="up" title="User Portal" href="index.html"/>
+        <link rel="next" title="UserPortal.devel" href="devel.html"/>
+        <link rel="prev" title="User Portal" href="index.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+          <a href="../../index.html" class="fa fa-home"> WARNO</a>
+        
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../WarnoIntroduction/index.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../WarnoIntroduction/index.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../WarnoIntroduction/index.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../WarnoIntroduction/index.html#fabric">Fabric</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../WarnoIntroduction/index.html#design">Design</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../WarnoIntroduction/installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../WarnoIntroduction/installation.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../WarnoIntroduction/installation.html#before-you-start">Before you Start</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../WarnoIntroduction/installation.html#start-up-configuration">Start Up Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../WarnoIntroduction/installation.html#nfs-permissions">NFS Permissions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../WarnoIntroduction/installation.html#multiple-vm-s-one-one-machine">Multiple VM&#8217;s one one machine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../WarnoIntroduction/installation.html#start-up">Start Up</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../WarnoIntroduction/installation.html#demo-data">Demo Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../WarnoIntroduction/installation.html#user-portal-access">User Portal Access</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../WarnoIntroduction/installation.html#valid-columns-for-graphs">Valid Columns for graphs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../WarnoIntroduction/tutorial.html">Tutorials</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Latest Release</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../WarnoConfig/index.html">WARNO Config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Agent/index.html">Agent</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">User Portal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../EventManager/index.html">Event Manager</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../indices.html">Indices and tables</a></li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">WARNO</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../index.html">Latest Release</a> &raquo;</li>
+      
+          <li><a href="index.html">User Portal</a> &raquo;</li>
+      
+    <li><code class="docutils literal"><span class="pre">UserPortal.dashboard</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="../../_sources/WarnoVagrant/UserPortal/dashboard.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <div class="section" id="userportal-dashboard">
+<h1><a class="reference internal" href="#module-UserPortal.dashboard" title="UserPortal.dashboard"><code class="xref py py-mod docutils literal"><span class="pre">UserPortal.dashboard</span></code></a><a class="headerlink" href="#userportal-dashboard" title="Permalink to this headline">¶</a></h1>
+<p>The Dashboard module is responsible for providing information the Dashboard widgets.</p>
+<span class="target" id="module-UserPortal.dashboard"></span><dl class="function">
+<dt id="UserPortal.dashboard.available_dashboards">
+<code class="descclassname">UserPortal.dashboard.</code><code class="descname">available_dashboards</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#UserPortal.dashboard.available_dashboards" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a list of the available dashboards for a user: all private dashboards a user owns, and all public dashboards.
+If a user is anonymous, just sends an empty json array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">dashboards: JSON object</p>
+<blockquote class="last">
+<div><p>A list of available dashboards, each entry of the format: {&#8220;name&#8221;: <em>dashboard name</em>,
+&#8220;id&#8221;: <em>database id of dashboard</em>, &#8220;private&#8221;: <em>true if the dashboard private, false if public</em>}</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="UserPortal.dashboard.load_dashboard">
+<code class="descclassname">UserPortal.dashboard.</code><code class="descname">load_dashboard</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#UserPortal.dashboard.load_dashboard" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a particular dashboard for the user.  When supplied a dashboard id from the database, returns the JSON
+schematic for the dashboard.  Only works if there is a user currently signed in.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>dashboard_id: integer</strong></p>
+<blockquote>
+<div><p>Passed as a GET argument, the database id of the dashboard to be loaded.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">dashboard schematic: JSON object</p>
+<blockquote class="last">
+<div><p>A JSON object describing string that describes a dashboard, allowing the saved dashboard to be reconstructed.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="UserPortal.dashboard.save_dashboard">
+<code class="descclassname">UserPortal.dashboard.</code><code class="descname">save_dashboard</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#UserPortal.dashboard.save_dashboard" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save a dashboard for a logged in user.  If the dashboard already exists with the same name and privacy, its
+schematic is instead overwritten.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>dashboard_json: JSON object</strong></p>
+<blockquote>
+<div><p>Expects a JSON object describing the dashboard to be saved of the form {&#8220;name&#8221;: <em>string name of the dashboard</em>,
+&#8220;private&#8221;: <em>true if dashboard is private, false if public</em>, schematic: <em>string JSON object describing the
+dashboard to be saved</em>}</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Empty String</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="UserPortal.dashboard.status_log_for_each_instrument">
+<code class="descclassname">UserPortal.dashboard.</code><code class="descname">status_log_for_each_instrument</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#UserPortal.dashboard.status_log_for_each_instrument" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a dictionary containing the most recent log entry for each instrument with log entries.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Dictionary with the instrument ids for each log as the key and a dictionary for the log&#8217;s &#8216;author&#8217;, &#8216;status code&#8217;,</p>
+<p class="last">and &#8216;contents&#8217; as the value.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="UserPortal.dashboard.widget_controller">
+<code class="descclassname">UserPortal.dashboard.</code><code class="descname">widget_controller</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#UserPortal.dashboard.widget_controller" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="UserPortal.dashboard.widget_histogram_controller">
+<code class="descclassname">UserPortal.dashboard.</code><code class="descname">widget_histogram_controller</code><span class="sig-paren">(</span><em>widget_id</em>, <em>dual=False</em><span class="sig-paren">)</span><a class="headerlink" href="#UserPortal.dashboard.widget_histogram_controller" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function has an unusual return, being both the rendered html and extra json data.  The response is designed to
+be pulled apart on the receiving end.  This allows the calling widget to build the histogram correctly.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>widget_id: integer</strong></p>
+<blockquote>
+<div><p>Allows for this widget to be dynamically created, tracked, and removed. Passed into the template and
+incorporated in element ids.</p>
+</div></blockquote>
+<p><strong>dual: boolean</strong></p>
+<blockquote>
+<div><p>Default False, if this is True then this request is for a dual histogram, and the column names returned differ.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">JSON dictionary of the form { &#8220;html&#8221;: &#8220;<em>html for page generation</em>&#8221;, &#8220;json&#8221;: &#8220;<em>json for the widget to internalize</em>&#8221; }</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="UserPortal.dashboard.widget_instrument_graph_controller">
+<code class="descclassname">UserPortal.dashboard.</code><code class="descname">widget_instrument_graph_controller</code><span class="sig-paren">(</span><em>widget_id</em><span class="sig-paren">)</span><a class="headerlink" href="#UserPortal.dashboard.widget_instrument_graph_controller" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function has an unusual return, being both the rendered html and extra json data.  The response is designed to
+be pulled apart on the receiving end.  This allows the calling widget to build the instrument graph correctly.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>widget_id: integer</strong></p>
+<blockquote>
+<div><p>Allows for this widget to be dynamically created, tracked, and removed. Passed into the template and
+incorporated in element ids.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">JSON dictionary of the form { &#8220;html&#8221;: &#8220;<em>html for page generation</em>&#8221;, &#8220;json&#8221;: &#8220;<em>json for the widget to internalize</em>&#8221; }</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="UserPortal.dashboard.widget_log_viewer">
+<code class="descclassname">UserPortal.dashboard.</code><code class="descname">widget_log_viewer</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#UserPortal.dashboard.widget_log_viewer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the most recent logs for the instrument whose id matches the request&#8217;s &#8216;instrument_id&#8217; argument.  The returned
+list of instruments is limited by the request&#8217;s &#8216;max_logs&#8217; argument.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">&#8216;widgets/log_viewer.html&#8217;: HTML document</p>
+<blockquote class="last">
+<div><p>Renders the log_viewer, passing in the logs&#8217; information.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="UserPortal.dashboard.widget_log_viewer_controller">
+<code class="descclassname">UserPortal.dashboard.</code><code class="descname">widget_log_viewer_controller</code><span class="sig-paren">(</span><em>widget_id</em><span class="sig-paren">)</span><a class="headerlink" href="#UserPortal.dashboard.widget_log_viewer_controller" title="Permalink to this definition">¶</a></dt>
+<dd><p>Controller for the log viewing widget.  Allows the user to re-query the database by changing the selection
+in the views.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>widget_id: integer</strong></p>
+<blockquote>
+<div><p>Allows for this widget to be dynamically created, tracked, and removed. Passed into the template and
+incorporated in element ids.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">&#8216;widgets/log_viewer_controller.html&#8217;: HTML document</p>
+<blockquote class="last">
+<div><p>Renders the controller for the log_viewer widget, passing in the list of instruments available to select from as
+well as the widget id that marks all elements as part of this same widget.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="UserPortal.dashboard.widget_real_time_gauge_controller">
+<code class="descclassname">UserPortal.dashboard.</code><code class="descname">widget_real_time_gauge_controller</code><span class="sig-paren">(</span><em>widget_id</em><span class="sig-paren">)</span><a class="headerlink" href="#UserPortal.dashboard.widget_real_time_gauge_controller" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function has an unusual return, being both the rendered html and extra json data.  The response is designed to
+be pulled apart on the receiving end.  This allows the calling widget to build the real time gauge correctly.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>widget_id: integer</strong></p>
+<blockquote>
+<div><p>Allows for this widget to be dynamically created, tracked, and removed. Passed into the template and
+incorporated in element ids.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">JSON dictionary of the form { &#8220;html&#8221;: &#8220;<em>html for page generation</em>&#8221;, &#8220;json&#8221;: &#8220;<em>json for the widget to internalize</em>&#8221; }</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="UserPortal.dashboard.widget_status_plot">
+<code class="descclassname">UserPortal.dashboard.</code><code class="descname">widget_status_plot</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#UserPortal.dashboard.widget_status_plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets all instruments with site id matching &#8216;site_id&#8217; (if less than 0 or not integer, assume all sites),
+the most recent log for each instrument, and sets the instrument&#8217;s status as the status of the most recent log.
+Then groups the instruments by which site they are at, passing all the information back to the HTML template to
+render.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">&#8216;widgets/status_plot.html&#8217;: HTML document</p>
+<blockquote class="last">
+<div><p>Returns an HTML document and passes in the instrument information and the widget id for the template generator.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="UserPortal.dashboard.widget_status_plot_controller">
+<code class="descclassname">UserPortal.dashboard.</code><code class="descname">widget_status_plot_controller</code><span class="sig-paren">(</span><em>widget_id</em><span class="sig-paren">)</span><a class="headerlink" href="#UserPortal.dashboard.widget_status_plot_controller" title="Permalink to this definition">¶</a></dt>
+<dd><p>Controller for the status plot widget.  Allows the user to re-query the database by changing the selection
+in the views.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>widget_id: integer</strong></p>
+<blockquote>
+<div><p>Allows for this widget to be dynamically created, tracked, and removed. Passed into the template and
+incorporated in element ids.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">&#8216;widgets/status_plot_controller.html&#8217;: HTML document</p>
+<blockquote class="last">
+<div><p>Renders the controller for the status_plot widget, passing in the list of sites available to select from as
+well as the widget id that marks all elements as part of this same widget.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="devel.html" class="btn btn-neutral float-right" title="UserPortal.devel">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="User Portal"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Joseph Hardin.
+    </p>
+  </div>
+
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

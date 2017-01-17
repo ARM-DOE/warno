@@ -1,0 +1,338 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Installation &mdash; WARNO 0.1 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Slab:400,700|Inconsolata:400,700&subset=latin,cyrillic' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="WARNO 0.1 documentation" href="../index.html"/>
+        <link rel="next" title="Tutorials" href="tutorial.html"/>
+        <link rel="prev" title="Getting Started" href="index.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+          <a href="../index.html" class="fa fa-home"> WARNO</a>
+        
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="index.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#fabric">Fabric</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#design">Design</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#before-you-start">Before you Start</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#start-up-configuration">Start Up Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#nfs-permissions">NFS Permissions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#multiple-vm-s-one-one-machine">Multiple VM&#8217;s one one machine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#start-up">Start Up</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#demo-data">Demo Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#user-portal-access">User Portal Access</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#valid-columns-for-graphs">Valid Columns for graphs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../WarnoVagrant/index.html">Latest Release</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../WarnoVagrant/WarnoConfig/index.html">WARNO Config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../WarnoVagrant/Agent/index.html">Agent</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../WarnoVagrant/UserPortal/index.html">User Portal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../WarnoVagrant/EventManager/index.html">Event Manager</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../indices.html">Indices and tables</a></li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">WARNO</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+    <li>Installation</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="../_sources/WarnoIntroduction/installation.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <div class="section" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">¶</a></h2>
+<p>First, install the latest versions of Vagrant and VirtualBox (Installation instructions for each on their respective sites).</p>
+<p><a class="reference external" href="https://www.vagrantup.com/">https://www.vagrantup.com/</a>
+<a class="reference external" href="https://www.virtualbox.org/wiki/Downloads">https://www.virtualbox.org/wiki/Downloads</a></p>
+<p>Then, install the <a class="reference external" href="https://github.com/emyl/vagrant-triggers">vagrant-triggers</a> plugin (may require superuser privileges).</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>vagrant plugin install vagrant-triggers
+</pre></div>
+</div>
+</div>
+<div class="section" id="before-you-start">
+<h2>Before you Start<a class="headerlink" href="#before-you-start" title="Permalink to this headline">¶</a></h2>
+<p>WARNO now requires whatever platform it is installed on to be running NFSD. You can install this using whatever method
+is appropriate to your machine. For CentOS:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>sudo yum install nfs-utils
+sudo systemctl <span class="nb">enable</span> nfs-server
+sudo systemctl restart nfs-server
+</pre></div>
+</div>
+<p>Also, if you are running Vagrant on CentOS, you also must configure your firewalls to allow the nfsd to send and receive traffic:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>sudo firewall-cmd --permanent --add-service nfs
+sudo firewall-cmd --permanent --add-service rpc-bind
+sudo firewall-cmd --permanent --add-service mountd
+sudo firewall-cmd --permanent --add-port<span class="o">=</span>2049/udp
+sudo firewall-cmd --reload
+</pre></div>
+</div>
+<p>Then, make sure to download the newest VM image. In the main directory:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>bash utility_setup_scripts/set_up_images.sh
+</pre></div>
+</div>
+<p>After this, you should have everything set up on the host side.</p>
+</div>
+<div class="section" id="start-up-configuration">
+<h2>Start Up Configuration<a class="headerlink" href="#start-up-configuration" title="Permalink to this headline">¶</a></h2>
+<p>WARNO Vagrant is run with the event manager as either a &#8220;site&#8221;  event manager or a &#8220;central&#8221; event manager.</p>
+<p>WARNO now runs encrypted by SSL between machines.  On the same VM, however, it communicates internally with
+standard HTTP requests.</p>
+<p>The default setting is as a &#8220;site&#8221; event manager.  In <em>data_store/data/config.yml</em> set &#8220;cf_url&#8221; to
+&#8220;<a class="reference external" href="https://">https://</a><strong>your_central_event_manager_ip</strong>/eventmanager/event&#8221;.  If you want to run it as a &#8220;central&#8221; event manager
+instead, in <em>data_store/data/config.yml</em>, change &#8220;central: 0&#8221; to &#8220;central: 1&#8221;</p>
+<p>If you want to receive data from the agent running in the virtual machine, set &#8220;em_url&#8221; in <em>data_store/data/config.yml</em>
+to &#8220;<a class="reference external" href="https://">https://</a><strong>your_event_manager_ip</strong>/eventmanager/event&#8221; or to &#8220;<a class="reference external" href="http://eventmanager/event">http://eventmanager/event</a>&#8221; if it is in the same Vagrant
+virtual machine.</p>
+<p>If you have a self signed SSL certificate and private certificate key you would like to use on a machine to encrypt
+incoming connections, name them <em>cacert.pem</em> and <em>privkey.pem</em> respectively and place them in <em>proxy/</em></p>
+<p>WARNO comes with some basic starter certificates, but these sample certificates will only work properly for
+communicating to &#8220;localhost&#8221;.</p>
+<p>If you would rather generate new ones, run the bash scripts <em>gen_ca.sh</em> and then <em>gen_certs.sh</em> in the main directory,
+which will generate and place the files.</p>
+<p>On any machine that would like to communicate with the certified machine, there are three settings for &#8220;cert_verify&#8221; in
+<em>data_store/data/config.yml</em>:</p>
+<ul class="simple">
+<li>&#8220;False&#8221;  Means the machine will not try to verify that the certificate is correct, and will blindly trust it (not safe
+for production).</li>
+<li>&#8220;True&#8221;  Means the machine will attempt to verify the certificate with a real certificate authority (CA).</li>
+<li>&#8220;path/to/cert&#8221;  Will look for a copy of the self signed certificate mentioned above to locally verify the connection.</li>
+</ul>
+<p>This allows you to manually copy the &#8220;rootCA.pem&#8221; that was used to generate the certs (either locally if you generated
+the certs or copied from where the certs came from) into the data directory to allow for fairly confident verification
+without an outside CA.  Currently, setting this to &#8220;/vagrant/data_store/data/rootCA.pem&#8221; and copying the <em>rootCA.pem</em>
+from before to <em>data_store/data/rootCA.pem</em> allows either the Event Manager or the Agent to access it as needed.</p>
+</div>
+<div class="section" id="nfs-permissions">
+<h2>NFS Permissions<a class="headerlink" href="#nfs-permissions" title="Permalink to this headline">¶</a></h2>
+<p>Because Vagrant uses NFS for file syncing, it requires permission to edit NFS exports.  Although it is possible to enter
+the sudo password every time, one alternative is to add the following to /etc/sudoers (CentOS 7, other solutions in the
+Vagrant documentation for <a class="reference external" href="https://www.vagrantup.com/docs/synced-folders/nfs.html">NFS Permissions</a>).</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>Cmnd_Alias <span class="nv">VAGRANT_EXPORTS_ADD</span> <span class="o">=</span> /usr/bin/tee -a /etc/exports
+Cmnd_Alias <span class="nv">VAGRANT_EXPORTS_COPY</span> <span class="o">=</span> /bin/cp /tmp/exports /etc/exports
+Cmnd_Alias <span class="nv">VAGRANT_NFSD_CHECK</span> <span class="o">=</span> /etc/init.d/nfs-kernel-server status
+Cmnd_Alias <span class="nv">VAGRANT_NFSD_START</span> <span class="o">=</span> /etc/init.d/nfs-kernel-server start
+Cmnd_Alias <span class="nv">VAGRANT_NFSD_APPLY</span> <span class="o">=</span> /usr/sbin/exportfs -ar
+Cmnd_Alias <span class="nv">VAGRANT_EXPORTS_REMOVE</span> <span class="o">=</span> /bin/sed -r -e * d -ibak /tmp/exports
+%vboxusers <span class="nv">ALL</span><span class="o">=(</span>root<span class="o">)</span> NOPASSWD: VAGRANT_EXPORTS_ADD, VAGRANT_NFSD_CHECK, VAGRANT_NFSD_START, VAGRANT_NFSD_APPLY, VAGRANT_EXPORTS_REMOVE, VAGRANT_EXPORTS_COPY
+</pre></div>
+</div>
+<p><em>&#8220;vboxusers&#8221; can be replaced with any group name you would like to give the permissions to</em></p>
+</div>
+<div class="section" id="multiple-vm-s-one-one-machine">
+<h2>Multiple VM&#8217;s one one machine<a class="headerlink" href="#multiple-vm-s-one-one-machine" title="Permalink to this headline">¶</a></h2>
+<p>If you wish to start up a second Vagrant VM on the same machine, there are a few hoops to jump through.  For the second
+machine, create a copy of the warno-vagrant directory somewhere else, and in that directory:</p>
+<p>Vagrantfile:</p>
+<ul class="simple">
+<li>Change the ip to 192.168.50.99</li>
+<li>Change the forwarded ports (host to VM) to unused ports</li>
+<li>Change the vm hostname and virtualbox name away from &#8220;warno&#8221;</li>
+</ul>
+<p>data_store/data/config.yml:</p>
+<ul class="simple">
+<li>Change 192.168.50.100 to 192.168.50.99</li>
+</ul>
+</div>
+<div class="section" id="start-up">
+<h2>Start Up<a class="headerlink" href="#start-up" title="Permalink to this headline">¶</a></h2>
+<p>To start up your Vagrant machine, enter:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>vagrant up
+</pre></div>
+</div>
+<p>Note that occasionally the machine will get stuck at &#8220;Mounting NFS shared folders...&#8221;.</p>
+<p>If this is the case, first attempt:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>sudo systemctl restart nfs-server
+</pre></div>
+</div>
+<p>If that doesn&#8217;t work, your firewall may be misconfigured, in which case a quick</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>sudo systemctl stop firewalld
+</pre></div>
+</div>
+<p>followed by a</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>sudo systemctl start firewalld
+</pre></div>
+</div>
+<p>after the VM starts making progress again should remedy the issue.  This is not a permanent solution, however, and you
+should attempt to remedy the firewall configuration issues.</p>
+<p>If you suspect the machine failed in some way to be properly created, you can recreate it by:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>vagrant destroy
+vagrant up
+</pre></div>
+</div>
+<p><em>Note that this will destroy the current virtual machine, and any non-persistant data inside</em></p>
+</div>
+<div class="section" id="demo-data">
+<h2>Demo Data<a class="headerlink" href="#demo-data" title="Permalink to this headline">¶</a></h2>
+<p>WARNO pre-populates some basic sites and users when it loads up.</p>
+<p>To demo data with basic information (basic sites, instruments, instrument data, logs, etc.), simply set
+&#8220;database&#8221;:&#8221;test_db&#8221; to &#8216;true&#8217; in <em>data_store/data/config.yml</em>.</p>
+</div>
+<div class="section" id="user-portal-access">
+<h2>User Portal Access<a class="headerlink" href="#user-portal-access" title="Permalink to this headline">¶</a></h2>
+<p>To access the web server from your browser, just enter &#8220;<a class="reference external" href="https://">https://</a><strong>ip_of_host_machine</strong>&#8220;</p>
+</div>
+<div class="section" id="valid-columns-for-graphs">
+<h2>Valid Columns for graphs<a class="headerlink" href="#valid-columns-for-graphs" title="Permalink to this headline">¶</a></h2>
+<p>To update which columns are valid to graph, visit &#8220;<a class="reference external" href="https://">https://</a><strong>ip_of_host_machine</strong>/eventmanager&#8221;.  This will trigger an
+update of the valid columns for each instrument to graph. This can take up to a few minutes, and at the
+end it will display a page listing how many columns were updated.</p>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="tutorial.html" class="btn btn-neutral float-right" title="Tutorials">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="Getting Started"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Joseph Hardin.
+    </p>
+  </div>
+
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

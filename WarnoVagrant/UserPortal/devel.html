@@ -7,7 +7,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Agent &mdash; WARNO 0.1 documentation</title>
+  <title>UserPortal.devel &mdash; WARNO 0.1 documentation</title>
   
 
   
@@ -31,9 +31,9 @@
 
   
     <link rel="top" title="WARNO 0.1 documentation" href="../../index.html"/>
-        <link rel="up" title="Latest Release" href="../index.html"/>
-        <link rel="next" title="Agent.Agent" href="Agent.html"/>
-        <link rel="prev" title="WarnoConfig.utility" href="../WarnoConfig/utility.html"/> 
+        <link rel="up" title="User Portal" href="index.html"/>
+        <link rel="next" title="UserPortal.instruments" href="instruments.html"/>
+        <link rel="prev" title="UserPortal.dashboard" href="dashboard.html"/> 
 
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
@@ -87,8 +87,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../WarnoIntroduction/tutorial.html">Tutorials</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../index.html">Latest Release</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../WarnoConfig/index.html">WARNO Config</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="">Agent</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../UserPortal/index.html">User Portal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Agent/index.html">Agent</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">User Portal</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../EventManager/index.html">Event Manager</a></li>
 </ul>
 </li>
@@ -119,10 +119,12 @@
       
           <li><a href="../index.html">Latest Release</a> &raquo;</li>
       
-    <li>Agent</li>
+          <li><a href="index.html">User Portal</a> &raquo;</li>
+      
+    <li><code class="docutils literal"><span class="pre">UserPortal.devel</span></code></li>
       <li class="wy-breadcrumbs-aside">
         
-          <a href="../../_sources/WarnoVagrant/Agent/index.txt" rel="nofollow"> View page source</a>
+          <a href="../../_sources/WarnoVagrant/UserPortal/devel.txt" rel="nofollow"> View page source</a>
         
       </li>
   </ul>
@@ -130,32 +132,15 @@
 </div>
           <div role="main" class="document">
             
-  <div class="section" id="agent">
-<span id="id1"></span><h1>Agent<a class="headerlink" href="#agent" title="Permalink to this headline">¶</a></h1>
-<p>Agent service for WARNO.</p>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="Agent.html"><code class="docutils literal"><span class="pre">Agent.Agent</span></code></a></li>
-</ul>
-</div>
-<div class="section" id="introduction">
-<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
-<p>The Agent runs a series of plugins, each responsible for either gathering or processing data and returning
-it to the Agent.  The agent then passes the data to the <a class="reference internal" href="../EventManager/index.html#event-manager"><span>Event Manager</span></a>.
-The Agent is also responsible to ensure the proper operation of the plugins, and restart them as necessary.</p>
-</div>
-<div class="section" id="design">
-<h2>Design<a class="headerlink" href="#design" title="Permalink to this headline">¶</a></h2>
-<p>The Agent reads in its configuration on start up from the configuration file located in the Data Store folder.  This
-tells the Agent what url to connect to so it can communicate with the Agent&#8217;s <a class="reference internal" href="../EventManager/index.html#event-manager"><span>Event Manager</span></a>.  Also, if the VM is configured
-to not start up the Agent, the Agent will exit before any other startup actions are performed.
-The Agent communicates with the Event Manager using JSON packets over an HTTP connection.</p>
-<p>Upon startup, the Agent gathers a list of all possible plugins.  For each plugin, if it appears to be a valid plugin,
-it is added to the list of plugins the Agent will manage.  For each of these plugins, it runs the plugin&#8217;s &#8216;register&#8217;
-function, which may involve communicating with the Agent&#8217;s Event Manager.  After registering, the plugins are each
-started, running a subprocess on the plugin&#8217;s &#8216;run&#8217; function.  The Agent will then relay any packets from the plugins to
-the Agent&#8217;s Event Manager, and if the plugin dies, the Agent will restart the plugin.</p>
-</div>
+  <div class="section" id="userportal-devel">
+<h1><a class="reference internal" href="#module-UserPortal.devel" title="UserPortal.devel"><code class="xref py py-mod docutils literal"><span class="pre">UserPortal.devel</span></code></a><a class="headerlink" href="#userportal-devel" title="Permalink to this headline">¶</a></h1>
+<p>The Devel module is responsible for holding functions for items currently in active development but not ready to show
+as an active feature.</p>
+<span class="target" id="module-UserPortal.devel"></span><dl class="function">
+<dt id="UserPortal.devel.devel_front">
+<code class="descclassname">UserPortal.devel.</code><code class="descname">devel_front</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#UserPortal.devel.devel_front" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </div>
 
 
@@ -164,10 +149,10 @@ the Agent&#8217;s Event Manager, and if the plugin dies, the Agent will restart 
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="Agent.html" class="btn btn-neutral float-right" title="Agent.Agent">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="instruments.html" class="btn btn-neutral float-right" title="UserPortal.instruments">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="../WarnoConfig/utility.html" class="btn btn-neutral" title="WarnoConfig.utility"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="dashboard.html" class="btn btn-neutral" title="UserPortal.dashboard"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
