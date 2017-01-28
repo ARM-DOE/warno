@@ -16,6 +16,7 @@ set -e
 # a conda based install of the SciPy stack on multiple versions of Python
 # as well as use conda and binstar to install additional modules which are not
 # in the default repository.
+yum install -y gcc
 conda update --yes conda
 
 # Install dependencies
