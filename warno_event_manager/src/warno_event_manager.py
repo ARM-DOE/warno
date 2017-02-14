@@ -5,6 +5,7 @@ import psutil
 import json
 import csv
 import os
+import dateutil.parser
 
 from flask import Flask, request, render_template, redirect, url_for
 from flask_migrate import Migrate, upgrade
@@ -13,12 +14,10 @@ from flask_migrate import downgrade
 
 from WarnoConfig import config
 from WarnoConfig import utility
+from WarnoConfig import redis_interface
 from WarnoConfig.models import db
 from WarnoConfig.models import EventWithValue, EventWithText, ProsensingPAF, InstrumentDataReference, User
 from WarnoConfig.models import Instrument, Site, InstrumentLog, PulseCapture, EventCode
-
-from WarnoConfig import redis_interface
-import dateutil.parser
 
 
 # Set up logging
@@ -845,7 +844,7 @@ def initialize_database():
             db_user = User.query.first()
             if db_user is None:
                 utility.load_dumpfile()
-                clear_and_populate_redis() # TODO Remove?
+                clear_and_populate_redis()
 
         # If there are still no users, assume the database is empty and populate the basic information
         db_user = User.query.first()
@@ -891,7 +890,7 @@ def initialize_database():
                 else:
                     EM_LOGGER.info("%ss in table.", table)
 
-            clear_and_populate_redis() # TODO Remove?
+            clear_and_populate_redis()
         else:
             EM_LOGGER.info("Test database demo data disabled")
 

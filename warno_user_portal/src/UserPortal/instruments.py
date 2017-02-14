@@ -1,23 +1,20 @@
-import logging
-import json
 import os
+import json
+import logging
+import ciso8601
+import dateutil.parser
 
 from flask import render_template, redirect, url_for, request
 from flask import Blueprint
 from sqlalchemy.sql import func
 from sqlalchemy import asc
 
+from WarnoConfig import redis_interface
 from WarnoConfig.utility import status_code_to_text
 from WarnoConfig.models import db
 from WarnoConfig.models import Instrument, ProsensingPAF, PulseCapture, InstrumentLog, Site
 from WarnoConfig.models import InstrumentDataReference, EventCode, EventWithValue, ValidColumn
 
-from WarnoConfig import redis_interface
-import dateutil.parser
-import datetime
-
-import ciso8601
-import ast
 
 instruments = Blueprint('instruments', __name__, template_folder='templates')
 
