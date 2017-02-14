@@ -48,7 +48,3 @@ class TestInstruments(TestCase, FixturesMixin):
 
         return views.app
 
-    def test_histogram_page_loads(self, logger):
-        get_request_return = self.client.get('/devel/histogram')
-        self.assert200(get_request_return)
-

@@ -9,6 +9,7 @@ from flask.ext.fixtures import FixturesMixin
 from UserPortal import instruments
 from UserPortal import views
 from WarnoConfig import config
+from WarnoConfig import redis_interface
 from WarnoConfig.models import db
 from WarnoConfig.models import Instrument, InstrumentLog, Site, InstrumentDataReference, ValidColumn
 
@@ -173,7 +174,8 @@ class TestInstruments(TestCase, FixturesMixin):
         after_delete_count = db.session.query(Instrument).filter(Instrument.id == instrument_id).count()
         self.assertEqual(after_delete_count, 0, "The Instrument with id %s was not deleted." % instrument_id)
 
-    def test_recent_values_for_instrument_id_1_with_valid_key_antenna_humidity_returns_expected_object(self, logger):
+    @mock.patch('redis_interface.RedisInterface')
+    def test_recent_values_for_instrument_id_1_with_valid_key_antenna_humidity_returns_expected_object(self, interface, logger):
         instrument_id = 1
         key = "antenna_humidity"
         test_url = "/recent_values?instrument_id=%s&keys=%s" % (instrument_id, key)
@@ -194,7 +196,8 @@ class TestInstruments(TestCase, FixturesMixin):
         self.assertEqual(expected_time, result_object[0]["data"]["time"],
                          "The returned objects first entry's data did not have a time of '%s'." % expected_time)
 
-    def test_recent_values_for_instrument_id_1_with_invalid_key_antenna_temp_returns_empty_object(self, logger):
+    @mock.patch('redis_interface.RedisInterface')
+    def test_recent_values_for_instrument_id_1_with_invalid_key_antenna_temp_returns_empty_object(self, interface, logger):
         instrument_id = 1
         key = "antenna_temp"
         test_url = "/recent_values?instrument_id=%s&keys=%s" % (instrument_id, key)

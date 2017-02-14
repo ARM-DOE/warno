@@ -12,6 +12,13 @@ from WarnoConfig.models import db
 from WarnoConfig.models import Instrument, ProsensingPAF, PulseCapture, InstrumentLog, Site
 from WarnoConfig.models import InstrumentDataReference, EventCode, EventWithValue, ValidColumn
 
+from WarnoConfig import redis_interface
+import dateutil.parser
+import datetime
+
+import ciso8601
+import ast
+
 instruments = Blueprint('instruments', __name__, template_folder='templates')
 
 log_path = os.environ.get("LOG_PATH")
@@ -323,35 +330,62 @@ def recent_values():
             return json.dumps([])
     references = db_get_instrument_references(instrument_id)
 
+    # First see if we gan get entries from Redis.  Any keys that couldn't get data from Redis will then hit the main DB
+    # Hopefully will keep the majority of requests within memory.
+    # TODO Fix any unit tests this breaks.  Might not break any if there is a way to cleanly fake connection to Redis
+    redint = redis_interface.RedisInterface()
+
     for reference in references:
         for key_pair in key_pairs:
-            sql_query = None
+            # If the reference is not 'special', it counts as a non table-organized Redis entry.
             if reference.description == key_pair["key"]:
-                event_code = db.session.execute('SELECT event_code FROM event_codes WHERE description = :key',
-                                                dict(key=key_pair["key"])).fetchone()
-
-                sql_query = ('SELECT time, value FROM events_with_value WHERE instrument_id = :id '
-                             'ORDER BY time DESC LIMIT 1') % event_code[0]
+                result = redint.get_most_recent_value_for_attribute(instrument_id, key_pair["key"])
+                if result and (len(result.keys()) > 0):
+                    key_pair["data"] = (dateutil.parser.parse(result["time"]), float(result["value"]))
+            # If the reference is 'special', it counts as a table-organized Redis entry.
             elif reference.special is True:
-                rows = db.session.execute("SELECT column_name FROM information_schema.columns WHERE table_name = :table",
-                                          dict(table=reference.description)).fetchall()
+                result = redint.get_most_recent_value_for_attribute(instrument_id, key_pair["key"],
+                                                                    table_name=reference.description)
+                if result and (len(result.keys()) > 0):
+                    key_pair["data"] = (dateutil.parser.parse(result["time"]), float(result["value"]))
 
-                columns = [row[0] for row in rows]
-                if key_pair["key"] in columns:
-                    sql_query = 'SELECT time, %s FROM %s WHERE instrument_id = :id ORDER BY time DESC LIMIT 1' % (
-                        key_pair["key"], reference.description)
-            # Selects the time and the "key" column from the data table
-            if sql_query:
-                try:
-                    key_pair["data"] = db.session.execute(sql_query, dict(id=instrument_id)).fetchone()
-                except Exception, e:
-                    print(e)
-                    return json.dumps([])
+
+    for reference in references:
+        for key_pair in key_pairs:
+            if key_pair["data"] is None:
+                sql_query = None
+                if reference.description == key_pair["key"]:
+                    event_code = db.session.execute('SELECT event_code FROM event_codes WHERE description = :key',
+                                                    dict(key=key_pair["key"])).fetchone()
+
+                    sql_query = ('SELECT time, value FROM events_with_value WHERE instrument_id = :id '
+                                 'AND event_code = %s ORDER BY time DESC LIMIT 1') % event_code[0]
+                elif reference.special is True:
+                    rows = db.session.execute("SELECT column_name FROM information_schema.columns WHERE table_name = :table",
+                                              dict(table=reference.description)).fetchall()
+
+                    columns = [row[0] for row in rows]
+                    if key_pair["key"] in columns:
+                        sql_query = 'SELECT time, %s FROM %s WHERE instrument_id = :id ORDER BY time DESC LIMIT 1' % (
+                            key_pair["key"], reference.description)
+                # Selects the time and the "key" column from the data table
+                if sql_query:
+                    try:
+                        key_pair["data"] = db.session.execute(sql_query, dict(id=instrument_id)).fetchone()
+                    except Exception, e:
+                        print(e)
+                        return json.dumps([])
+
+
+
 
     # Convert each data entry into a dictionary with ISO formatted time and current value
     for key_pair in key_pairs:
         key_pair["data"] = dict(time=key_pair["data"][0].isoformat(), value=key_pair["data"][1])
-        if (do_stats):
+
+
+    if (do_stats):
+        for key_pair in key_pairs:
             stats_json = get_attribute_stats(key_pair["key"], instrument_id)
             key_pair["data"]["stats"] = dict(json.loads(stats_json))
 
@@ -405,7 +439,7 @@ def generate_instrument_graph():
     end = request.args.get("end")
     do_stats = request.args.get("do_stats")
 
-    keys = {index: dict(key=a_key, data=[]) for index, a_key in enumerate(arg_keys)}
+    keys = {index: dict(key=a_key, data=None) for index, a_key in enumerate(arg_keys)}
 
     # If any key is invalid, sends a blank response
     for key, value in keys.iteritems():
@@ -417,47 +451,82 @@ def generate_instrument_graph():
     average = None
     std_deviation = None
 
-    # Build the SQL query for the given key.  If the key is a part of a special table,
-    # build a query based on the key and containing table
+    # TODO Need to make sure that this redis functionality is either reflected or omitted in the (probably broken) tests
+    # TODO Hit redis first, may need to run averages and std_deviation on the returned data.
+
+    redint = redis_interface.RedisInterface()
+
     for reference in references:
         for key, value in keys.iteritems():
-            sql_query = None
+            # If the reference is not 'special', it counts as a non table-organized Redis entry.
             if reference.description == value["key"]:
-                event_code = db.session.execute('SELECT event_code FROM event_codes WHERE description = :key',
-                                                dict(key=value["key"])).fetchone()
-                aggregate_query = ('SELECT avg(value), stddev_pop(value) FROM events_with_value '
-                                   'WHERE instrument_id = :id AND event_code = :event_code AND '
-                                   'time >= :origin AND time <= :end')
-                db_aggregates = db.session.execute(aggregate_query, dict(id=instrument_id, event_code=event_code[0],
-                                                                         origin=origin, end=end)).fetchall()[0]
-
-                average = db_aggregates[0]
-                std_deviation = db_aggregates[1]
-
-                sql_query = ('SELECT time, value FROM events_with_value WHERE instrument_id = :id '
-                             'AND time >= :start AND time <= :end AND event_code = %s ORDER BY time DESC') % event_code[0]
+                if redint.is_time_before_last_time_for_attribute(instrument_id, value["key"],
+                                                                 dateutil.parser.parse(start)):
+                    result = redint.get_values_for_attribute_between_times(instrument_id, value["key"],
+                                                                           dateutil.parser.parse(start),
+                                                                           dateutil.parser.parse(end))
+                    if result and (len(result) > 0):
+                        value["data"] = [(ciso8601.parse_datetime(entry[0]), float(entry[1])) if entry[1] != "NULL"
+                                         else (ciso8601.parse_datetime(entry[0]), entry[1])
+                                         for entry in result]
+            # If the reference is 'special', it counts as a table-organized Redis entry.
             elif reference.special is True:
-                rows = db.session.execute("SELECT column_name FROM information_schema.columns WHERE table_name = :table",
-                                          dict(table=reference.description)).fetchall()
+                if redint.is_time_before_last_time_for_attribute(instrument_id, value["key"],
+                                                                 dateutil.parser.parse(start),
+                                                                 table_name=reference.description):
+                    result = redint.get_values_for_attribute_between_times(instrument_id, value["key"],
+                                                                           dateutil.parser.parse(start),
+                                                                           dateutil.parser.parse(end),
+                                                                           table_name=reference.description)
+                    if result and (len(result) > 0):
+                        # Might be a case where a string that cannot be converted to float other than 'NULL' breaks this
+                        value["data"] = [(ciso8601.parse_datetime(entry[0]), float(entry[1])) if entry[1] != "NULL"
+                                         else (ciso8601.parse_datetime(entry[0]), entry[1])
+                                         for entry in result]
 
-                columns = [row[0] for row in rows]
-                if value["key"] in columns:
-                    aggregate_query = 'SELECT avg(%s), stddev_pop(%s) FROM %s WHERE instrument_id = :id AND time >= :origin AND time <= :end' % (value['key'], value['key'], reference.description)
-                    db_aggregates = db.session.execute(aggregate_query,
-                                                       dict(id=instrument_id, origin=origin, end=end)).fetchall()[0]
+    # For each reference that could not be resolved by Redis, fall back to the main database. Build the SQL query for
+    # the given key. If the key is a part of a special table, build a query based on the key and containing table.
+    for reference in references:
+        for key, value in keys.iteritems():
+            if value["data"] is None:
+                sql_query = None
+                if reference.description == value["key"]:
+                    event_code = db.session.execute('SELECT event_code FROM event_codes WHERE description = :key',
+                                                    dict(key=value["key"])).fetchone()
+                    aggregate_query = ('SELECT avg(value), stddev_pop(value) FROM events_with_value '
+                                       'WHERE instrument_id = :id AND event_code = :event_code AND '
+                                       'time >= :origin AND time <= :end')
+                    db_aggregates = db.session.execute(aggregate_query, dict(id=instrument_id, event_code=event_code[0],
+                                                                             origin=origin, end=end)).fetchall()[0]
 
                     average = db_aggregates[0]
                     std_deviation = db_aggregates[1]
 
-                    sql_query = 'SELECT time, %s FROM %s WHERE instrument_id = :id AND time >= :start AND time <= :end AND %s IS NOT NULL ORDER BY time DESC' % (
-                        value["key"], reference.description, value["key"])
-            # Selects the time and the "key" column from the data table with time between 'start' and 'end'
-            if sql_query:
-                try:
-                    value["data"] = db.session.execute(sql_query, dict(id=instrument_id, start=start, end=end)).fetchall()
-                except Exception, e:
-                    print(e)
-                    return json.dumps("[]")
+                    sql_query = ('SELECT time, value FROM events_with_value WHERE instrument_id = :id '
+                                 'AND time >= :start AND time <= :end AND event_code = %s ORDER BY time DESC') % event_code[0]
+                elif reference.special is True:
+                    rows = db.session.execute("SELECT column_name FROM information_schema.columns WHERE table_name = :table",
+                                              dict(table=reference.description)).fetchall()
+
+                    columns = [row[0] for row in rows]
+                    if value["key"] in columns:
+                        aggregate_query = 'SELECT avg(%s), stddev_pop(%s) FROM %s WHERE instrument_id = :id AND time >= :origin AND time <= :end' % (value['key'], value['key'], reference.description)
+                        db_aggregates = db.session.execute(aggregate_query,
+                                                           dict(id=instrument_id, origin=origin, end=end)).fetchall()[0]
+
+                        average = db_aggregates[0]
+                        std_deviation = db_aggregates[1]
+
+                        sql_query = 'SELECT time, %s FROM %s WHERE instrument_id = :id AND time >= :start AND time <= :end AND %s IS NOT NULL ORDER BY time DESC' % (
+                            value["key"], reference.description, value["key"])
+                # Selects the time and the "key" column from the data table with time between 'start' and 'end'
+                if sql_query:
+                    try:
+                        value["data"] = db.session.execute(sql_query, dict(id=instrument_id, start=start, end=end)).fetchall()
+
+                    except Exception, e:
+                        print(e)
+                        return json.dumps("[]")
 
     data = synchronize_sort(keys)
     map(iso_first_element, data)
