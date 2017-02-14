@@ -1,14 +1,13 @@
 from __future__ import print_function
 
+import ciso8601
 import datetime
 import redis
 import pytz
 
-import ciso8601
-
 
 class RedisInterface:
-    MAX_ENTRIES = 21600  # 15 days at 1/Min
+    MAX_ENTRIES = 21600  # 15 days at 1 entry per minute
     MAX_INDEX = MAX_ENTRIES - 1
     _r = None
 
@@ -155,6 +154,8 @@ class RedisInterface:
         this means that the two lists are expected to be the same length.  The times and values given are expected to be
         given in the order from oldest time to newest time.  After the entries are inserted, if the length of the lists
         exceed MAX_LENGTH, the oldest values (assuming all insertions have been ordered correctly) will be trimmed out.
+        There will be two Redis keys for each attribute, 'instruments:<instrument_id>:<attribute>:time' for times and
+        'instruments:<instrument_id>:<attribute>:value' for their matching values.
 
         Parameters
         ----------
@@ -223,7 +224,9 @@ class RedisInterface:
         example, if the second attribute in 'attributes' is "temperature" and the second value in 'values' is 10, this
         means the "temperature" value at the given time is "10".  After the entries are inserted, if the length of any
         of the Redis lists exceeds MAX_LENGTH, the oldest values (assuming all insertions have been ordered correctly)
-        will be trimmed out.
+        will be trimmed out. The times for the attributes will be stored in Redis under the key
+        'instruments:<instrument_id>:<table_name>:time', and the values for each attribute will be stored under the key
+        'instruments:<instrument_id>:<table_name>:<attribute>:value'.
 
         All calls of this function should try to use the same list of attributes every time for the same table.  The way
         this interface uses lists will have multiple lists implied to match the same 'time' list (e.g. entry 5 in
@@ -303,7 +306,12 @@ class RedisInterface:
         example, if the second attribute in 'attributes' is "temperature" and the second value in 'values' is 10, this
         means the "temperature" value at the given time is "10".  After the entries are inserted, if the length of any
         of the Redis lists exceeds MAX_LENGTH, the oldest values (assuming all insertions have been ordered correctly)
-        will be trimmed out.
+        will be trimmed out.  If 'table_name' is given (as is the primary use case for this function), the times for the
+        attributes will be stored in Redis under the key 'instruments:<instrument_id>:<table_name>:time', and the values
+        for each attribute will be stored under the key 'instruments:<instrument_id>:<table_name>:<attribute>:value'. If
+        'table_name' is not given, there will be two Redis keys for each attribute,
+        'instruments:<instrument_id>:<attribute>:time' for times and 'instruments:<instrument_id>:<attribute>:value'
+        for their matching values.
 
         All calls of this function should try to use the same list of attributes every time for the same table.  The way
         this interface uses lists will have multiple lists implied to match the same 'time' list (e.g. entry 5 in
