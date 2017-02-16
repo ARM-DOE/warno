@@ -5,6 +5,7 @@ import psutil
 import json
 import csv
 import os
+import dateutil.parser
 
 from flask import Flask, request, render_template, redirect, url_for
 from flask_migrate import Migrate, upgrade
@@ -13,6 +14,7 @@ from flask_migrate import downgrade
 
 from WarnoConfig import config
 from WarnoConfig import utility
+from WarnoConfig import redis_interface
 from WarnoConfig.models import db
 from WarnoConfig.models import EventWithValue, EventWithText, ProsensingPAF, InstrumentDataReference, User
 from WarnoConfig.models import Instrument, Site, InstrumentLog, PulseCapture, EventCode
@@ -86,6 +88,11 @@ s_db_cfg = config.get_config_context()['s_database']
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://%s:%s@%s:%s/%s' % (db_cfg['DB_USER'], s_db_cfg['DB_PASS'],
                                                                          db_cfg['DB_HOST'], db_cfg['DB_PORT'],
                                                                          db_cfg['DB_NAME'])
+
+# Redis setup.  This whole setup section feels pretty wrong. Probably needs a dire rework.
+redint = redis_interface.RedisInterface()
+
+
 db.init_app(app)
 migrate = Migrate(app, db)
 migration_path = os.environ.get("MIGRATION_PATH")
@@ -405,6 +412,10 @@ def event():
 
             db.session.add(event_wv)
             db.session.commit()
+
+            # Add the entry to the Redis database.
+            attribute_name = redint.get_attribute_by_event_code(msg_event_code)
+            redint.add_values_for_attribute(event_wv.instrument_id, attribute_name, dateutil.parser.parse(timestamp), float_value)
             EM_LOGGER.info("Saved Value Event")
         except ValueError:
             event_wt = EventWithText()
@@ -415,6 +426,11 @@ def event():
 
             db.session.add(event_wt)
             db.session.commit()
+
+            # Add the entry to the Redis database.
+            attribute_name = redint.get_attribute_by_event_code(msg_event_code)
+            redint.add_values_for_attribute(event_wt.instrument_id, attribute_name,
+                                            dateutil.parser.parse(timestamp), msg_struct['data']['value'])
             EM_LOGGER.info("Saved Text Event")
         # If application is at a site instead of the central facility, passes data on to be saved at central facility
         if not is_central:
@@ -443,21 +459,36 @@ def save_special_prosensing_paf(msg, msg_struct):
     sql_query_a = "INSERT INTO prosensing_paf(time, site_id, instrument_id"
     sql_query_b = ") VALUES ('%s', %s, %s" % (timestamp, msg_struct['data']['site_id'],
                                               msg_struct['data']['instrument_id'])
+    redis_attributes = []
+    redis_values = []
     for key, value in msg_struct['data']['values'].iteritems():
         sql_query_a = ', '.join([sql_query_a, key])
         # Converts inf and -inf to Postgresql equivalents
+
+        # Add Redis attribute
+        redis_attributes.append(key)
         if "-inf" in str(value) or "inf" in str(value) or "-Inf" in str(value) or "Inf" in str(value):
             sql_query_b = ', '.join([sql_query_b, "NULL"])
+
+            # Add value to list of Redis values to save
+            redis_values.append("NULL")
         else:
             try:
                 float(value)
                 sql_query_b = ', '.join([sql_query_b, "%s" % value])
             except ValueError:
                 sql_query_b = ', '.join([sql_query_b, "'%s'" % value.rstrip('\x00')])
+
+            # Add value to list of Redis values to save
+            redis_values.append(value)
     sql_query = ''.join([sql_query_a, sql_query_b, ")"])
 
     db.session.execute(sql_query)
     db.session.commit()
+
+    # Save values to Redis
+    redint.add_value_set_for_table_attributes(msg_struct["data"]["instrument_id"], redis_attributes,
+                                              dateutil.parser.parse(timestamp), redis_values, "prosensing_paf")
 
     if not is_central:
         payload = json.loads(msg)
@@ -752,6 +783,8 @@ def get_event_code(msg, msg_struct):
         db.session.add(new_ec)
         db.session.commit()
 
+        redint.add_event_code(new_ec.event_code, new_ec.description)
+
         new_event_code = db.session.query(EventCode.event_code).filter(
                 EventCode.description == msg_struct['data']['description']).first()[0]
 
@@ -772,6 +805,8 @@ def get_event_code(msg, msg_struct):
         db.session.add(new_ec)
         db.session.commit()
         utility.reset_db_keys()
+
+        redint.add_event_code(new_ec.event_code, new_ec.description)
 
         EM_LOGGER.info("Saved Event Code")
         return '{"event_code": %i, "data": {"description": "%s"}}' % (
@@ -809,6 +844,7 @@ def initialize_database():
             db_user = User.query.first()
             if db_user is None:
                 utility.load_dumpfile()
+                clear_and_populate_redis()
 
         # If there are still no users, assume the database is empty and populate the basic information
         db_user = User.query.first()
@@ -832,6 +868,7 @@ def initialize_database():
         else:
             EM_LOGGER.info("Event_codes in table.")
 
+
         # If it is set to be a test database, populate extra information.
         if cfg['database']['test_db']:
             EM_LOGGER.info("Test database demo data loading")
@@ -852,12 +889,87 @@ def initialize_database():
                     utility.load_data_into_table("database/schema/%s.data" % table, table)
                 else:
                     EM_LOGGER.info("%ss in table.", table)
+
+            clear_and_populate_redis()
         else:
             EM_LOGGER.info("Test database demo data disabled")
 
         # Without this, the database prevents the server from running properly.
         utility.reset_db_keys()
 
+
+def clear_and_populate_redis():
+    """Completely wipes the Redis database, then loads recent entries and event codes from the main database into Redis.
+
+    """
+    redint.clear_database()
+
+    references = db.session.query(InstrumentDataReference).all()
+
+    # Lists of data passed into the Redis interface must be ordered from oldest to most recent, which may require
+    # reordering list of data before passing it in.
+    for reference in references:
+        # For special tables, utilize bulk insertion functionality
+        if reference.special:
+            # Get a list of all possible columns for the particular table.
+            rows = db.session.execute("SELECT column_name FROM information_schema.columns WHERE table_name = :table",
+                                      dict(table=reference.description)).fetchall()
+            # Because time is needed for specific parts of this function, force it to always be the first element.
+            # Some columns necessary to the main database are irrelevant to the Redis database.
+            columns = ["time"] + [row[0] for row in rows if row[0] not in ["packet_id", "site_id", "time"]]
+            sql_column_string = ",".join(columns)
+
+            # Get the most recent values from the main database.
+            sql_query = ("SELECT %s FROM %s WHERE instrument_id=:instrument_id ORDER BY time DESC LIMIT :limit"
+                         % (sql_column_string, reference.description))
+            db_result = db.session.execute(sql_query, dict(instrument_id=reference.instrument_id,
+                                                           limit=redint.MAX_ENTRIES)).fetchall()
+            if (db_result):
+                # add_values_for_attribute assumes the list of values is sorted oldest to newest, which is the opposite
+                # of the resulting list from the database call.  Therefore all lists passed should be reversed first.
+                reversed_result = [ x for x in reversed(db_result)]
+                time_list = [row[0] for row in reversed_result]
+                temp_group = []
+                # Need to rearrange entries into the format expected by the Redis interface.
+                for index in xrange(1, len(columns)):
+                    temp_group.append([row[index] if row[index] is not None else "NULL"
+                                                              for row in reversed_result])
+                # Don't pass the first entry in 'columns' as it is 'time', which already has its own list passed.
+                redint.bulk_insert_values_for_table_attributes(reference.instrument_id, columns[1:], time_list,
+                                                               temp_group, table_name="prosensing_paf")
+        else:
+            # There is a general assumption that there really shouldn't be an EventWithText and an EventWithValue with
+            # the same attribute name.  Otherwise one or the other could be overwritten here.
+            event_code = (db.session.query(EventCode.event_code)
+                          .filter(EventCode.description == reference.description).first())
+
+            events_with_text = (db.session.query(EventWithText)
+                                .filter(EventWithText.event_code_id == event_code)
+                                .filter(EventWithText.instrument_id == reference.instrument_id)
+                                .order_by(EventWithText.time.desc())
+                                .limit(redint.MAX_ENTRIES).all())
+            events_with_value = (db.session.query(EventWithValue)
+                                 .filter(EventWithValue.event_code_id == event_code)
+                                .filter(EventWithValue.instrument_id == reference.instrument_id)
+                                 .order_by(EventWithValue.time.desc())
+                                 .limit(redint.MAX_ENTRIES).all())
+
+            if len(events_with_text) > 0:
+                event_times = [event.time for event in reversed(events_with_value)]
+                event_values = [event.value for event in reversed(events_with_value)]
+                redint.add_values_for_attribute(reference.instrument_id, reference.description,
+                                                event_times, event_values)
+
+            if len(events_with_value) > 0:
+                event_times = [event.time for event in reversed(events_with_value)]
+                event_values = [event.value for event in reversed(events_with_value)]
+                redint.add_values_for_attribute(reference.instrument_id, reference.description,
+                                                event_times, event_values)
+
+    # Load event codes into Redis.
+    db_event_codes = db.session.query(EventCode).all()
+    for db_ec in db_event_codes:
+        redint.add_event_code(db_ec.event_code, db_ec.description)
 
 @app.route('/eventmanager')
 def event_manager_home():

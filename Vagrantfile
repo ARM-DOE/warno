@@ -51,6 +51,7 @@ Vagrant.configure(2) do |config|
   config.vm.network "forwarded_port", guest: 80, host: 8080
   config.vm.network "forwarded_port", guest: 443, host: 8443
   config.vm.network "forwarded_port", guest: 5432, host: 8432
+  config.vm.network "forwarded_port", guest: 6379, host: 8379
   config.vm.network "forwarded_port", guest: 6304, host: 6304
   config.vm.network "forwarded_port", guest: 6306, host: 6306
   config.vm.network "forwarded_port", guest: 22, host: 8022, id: "ssh", auto_correct: true
@@ -95,6 +96,9 @@ Vagrant.configure(2) do |config|
   # Add crontab for regular database backup (currently once daily)
   config.vm.provision :shell, inline: "(crontab -l; echo '0 22 * * * bash /vagrant/data_store/data/db_save.sh') | crontab -"
 
+  # Install Redis
+  config.vm.provision :shell, path: "utility_setup_scripts/install_redis.sh"
+
   # Add hosts to /etc/hosts
   config.vm.provision :shell, path: "utility_setup_scripts/add_hosts.sh"
 
@@ -104,6 +108,9 @@ Vagrant.configure(2) do |config|
 
   # Start proxy server
   config.vm.provision :shell, path: "proxy/start_proxy.sh", run: "always"
+
+  # Start Redis
+  config.vm.provision :shell, path: "redis/start_redis.sh", run: "always"
 
   # Need to call a script to run all the servers.
   config.vm.provision :shell, path: "utility_setup_scripts/start_all_servers.sh", privileged: false, run: "always"

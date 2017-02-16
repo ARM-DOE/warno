@@ -10,3 +10,4 @@ warno-docker-image
 *.box
 logs/*.log
 doc/srv/_build/*
+*.rdb
