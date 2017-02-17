@@ -1219,9 +1219,9 @@ Histogram.prototype.generateHistogram = function() {
 
                 // If upper and lower limits are set and valid, set the bin and range limits to them
                 if (!isNaN(that.lowerLimit)
-                    && that.lowerLimit != ""
+                    && !(that.lowerLimit === "")
                     && !isNaN(that.upperLimit)
-                    && that.upperLimit != "")
+                    && !(that.upperLimit === ""))
                 {
                     histogramRange = [that.lowerLimit, that.upperLimit];
                     useAutorange = false;
@@ -1932,9 +1932,9 @@ DualHistogram.prototype.generateDualHistogram = function() {
                 var xRange = [0, 1]
 
                 if (!isNaN(that.xLowerLimit)
-                    && that.xLowerLimit != ""
+                    && !(that.xLowerLimit === "")
                     && !isNaN(that.xUpperLimit)
-                    && that.xUpperLimit != "")
+                    && !(that.xUpperLimit === ""))
                 {
                     xRange = [that.xLowerLimit, that.xUpperLimit];
                     xUseAutorange = false;
@@ -1947,9 +1947,9 @@ DualHistogram.prototype.generateDualHistogram = function() {
                 var yRange = [0, 1]
 
                 if (!isNaN(that.yLowerLimit)
-                    && that.yLowerLimit != ""
+                    && !(that.yLowerLimit === "")
                     && !isNaN(that.yUpperLimit)
-                    && that.yUpperLimit != "")
+                    && !(that.yUpperLimit === ""))
                 {
                     yRange = [that.yLowerLimit, that.yUpperLimit];
                     yUseAutorange = false;
@@ -2898,6 +2898,8 @@ InstrumentGraph.prototype.updateWithValues = function(values) {
     var average = this.average.toPrecision(4);
     var stdDeviation = this.stdDeviation.toPrecision(4);
 
+    // Filter out sentinel values
+    values = values.filter(pairIsNotSentinel);
 
     if (this.statsEnabled === true) {
         //Add extra information if stats are enabled
@@ -2957,9 +2959,9 @@ InstrumentGraph.prototype.updateWithValues = function(values) {
 
             // If the upper and lower limits are somewhat reasonable, use them instead for the y-axis range
             if (!isNaN(this.lowerLimit)
-                && this.lowerLimit != ""
+                && !(this.lowerLimit === "")
                 && !isNaN(this.upperLimit)
-                && this.upperLimit != "")
+                && !(this.upperLimit === ""))
             {
                 yRange = [this.lowerLimit, this.upperLimit];
             }
@@ -3341,12 +3343,21 @@ function removeOptions(selectBox) {
 };
 
 function isNotSentinel(value){
- if (value == -999){
+ if (value == -999 || value == -999.0){
      return false;
  } else {
      return true;
  }
 };
+
+function pairIsNotSentinel(value){
+  // This version of the sentinel check assumes arrays where the second element is the value in question.
+  if (value[1] == -999 || value[1] == -999.0) {
+    return false;
+  } else {
+    return true;
+  }
+}
 
 function dataToDB(inputData) {
     for (var i = 1; i < inputData.length; i++)
