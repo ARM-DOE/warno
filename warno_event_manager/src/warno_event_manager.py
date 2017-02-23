@@ -936,6 +936,7 @@ def initialize_database():
 def clear_and_populate_redis():
     """Completely wipes the Redis database, then loads recent entries and event codes from the main database into Redis.
 
+        This is mostly only called after loading in test data, or loading a database file.
     """
     redint.clear_database()
 
