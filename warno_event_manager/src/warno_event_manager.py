@@ -455,7 +455,8 @@ def save_misc_event(msg, msg_struct):
     if not is_central:
         payload = json.loads(msg)
         requests.post(cf_url, json=payload, headers=headers, verify=cert_verify)
-    return "OK"
+
+    return "", 200
 
 
 def save_special_prosensing_paf(msg, msg_struct):
