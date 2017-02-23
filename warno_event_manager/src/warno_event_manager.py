@@ -872,7 +872,7 @@ def initialize_database():
 
         # If it is not a test database, first attempt to load database from an existing postgres dumpfile.
 
-        # If there there are no users in the database (which any active db should have users) and it is not a test db,
+        # First if there there are no users in the database (which any active db should have users) and it is not a test db,
         # attempt to load in a dumpfile.
 
         if not cfg['database']['test_db']:
@@ -881,7 +881,7 @@ def initialize_database():
                 utility.load_dumpfile()
                 clear_and_populate_redis()
 
-        # If there are still no users, assume the database is empty and populate the basic information
+        # Then if there are still no users, assume the database is empty and populate the basic information
         db_user = User.query.first()
         if db_user is None:
             EM_LOGGER.info("Populating Users")
