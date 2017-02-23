@@ -355,6 +355,20 @@ def save_json_db_data():
 
     return "Finish"
 
+def new_event(msg, msg_struct):
+    """ Register a new event
+
+    Parameters
+    ----------
+    msg
+    msg_struct
+
+    Returns
+    -------
+
+    """
+    save_instrument_data_reference(msg_struct)
+    return get_event_code(msg, msg_struct)
 
 @app.route("/eventmanager/event", methods=['POST'])
 def event():
@@ -377,27 +391,18 @@ def event():
     msg_struct = dict(json.loads(msg))
 
     msg_event_code = msg_struct['event_code']
-    # Request for the event code for a given description
-    if msg_event_code == utility.EVENT_CODE_REQUEST:
-        save_instrument_data_reference(msg_struct)
-        return get_event_code(msg, msg_struct)
 
-    # Request a site id from site name
-    elif msg_event_code == utility.SITE_ID_REQUEST:
-        return get_site_id(msg, msg_struct)
+    EVENT_ROUTING_TABLE = {
+        utility.EVENT_CODE_REQUEST:     new_event,
+        utility.SITE_ID_REQUEST:        get_site_id,
+        utility.INSTRUMENT_ID_REQUEST:  get_instrument_id,
+        utility.PULSE_CAPTURE:          save_pulse_capture,
+        utility.INSTRUMENT_LOG:         save_instrument_log,
+        utility.PROSENSING_PAF:         save_special_prosensing_paf,
+    }
 
-    # Request an instrument id from instrument name
-    elif msg_event_code == utility.INSTRUMENT_ID_REQUEST:
-        return get_instrument_id(msg, msg_struct)
-    elif msg_event_code == utility.PULSE_CAPTURE:
-        return save_pulse_capture(msg, msg_struct)
-    elif msg_event_code == utility.INSTRUMENT_LOG:
-        return save_instrument_log(msg, msg_struct)
-    # Event is special case: 'prosensing_paf' structure
-    elif msg_event_code == utility.PROSENSING_PAF:
-        return save_special_prosensing_paf(msg, msg_struct)
-
-    # Any other event
+    if msg_event_code in EVENT_ROUTING_TABLE.keys():
+        return EVENT_ROUTING_TABLE[msg_event_code](msg, msg_struct)
     else:
         timestamp = msg_struct['data']['time']
         try:
