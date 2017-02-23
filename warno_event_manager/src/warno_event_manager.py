@@ -401,47 +401,61 @@ def event():
         utility.PROSENSING_PAF:         save_special_prosensing_paf,
     }
 
-    if msg_event_code in EVENT_ROUTING_TABLE.keys():
-        return EVENT_ROUTING_TABLE[msg_event_code](msg, msg_struct)
-    else:
-        timestamp = msg_struct['data']['time']
-        try:
-            # If it can cast as a number, save as a number.  If not, save as text
-            float_value = float(msg_struct['data']['value'])
-            event_wv = EventWithValue()
-            event_wv.event_code_id = msg_event_code
-            event_wv.time = timestamp
-            event_wv.instrument_id = msg_struct['data']['instrument_id']
-            event_wv.value = float_value
+    # The save_misc_event is the default value if the event_code does not exist in the table.
+    return EVENT_ROUTING_TABLE.get(msg_event_code, save_misc_event)(msg, msg_struct)
 
-            db.session.add(event_wv)
-            db.session.commit()
 
-            # Add the entry to the Redis database.
-            attribute_name = redint.get_attribute_by_event_code(msg_event_code)
-            redint.add_values_for_attribute(event_wv.instrument_id, attribute_name,
-                                            dateutil.parser.parse(timestamp), float_value)
-            EM_LOGGER.info("Saved Value Event")
-        except ValueError:
-            event_wt = EventWithText()
-            event_wt.event_code_id = msg_event_code
-            event_wt.time = timestamp
-            event_wt.instrument_id = msg_struct['data']['instrument_id']
-            event_wt.text = msg_struct['data']['value']
+def save_misc_event(msg, msg_struct):
+    """ Handle a MISC event message.
 
-            db.session.add(event_wt)
-            db.session.commit()
+    Parameters
+    ----------
+    msg: JSON object
+        JSON object representing the message
+    msg_struct: dict
+        Dictionary representation of message
 
-            # Add the entry to the Redis database.
-            attribute_name = redint.get_attribute_by_event_code(msg_event_code)
-            redint.add_values_for_attribute(event_wt.instrument_id, attribute_name,
-                                            dateutil.parser.parse(timestamp), msg_struct['data']['value'])
-            EM_LOGGER.info("Saved Text Event")
-        # If application is at a site instead of the central facility, passes data on to be saved at central facility
-        if not is_central:
-            payload = json.loads(msg)
-            requests.post(cf_url, json=payload, headers=headers, verify=cert_verify)
-        return "OK"
+    """
+
+    msg_event_code = msg_struct['event_code']
+    timestamp = msg_struct['data']['time']
+    try:
+        # If it can cast as a number, save as a number.  If not, save as text
+        float_value = float(msg_struct['data']['value'])
+        event_wv = EventWithValue()
+        event_wv.event_code_id = msg_event_code
+        event_wv.time = timestamp
+        event_wv.instrument_id = msg_struct['data']['instrument_id']
+        event_wv.value = float_value
+
+        db.session.add(event_wv)
+        db.session.commit()
+
+        # Add the entry to the Redis database.
+        attribute_name = redint.get_attribute_by_event_code(msg_event_code)
+        redint.add_values_for_attribute(event_wv.instrument_id, attribute_name,
+                                        dateutil.parser.parse(timestamp), float_value)
+        EM_LOGGER.info("Saved Value Event")
+    except ValueError:
+        event_wt = EventWithText()
+        event_wt.event_code_id = msg_event_code
+        event_wt.time = timestamp
+        event_wt.instrument_id = msg_struct['data']['instrument_id']
+        event_wt.text = msg_struct['data']['value']
+
+        db.session.add(event_wt)
+        db.session.commit()
+
+        # Add the entry to the Redis database.
+        attribute_name = redint.get_attribute_by_event_code(msg_event_code)
+        redint.add_values_for_attribute(event_wt.instrument_id, attribute_name,
+                                        dateutil.parser.parse(timestamp), msg_struct['data']['value'])
+        EM_LOGGER.info("Saved Text Event")
+    # If application is at a site instead of the central facility, passes data on to be saved at central facility
+    if not is_central:
+        payload = json.loads(msg)
+        requests.post(cf_url, json=payload, headers=headers, verify=cert_verify)
+    return "OK"
 
 
 def save_special_prosensing_paf(msg, msg_struct):
