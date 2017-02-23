@@ -3,7 +3,6 @@ import requests
 import logging
 import psutil
 import json
-import csv
 import os
 import dateutil.parser
 
@@ -108,7 +107,7 @@ cert_verify = False
 
 def save_json_db_info():
     """Saves database tables containing more permanent information, such as sites or instruments, to a json file.
-    File name has the format 'db_info_*day*_*month*_*year*', where the date corresponds to the date the function was run,
+    File name has the format 'db_info_*day*_*month*_*year*', where the date corresponds to the date the function was run
     because it shows the current status of the database.
 
     Example File (indentation unnecessary):
@@ -415,7 +414,8 @@ def event():
 
             # Add the entry to the Redis database.
             attribute_name = redint.get_attribute_by_event_code(msg_event_code)
-            redint.add_values_for_attribute(event_wv.instrument_id, attribute_name, dateutil.parser.parse(timestamp), float_value)
+            redint.add_values_for_attribute(event_wv.instrument_id, attribute_name,
+                                            dateutil.parser.parse(timestamp), float_value)
             EM_LOGGER.info("Saved Value Event")
         except ValueError:
             event_wt = EventWithText()
@@ -813,6 +813,36 @@ def get_event_code(msg, msg_struct):
             cf_msg['event_code'], cf_msg['data']['description'])
 
 
+def trigger_migration_upograde(migration_path):
+    """
+    Optional function to trigger generating a database migration.
+    Causes program to exit!
+
+    Parameters
+    ----------
+    migration_path: str
+        Migration Path
+
+    """
+    db_migrate(directory=migration_path)
+    exit(0)
+
+
+def trigger_migration_downgrade(migration_path):
+    """
+    Optional function to trigger a database migration downgrade 1 version.
+    Causes program to exit!
+
+    Parameters
+    ----------
+    migration_path : str
+        Migration Path
+    """
+
+    downgrade(directory=migration_path)
+    exit(0)
+
+
 def initialize_database():
     """Initializes the database.  If the database is specified in config.yml as a 'test_db',
     the database is wiped when at the beginning to ensure a clean load.  If it is not a test
@@ -867,7 +897,6 @@ def initialize_database():
             utility.load_data_into_table("database/schema/event_codes.data", "event_codes")
         else:
             EM_LOGGER.info("Event_codes in table.")
-
 
         # If it is set to be a test database, populate extra information.
         if cfg['database']['test_db']:
@@ -924,7 +953,7 @@ def clear_and_populate_redis():
                          % (sql_column_string, reference.description))
             db_result = db.session.execute(sql_query, dict(instrument_id=reference.instrument_id,
                                                            limit=redint.MAX_ENTRIES)).fetchall()
-            if (db_result):
+            if db_result:
                 # add_values_for_attribute assumes the list of values is sorted oldest to newest, which is the opposite
                 # of the resulting list from the database call.  Therefore all lists passed should be reversed first.
                 reversed_result = [ x for x in reversed(db_result)]
