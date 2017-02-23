@@ -327,6 +327,7 @@ class Agent(object):
         """
 
         if not self.config_ctxt['setup']['run_vm_agent']:
+            logging.info("run_vm_agent set to false, so shutting down Agent")
             sys.exit(0)
 
         remote_server = wsgiref.simple_server.make_server(
