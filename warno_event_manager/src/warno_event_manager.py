@@ -6,7 +6,7 @@ import json
 import os
 import dateutil.parser
 
-from flask import Flask, request, render_template, redirect, url_for
+from flask import Flask, request, render_template
 from flask_migrate import Migrate, upgrade
 from flask_migrate import migrate as db_migrate
 from flask_migrate import downgrade
