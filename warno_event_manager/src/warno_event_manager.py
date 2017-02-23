@@ -844,7 +844,9 @@ def trigger_migration_downgrade(migration_path):
 
 
 def initialize_database():
-    """Initializes the database.  If the database is specified in config.yml as a 'test_db',
+    """Initializes the database.
+
+    If the database is specified in config.yml as a 'test_db'
     the database is wiped when at the beginning to ensure a clean load.  If it is not a test
     database, a utility function is called to attempt to load in a postgresql database dumpfile
     if it exists.  First, the tables are initialized, and then if no basic database entries
@@ -861,15 +863,18 @@ def initialize_database():
             db.session.execute("DROP SCHEMA public CASCADE;")
             db.session.execute("CREATE SCHEMA public;")
             db.session.commit()
-            # If it is not a test database, first attempt to load database from an existing postgres dumpfile
 
         upgrade(directory=migration_path)
+
         # db_migrate(directory=migration_path) # These functions can be used instead of upgrade for Flask Migrate
         # downgrade(directory=migration_path)
         # exit(0)
 
+        # If it is not a test database, first attempt to load database from an existing postgres dumpfile.
+
         # If there there are no users in the database (which any active db should have users) and it is not a test db,
         # attempt to load in a dumpfile.
+
         if not cfg['database']['test_db']:
             db_user = User.query.first()
             if db_user is None:
@@ -911,6 +916,7 @@ def initialize_database():
                            "table_references",
                            "instrument_data_references"
                        ]
+
             for table in test_tables:
                 result = db.session.execute("SELECT * FROM %s LIMIT 1" % table).fetchone()
                 if result is None:
@@ -921,7 +927,7 @@ def initialize_database():
 
             clear_and_populate_redis()
         else:
-            EM_LOGGER.info("Test database demo data disabled")
+            EM_LOGGER.info("Config not set to development test database, not populating demo data. ")
 
         # Without this, the database prevents the server from running properly.
         utility.reset_db_keys()

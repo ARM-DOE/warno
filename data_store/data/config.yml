@@ -20,7 +20,7 @@ type:
     central_facility: 1
 
 database:
-    test_db      : false
+    test_db      : true
     days_retained: 30
     DB_HOST      : "192.168.50.100"
     DB_NAME      : "warno"
@@ -43,18 +43,4 @@ agent:
         base_port: 3000
         sampling_interval: 60
         ps_type: "KAZR2"
-      KaSACR2:
-        name: "KASACR"
-        base_url: "192.148.95.7"
-        base_port: 3000
-        sampling_interval: 60
-        ps_type: "SACR2"
-      WSACR2:
-        name: "WSACR"
-        base_url: "192.148.95.7"
-        base_port: 3001
-        sampling_interval: 60
-        ps_type: "SACR2"
-
-
 
