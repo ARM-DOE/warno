@@ -23,8 +23,8 @@ global remote_server
 headers = {'Content-Type': 'application/json'}
 
 DEFAULT_PLUGIN_PATH = 'Agent/plugins/'
-MAX_CONN_ATTEMPTS = 20
-CONN_RETRY_TIME = 10
+MAX_CONN_ATTEMPTS = 99999
+CONN_RETRY_TIME = 15
 AGENT_DASHBOARD_PORT = 6309
 
 ctx = config.get_config_context()
