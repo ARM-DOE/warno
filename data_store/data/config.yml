@@ -20,7 +20,7 @@ type:
     central_facility: 1
 
 database:
-    test_db      : true
+    test_db      : false
     days_retained: 30
     DB_HOST      : "192.168.50.100"
     DB_NAME      : "warno"
