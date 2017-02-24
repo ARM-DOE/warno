@@ -93,11 +93,11 @@ def reset_db_keys():
     """
     if os.environ["DATA_STORE_PATH"]:
         script = os.environ["DATA_STORE_PATH"] + "db_sequence_reset.sh"
+        p = subprocess.Popen(["bash", script], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p.wait()
     else:
-        script = "/vagrant/data_store/data/db_upgrade.sh"
+        print("Environment Variable DATA_STORE_PATH not set. This is probably going to cause an error.")
 
-    p = subprocess.Popen(["bash", script], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    p.wait()
 
 
 def load_dumpfile():
@@ -107,11 +107,11 @@ def load_dumpfile():
     """
     if os.environ["DATA_STORE_PATH"]:
         script = os.environ["DATA_STORE_PATH"] + "db_load.sh"
+        p = subprocess.Popen(["bash", script], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p.wait()
     else:
-        script = "/vagrant/data_store/data/db_upgrade.sh"
+        print("Environment Variable DATA_STORE_PATH not set. This is probably going to cause an error.")
 
-    p = subprocess.Popen(["bash", script], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    p.wait()
 
 
 def table_exists(table_name, curr):

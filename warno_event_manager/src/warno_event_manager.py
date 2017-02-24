@@ -3,11 +3,10 @@ import requests
 import logging
 import psutil
 import json
-import csv
 import os
 import dateutil.parser
 
-from flask import Flask, request, render_template, redirect, url_for
+from flask import Flask, request, render_template
 from flask_migrate import Migrate, upgrade
 from flask_migrate import migrate as db_migrate
 from flask_migrate import downgrade
@@ -108,7 +107,7 @@ cert_verify = False
 
 def save_json_db_info():
     """Saves database tables containing more permanent information, such as sites or instruments, to a json file.
-    File name has the format 'db_info_*day*_*month*_*year*', where the date corresponds to the date the function was run,
+    File name has the format 'db_info_*day*_*month*_*year*', where the date corresponds to the date the function was run
     because it shows the current status of the database.
 
     Example File (indentation unnecessary):
@@ -356,6 +355,20 @@ def save_json_db_data():
 
     return "Finish"
 
+def new_event(msg, msg_struct):
+    """ Register a new event
+
+    Parameters
+    ----------
+    msg
+    msg_struct
+
+    Returns
+    -------
+
+    """
+    save_instrument_data_reference(msg_struct)
+    return get_event_code(msg, msg_struct)
 
 @app.route("/eventmanager/event", methods=['POST'])
 def event():
@@ -378,65 +391,72 @@ def event():
     msg_struct = dict(json.loads(msg))
 
     msg_event_code = msg_struct['event_code']
-    # Request for the event code for a given description
-    if msg_event_code == utility.EVENT_CODE_REQUEST:
-        save_instrument_data_reference(msg_struct)
-        return get_event_code(msg, msg_struct)
 
-    # Request a site id from site name
-    elif msg_event_code == utility.SITE_ID_REQUEST:
-        return get_site_id(msg, msg_struct)
+    EVENT_ROUTING_TABLE = {
+        utility.EVENT_CODE_REQUEST:     new_event,
+        utility.SITE_ID_REQUEST:        get_site_id,
+        utility.INSTRUMENT_ID_REQUEST:  get_instrument_id,
+        utility.PULSE_CAPTURE:          save_pulse_capture,
+        utility.INSTRUMENT_LOG:         save_instrument_log,
+        utility.PROSENSING_PAF:         save_special_prosensing_paf,
+    }
 
-    # Request an instrument id from instrument name
-    elif msg_event_code == utility.INSTRUMENT_ID_REQUEST:
-        return get_instrument_id(msg, msg_struct)
-    elif msg_event_code == utility.PULSE_CAPTURE:
-        return save_pulse_capture(msg, msg_struct)
-    elif msg_event_code == utility.INSTRUMENT_LOG:
-        return save_instrument_log(msg, msg_struct)
-    # Event is special case: 'prosensing_paf' structure
-    elif msg_event_code == utility.PROSENSING_PAF:
-        return save_special_prosensing_paf(msg, msg_struct)
+    # The save_misc_event is the default value if the event_code does not exist in the table.
+    return EVENT_ROUTING_TABLE.get(msg_event_code, save_misc_event)(msg, msg_struct)
 
-    # Any other event
-    else:
-        timestamp = msg_struct['data']['time']
-        try:
-            # If it can cast as a number, save as a number.  If not, save as text
-            float_value = float(msg_struct['data']['value'])
-            event_wv = EventWithValue()
-            event_wv.event_code_id = msg_event_code
-            event_wv.time = timestamp
-            event_wv.instrument_id = msg_struct['data']['instrument_id']
-            event_wv.value = float_value
 
-            db.session.add(event_wv)
-            db.session.commit()
+def save_misc_event(msg, msg_struct):
+    """ Handle a MISC event message.
 
-            # Add the entry to the Redis database.
-            attribute_name = redint.get_attribute_by_event_code(msg_event_code)
-            redint.add_values_for_attribute(event_wv.instrument_id, attribute_name, dateutil.parser.parse(timestamp), float_value)
-            EM_LOGGER.info("Saved Value Event")
-        except ValueError:
-            event_wt = EventWithText()
-            event_wt.event_code_id = msg_event_code
-            event_wt.time = timestamp
-            event_wt.instrument_id = msg_struct['data']['instrument_id']
-            event_wt.text = msg_struct['data']['value']
+    Parameters
+    ----------
+    msg: JSON object
+        JSON object representing the message
+    msg_struct: dict
+        Dictionary representation of message
 
-            db.session.add(event_wt)
-            db.session.commit()
+    """
 
-            # Add the entry to the Redis database.
-            attribute_name = redint.get_attribute_by_event_code(msg_event_code)
-            redint.add_values_for_attribute(event_wt.instrument_id, attribute_name,
-                                            dateutil.parser.parse(timestamp), msg_struct['data']['value'])
-            EM_LOGGER.info("Saved Text Event")
-        # If application is at a site instead of the central facility, passes data on to be saved at central facility
-        if not is_central:
-            payload = json.loads(msg)
-            requests.post(cf_url, json=payload, headers=headers, verify=cert_verify)
-        return "OK"
+    msg_event_code = msg_struct['event_code']
+    timestamp = msg_struct['data']['time']
+    try:
+        # If it can cast as a number, save as a number.  If not, save as text
+        float_value = float(msg_struct['data']['value'])
+        event_wv = EventWithValue()
+        event_wv.event_code_id = msg_event_code
+        event_wv.time = timestamp
+        event_wv.instrument_id = msg_struct['data']['instrument_id']
+        event_wv.value = float_value
+
+        db.session.add(event_wv)
+        db.session.commit()
+
+        # Add the entry to the Redis database.
+        attribute_name = redint.get_attribute_by_event_code(msg_event_code)
+        redint.add_values_for_attribute(event_wv.instrument_id, attribute_name,
+                                        dateutil.parser.parse(timestamp), float_value)
+        EM_LOGGER.info("Saved Value Event")
+    except ValueError:
+        event_wt = EventWithText()
+        event_wt.event_code_id = msg_event_code
+        event_wt.time = timestamp
+        event_wt.instrument_id = msg_struct['data']['instrument_id']
+        event_wt.text = msg_struct['data']['value']
+
+        db.session.add(event_wt)
+        db.session.commit()
+
+        # Add the entry to the Redis database.
+        attribute_name = redint.get_attribute_by_event_code(msg_event_code)
+        redint.add_values_for_attribute(event_wt.instrument_id, attribute_name,
+                                        dateutil.parser.parse(timestamp), msg_struct['data']['value'])
+        EM_LOGGER.info("Saved Text Event")
+    # If application is at a site instead of the central facility, passes data on to be saved at central facility
+    if not is_central:
+        payload = json.loads(msg)
+        requests.post(cf_url, json=payload, headers=headers, verify=cert_verify)
+
+    return "", 200
 
 
 def save_special_prosensing_paf(msg, msg_struct):
@@ -813,8 +833,40 @@ def get_event_code(msg, msg_struct):
             cf_msg['event_code'], cf_msg['data']['description'])
 
 
+def trigger_migration_upograde(migration_path):
+    """
+    Optional function to trigger generating a database migration.
+    Causes program to exit!
+
+    Parameters
+    ----------
+    migration_path: str
+        Migration Path
+
+    """
+    db_migrate(directory=migration_path)
+    exit(0)
+
+
+def trigger_migration_downgrade(migration_path):
+    """
+    Optional function to trigger a database migration downgrade 1 version.
+    Causes program to exit!
+
+    Parameters
+    ----------
+    migration_path : str
+        Migration Path
+    """
+
+    downgrade(directory=migration_path)
+    exit(0)
+
+
 def initialize_database():
-    """Initializes the database.  If the database is specified in config.yml as a 'test_db',
+    """Initializes the database.
+
+    If the database is specified in config.yml as a 'test_db'
     the database is wiped when at the beginning to ensure a clean load.  If it is not a test
     database, a utility function is called to attempt to load in a postgresql database dumpfile
     if it exists.  First, the tables are initialized, and then if no basic database entries
@@ -831,22 +883,25 @@ def initialize_database():
             db.session.execute("DROP SCHEMA public CASCADE;")
             db.session.execute("CREATE SCHEMA public;")
             db.session.commit()
-            # If it is not a test database, first attempt to load database from an existing postgres dumpfile
 
         upgrade(directory=migration_path)
+
         # db_migrate(directory=migration_path) # These functions can be used instead of upgrade for Flask Migrate
         # downgrade(directory=migration_path)
         # exit(0)
 
-        # If there there are no users in the database (which any active db should have users) and it is not a test db,
+        # If it is not a test database, first attempt to load database from an existing postgres dumpfile.
+
+        # First if there there are no users in the database (which any active db should have users) and it is not a test db,
         # attempt to load in a dumpfile.
+
         if not cfg['database']['test_db']:
             db_user = User.query.first()
             if db_user is None:
                 utility.load_dumpfile()
                 clear_and_populate_redis()
 
-        # If there are still no users, assume the database is empty and populate the basic information
+        # Then if there are still no users, assume the database is empty and populate the basic information
         db_user = User.query.first()
         if db_user is None:
             EM_LOGGER.info("Populating Users")
@@ -868,7 +923,6 @@ def initialize_database():
         else:
             EM_LOGGER.info("Event_codes in table.")
 
-
         # If it is set to be a test database, populate extra information.
         if cfg['database']['test_db']:
             EM_LOGGER.info("Test database demo data loading")
@@ -882,6 +936,7 @@ def initialize_database():
                            "table_references",
                            "instrument_data_references"
                        ]
+
             for table in test_tables:
                 result = db.session.execute("SELECT * FROM %s LIMIT 1" % table).fetchone()
                 if result is None:
@@ -892,7 +947,7 @@ def initialize_database():
 
             clear_and_populate_redis()
         else:
-            EM_LOGGER.info("Test database demo data disabled")
+            EM_LOGGER.info("Config not set to development test database, not populating demo data. ")
 
         # Without this, the database prevents the server from running properly.
         utility.reset_db_keys()
@@ -901,6 +956,7 @@ def initialize_database():
 def clear_and_populate_redis():
     """Completely wipes the Redis database, then loads recent entries and event codes from the main database into Redis.
 
+        This is mostly only called after loading in test data, or loading a database file.
     """
     redint.clear_database()
 
@@ -924,7 +980,7 @@ def clear_and_populate_redis():
                          % (sql_column_string, reference.description))
             db_result = db.session.execute(sql_query, dict(instrument_id=reference.instrument_id,
                                                            limit=redint.MAX_ENTRIES)).fetchall()
-            if (db_result):
+            if db_result:
                 # add_values_for_attribute assumes the list of values is sorted oldest to newest, which is the opposite
                 # of the resulting list from the database call.  Therefore all lists passed should be reversed first.
                 reversed_result = [ x for x in reversed(db_result)]
