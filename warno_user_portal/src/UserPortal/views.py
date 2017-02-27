@@ -114,23 +114,6 @@ def landing_page():
     return redirect(url_for('show_radar_status'))
 
 
-@app.route('/dygraph')
-def show_dygraph():
-    """Show Dygraphs.
-
-    Returns
-    -------
-    instrument_dygraph.html: HTML document
-        Returns an HTML document with a list of table columns to select from.
-    """
-
-    # Lists available columns to graph, and only allows an entry if it is an acceptable data type (graphable).
-    columns = [col.key for col in ProsensingPAF.__table__.columns
-               if type(col.type) in [Integer, Boolean, Float]]
-
-    return render_template('instrument_dygraph.html', columns=columns)
-
-
 @app.route('/pulse')
 def show_pulse():
     """Show a pulse from an instrument.
