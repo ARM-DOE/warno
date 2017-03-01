@@ -5,7 +5,7 @@ import ciso8601
 import dateutil.parser
 
 from flask import render_template, redirect, url_for, request
-from flask import Blueprint
+from flask import Blueprint, Markup
 from sqlalchemy.sql import func
 from sqlalchemy import asc
 
@@ -272,14 +272,15 @@ def db_recent_logs_by_instrument(instrument_id, maximum_number=5):
 
     Returns
     -------
-    A list containing logs, each log returned as a dictionary containing its information.
+    A list containing logs, each log returned as a dictionary containing its information.  The 'contents' of a log are
+    converted to a flask Markup class to allow rendering in the browser.
 
     """
     # Creates a list of dictionaries, each dictionary being one of the log entries
     db_logs = (db.session.query(InstrumentLog).filter(InstrumentLog.instrument_id == instrument_id)
                .order_by(InstrumentLog.time.desc()).limit(maximum_number).all())
 
-    return [dict(time=log.time, contents=log.contents, status=log.status,
+    return [dict(time=log.time, contents=Markup(log.contents), status=log.status,
                  supporting_images=log.supporting_images, author=log.author.name)
             for log in db_logs]
 
