@@ -41,10 +41,15 @@ class TestSites(TestCase, FixturesMixin):
 
         return views.app
 
-    def test_method_get_on_edit_site_returns_200_ok_and_passes_fixture_site_as_context_variable_using_correct_template(self, logger):
+    @mock.patch('UserPortal.sites.current_user')
+    def test_method_get_on_edit_site_returns_200_ok_and_passes_fixture_site_as_context_variable_using_correct_template(self, current_user, logger):
         """A 'GET' request to /sites/<site_id>/edit returns a response of '200' OK and passes the database information
         of the site with an id matching 'site_id' as a context variable to the 'edit_site.html' template."""
         # Should get database fixture site entry with id 2
+        # Mocks an authorized user
+        current_user.is_anonymous = False
+        current_user.authorizations = "engineer"
+
         get_request_return = self.client.get('/sites/2/edit')
         self.assert200(get_request_return)
 

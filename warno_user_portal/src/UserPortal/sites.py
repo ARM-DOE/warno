@@ -1,8 +1,9 @@
 import logging
 import os
 
-from flask import render_template, redirect, url_for, request
+from flask import render_template, redirect, url_for, request, abort
 from flask import Blueprint
+from flask_user import current_user
 from sqlalchemy import desc, and_, or_
 from sqlalchemy.orm import aliased
 
@@ -48,6 +49,8 @@ def new_site():
         If the request method is 'POST' and the new site is valid, returns a Flask redirect
             location to the list_sites function, redirecting the user to the list of ARM sites.
     """
+    if current_user.is_anonymous or current_user.authorizations != "engineer":
+        abort(404)
 
     # If the method is post, the user has submitted the information in the form.
     # Try to insert the new site into the database, if the values are incorrect redirect
@@ -102,6 +105,9 @@ def edit_site(site_id):
         If the request method is 'POST', returns a Flask redirect location to the
             list_sites function, redirecting the site to the list of sites.
     """
+    if current_user.is_anonymous or current_user.authorizations != "engineer":
+        abort(404)
+
     # If the form information has been received, update the site in the database
     if request.method == 'POST':
         # Get the site information from the request

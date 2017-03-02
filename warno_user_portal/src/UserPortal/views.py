@@ -2,8 +2,9 @@ import logging
 import json
 import os
 
-from flask import render_template, request, redirect, url_for
+from flask import render_template, request, redirect, url_for, abort
 from flask import Markup
+from flask_user import current_user
 from werkzeug.contrib.fixers import ProxyFix
 from sqlalchemy import Float, Boolean, Integer, or_, and_
 from sqlalchemy.exc import ProgrammingError as SAProgrammingError
@@ -265,6 +266,9 @@ def query():
         Returns an HTML document with the results from the query displayed.
 
     """
+    if current_user.is_anonymous or current_user.authorizations != "engineer":
+        abort(404)
+
     data = ""
     if request.method == 'POST':
         query_arg = request.form.get("query")

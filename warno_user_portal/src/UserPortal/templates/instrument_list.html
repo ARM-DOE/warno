@@ -14,6 +14,9 @@ Instruments
             <th> Type</th>
             <th> Vendor</th>
             <th> Description</th>
+            {% if current_user.authorizations == "engineer" %}
+            <th></th>
+            {% endif %}
         </tr>
         {%  for instrument in instruments %}
         <tr>
@@ -23,6 +26,9 @@ Instruments
             <td>{{ instrument.type }}</td>
             <td>{{ instrument.vendor }}</td>
             <td>{{ instrument.description }}</td>
+            {% if current_user.authorizations == "engineer" %}
+            <td><a href= "{{url_for('instruments.edit_instrument', instrument_id=instrument.id)}}">Edit</a></td>
+            {% endif %}
         </tr>
         {% endfor %}
     </table>
@@ -32,8 +38,11 @@ Instruments
 <hr>
 <br>
 
+{% if current_user.authorizations == "engineer" %}
 <form action="{{ url_for('instruments.new_instrument') }}" method="get">
   <input type="submit" id="new-instrument-redirect-button"
          value="Add New Instrument"/>
 </form>
+{% endif %}
+
 {% endblock %}

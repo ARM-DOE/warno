@@ -4,8 +4,9 @@ import logging
 import ciso8601
 import dateutil.parser
 
-from flask import render_template, redirect, url_for, request
+from flask import render_template, redirect, url_for, request, abort
 from flask import Blueprint, Markup
+from flask_user import current_user
 from sqlalchemy.sql import func
 from sqlalchemy import asc
 
@@ -60,6 +61,9 @@ def new_instrument():
         If the request method is 'POST', returns a Flask redirect location to the
             list_instruments function, redirecting the user to the list of instruments.
     """
+    if current_user.is_anonymous or current_user.authorizations != "engineer":
+        abort(404)
+
     # If the form information has been received, insert the new instrument into the table
     if request.method == 'POST':
         # Get the instrument information from the request
@@ -106,6 +110,8 @@ def edit_instrument(instrument_id):
         If the request method is 'POST', returns a Flask redirect location to the
             list_instruments function, redirecting the site to the list of instruments.
     """
+    if current_user.is_anonymous or current_user.authorizations != "engineer":
+        abort(404)
 
     if request.method == 'POST':
         # Get the instrument information from the request
@@ -663,6 +669,8 @@ def update_all_valid_columns():
     HTML displaying how many entries have been updated per instrument.
 
     """
+    if current_user.is_anonymous or current_user.authorizations not in ["engineer", "technician"]:
+        abort(404)
     message = "Adding data attributes that are no longer all null to list of valid columns:<hr>"
     db_instruments = db.session.query(Instrument).all()
     for inst in db_instruments:

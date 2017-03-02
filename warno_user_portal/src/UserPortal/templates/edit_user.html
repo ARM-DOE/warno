@@ -36,6 +36,30 @@ Edit User
         </div>
         <input type="text" class="form-control" id="userPositionBox" name="position" maxlength="24" value="{{user.position}}">
     </div>
+    <div class="form-group">
+        <div>
+            <label for="authorizations" class="control-label">Authorization Level:</label>
+        </div>
+        <select type="text" class="form-control" id="userAuthorizationsBox" name="authorizations">
+            {% if user.authorizations == "engineer" %}
+            <option value="engineer" selected>Engineer (Full)</option>
+            {% else %}
+            <option value="engineer">Engineer (Full)</option>
+            {% endif %}
+
+            {% if user.authorizations == "technician" %}
+            <option value="technician" selected>Technician (Partial)</option>
+            {% else %}
+            <option value="technician">Technician (Partial)</option>
+            {% endif %}
+
+            {% if user.authorizations == "user" %}
+            <option value="user" selected>User (Minimal)</option>
+            {% else %}
+            <option value="user">User (Minimal)</option>
+            {% endif %}
+        </select>
+    </div>
 
     <br>
 

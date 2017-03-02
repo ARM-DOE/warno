@@ -1,8 +1,9 @@
 import logging
 import os
 
-from flask import render_template, redirect, url_for, request
+from flask import render_template, redirect, url_for, request, abort
 from flask import Blueprint
+from flask_user import current_user
 
 from WarnoConfig.models import db
 from WarnoConfig.models import User
@@ -30,6 +31,8 @@ def list_users():
     users_template.html: HTML document
         Returns an HTML document with an argument for the list of users and their information.
     """
+    if current_user.is_anonymous or current_user.authorizations != "engineer":
+        abort(404)
 
     db_users = db.session.query(User).all()
     users_dict = [dict(name=user.name, email=user.email, location=user.location, position=user.position, id=user.id, username=user.username, active=user.is_active, password=user.password)
@@ -52,6 +55,8 @@ def new_user():
         If the request method is 'POST', returns a Flask redirect location to the
             list_users function, redirecting the user to the list of users.
     """
+    if current_user.is_anonymous or current_user.authorizations != "engineer":
+        abort(404)
 
     if request.method == 'POST':
         # Get the information for the insert from the submitted form arguments
@@ -98,6 +103,9 @@ def edit_user(user_id):
         If the request method is 'POST', returns a Flask redirect location to the
             list_users function, redirecting the user to the list of users.
     """
+    if current_user.is_anonymous or current_user.authorizations != "engineer":
+        abort(404)
+
     # If the form information has been received, update the user in the database
     if request.method == 'POST':
         # Get the user information from the request
@@ -107,6 +115,7 @@ def edit_user(user_id):
         updated_user.email = request.form.get('email')
         updated_user.location = request.form.get('location')
         updated_user.position = request.form.get('position')
+        updated_user.authorizations = request.form.get('authorizations')
 
         # Update user in the database
         db.session.commit()
@@ -118,6 +127,6 @@ def edit_user(user_id):
     if request.method == 'GET':
         db_user = db.session.query(User).filter(User.id == user_id).first()
         user = dict(username=db_user.username, name=db_user.name, email=db_user.email, location=db_user.location,
-                    position=db_user.position)
+                    position=db_user.position, authorizations=db_user.authorizations)
 
         return render_template('edit_user.html', user=user)

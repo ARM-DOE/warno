@@ -4,8 +4,9 @@ import logging
 import json
 import os
 
-from flask import render_template, redirect, url_for, request
+from flask import render_template, redirect, url_for, request, abort
 from flask import Blueprint
+from flask_user import current_user
 
 from WarnoConfig.utility import status_code_to_text, status_text
 from WarnoConfig.models import InstrumentLog, User, Instrument
@@ -70,6 +71,8 @@ def new_log():
             to the instrument function, redirecting the user to the page showing the
             instrument with the instrument_id matching the insertion.
     """
+    if current_user.is_anonymous or current_user.authorizations not in ["engineer", "technician"]:
+        abort(404)
 
     # Default error message will not show on template when its the empty string
     error = ""
