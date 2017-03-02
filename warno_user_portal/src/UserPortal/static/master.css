@@ -546,6 +546,13 @@ button.site_toggle:hover {
     background-color: moccasin;
 }
 
+div.status_log_container {
+    margin: 2px;
+    background-color: white;
+    border: 2px solid #555555;
+    padding: 5px;
+}
+
 /*** Status types ***/
 .operational {
     background: -moz-linear-gradient(top, #90EEA0, #8AE98A); /* FF3.6-15 */
@@ -722,6 +729,150 @@ div.devel_notification {
  color: white;
 }*/
 
+/* Markdown Defaults, editor and displayed logs */
+div.html_log h1,
+div.editor-preview-side h1,
+div.editor-preview h1 {
+    display: block;
+    font-size: 2em;
+    margin-top: 0.67em;
+    margin-bottom: 0.67em;
+    margin-left: 0;
+    margin-right: 0;
+    font-weight: bold;
+}
+
+div.html_log h2,
+div.editor-preview-side h2,
+div.editor-preview h2 {
+    display: block;
+    font-size: 1.5em;
+    margin-top: 0.83em;
+    margin-bottom: 0.83em;
+    margin-left: 0;
+    margin-right: 0;
+    font-weight: bold;
+}
+
+div.html_log h3,
+div.editor-preview-side h3,
+div.editor-preview h3 {
+    display: block;
+    font-size: 1.17em;
+    margin-top: 1em;
+    margin-bottom: 1em;
+    margin-left: 0;
+    margin-right: 0;
+    font-weight: bold;
+}
+
+div.html_log h4,
+div.editor-preview-side h4,
+div.editor-preview h4 {
+    display: block;
+    margin-top: 1.33em;
+    margin-bottom: 1.33em;
+    margin-left: 0;
+    margin-right: 0;
+    font-weight: bold;
+}
+
+div.html_log h5,
+div.editor-preview-side h5,
+div.editor-preview h5 {
+    display: block;
+    font-size: .83em;
+    margin-top: 1.67em;
+    margin-bottom: 1.67em;
+    margin-left: 0;
+    margin-right: 0;
+    font-weight: bold;
+}
+
+div.html_log h6,
+div.editor-preview-side h6,
+div.editor-preview h6 {
+    display: block;
+    font-size: .67em;
+    margin-top: 2.33em;
+    margin-bottom: 2.33em;
+    margin-left: 0;
+    margin-right: 0;
+    font-weight: bold;
+}
+
+div.html_log p,
+div.editor-preview-side p,
+div.editor-preview p {
+    display: block;
+    margin: 1em 0px;
+}
+
+div.html_log ul,
+div.editor-preview-side ul,
+div.editor-preview ul {
+   list-style-type: disc;
+   list-style-position: inside;
+   margin-top: 1em;
+   margin-bottom: 1em;
+   padding-left: 10px;
+}
+
+div.html_log ol,
+div.editor-preview-side ol,
+div.editor-preview ol {
+   list-style-type: decimal;
+   list-style-position: inside;
+   margin-top: 1em;
+   margin-bottom: 1em;
+   padding-left: 10px;
+}
+
+div.html_log ul ul,
+div.editor-preview-side ul ul,
+div.editor-preview ul ul {
+   list-style-type: circle;
+   list-style-position: inside;
+   margin-left: 15px;
+}
+
+div.html_log ol ul,
+div.editor-preview-side ol ul,
+div.editor-preview ol ul {
+   list-style-type: circle;
+   list-style-position: inside;
+   margin-left: 15px;
+}
+
+div.html_log ol ol,
+div.editor-preview-side ol ol,
+div.editor-preview ol ol {
+   list-style-type: lower-latin;
+   list-style-position: inside;
+   margin-left: 15px;
+}
+
+div.html_log ul ol,
+div.editor-preview-side ul ol,
+div.editor-preview ul ol {
+   list-style-type: lower-latin;
+   list-style-position: inside;
+   margin-left: 15px;
+}
+
+div.html_log blockquote,
+div.editor-preview-side blockquote,
+div.editor-preview blockquote {
+   margin-left: 40px;
+   margin-right: 40px;
+   margin-top: 16px;
+   margin-bottom: 16px;
+
+}
+
+
+
+
 /* Needs Classifying */
 
 div.info {
@@ -741,3 +892,4 @@ div.error_display {
 input.short_input {
     width: 50px;
 }
+

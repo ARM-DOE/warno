@@ -325,8 +325,7 @@ class TestIndexFunctionality(TestCase):
                            'name': 'SELENIUM TEST INSTRUMENT',
                            'type': 'TEST_RADAR',
                            'vendor': 'SELENIUM',
-                           'description': 'Selenium Injected Instrument',
-                           'frequency_band': 'Y'}
+                           'description': 'Selenium Injected Instrument'}
 
         self.browser.get(self.warno_url)
         self.browser.find_element_by_link_text('Instruments').click()
@@ -367,8 +366,7 @@ class TestIndexFunctionality(TestCase):
                            'name': 'SELENIUM TEST INSTRUMENT',
                            'type': 'TEST_RADAR',
                            'vendor': 'SELENIUM',
-                           'description': 'Selenium Injected Instrument',
-                           'frequency_band': 'Y'}
+                           'description': 'Selenium Injected Instrument',}
         new_name = "EDIT%d" % randint(0, 100)
 
         # Navigate to the new instrument form

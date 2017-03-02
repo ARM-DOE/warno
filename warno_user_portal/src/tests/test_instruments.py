@@ -68,9 +68,14 @@ class TestInstruments(TestCase, FixturesMixin):
                         "'TESTSIT2' is not in the 'location' field for the second instrument.")
         self.assert_template_used('instrument_list.html')
 
-    def test_method_get_on_new_instrument_passes_fixture_sites_using_correct_template(self, logger):
+    @mock.patch("UserPortal.instruments.current_user")
+    def test_method_get_on_new_instrument_passes_fixture_sites_using_correct_template(self, current_user, logger):
         """A 'GET' request to '/instruments/new' returns a response of '200 OK' and then  renders 'new_instrument.html',
         passing in the list of database sites as a context variable 'sites'."""
+        # Mocks an authorized user
+        current_user.is_anonymous = False
+        current_user.authorizations = "engineer"
+
         get_request_return = self.client.get('/instruments/new')
         self.assert200(get_request_return)
 
@@ -84,10 +89,15 @@ class TestInstruments(TestCase, FixturesMixin):
                         "'TESTSIT2' is not in the 'name' field for the second context variable site.")
         self.assert_template_used('new_instrument.html')
 
-    def test_method_get_on_edit_instrument_with_id_2_passes_fixture_sites_and_correct_instrument_as_context_variables_using_correct_template(self, logger):
+    @mock.patch("UserPortal.instruments.current_user")
+    def test_method_get_on_edit_instrument_with_id_2_passes_fixture_sites_and_correct_instrument_as_context_variables_using_correct_template(self, current_user, logger):
         """A 'GET' request to '/instruments/<instrument_id>/edit' returns a response of '200 OK' and then  renders
         'edit_instrument.html', passing in the list of database sites and the instrument with an id matching
         'instrument_id' as context variables 'sites' and 'instrument' respectively."""
+        # Mocks an authorized user
+        current_user.is_anonymous = False
+        current_user.authorizations = "engineer"
+
         get_request_return = self.client.get('/instruments/2/edit')
         self.assert200(get_request_return)
 

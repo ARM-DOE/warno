@@ -41,10 +41,15 @@ class TestUsers(TestCase, FixturesMixin):
 
         return views.app
 
-    def test_method_get_on_edit_user_returns_200_ok_and_passes_fixture_user_using_correct_template(self, logger):
+    @mock.patch("UserPortal.users.current_user")
+    def test_method_get_on_edit_user_returns_200_ok_and_passes_fixture_user_using_correct_template(self, current_user, logger):
         """Method 'GET' on /users/<user_id>/edit gets the edit page for the user matching 'user_id'.  The user's
         database information is passed as a context variable to the template.  The response for the 'GET' request
         is '200' OK."""
+        # Mocks an authorized user
+        current_user.is_anonymous = False
+        current_user.authorizations = "engineer"
+
         # Should get database fixture user entry with id 2
         get_request_return = self.client.get('/users/2/edit')
         self.assert200(get_request_return)

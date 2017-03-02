@@ -15,6 +15,9 @@ Sites
         <th> Mobile</th>
         <th> Location Name</th>
         <th> Site ID </th>
+        {% if current_user.authorizations == "engineer" %}
+        <th></th>
+        {% endif %}
     </tr>
     {%  for site in sites %}
     <tr>
@@ -30,6 +33,9 @@ Sites
         {% endif %}
         <td>{{ site.location_name }}</td>
         <td>{{ site.id }}</td>
+        {% if current_user.authorizations == "engineer" %}
+        <td><a href="{{url_for('sites.edit_site', site_id=site.id)}}">Edit</a></td>
+        {% endif %}
     </tr>
     {% endfor %}
 </table>
@@ -38,8 +44,11 @@ Sites
 <hr>
 <br>
 
+{% if current_user.authorizations == "engineer" %}
 <form action="{{ url_for('sites.new_site') }}" method="get">
   <input type="submit" id="new-site-redirect-button"
          value="Add New Site"/>
 </form>
+{% endif %}
+
 {% endblock %}

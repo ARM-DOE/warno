@@ -4,8 +4,9 @@ import logging
 import ciso8601
 import dateutil.parser
 
-from flask import render_template, redirect, url_for, request
-from flask import Blueprint
+from flask import render_template, redirect, url_for, request, abort
+from flask import Blueprint, Markup
+from flask_user import current_user
 from sqlalchemy.sql import func
 from sqlalchemy import asc
 
@@ -40,8 +41,8 @@ def list_instruments():
     """
     db_instruments = db.session.query(Instrument).order_by(asc(Instrument.id)).all()
     instrument_list = [dict(abbv=inst.name_short, name=inst.name_long, type=inst.type, vendor=inst.vendor,
-                            description=inst.description, frequency_band=inst.frequency_band,
-                            location=inst.site.name_short, site_id=inst.site_id, id=inst.id)
+                            description=inst.description, location=inst.site.name_short,
+                            site_id=inst.site_id, id=inst.id)
                        for inst in db_instruments]
 
     return render_template('instrument_list.html', instruments=instrument_list)
@@ -60,6 +61,9 @@ def new_instrument():
         If the request method is 'POST', returns a Flask redirect location to the
             list_instruments function, redirecting the user to the list of instruments.
     """
+    if current_user.is_anonymous or current_user.authorizations != "engineer":
+        abort(404)
+
     # If the form information has been received, insert the new instrument into the table
     if request.method == 'POST':
         # Get the instrument information from the request
@@ -70,7 +74,6 @@ def new_instrument():
         new_db_instrument.type = request.form.get('type')
         new_db_instrument.vendor = request.form.get('vendor')
         new_db_instrument.description = request.form.get('description')
-        new_db_instrument.frequency_band = request.form.get('frequency_band')
         new_db_instrument.site_id = request.form.get('site')
 
         # Insert a new instrument into the database
@@ -107,6 +110,8 @@ def edit_instrument(instrument_id):
         If the request method is 'POST', returns a Flask redirect location to the
             list_instruments function, redirecting the site to the list of instruments.
     """
+    if current_user.is_anonymous or current_user.authorizations != "engineer":
+        abort(404)
 
     if request.method == 'POST':
         # Get the instrument information from the request
@@ -117,7 +122,6 @@ def edit_instrument(instrument_id):
         updated_instrument.type = request.form.get('type')
         updated_instrument.vendor = request.form.get('vendor')
         updated_instrument.description = request.form.get('description')
-        updated_instrument.frequency_band = request.form.get('frequency_band')
         updated_instrument.site_id = request.form.get('site')
 
         # Update instrument in the database
@@ -135,8 +139,7 @@ def edit_instrument(instrument_id):
         db_instrument = db.session.query(Instrument).filter(Instrument.id == instrument_id).first()
         instrument_dict = dict(name_short=db_instrument.name_short, name_long=db_instrument.name_long,
                                type=db_instrument.type, vendor=db_instrument.vendor,
-                               description=db_instrument.description, frequency_band=db_instrument.frequency_band,
-                               site_id=db_instrument.site_id)
+                               description=db_instrument.description, site_id=db_instrument.site_id)
 
         return render_template('edit_instrument.html', sites=sites, instrument=instrument_dict)
 
@@ -196,8 +199,8 @@ def db_select_instrument(instrument_id):
     """
     inst = db.session.query(Instrument).filter(Instrument.id == instrument_id).first()
     return dict(abbv=inst.name_short, name=inst.name_long, type=inst.type, vendor=inst.vendor,
-                description=inst.description, frequency_band=inst.frequency_band, location=inst.site.name_short,
-                latitude=inst.site.latitude, longitude=inst.site.longitude, site_id=inst.site_id, id=inst.id)
+                description=inst.description, location=inst.site.name_short, latitude=inst.site.latitude,
+                longitude=inst.site.longitude, site_id=inst.site_id, id=inst.id)
 
 
 def db_delete_instrument(instrument_id):
@@ -272,14 +275,15 @@ def db_recent_logs_by_instrument(instrument_id, maximum_number=5):
 
     Returns
     -------
-    A list containing logs, each log returned as a dictionary containing its information.
+    A list containing logs, each log returned as a dictionary containing its information.  The 'contents' of a log are
+    converted to a flask Markup class to allow rendering in the browser.
 
     """
     # Creates a list of dictionaries, each dictionary being one of the log entries
     db_logs = (db.session.query(InstrumentLog).filter(InstrumentLog.instrument_id == instrument_id)
                .order_by(InstrumentLog.time.desc()).limit(maximum_number).all())
 
-    return [dict(time=log.time, contents=log.contents, status=log.status,
+    return [dict(time=log.time, contents=Markup(log.contents), status=log.status,
                  supporting_images=log.supporting_images, author=log.author.name)
             for log in db_logs]
 
@@ -665,6 +669,8 @@ def update_all_valid_columns():
     HTML displaying how many entries have been updated per instrument.
 
     """
+    if current_user.is_anonymous or current_user.authorizations not in ["engineer", "technician"]:
+        abort(404)
     message = "Adding data attributes that are no longer all null to list of valid columns:<hr>"
     db_instruments = db.session.query(Instrument).all()
     for inst in db_instruments:

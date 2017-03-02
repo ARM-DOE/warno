@@ -22,7 +22,6 @@
             <th> Intrument Name</th>
             <th> Type</th>
             <th> Vendor</th>
-            <th> Frequency Band</th>
             <th> Description</th>
         </tr>
         {%  for instrument in instruments %}
@@ -33,7 +32,6 @@
             <td>{{ instrument.name }}</td>
             <td>{{ instrument.type }}</td>
             <td>{{ instrument.vendor }}</td>
-            <td>{{ instrument.frequency_band }}</td>
             <td>{{ instrument.description }}</td>
         </tr>
         {% endfor %}

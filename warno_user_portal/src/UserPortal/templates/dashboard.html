@@ -50,8 +50,12 @@ Dashboard
             <label for="name">Dashboard Name:</label>
             <input type="text" name="name" id="save-dashboard-name">
             <div>
+                {% if current_user.authorizations == "engineer" %}
                 <label for="private">Private:</label>
                 <input type="checkbox" name="private" id="save-dashboard-private" checked>
+                {% else %}
+                Private Dashboard
+                {% endif %}
                 <button type="submit" class="experiment" style="float: right;" onclick="saveDashboard()">Save Dashboard</button>
             </div>
         </div>
@@ -111,9 +115,13 @@ Dashboard
 
         var name = document.getElementById("save-dashboard-name").value;
         var private = false;
+        {% if current_user.authorizations == "engineer" %}
         if (document.getElementById("save-dashboard-private").checked) {
             var private = true;
         }
+        {% else %}
+        var private = true;
+        {% endif %}
 
         var xmlHttp = new XMLHttpRequest();
         xmlHttp.onreadystatechange = function() {

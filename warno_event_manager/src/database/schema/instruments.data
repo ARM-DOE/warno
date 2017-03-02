@@ -1,5 +1,5 @@
-site_id,name_short,name_long,type,vendor,description,frequency_band
-2,KAZR,KAZR,Radar,Prosensing,Ka Band Zenith Radar,Ka
-2,WSACR,WSACR,Radar,Prosensing,W Band Scanning Arm Cloud Radar,W
-2,KASACR,KASACR,Radar,Prosensing,Ka Band Scanning Arm Cloud Radar,Ka
-3,KAZR-OLI,KAZR,Radar,Prosensing,Ka Band Zenith Radar,Ka
+site_id,name_short,name_long,type,vendor,description
+2,KAZR,KAZR,Radar,Prosensing,Ka Band Zenith Radar
+2,WSACR,WSACR,Radar,Prosensing,W Band Scanning Arm Cloud Radar
+2,KASACR,KASACR,Radar,Prosensing,Ka Band Scanning Arm Cloud Radar
+3,KAZR-OLI,KAZR,Radar,Prosensing,Ka Band Zenith Radar

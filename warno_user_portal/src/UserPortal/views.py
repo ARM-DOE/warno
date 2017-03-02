@@ -2,7 +2,9 @@ import logging
 import json
 import os
 
-from flask import render_template, request, redirect, url_for
+from flask import render_template, request, redirect, url_for, abort
+from flask import Markup
+from flask_user import current_user
 from werkzeug.contrib.fixers import ProxyFix
 from sqlalchemy import Float, Boolean, Integer, or_, and_
 from sqlalchemy.exc import ProgrammingError as SAProgrammingError
@@ -176,7 +178,7 @@ def status_log_for_each_instrument():
     Returns
     -------
     Dictionary with the instrument ids for each log as the key and a dictionary for the log's 'author', 'status code',
-    and 'contents' as the value.
+    and 'contents' as the value. 'contents' gets converted to a flask Markup class to render html in the browser.
 
     """
     il_alias_1 = aliased(InstrumentLog, name='il_alias_1')
@@ -188,7 +190,8 @@ def status_log_for_each_instrument():
                                             il_alias_1.instrument_id < il_alias_2.instrument_id)))).\
         filter(il_alias_2.id == None).all()
 
-    recent_logs = {log.instrument.id: dict(author=log.author.name, status_code=log.status, contents=log.contents)
+    recent_logs = {log.instrument.id: dict(author=log.author.name, status_code=log.status,
+                                           contents=Markup(log.contents), time=log.time)
                    for log in logs}
 
     return recent_logs
@@ -213,7 +216,7 @@ def show_radar_status():
     # Assume the instrument status is operational unless the status has changed, handled afterward
     db_instruments = db.session.query(Instrument).join(Instrument.site).all()
     instruments = [dict(id=instrument.id, instrument_name=instrument.name_long, site_id=instrument.site_id,
-                        site=instrument.site.name_short, status=1, author="", contents="")
+                        site=instrument.site.name_short, status=1, author="", contents="", time="")
                    for instrument in db_instruments]
 
     # For each instrument, if there is a corresponding status entry from the query above,
@@ -223,6 +226,7 @@ def show_radar_status():
             instrument['status'] = status[instrument['id']]["status_code"]
             instrument['author'] = status[instrument['id']]["author"]
             instrument['contents'] = status[instrument['id']]["contents"]
+            instrument['log_time'] = status[instrument['id']]["time"]
         instrument['status'] = status_code_to_text(instrument['status'])
 
     sites = {inst['site']: inst['site_id'] for inst in instruments}
@@ -245,6 +249,9 @@ def query():
         Returns an HTML document with the results from the query displayed.
 
     """
+    if current_user.is_anonymous or current_user.authorizations != "engineer":
+        abort(404)
+
     data = ""
     if request.method == 'POST':
         query_arg = request.form.get("query")
