@@ -35,26 +35,30 @@ Status
             <button type="button" class="site_toggle" onclick="toggleLogsForSite(this)">+</button>
             <a href="{{url_for('sites.show_site', site_id=site_id)}}">{{ site }}</a>
             </th>
-            {% set blarg = 0 %}
+            {% set td_index = 0 %}
             {% for instrument in instruments %}
             {% if instrument.site == site %}
-            {% set blarg = blarg + 1 %}
-            {% if blarg % 2 == 1 %}
+            {% set td_index = td_index + 1 %}
+            {% if td_index % 2 == 1 %}
             <tr>
             {% endif %}
             <td class="inst_status_td" style="float: left;">
-                <a href="{{url_for('instruments.instrument', instrument_id= instrument.id)}}">{{  instrument.instrument_name }}</a>
-                <br>
+                <div class="inst_status_hidden_title">
+                    <a href="{{url_for('instruments.instrument', instrument_id= instrument.id)}}">{{  instrument.instrument_name }}</a>
+                </div>
                 <div class="inst_status_div round {{instrument.status.replace(' ', '_').replace('-', '_').lower()}}" onclick="toggleShowLogs(this)">
                     <div class="log_div" hidden>
-                    Last Author: {{ instrument.author }}
-                    <br>
-                    Last Log: {{ instrument.contents }}
-                </div>
+                        <h1><a href="{{url_for('instruments.instrument', instrument_id= instrument.id)}}">{{  instrument.instrument_name }}</a></h1>
+                        <br>
+                        Last Author: {{ instrument.author }}
+                        <br>
+                        Last Log: {{ instrument.log_time }}
+                        <div class="status_log_container">{{ instrument.contents }}</div>
+                    </div>
                 </div>
                 <br>
             </td>
-            {% if blarg % 2 == 0 %}
+            {% if td_index % 2 == 0 %}
             </tr>
             {% endif %}
             {% endif %}
@@ -68,15 +72,12 @@ Status
 {% block script %}
 <script>
     function toggleLogsForSite(element) {
-        console.log("Toggled");
         status_table = element.parentNode.parentNode.parentNode.parentNode;
         status_div = status_table.parentNode
 
         inst_status_tds = status_table.getElementsByClassName("inst_status_td");
         inst_status_divs = status_table.getElementsByClassName("inst_status_div");
         log_divs = status_table.getElementsByClassName("log_div");
-
-        console.log(inst_status_tds);
 
         // This function assumes inst_status_tds, inst_status_divs, and log_divs are of equal length
         // If this ever becomes untrue, each one will need its own loop
@@ -127,6 +128,9 @@ Status
     //Table cell containing the clicked element
     inst_td = element.parentNode;
 
+    //Div containing the instrument title when the log is hidden.  Should only be one.
+    title_div_when_hidden = inst_td.getElementsByClassName("inst_status_hidden_title")[0]
+
     //Status table containing the clicked element and its containing div
     status_table = element.parentNode.parentNode.parentNode.parentNode;
     status_div = status_table.parentNode;
@@ -146,6 +150,8 @@ Status
         element.style['text-align'] = "left";
 
         hidden_div.hidden = false;
+        //When the hidden_div is revealed, the title div should be hidden
+        title_div_when_hidden.hidden = true;
     }
     else {
         inst_td.parentNode.classList.remove("expanded");
@@ -158,13 +164,14 @@ Status
         element.style['text-align'] = "center";
 
         hidden_div.hidden = true;
+        //When the hidden_div is hidden, the title div should be revealed
+        title_div_when_hidden.hidden = false;
     }
 
     all_hidden = true;
     hidden_children = status_table.getElementsByClassName("log_div");
     for (i = 0; i < hidden_children.length; i++) {
         if (hidden_children[i].hidden == false){
-            console.log("found something unhidden... darkness");
             all_hidden = false;
         }
     }

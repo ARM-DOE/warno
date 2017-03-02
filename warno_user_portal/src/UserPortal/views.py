@@ -207,7 +207,7 @@ def status_log_for_each_instrument():
         filter(il_alias_2.id == None).all()
 
     recent_logs = {log.instrument.id: dict(author=log.author.name, status_code=log.status,
-                                           contents=Markup(log.contents))
+                                           contents=Markup(log.contents), time=log.time)
                    for log in logs}
 
     return recent_logs
@@ -232,7 +232,7 @@ def show_radar_status():
     # Assume the instrument status is operational unless the status has changed, handled afterward
     db_instruments = db.session.query(Instrument).join(Instrument.site).all()
     instruments = [dict(id=instrument.id, instrument_name=instrument.name_long, site_id=instrument.site_id,
-                        site=instrument.site.name_short, status=1, author="", contents="")
+                        site=instrument.site.name_short, status=1, author="", contents="", time="")
                    for instrument in db_instruments]
 
     # For each instrument, if there is a corresponding status entry from the query above,
@@ -242,6 +242,7 @@ def show_radar_status():
             instrument['status'] = status[instrument['id']]["status_code"]
             instrument['author'] = status[instrument['id']]["author"]
             instrument['contents'] = status[instrument['id']]["contents"]
+            instrument['log_time'] = status[instrument['id']]["time"]
         instrument['status'] = status_code_to_text(instrument['status'])
 
     sites = {inst['site']: inst['site_id'] for inst in instruments}
