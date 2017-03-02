@@ -33,8 +33,6 @@
                         <br>
                         Type:           {{instrument.type}}
                         <br>
-                        Frequency Band: {{instrument.frequency_band}}
-                        <br>
                         Location:
                         <a href="{{url_for('sites.show_site', site_id= instrument.site_id)}}">{{instrument.location}}</a>
                         <br>
@@ -73,15 +71,6 @@
                 </div>
         </div>
 
-<!--<div style="display: inline-block; vertical-align: top; width: calc(100% - 320px);">-->
-            <!--<div style="padding: 5px; display: vertical-align: top;">-->
-                    <!--{% with columns=columns, instrument_id=instrument.id %}-->
-                    <!--{% include 'instrument_dygraph.html' %}-->
-                    <!--{% endwith %}-->
-            <!--</div>-->
         </div>
-
-
-
 
 {% endblock %}

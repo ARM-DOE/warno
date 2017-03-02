@@ -600,8 +600,7 @@ def get_instrument_id(msg, msg_struct):
     {"event_code": *integer event code*, "data": {"instrument_id": *integer instrument id*, "site_id":
     *integer site id instrument is at*, "name_short": *string instrument abbreviation*, "name_long":
     *string full instrument name*, "type": *string type of instrument*, "vendor": *string instrument's vendor*,
-    "description": *string description of instrument*, "frequency_band":
-    *two character frequency band instrument operates at*}}.
+    "description": *string description of instrument* }}.
 
     If no instrument was found, the instrument id is passed as -1.
 
@@ -613,10 +612,10 @@ def get_instrument_id(msg, msg_struct):
     if db_instrument:
         EM_LOGGER.info("Found Existing Instrument")
         return '{"event_code": %i, "data": {"instrument_id": %s, "site_id": %s, "name_short": "%s", '\
-               '"name_long": "%s", "type": "%s", "vendor": "%s", "description": "%s", "frequency_band": "%s"}}' \
+               '"name_long": "%s", "type": "%s", "vendor": "%s", "description": "%s"}}' \
                % (utility.INSTRUMENT_ID_REQUEST, db_instrument.id, db_instrument.site_id, db_instrument.name_short,
                   db_instrument.name_long, db_instrument.type, db_instrument.vendor,
-                  db_instrument.description, db_instrument.frequency_band)
+                  db_instrument.description)
     else:
         # If it does not exist at the central facility, returns an error indicator
         if is_central:
@@ -637,7 +636,6 @@ def get_instrument_id(msg, msg_struct):
             new_instrument.type = cf_data['type']
             new_instrument.vendor = cf_data['vendor']
             new_instrument.description = cf_data['description']
-            new_instrument.frequency_band = cf_data['frequency_band']
 
             db.session.add(new_instrument)
             db.session.commit()
@@ -645,10 +643,10 @@ def get_instrument_id(msg, msg_struct):
 
             EM_LOGGER.info("Saved New Instrument")
             return '{"event_code": %i, "data": {"instrument_id": %s, "site_id": %s, "name_short": "%s", ' \
-                   '"name_long": "%s", "type": "%s", "vendor": "%s", "description": "%s", "frequency_band": "%s"}}' \
+                   '"name_long": "%s", "type": "%s", "vendor": "%s", "description": "%s"}}' \
                    % (utility.INSTRUMENT_ID_REQUEST, cf_data['instrument_id'], cf_data['site_id'],
                       cf_data['name_short'], cf_data['name_long'], cf_data['type'], cf_data['vendor'],
-                      cf_data['description'], cf_data['frequency_band'])
+                      cf_data['description'])
 
 
 def get_site_id(msg, msg_struct):
@@ -833,7 +831,7 @@ def get_event_code(msg, msg_struct):
             cf_msg['event_code'], cf_msg['data']['description'])
 
 
-def trigger_migration_upograde(migration_path):
+def trigger_migration_migrate(migration_path):
     """
     Optional function to trigger generating a database migration.
     Causes program to exit!

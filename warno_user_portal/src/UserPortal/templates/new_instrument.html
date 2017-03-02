@@ -41,30 +41,13 @@ New Instrument
         <input type="text" class="form-control" id="instrumentDescriptionBox" name="description">
     </div>
 
-    <div class="grid-container">
-        <div class="row">
-            <div class="col-6">
-                <div class="form-group">
-                    <div>
-                        <label for="frequency_band" class="control-label">Frequency Band:</label>
-                    </div>
-                    <input type="text" style="width: 40px;" id="instrumentFrequencyBandBox" name="frequency_band" maxlength="2">
-                </div>
-            </div>
-
-            <div class="col-6">
-                <div class="form-group">
-                    <div>
-                        <label for="site" class="form-control">Site:</label>
-                    </div>
-                    <select id="instrumentSiteSelect" name="site">
-                        {% for site in sites %}
-                        <option value="{{site.id}}">{{site.name}}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-            </div>
-        </div>
+    <div class="form-group">
+        <label for="site" class="form-control">Site: </label>
+        <select id="instrumentSiteSelect" name="site">
+            {% for site in sites %}
+            <option value="{{site.id}}">{{site.name}}</option>
+            {% endfor %}
+        </select>
     </div>
 
     <br>

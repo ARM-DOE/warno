@@ -54,7 +54,8 @@ class User(db.Model, UserMixin):
     name = db.Column(db.String, nullable=False, server_default='')
     location = db.Column(db.String)
     position = db.Column(db.String)
-    authorizations = db.Column(db.String)
+    # The default user authorization is the most basic, 'user'
+    authorizations = db.Column(db.String, nullable=False, server_default='user')
 
     def get_id(self):
         return unicode(self.id)
@@ -93,7 +94,6 @@ class Instrument(db.Model):
     type = db.Column(db.String)
     vendor = db.Column(db.String)
     description = db.Column(db.String)
-    frequency_band = db.Column(db.String(2))
     site = db.relationship(Site)
 
 

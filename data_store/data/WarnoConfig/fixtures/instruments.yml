@@ -6,7 +6,6 @@
       type: "Test Type 1"
       vendor: "Test Vendor 1"
       description: "Test Description 1"
-      frequency_band: "F1"
       site_id: 1
     - id: 2
       name_short: "TESTINS2"
@@ -14,5 +13,4 @@
       type: "Test Type 2"
       vendor: "Test Vendor 2"
       description: "Test Description 2"
-      frequency_band: "F2"
       site_id: 2

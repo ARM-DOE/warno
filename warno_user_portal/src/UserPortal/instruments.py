@@ -40,8 +40,8 @@ def list_instruments():
     """
     db_instruments = db.session.query(Instrument).order_by(asc(Instrument.id)).all()
     instrument_list = [dict(abbv=inst.name_short, name=inst.name_long, type=inst.type, vendor=inst.vendor,
-                            description=inst.description, frequency_band=inst.frequency_band,
-                            location=inst.site.name_short, site_id=inst.site_id, id=inst.id)
+                            description=inst.description, location=inst.site.name_short,
+                            site_id=inst.site_id, id=inst.id)
                        for inst in db_instruments]
 
     return render_template('instrument_list.html', instruments=instrument_list)
@@ -70,7 +70,6 @@ def new_instrument():
         new_db_instrument.type = request.form.get('type')
         new_db_instrument.vendor = request.form.get('vendor')
         new_db_instrument.description = request.form.get('description')
-        new_db_instrument.frequency_band = request.form.get('frequency_band')
         new_db_instrument.site_id = request.form.get('site')
 
         # Insert a new instrument into the database
@@ -117,7 +116,6 @@ def edit_instrument(instrument_id):
         updated_instrument.type = request.form.get('type')
         updated_instrument.vendor = request.form.get('vendor')
         updated_instrument.description = request.form.get('description')
-        updated_instrument.frequency_band = request.form.get('frequency_band')
         updated_instrument.site_id = request.form.get('site')
 
         # Update instrument in the database
@@ -135,8 +133,7 @@ def edit_instrument(instrument_id):
         db_instrument = db.session.query(Instrument).filter(Instrument.id == instrument_id).first()
         instrument_dict = dict(name_short=db_instrument.name_short, name_long=db_instrument.name_long,
                                type=db_instrument.type, vendor=db_instrument.vendor,
-                               description=db_instrument.description, frequency_band=db_instrument.frequency_band,
-                               site_id=db_instrument.site_id)
+                               description=db_instrument.description, site_id=db_instrument.site_id)
 
         return render_template('edit_instrument.html', sites=sites, instrument=instrument_dict)
 
@@ -196,8 +193,8 @@ def db_select_instrument(instrument_id):
     """
     inst = db.session.query(Instrument).filter(Instrument.id == instrument_id).first()
     return dict(abbv=inst.name_short, name=inst.name_long, type=inst.type, vendor=inst.vendor,
-                description=inst.description, frequency_band=inst.frequency_band, location=inst.site.name_short,
-                latitude=inst.site.latitude, longitude=inst.site.longitude, site_id=inst.site_id, id=inst.id)
+                description=inst.description, location=inst.site.name_short, latitude=inst.site.latitude,
+                longitude=inst.site.longitude, site_id=inst.site_id, id=inst.id)
 
 
 def db_delete_instrument(instrument_id):

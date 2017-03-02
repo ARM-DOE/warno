@@ -64,6 +64,9 @@ def new_user():
         new_db_user.position = request.form.get('position')
         new_db_user.password = request.form.get('password')
 
+        # New users only have the most basic authorization type, 'user'
+        new_db_user.authorizations = "user"
+
         # Insert the new user into the database
         db.session.add(new_db_user)
         db.session.commit()

@@ -298,8 +298,8 @@ def widget_histogram_controller(widget_id, dual=False):
     # We need to pass in a list of valid instruments:
     db_instruments = db.session.query(Instrument).order_by(asc(Instrument.id)).all()
     instrument_list = [dict(abbv=inst.name_short, name=inst.name_long, type=inst.type, vendor=inst.vendor,
-                            description=inst.description, frequency_band=inst.frequency_band,
-                            location=inst.site.name_short, site_id=inst.site_id, id=inst.id)
+                            description=inst.description, location=inst.site.name_short, site_id=inst.site_id,
+                            id=inst.id)
                        for inst in db_instruments]
     column_list = {}
 
@@ -338,8 +338,8 @@ def widget_real_time_gauge_controller(widget_id):
     # We need to pass in a list of valid instruments:
     db_instruments = db.session.query(Instrument).order_by(asc(Instrument.id)).all()
     instrument_list = [dict(abbv=inst.name_short, name=inst.name_long, type=inst.type, vendor=inst.vendor,
-                            description=inst.description, frequency_band=inst.frequency_band,
-                            location=inst.site.name_short, site_id=inst.site_id, id=inst.id)
+                            description=inst.description, location=inst.site.name_short, site_id=inst.site_id,
+                            id=inst.id)
                        for inst in db_instruments]
     column_list = {}
 
@@ -372,8 +372,8 @@ def widget_instrument_graph_controller(widget_id):
     # We need to pass in a list of valid instruments:
     db_instruments = db.session.query(Instrument).order_by(asc(Instrument.id)).all()
     instrument_list = [dict(abbv=inst.name_short, name=inst.name_long, type=inst.type, vendor=inst.vendor,
-                            description=inst.description, frequency_band=inst.frequency_band,
-                            location=inst.site.name_short, site_id=inst.site_id, id=inst.id)
+                            description=inst.description, location=inst.site.name_short, site_id=inst.site_id,
+                            id=inst.id)
                        for inst in db_instruments]
     column_list = {}
 

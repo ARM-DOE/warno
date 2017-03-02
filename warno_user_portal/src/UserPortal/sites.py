@@ -205,8 +205,8 @@ def show_site(site_id):
     # Assume the instrument status is operational unless the status has changed, handled afterward
     db_instruments = db.session.query(Instrument).filter(Instrument.site_id == site_id).all()
     instruments = [dict(abbv=instrument.name_short, name=instrument.name_long, type=instrument.type,
-                        vendor=instrument.vendor, frequency_band=instrument.frequency_band,
-                        description=instrument.description, status=1, last_author="", id=instrument.id)
+                        vendor=instrument.vendor, description=instrument.description, status=1,
+                        last_author="", id=instrument.id)
                    for instrument in db_instruments]
 
     # For each instrument, if there is a corresponding status entry from the query above,
