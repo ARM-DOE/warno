@@ -39,51 +39,56 @@
     {% endif %}
     <br>
 </div>
+<div style="vertical-align: top;">
+    <div style="display: inline-block; width: 300px; border: 2px solid black; margin: 5px; vertical-align: top;">
+        <div>
+            <img src='https://maps.googleapis.com/maps/api/staticmap?center={{site.latitude}}, {{site.longitude}}&zoom=1&size=300x300&maptype=roadmap&markers=color:blue%7Clabel:S%7C{{site.latitude}}, {{site.longitude}}&sensor=false'/>
+        </div>
+    </div>
+    <div style="display: inline-block; width: 400px; padding: 5px; vertical-align: top;">
+        <div class="info">
+            <h3 style="margin-left: 10px;">  Information:</h3>
+        </div>
+        <div style = "background-color: white; border: 1px solid black; padding: 5px;">
+            Abbreviation:   {{site.abbv}}
+            <br>
+            Name:           {{site.name}}
+            <br>
+            Facility:       {{site.facility}}
+            <br>
+            Mobile:         {{site.mobile}}
+            <br>
+            Location Name:  {{site.location_name}}
+            <br>
+            Latitude:       {{site.latitude}}
+            <br>
+            Longitude:      {{site.longitude}}
+            <br>
 
-<div style="width: 300px; float: left; border: 2px solid black; margin: 5px">
-    <div>
-        <img src='https://maps.googleapis.com/maps/api/staticmap?center={{site.latitude}}, {{site.longitude}}&zoom=1&size=300x300&maptype=roadmap&markers=color:blue%7Clabel:S%7C{{site.latitude}}, {{site.longitude}}&sensor=false'/>
-    </div>
+        </div>
 </div>
-<div style="float: left; width: 400px; padding: 5px;">
-    <div class="info">
-        <h3 style="margin-left: 10px;">  Information:</h3>
-    </div>
-    <div style = "background-color: white; border: 1px solid black; padding: 5px;">
-        Abbreviation:   {{site.abbv}}
-        <br>
-        Name:           {{site.name}}
-        <br>
-        Facility:       {{site.facility}}
-        <br>
-        Mobile:         {{site.mobile}}
-        <br>
-        Location Name:  {{site.location_name}}
-        <br>
-        Latitude:       {{site.latitude}}
-        <br>
-        Longitude:      {{site.longitude}}
-        <br>
-
-    </div>
 </div>
-<div style="float: left; width: 420px; padding: 5px;">
-    <div class="info">
-        <h3 style="text-align: center;">Recent Logs:</h3>
-    </div>
-    <div style="background-color: white; border: 1px solid black;">
-        {% for log in recent_logs %}
-            <b>Logged By</b>: {{log.author}}
-            <br>
-            <b>Time</b>: {{log.time}}
-            <br>
-            <b>Status</b>: {{log.status}}
-            <br>
-            <b>Comments</b>: {{log.contents}}
-            <br>
-            <b>Supporting Images</b>: {{log.supporting_images}}
+<div style="padding: 5px; width: 99%;">
+    <h3>Recent Logs:</h3>
+    {% for log in recent_logs %}
+    <div style="border: 2px solid black; margin: 5px; display: flex;">
+        <div class="{{log.status.replace(' ', '_').replace('-', '_').lower()}}"
+             style="border-right: 2px solid black; flex: 0 0 170px; vertical-align: middle;">
+            {{log.author}}
             <hr>
-        {% endfor %}
+            {{log.time}}
+            <hr>
+            {{log.status}}
+            <hr>
+        </div>
+        <div style="padding: 5px; vertical-align: top; flex: 1;">
+            {{log.contents}}
+            <hr>
+            <b>Supporting Images</b>:
+            <br>
+            {{log.supporting_images}}
+        </div>
     </div>
+    {% endfor %}
 </div>
 {% endblock %}

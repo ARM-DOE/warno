@@ -2,7 +2,7 @@ import logging
 import os
 
 from flask import render_template, redirect, url_for, request, abort
-from flask import Blueprint
+from flask import Blueprint, Markup
 from flask_user import current_user
 from sqlalchemy import desc, and_, or_
 from sqlalchemy.orm import aliased
@@ -192,7 +192,7 @@ def show_site(site_id):
     # Get the 5 most recent logs from all instruments at the site to display
     db_logs = db.session.query(InstrumentLog).join(InstrumentLog.instrument).join(Instrument.site).\
         filter(Instrument.site_id == site_id).order_by(desc(InstrumentLog.time)).limit(5).all()
-    recent_logs = [dict(time=log.time, contents=log.contents, status=status_code_to_text(log.status),
+    recent_logs = [dict(time=log.time, contents=Markup(log.contents), status=status_code_to_text(log.status),
                         supporting_images=log.supporting_images,
                         author=log.author.name, instrument=log.instrument.name_short)
                    for log in db_logs]

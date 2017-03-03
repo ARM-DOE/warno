@@ -126,8 +126,4 @@ def new_log():
     instruments = [dict(id=instrument.id, name=instrument.site.name_short + ":" + instrument.name_short)
                    for instrument in db_instruments]
 
-    # Get a list of users so the user can choose who submitted the log.
-    db_users = db.session.query(User).all()
-    users = [dict(id=user.id, name=user.name) for user in db_users]
-
-    return render_template('new_log.html', users=users, instruments=instruments, status=status_text, error=error)
+    return render_template('new_log.html', instruments=instruments, status=status_text, error=error)

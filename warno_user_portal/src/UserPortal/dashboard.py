@@ -4,6 +4,7 @@ import json
 import os
 
 from flask import Blueprint, render_template, request, jsonify
+from flask import Markup
 from flask_user import current_user
 from sqlalchemy import asc, or_, and_
 from sqlalchemy.orm import aliased
@@ -193,7 +194,7 @@ def widget_log_viewer():
     else:
         db_logs = db.session.query(InstrumentLog).order_by(InstrumentLog.time.desc()).limit(max_logs).all()
 
-    logs = [dict(time=log.time, contents=log.contents, status=status_code_to_text(log.status),
+    logs = [dict(time=log.time, contents=Markup(log.contents), status=status_code_to_text(log.status),
                  supporting_images=log.supporting_images, author=log.author.name,
                  instrument_name="%s:%s" % (log.instrument.site.name_short, log.instrument.name_short))
             for log in db_logs]
@@ -406,7 +407,7 @@ def status_log_for_each_instrument():
                                             il_alias_1.instrument_id < il_alias_2.instrument_id)))).\
         filter(il_alias_2.id == None).all()
 
-    recent_logs = {log.instrument.id: dict(author=log.author.name, status_code=log.status, contents=log.contents)
+    recent_logs = {log.instrument.id: dict(author=log.author.name, status_code=log.status, contents=Markup(log.contents))
                    for log in logs}
 
     return recent_logs
