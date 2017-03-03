@@ -43,18 +43,10 @@ Status
             <tr>
             {% endif %}
             <td class="inst_status_td" style="float: left;">
-                <div class="inst_status_hidden_title">
+                <div>
                     <a href="{{url_for('instruments.instrument', instrument_id= instrument.id)}}">{{  instrument.instrument_name }}</a>
                 </div>
-                <div class="inst_status_div round {{instrument.status.replace(' ', '_').replace('-', '_').lower()}}" onclick="toggleShowLogs(this)">
-                    <div class="log_div" hidden>
-                        <h1><a href="{{url_for('instruments.instrument', instrument_id= instrument.id)}}">{{  instrument.instrument_name }}</a></h1>
-                        <br>
-                        Last Author: {{ instrument.author }}
-                        <br>
-                        Last Log: {{ instrument.log_time }}
-                        <div class="status_log_container">{{ instrument.contents }}</div>
-                    </div>
+                <div class="inst_status_div round {{instrument.status.replace(' ', '_').replace('-', '_').lower()}}" onclick="openModal({{instrument.id}})">
                 </div>
                 <br>
             </td>
@@ -66,122 +58,43 @@ Status
         </table>
     </div>
     {% endfor %}
+    {% for instrument in instruments %}
+    <div class="db_modal" id="modal-{{instrument.id}}" onclick="closeModal({{instrument.id}})">
+        <div class="status_modal_content" onclick="blockClick(event)">
+            <div style="padding: 10px;">
+                <div class="status_modal_close" onclick="closeModal({{instrument.id}})" style="float: right;">x</div>
+                <div class="inst_status_div rect {{instrument.status.replace(' ', '_').replace('-', '_').lower()}}" style="display: inline-block;">
+                    {{instrument.status}}
+                </div>
+                <strong style="font-size: 200%;"><a href="{{url_for('instruments.instrument', instrument_id= instrument.id)}}">{{ instrument.site }}:{{ instrument.instrument_name }}</a></strong>
+                &nbsp &nbsp<strong>Logged by {{ instrument.author }} at {{ instrument.log_time }} UTC</strong>
+                <div class="status_log_container">{{ instrument.contents }}</div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
 
 {% endblock %}
 
 {% block script %}
 <script>
-    function toggleLogsForSite(element) {
-        status_table = element.parentNode.parentNode.parentNode.parentNode;
-        status_div = status_table.parentNode
-
-        inst_status_tds = status_table.getElementsByClassName("inst_status_td");
-        inst_status_divs = status_table.getElementsByClassName("inst_status_div");
-        log_divs = status_table.getElementsByClassName("log_div");
-
-        // This function assumes inst_status_tds, inst_status_divs, and log_divs are of equal length
-        // If this ever becomes untrue, each one will need its own loop
-        if (element.innerHTML == "+"){
-            element.innerHTML = "-";
-
-            status_table.classList.add("expanded")
-            status_div.classList.add("expanded")
-
-            for (i = 0; i < log_divs.length; i ++) {
-                inst_status_tds[i].classList.add("expanded");
-                inst_status_tds[i].style['text-align'] = "left";
-
-                inst_status_divs[i].classList.add("rect");
-                inst_status_divs[i].classList.add("expanded");
-                inst_status_divs[i].classList.remove("round");
-                inst_status_divs[i].style['text-align'] = "left";
-
-                log_divs[i].hidden=false;
-            }
-
-        }
-        else {
-            element.innerHTML = "+";
-
-            status_table.classList.remove("expanded");
-            status_div.classList.remove("expanded");
-
-            for (i = 0; i < log_divs.length; i ++) {
-                inst_status_tds[i].classList.remove("expanded");
-                inst_status_tds[i].style['text-align'] = "center";
-
-                inst_status_divs[i].classList.remove("rect");
-                inst_status_divs[i].classList.remove("expanded");
-                inst_status_divs[i].classList.add("round");
-                inst_status_divs[i].style['text-align'] = "center";
-
-                log_divs[i].hidden=true;
-            }
-        }
+    function openModal(instrument_id) {
+        log_modal = document.getElementById("modal-" + instrument_id);
+        log_modal.style.display = "block";
     }
 
-    function toggleShowLogs(element) {
-
-    //Get the first log containing div for the clicked element (should only be one per toggle element)
-    hidden_div = element.getElementsByClassName('log_div')[0];
-
-    //Table cell containing the clicked element
-    inst_td = element.parentNode;
-
-    //Div containing the instrument title when the log is hidden.  Should only be one.
-    title_div_when_hidden = inst_td.getElementsByClassName("inst_status_hidden_title")[0]
-
-    //Status table containing the clicked element and its containing div
-    status_table = element.parentNode.parentNode.parentNode.parentNode;
-    status_div = status_table.parentNode;
-
-    if (hidden_div.hidden == true){
-        status_table.classList.add("expanded");
-        status_div.classList.add("expanded");
-
-        inst_td.parentNode.classList.add("expanded");
-        inst_td.classList.add("expanded");
-
-        element.classList.remove("round");
-        element.classList.add("rect");
-        element.classList.add("expanded");
-
-        inst_td.style['text-align'] = "left";
-        element.style['text-align'] = "left";
-
-        hidden_div.hidden = false;
-        //When the hidden_div is revealed, the title div should be hidden
-        title_div_when_hidden.hidden = true;
-    }
-    else {
-        inst_td.parentNode.classList.remove("expanded");
-        inst_td.classList.remove("expanded");
-
-        element.classList.remove("rect")
-        element.classList.add("round");
-
-        inst_td.style['text-align'] = "center";
-        element.style['text-align'] = "center";
-
-        hidden_div.hidden = true;
-        //When the hidden_div is hidden, the title div should be revealed
-        title_div_when_hidden.hidden = false;
+    function closeModal(instrument_id) {
+        log_modal = document.getElementById("modal-" + instrument_id);
+        log_modal.style.display = "none";
     }
 
-    all_hidden = true;
-    hidden_children = status_table.getElementsByClassName("log_div");
-    for (i = 0; i < hidden_children.length; i++) {
-        if (hidden_children[i].hidden == false){
-            all_hidden = false;
-        }
-    }
-
-    //If all logs for a particular table are hidden, the table should no longer be expanded to display them
-    if (all_hidden) {
-        status_table.classList.remove("expanded");
-        status_div.classList.remove("expanded");
-    }
-
+    function blockClick(e)
+    {
+        // Stops a click from bubbling up into parent click events.
+        if (!e) var e = window.event;
+        e.cancelBubble = true;
+        if (e.stopPropagation) e.stopPropagation();
+        console.log("End bubble");
     }
 
 </script>
