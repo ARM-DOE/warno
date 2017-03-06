@@ -551,6 +551,34 @@ div.status_log_container {
     background-color: white;
     border: 2px solid #555555;
     padding: 5px;
+    text-align: left;
+}
+
+/* Modal Content */
+.status_modal_content {
+    position: relative;
+    background: -moz-linear-gradient(left, #e5f2ff, #c0d0f5); /* FF3.6-15 */
+    background: -webkit-linear-gradient(left, #e5f2ff, #c0d0f5); /* Chrome10-25,Safari5.1-6 */
+    background: linear-gradient(to right, #e5f2ff, #c0d0f5); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+    margin: auto;
+    padding: 10px;
+    border: 1px solid #888;
+    min-width: 800px;
+    max-width: 80%;
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+    -webkit-animation-name: db_animatetop;
+    -webkit-animation-duration: 0.4s;
+    animation-name: db_animatetop;
+    animation-duration: 0.4s;
+    margin-bottom: 150px;
+}
+
+/* The Close Button */
+div.status_modal_close {
+    color: white;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
 }
 
 /*** Status types ***/
