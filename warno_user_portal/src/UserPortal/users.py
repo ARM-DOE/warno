@@ -32,7 +32,7 @@ def list_users():
         Returns an HTML document with an argument for the list of users and their information.
     """
     if current_user.is_anonymous or current_user.authorizations != "engineer":
-        abort(404)
+        abort(403)
 
     db_users = db.session.query(User).all()
     users_dict = [dict(name=user.name, email=user.email, location=user.location, position=user.position, id=user.id, username=user.username, active=user.is_active, password=user.password)
@@ -56,7 +56,7 @@ def new_user():
             list_users function, redirecting the user to the list of users.
     """
     if current_user.is_anonymous or current_user.authorizations != "engineer":
-        abort(404)
+        abort(403)
 
     if request.method == 'POST':
         # Get the information for the insert from the submitted form arguments
@@ -104,7 +104,7 @@ def edit_user(user_id):
             list_users function, redirecting the user to the list of users.
     """
     if current_user.is_anonymous or current_user.authorizations != "engineer":
-        abort(404)
+        abort(403)
 
     # If the form information has been received, update the user in the database
     if request.method == 'POST':

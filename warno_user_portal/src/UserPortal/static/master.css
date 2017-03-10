@@ -921,3 +921,18 @@ input.short_input {
     width: 50px;
 }
 
+div.log_button {
+    display: inline-block;
+}
+
+div.log_button:hover,
+div.log_button:focus {
+    background: lightGray;
+    cursor: pointer;
+}
+
+div.status_site_button:hover,
+div.status_site_button:focus {
+    cursor: pointer;
+}
+

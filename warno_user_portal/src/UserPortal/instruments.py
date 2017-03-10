@@ -62,7 +62,7 @@ def new_instrument():
             list_instruments function, redirecting the user to the list of instruments.
     """
     if current_user.is_anonymous or current_user.authorizations != "engineer":
-        abort(404)
+        abort(403)
 
     # If the form information has been received, insert the new instrument into the table
     if request.method == 'POST':
@@ -111,7 +111,7 @@ def edit_instrument(instrument_id):
             list_instruments function, redirecting the site to the list of instruments.
     """
     if current_user.is_anonymous or current_user.authorizations != "engineer":
-        abort(404)
+        abort(403)
 
     if request.method == 'POST':
         # Get the instrument information from the request
@@ -670,7 +670,7 @@ def update_all_valid_columns():
 
     """
     if current_user.is_anonymous or current_user.authorizations not in ["engineer", "technician"]:
-        abort(404)
+        abort(403)
     message = "Adding data attributes that are no longer all null to list of valid columns:<hr>"
     db_instruments = db.session.query(Instrument).all()
     for inst in db_instruments:

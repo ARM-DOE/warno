@@ -72,7 +72,7 @@ def new_log():
             instrument with the instrument_id matching the insertion.
     """
     if current_user.is_anonymous or current_user.authorizations not in ["engineer", "technician"]:
-        abort(404)
+        abort(403)
 
     # Default error message will not show on template when its the empty string
     error = ""

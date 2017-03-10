@@ -72,7 +72,7 @@ api_manager = flask.ext.restless.APIManager(app, flask_sqlalchemy_db=db)
 user_blueprint = api_manager.create_api(User, methods=['GET'], exclude_columns=['password', 'reset_password_token'], url_prefix='/api/v1')
 site_blueprint = api_manager.create_api(Site, methods=['GET'], url_prefix='/api/v1')
 instrument_blueprint = api_manager.create_api(Instrument, methods=['GET'], url_prefix='/api/v1')
-log_blueprint = api_manager.create_api(InstrumentLog, methods=['GET'], url_prefix='/api/v1')
+log_blueprint = api_manager.create_api(InstrumentLog, methods=['GET'], exclude_columns=['author.password', 'author.reset_password_token'], url_prefix='/api/v1')
 event_with_text_blueprint = api_manager.create_api(EventWithText, methods=['GET'], url_prefix='/api/v1')
 event_with_value_blueprint = api_manager.create_api(EventWithValue, methods=['GET'], url_prefix='/api/v1', results_per_page=30)
 ProsensingPAF_blueprint = api_manager.create_api(ProsensingPAF, methods=['GET'], url_prefix='/api/v1')
@@ -250,7 +250,7 @@ def query():
 
     """
     if current_user.is_anonymous or current_user.authorizations != "engineer":
-        abort(404)
+        abort(403)
 
     data = ""
     if request.method == 'POST':

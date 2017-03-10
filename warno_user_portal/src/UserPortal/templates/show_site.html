@@ -42,7 +42,7 @@
 <div style="vertical-align: top;">
     <div style="display: inline-block; width: 300px; border: 2px solid black; margin: 5px; vertical-align: top;">
         <div>
-            <img src='https://maps.googleapis.com/maps/api/staticmap?center={{site.latitude}}, {{site.longitude}}&zoom=1&size=300x300&maptype=roadmap&markers=color:blue%7Clabel:S%7C{{site.latitude}}, {{site.longitude}}&sensor=false'/>
+            <img src='https://maps.googleapis.com/maps/api/staticmap?center={{site.latitude}}, {{site.longitude}}&zoom=1&size=300x300&maptype=roadmap&markers=color:blue%7Clabel:S%7C{{site.latitude}}, {{site.longitude}}&sensor=false&key=AIzaSyBHcnNMn_-7yvt9PafY5FFPtGrhQNiamnc'/>
         </div>
     </div>
     <div style="display: inline-block; width: 400px; padding: 5px; vertical-align: top;">
@@ -74,6 +74,8 @@
     <div style="border: 2px solid black; margin: 5px; display: flex;">
         <div class="{{log.status.replace(' ', '_').replace('-', '_').lower()}}"
              style="border-right: 2px solid black; flex: 0 0 170px; vertical-align: middle;">
+            {{log.instrument}}
+            <hr>
             {{log.author}}
             <hr>
             {{log.time}}
@@ -83,10 +85,6 @@
         </div>
         <div style="padding: 5px; vertical-align: top; flex: 1;">
             {{log.contents}}
-            <hr>
-            <b>Supporting Images</b>:
-            <br>
-            {{log.supporting_images}}
         </div>
     </div>
     {% endfor %}

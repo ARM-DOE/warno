@@ -25,34 +25,27 @@ Status
         <br>
         <br>
 
-        Click on a status box to expand it, or on an instrument or site name to visit the details page for that item.
+        Click on a status bubble to expand it, or on an instrument or site name to visit the details page for that item.
     </p>
 
     {% for site, site_id in sites.iteritems() %}
     <div class="status_block">
         <table class='status_plot'>
             <th colspan="2">
-            <button type="button" class="site_toggle" onclick="toggleLogsForSite(this)">+</button>
-            <a href="{{url_for('sites.show_site', site_id=site_id)}}">{{ site }}</a>
+            <a href="{{url_for('sites.show_site', site_id=site_id)}}"><div class="status_site_button">{{ site }}</div></a>
             </th>
-            {% set td_index = 0 %}
             {% for instrument in instruments %}
             {% if instrument.site == site %}
-            {% set td_index = td_index + 1 %}
-            {% if td_index % 2 == 1 %}
             <tr>
-            {% endif %}
             <td class="inst_status_td" style="float: left;">
                 <div>
                     <a href="{{url_for('instruments.instrument', instrument_id= instrument.id)}}">{{  instrument.instrument_name }}</a>
                 </div>
-                <div class="inst_status_div round {{instrument.status.replace(' ', '_').replace('-', '_').lower()}}" onclick="openModal({{instrument.id}})">
+                <div class="log_button round {{instrument.status.replace(' ', '_').replace('-', '_').lower()}}" style="display: inline-block;" onclick="openModal({{instrument.id}})">
                 </div>
                 <br>
             </td>
-            {% if td_index % 2 == 0 %}
             </tr>
-            {% endif %}
             {% endif %}
             {% endfor %}
         </table>
