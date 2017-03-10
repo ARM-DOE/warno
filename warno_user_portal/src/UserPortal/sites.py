@@ -50,7 +50,7 @@ def new_site():
             location to the list_sites function, redirecting the user to the list of ARM sites.
     """
     if current_user.is_anonymous or current_user.authorizations != "engineer":
-        abort(404)
+        abort(403)
 
     # If the method is post, the user has submitted the information in the form.
     # Try to insert the new site into the database, if the values are incorrect redirect
@@ -106,7 +106,7 @@ def edit_site(site_id):
             list_sites function, redirecting the site to the list of sites.
     """
     if current_user.is_anonymous or current_user.authorizations != "engineer":
-        abort(404)
+        abort(403)
 
     # If the form information has been received, update the site in the database
     if request.method == 'POST':
