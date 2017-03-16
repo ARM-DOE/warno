@@ -162,6 +162,564 @@ WidgetManager.prototype.wideBorders = function() {
 
 
 
+// Configuration Parameter superclass and subtypes
+function ConfigParameter(name, label, defaultValue) {
+    // Object representing a widget configuration parameter.
+    this.name = name;          // Name of the parameter
+    this.label = label;        // Label for the generated configuration parameter element.
+    this.type = 'abstract';    // Type of config parameter.  Used for loading the dashboard back in.
+    this.value = defaultValue; // Current value of parameter.  Default given at creation.
+}
+
+ConfigParameter.prototype.isValidValue = function(value) {
+    // Up to the subclasses to validate values.  If there is no defined validity checking function, defaults to true.
+    return true;
+}
+
+ConfigParameter.prototype.buildConfigElement = function() {
+    console.log("CP bCE");
+    // Create the html config element that will allow the user to select and save the proper value to this object.
+    var configElement = document.createElement('div');  // Defaults to an empty div.
+    return configElement;
+}
+
+ConfigParameter.prototype.loadFromConfigElement = function() {
+    // Load in the value in the config element.  Defaults to doing nothing, must be set for each ConfigParameter type
+}
+
+ConfigParameter.prototype.setValue = function(value) {
+    this.value = value;
+    return value;
+}
+
+ConfigParameter.prototype.getRepresentation = function() {
+    // Return a dictionary defining the parts needed to recreate the object.
+    return {
+        "type": this.type,
+        "name": this.name,
+        "label": this.label,
+        "value": this.value,
+        }
+}
+
+
+
+function ConfigString(name, label, defaultValue, maxLength) {
+    ConfigParameter.call(this, name, label, defaultValue);
+
+    this.type = 'string';
+    this.inputId = name + '-input';
+    this.maxLength = maxLength;
+}
+
+ConfigString.prototype = Object.create(ConfigParameter.prototype);
+ConfigString.prototype.constructor = ConfigString;
+
+ConfigString.prototype.isValidValue = function(value) {
+    var isValid = false;
+
+    if (value === null) {
+        isValid = true;
+    };
+
+    if (typeof value === "string") {
+        if (value.length <= this.maxLength) {
+            isValid = true;
+        };
+    };
+
+    return isValid;
+}
+
+ConfigString.prototype.buildConfigElement = function() {
+    console.log("CS bCE");
+    var configElement = document.createElement('div');
+
+    var divLabel = document.createElement('label');
+    divLabel.htmlFor = this.inputId;
+    divLabel.innerHTML = this.label;
+    configElement.appendChild(divLabel);
+
+    var divInput = document.createElement('input');
+    divInput.type = 'text';
+    divInput.id = this.inputId;
+    if (!(this.maxLength === null) & (this.maxLength >= 1)) {
+        divInput.maxLength = this.maxLength;
+        this.value = this.value.substring(0, this.maxLength);
+    };
+    divInput.value = this.value;
+    configElement.appendChild(divInput)
+
+    return configElement;
+}
+
+ConfigString.prototype.loadFromConfigElement = function() {
+    var inputElement = document.getElementById(this.inputId);
+    return inputElement.value;
+}
+
+ConfigString.prototype.getRepresentation = function() {
+    // Return a dictionary defining the parts needed to recreate the object.
+    return {
+        "type": this.type,
+        "name": this.name,
+        "label": this.label,
+        "value": this.value,
+        "maxLength": this.maxLength,
+        }
+}
+
+
+function ConfigNumber(name, label, defaultValue, lowerLimit, upperLimit) {
+    ConfigParameter.call(this, name, label, defaultValue);
+
+    this.type = 'number';
+    this.inputId = name + '-input';
+    this.errorId = name + '-error';
+    this.lowerLimit = lowerLimit; // A 'null' here means no lower limit for the value
+    this.upperLimit = upperLimit; // A 'null' here means no upper limit for the value
+}
+
+ConfigNumber.prototype = Object.create(ConfigParameter.prototype);
+ConfigNumber.prototype.constructor = ConfigNumber;
+
+ConfigNumber.prototype.isValidValueWithReason = function(value) {
+    var isValid = false;
+    var error = "";
+
+    if (typeof value === "number" && !isNaN(value)) {
+        if (( (this.lowerLimit === null) || (value >= this.lowerLimit) ) &&
+            ( (this.upperLimit === null) || (value <= this.upperLimit) )) {
+            isValid = true;
+        } else {
+            // This should not be reached if both limits are null, so that case is not handled here
+            error = "";
+            if (!(this.lowerLimit === null)) {
+                error += "Value must be at least " + this.lowerLimit + ". ";
+            };
+            if (!(this.upperLimit === null)) {
+                error += "Value must not be greater than " + this.upperLimit + ".";
+            };
+        };
+    } else {
+        error = "Value must be a number.";
+    }
+
+    // Returns both the boolean indicating valid/not valid and the error if it was not valid.
+    return [isValid, error];
+}
+
+ConfigNumber.prototype.isValidValue = function(value) {
+    // In the simple case where you just want to know if the value is valid without needing the reason.
+    result = this.isValidValueWithReason(value);
+    return result[0];
+}
+
+ConfigNumber.prototype.buildConfigElement = function() {
+    var configElement = document.createElement('div');
+
+    var divLabel = document.createElement('label');
+    divLabel.htmlFor = this.inputId;
+    divLabel.innerHTML = this.label;
+    configElement.appendChild(divLabel);
+
+    var divInput = document.createElement('input');
+    divInput.type = 'text';
+    divInput.id = this.inputId;
+    divInput.value = this.value;
+    configElement.appendChild(divInput);
+
+    var divError = document.createElement('div');
+    divError.id = this.errorId;
+    divError.className = 'config-error';
+    configElement.appendChild(divError);
+
+    return configElement;
+}
+
+ConfigNumber.prototype.loadFromConfigElement = function() {
+    var inputElement = document.getElementById(this.inputId);
+    var errorElement = document.getElementById(this.errorId);
+    floatValue = parseFloat(inputElement.value);
+
+    result = this.isValidValueWithReason(floatValue);
+
+    if (result[0]) {
+        errorElement.innerHTML = "";
+        return floatValue;
+    } else {
+        errorElement.innerHTML = result[1];
+        return NaN;
+    };
+}
+
+ConfigNumber.prototype.getRepresentation = function() {
+    // Return a dictionary defining the parts needed to recreate the object.
+    return {
+        "type": this.type,
+        "name": this.name,
+        "label": this.label,
+        "value": this.value,
+        "lowerLimit": this.lowerLimit,
+        "upperLimit": this.upperLimit,
+        }
+}
+
+
+function ConfigInteger(name, label, defaultValue, lowerLimit, upperLimit) {
+    ConfigParameter.call(this, name, label, defaultValue);
+
+    this.type = 'integer';
+    this.inputId = name + '-input';
+    this.errorId = name + '-error';
+    this.lowerLimit = lowerLimit;  // A 'null' here means no lower limit for the value
+    this.upperLimit = upperLimit;  // A 'null' here means no upper limit for the value
+}
+
+ConfigInteger.prototype = Object.create(ConfigParameter.prototype);
+ConfigInteger.prototype.constructor = ConfigInteger;
+
+ConfigInteger.prototype.isValidValueWithReason = function(value) {
+    var isValid = false;
+    var error = "";
+
+    // Will not allow strings to represent numbers. Must be converted beforehand.
+    if (isInt(value) && typeof value === "number"){
+        if (( (this.lowerLimit === null) || (value >= this.lowerLimit) ) &&
+            ( (this.upperLimit === null) || (value <= this.upperLimit) )) {
+            isValid = true;
+        } else {
+            // This should not be reached if both limits are null, so that case is not handled here
+            error = "";
+            if (!(this.lowerLimit === null)) {
+                error += "Value must be at least " + this.lowerLimit + ". ";
+            };
+            if (!(this.upperLimit === null)) {
+                error += "Value must not be greater than " + this.upperLimit + ".";
+            };
+        };
+    } else {
+        error = "Value must be an integer.";
+    }
+
+    // Returns both the boolean indicating valid/not valid and the error if it was not valid.
+    return [isValid, error];
+}
+
+ConfigInteger.prototype.isValidValue = function(value) {
+    // In the simple case where you just want to know if the value is valid without needing the reason.
+    result = this.isValidValueWithReason(value);
+    return result[0];
+}
+
+ConfigInteger.prototype.buildConfigElement = function() {
+    var configElement = document.createElement('div');
+
+    var divLabel = document.createElement('label');
+    divLabel.htmlFor = this.inputId;
+    divLabel.innerHTML = this.label;
+    configElement.appendChild(divLabel);
+
+    var divInput = document.createElement('input');
+    divInput.type = 'text';
+    divInput.id = this.inputId;
+    divInput.value = this.value;
+    configElement.appendChild(divInput);
+
+    var divError = document.createElement('div');
+    divError.id = this.errorId;
+    divError.className = 'config-error';
+    configElement.appendChild(divError);
+
+    return configElement;
+}
+
+ConfigInteger.prototype.loadFromConfigElement = function() {
+    var inputElement = document.getElementById(this.inputId);
+    var errorElement = document.getElementById(this.errorId);
+    floatValue = parseFloat(inputElement.value);
+
+    // Checking against float version then converting to integer if it is valid prevents unintended rounding in parseInt
+    result = this.isValidValueWithReason(floatValue);
+
+    if (result[0]) {
+        errorElement.innerHTML = "";
+        return parseInt(inputElement.value);
+    } else {
+        errorElement.innerHTML = result[1];
+        return NaN;
+    };
+}
+
+ConfigInteger.prototype.getRepresentation = function() {
+    // Return a dictionary defining the parts needed to recreate the object.
+    return {
+        "type": this.type,
+        "name": this.name,
+        "label": this.label,
+        "value": this.value,
+        "lowerLimit": this.lowerLimit,
+        "upperLimit": this.upperLimit,
+        }
+};
+
+function ConfigCheckbox(name, label, defaultValue) {
+    ConfigParameter.call(this, name, label, defaultValue);
+
+    this.type = "checkbox";
+    this.inputId = this.name + "-input";
+}
+
+ConfigCheckbox.prototype = Object.create(ConfigParameter.prototype);
+ConfigCheckbox.prototype.constructor = ConfigCheckbox;
+
+ConfigCheckbox.prototype.isValidValue = function(value) {
+    if (typeof value == "boolean") {
+        return true;
+    } else {
+        return false;
+    };
+}
+
+ConfigCheckbox.prototype.buildConfigElement = function() {
+    var configElement = document.createElement('div');
+
+    var divLabel = document.createElement('label');
+    divLabel.htmlFor = this.inputId;
+    divLabel.innerHTML = this.label;
+    configElement.appendChild(divLabel);
+
+    var divInput = document.createElement('input');
+    divInput.type = 'checkbox';
+    divInput.id = this.inputId;
+    if (this.value) {
+        divInput.checked = true;
+    };
+    configElement.appendChild(divInput);
+
+    return configElement;
+}
+
+ConfigCheckbox.prototype.loadFromConfigElement = function() {
+    var inputElement = document.getElementById(this.inputId);
+
+    if (inputElement.checked) {
+        return true;
+    } else {
+        return false;
+    };
+}
+
+function ConfigSelect(name, label, defaultValue, options) {
+    ConfigParameter.call(this, name, label, defaultValue);
+
+    this.type = "select";
+    this.inputId = this.name + "-input";
+    this.options = options // Array where each element is an option of the array form '[optionText, value]'
+}
+
+ConfigSelect.prototype = Object.create(ConfigParameter.prototype);
+ConfigSelect.prototype.constructor = ConfigSelect;
+
+ConfigSelect.prototype.isValidValue = function(value) {
+    // If one of the 'options' value matches the given value, return true
+    for (var i = 0; i < this.options.length; i++) {
+        if (value == this.options[i][1]) {
+            return true;
+        };
+    };
+
+    return false;
+}
+
+ConfigSelect.prototype.buildConfigElement = function() {
+    var configElement = document.createElement('div');
+
+    var divLabel = document.createElement('label');
+    divLabel.htmlFor = this.inputId;
+    divLabel.innerHTML = this.label;
+    configElement.appendChild(divLabel);
+
+    var divInput = document.createElement('select');
+    divInput.id = this.inputId;
+    for (var i = 0; i < this.options.length; i ++) {
+        var opt = document.createElement('option');
+        opt.innerHTML = this.options[i][0];
+        opt.value = this.options[i][1];
+        if (opt.value == this.value) {
+            opt.selected = true;
+        };
+        divInput.appendChild(opt);
+    };
+    configElement.appendChild(divInput);
+
+    return configElement;
+}
+
+ConfigSelect.prototype.loadFromConfigElement = function() {
+    var inputElement = document.getElementById(this.inputId);
+
+    return inputElement.value;
+}
+
+ConfigSelect.prototype.getRepresentation = function() {
+    // Return a dictionary defining the parts needed to recreate the object.
+    return {
+        "type": this.type,
+        "name": this.name,
+        "label": this.label,
+        "value": this.value,
+        "options": this.options,
+        }
+}
+
+
+
+
+
+
+
+
+
+// Class definition for generic Widget
+function Widget(manager, id, containerDiv) {
+    this.manager = manager;
+    this.id = id;
+    this.containerDiv = containerDiv;
+
+    this.active = true;
+    this.activeCounter = false;
+    this.controlDiv = document.createElement('div');
+    this.configDiv = document.createElement('div');
+
+    this.triggerCounter = 0;
+
+    // The first element of each parameter is the unique name for it.  Must not be any repeats.
+    this.configParameters = [
+        new ConfigInteger("triggerTickNumber", "Update Frequency in Minutes (positive integer): ", 1, 1, null),
+    ];
+
+    this.buildControlDiv();
+    this.buildConfigDiv();
+}
+
+Widget.prototype.tick = function() {
+    if (this.activeCounter === true) {
+        this.triggerCounter += 1;
+        if (this.triggerCounter >= this.getConfigParameter("triggerTickNumber")){
+            this.triggerCounter = 0;
+            this.triggerJob();
+        };
+    };
+};
+
+Widget.prototype.getConfigParameter = function (name) {
+    for (var i = 0; i < this.configParameters.length; i++) {
+        if (name == this.configParameters[i].name) {
+            return this.configParameters[i].value;
+        };
+    };
+    return null;
+}
+
+Widget.prototype.getConfigParameterRepresentations = function() {
+    configParameterRepresentations = [];
+    for (var i = 0; i < this.configParameters.length; i ++) {
+        representation = this.configParameters[i].getRepresentation();
+        configParameterRepresentations.push(representation);
+    };
+
+    return configParameterRepresentations;
+};
+
+Widget.prototype.saveDashboard = function() {
+    dashboard = {};
+
+    // First package up the configuration parameters
+    dashboard["configParameters"] = this.getConfigParameterRepresentations();
+
+    // Then package up the rest of the dashboard.
+
+    return JSON.stringify(dashboard);
+};
+Widget.prototype.loadDashboard = function() {};
+
+Widget.prototype.buildControlDiv = function () {
+    this.controlDiv.className = 'wd';
+    this.controlDiv.innerHTML = "Hello from the otter slide";
+    this.controlDiv.id = 'widget-' + this.id;
+
+    configButton = document.createElement('button');
+    configButton.innerHTML = "Conf";
+    var that = this;
+    configButton.onclick = function(){that.showConfig()};
+    this.controlDiv.appendChild(configButton);
+
+    this.containerDiv.appendChild(this.controlDiv);
+};
+
+Widget.prototype.buildConfigDiv = function() {
+    this.configDiv.id = 'config-' + this.id;
+    this.configDiv.className = "widget_config";
+
+    for (var i = 0; i < this.configParameters.length; i++) {
+        this.configDiv.appendChild(this.configParameters[i].buildConfigElement());
+    };
+
+    controlButton = document.createElement('button');
+    controlButton.innerHTML = "<< Return";
+    var that = this;
+    controlButton.onclick = function(){that.hideConfig()};
+    this.configDiv.appendChild(controlButton);
+
+    saveButton = document.createElement('button');
+    saveButton.innerHTML = "Apply";
+    var that = this;
+    saveButton.onclick = function(){that.saveConfig()};
+    this.configDiv.appendChild(saveButton);
+
+    this.containerDiv.appendChild(this.configDiv);
+};
+
+Widget.prototype.validateConfig = function() {
+    // Only returns true if all of the entries are valid, otherwise returns false.  Want to make sure all
+    // 'loadFromConfigElement' functions are called to display all errors at once though.
+    allValid = true;
+    for (var i = 0; i < this.configParameters.length; i++) {
+        value = this.configParameters[i].loadFromConfigElement();
+        if (!this.configParameters[i].isValidValue(value)) {
+            allValid = false;
+        };
+    };
+    return allValid;
+};
+Widget.prototype.saveConfig = function() {
+    allEntriesValid = this.validateConfig();
+    if (allEntriesValid) {
+        for (var i = 0; i < this.configParameters.length; i++) {
+            value = this.configParameters[i].loadFromConfigElement();
+            this.configParameters[i].setValue(value);
+        };
+    } else {
+        return false;
+    };
+};
+
+Widget.prototype.triggerJob = function() {console.log("Job Triggered")};
+Widget.prototype.removeWidget = function() {};
+Widget.prototype.showConfig = function() {
+    this.controlDiv.style.display = "none";
+    this.configDiv.style.display = "inline-block";
+};
+Widget.prototype.hideConfig = function() {
+    this.controlDiv.style.display = "inline-block";
+    this.configDiv.style.display = "none";
+};
+
+
+
+
+
 // Log Display Section
 function LogViewer(manager, id, containerDiv, controllerUrl, logViewerURL) {
     this.manager = manager;
@@ -3382,3 +3940,12 @@ function isNormalInteger(str) {
     var n = ~~Number(str);
     return String(n) === str && n >= 0;
 };
+
+// http://stackoverflow.com/questions/14636536/how-to-check-if-a-variable-is-an-integer-in-javascript
+function isInt(value) {
+  if (isNaN(value)) {
+    return false;
+  }
+  var x = parseFloat(value);
+  return (x | 0) === x;
+}

@@ -936,3 +936,8 @@ div.status_site_button:focus {
     cursor: pointer;
 }
 
+div.config-error {
+    color: red;
+    font-style: italic;
+    font-size: 80%;
+}
