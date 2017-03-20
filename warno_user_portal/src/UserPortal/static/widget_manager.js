@@ -33,16 +33,22 @@ WidgetManager.prototype.loadDashboard = function(dashboardSchematic) {
     this.removeWidgets();
     this.removeInactive();
 
+    console.log(dashboardSchematic);
+
     this.buildFromSchematic(dashboardSchematic);
 };
 
 WidgetManager.prototype.buildFromSchematic = function(dashboardSchematic) {
     // Build objects from the returned dashboard configuration
+    console.log(dashboardSchematic);
     for (var i = 0; i < dashboardSchematic.length; i ++) {
         if (dashboardSchematic[i]["type"] == "LogViewer") {
             this.addLogViewer();
             var newLogViewer = this.widgets[this.widgets.length - 1];
             newLogViewer.loadDashboard(dashboardSchematic[i]["data"]);
+        }
+        if (dashboardSchematic[i]["type"] == "WLogViewer") {
+            this.addWLogViewer(dashboardSchematic[i]["data"]);
         }
         if (dashboardSchematic[i]["type"] == "StatusPlot") {
             this.addStatusPlot();
@@ -139,6 +145,15 @@ WidgetManager.prototype.addRealTimeGauge = function(schematic) {
     }
 }
 
+WidgetManager.prototype.addWLogViewer = function(schematic) {
+    newWLogViewer = new WLogViewer(this, this.newWidgetId, this.containerDiv, this.controllerUrl, this.logViewerURL, schematic);
+    this.widgets.push(newWLogViewer);
+    this.newWidgetId += 1;
+    if (this.hasTightBorders) {
+        newWLogViewer.tightBorders();
+    };
+}
+
 WidgetManager.prototype.removeWidgets = function() {
     for (var i = this.widgets.length; i > 0; i--){
         this.widgets[i - 1].remove();
@@ -163,9 +178,10 @@ WidgetManager.prototype.wideBorders = function() {
 
 
 // Configuration Parameter superclass and subtypes
-function ConfigParameter(name, label, defaultValue) {
-    // Object representing a widget configuration parameter.
-    this.name = name;          // Name of the parameter
+function ConfigParameter(id, name, label, defaultValue) {
+    // Object representing a widget configuration parameter
+    this.id = id;              // Unique identifier.  Helps distinguish between multiple instances of parameters.
+    this.name = name;          // Name of the parameter.
     this.label = label;        // Label for the generated configuration parameter element.
     this.type = 'abstract';    // Type of config parameter.  Used for loading the dashboard back in.
     this.value = defaultValue; // Current value of parameter.  Default given at creation.
@@ -204,11 +220,11 @@ ConfigParameter.prototype.getRepresentation = function() {
 
 
 
-function ConfigString(name, label, defaultValue, maxLength) {
-    ConfigParameter.call(this, name, label, defaultValue);
+function ConfigString(id, name, label, defaultValue, maxLength) {
+    ConfigParameter.call(this, id, name, label, defaultValue);
 
     this.type = 'string';
-    this.inputId = name + '-input';
+    this.inputId = name + '-input-' + this.id;
     this.maxLength = maxLength;
 }
 
@@ -270,12 +286,12 @@ ConfigString.prototype.getRepresentation = function() {
 }
 
 
-function ConfigNumber(name, label, defaultValue, lowerLimit, upperLimit) {
-    ConfigParameter.call(this, name, label, defaultValue);
+function ConfigNumber(id, name, label, defaultValue, lowerLimit, upperLimit) {
+    ConfigParameter.call(this, id, name, label, defaultValue);
 
     this.type = 'number';
-    this.inputId = name + '-input';
-    this.errorId = name + '-error';
+    this.inputId = name + '-input-' + this.id;
+    this.errorId = name + '-error-' + this.id;
     this.lowerLimit = lowerLimit; // A 'null' here means no lower limit for the value
     this.upperLimit = upperLimit; // A 'null' here means no upper limit for the value
 }
@@ -366,12 +382,12 @@ ConfigNumber.prototype.getRepresentation = function() {
 }
 
 
-function ConfigInteger(name, label, defaultValue, lowerLimit, upperLimit) {
-    ConfigParameter.call(this, name, label, defaultValue);
+function ConfigInteger(id, name, label, defaultValue, lowerLimit, upperLimit) {
+    ConfigParameter.call(this, id, name, label, defaultValue);
 
     this.type = 'integer';
-    this.inputId = name + '-input';
-    this.errorId = name + '-error';
+    this.inputId = name + '-input-' + this.id;
+    this.errorId = name + '-error-' + this.id;
     this.lowerLimit = lowerLimit;  // A 'null' here means no lower limit for the value
     this.upperLimit = upperLimit;  // A 'null' here means no upper limit for the value
 }
@@ -463,11 +479,11 @@ ConfigInteger.prototype.getRepresentation = function() {
         }
 };
 
-function ConfigCheckbox(name, label, defaultValue) {
-    ConfigParameter.call(this, name, label, defaultValue);
+function ConfigCheckbox(id, name, label, defaultValue) {
+    ConfigParameter.call(this, id, name, label, defaultValue);
 
     this.type = "checkbox";
-    this.inputId = this.name + "-input";
+    this.inputId = this.name + "-input-" + this.id;
 }
 
 ConfigCheckbox.prototype = Object.create(ConfigParameter.prototype);
@@ -510,12 +526,12 @@ ConfigCheckbox.prototype.loadFromConfigElement = function() {
     };
 }
 
-function ConfigSelect(name, label, defaultValue, options) {
-    ConfigParameter.call(this, name, label, defaultValue);
+function ConfigSelect(id, name, label, defaultValue, options) {
+    ConfigParameter.call(this, id, name, label, defaultValue);
 
     this.type = "select";
-    this.inputId = this.name + "-input";
-    this.options = options // Array where each element is an option of the array form '[optionText, value]'
+    this.inputId = this.name + "-input-" + this.id;
+    this.options = options; // Array where each element is an option of the array form '[optionText, value]'
 }
 
 ConfigSelect.prototype = Object.create(ConfigParameter.prototype);
@@ -582,25 +598,21 @@ ConfigSelect.prototype.getRepresentation = function() {
 
 
 // Class definition for generic Widget
-function Widget(manager, id, containerDiv) {
+function Widget(manager, id, containerDiv, schematic) {
     this.manager = manager;
     this.id = id;
     this.containerDiv = containerDiv;
+    this.schematic = schematic;
 
     this.active = true;
-    this.activeCounter = false;
-    this.controlDiv = document.createElement('div');
-    this.configDiv = document.createElement('div');
+    this.activeCounter = false;                      // True if actively counting ticks and triggering jobs.
+    this.controlDiv = document.createElement('div'); // The div for the main view and controls of the widget
+    this.configDiv = document.createElement('div');  // The div containing the configuration controls of the widget
 
     this.triggerCounter = 0;
 
     // The first element of each parameter is the unique name for it.  Must not be any repeats.
-    this.configParameters = [
-        new ConfigInteger("triggerTickNumber", "Update Frequency in Minutes (positive integer): ", 1, 1, null),
-    ];
-
-    this.buildControlDiv();
-    this.buildConfigDiv();
+    this.configParameters = []
 }
 
 Widget.prototype.tick = function() {
@@ -613,6 +625,61 @@ Widget.prototype.tick = function() {
     };
 };
 
+Widget.prototype.initializeAndBuild = function () {
+    this.initializeParameters();  // Should be called before buildConfigDiv, function sets correct configParameters
+    this.buildControlDiv();
+    this.buildConfigDiv();
+}
+
+Widget.prototype.initializeParameters = function() {
+    this.configParameters = [];
+
+    var localSchematic = this.schematic;
+
+    if (typeof this.schematic == "string") {
+        localSchematic = JSON.parse(this.schematic);
+    }
+
+    if (localSchematic) {
+        // Build from schematic
+        configParameterSchematics = localSchematic["configParameters"];
+        for (var i = 0; i < configParameterSchematics.length; i++) {
+            this.configParameters.push(this.buildParameterFromRepresentation(configParameterSchematics[i]));
+        }
+    } else {
+        // Build defaults
+        this.buildDefaultParameters();
+    }
+}
+
+Widget.prototype.buildDefaultParameters = function () {
+    this.configParameters = [
+        new ConfigInteger(this.id, "triggerTickNumber", "Update Frequency in Minutes (positive integer): ", 1, 1, null),
+    ];
+};
+
+Widget.prototype.buildParameterFromRepresentation = function(representation) {
+    if (representation["type"] === "string") {
+        return new ConfigString(this.id, representation["name"], representation["label"], representation["value"]);
+
+    } else if (representation["type"] === "checkbox") {
+        return new ConfigCheckbox(this.id, representation["name"], representation["label"], representation["value"]);
+
+    } else if (representation["type"] === "integer") {
+        return new ConfigInteger(this.id, representation["name"], representation["label"],  representation["value"],
+                                 representation["lowerLimit"], representation["upperLimit"]);
+
+    } else if (representation["type"] === "number") {
+        return new ConfigNumber(this.id, representation["name"], representation["label"], representation["value"],
+                                representation["lowerLimit"], representation["upperLimit"]);
+
+    } else if (representation["type"] === "select") {
+        return new ConfigSelect(this.id, representation["name"], representation["label"], representation["value"],
+                                representation["options"]);
+    }
+    return null;
+}
+
 Widget.prototype.getConfigParameter = function (name) {
     for (var i = 0; i < this.configParameters.length; i++) {
         if (name == this.configParameters[i].name) {
@@ -623,7 +690,8 @@ Widget.prototype.getConfigParameter = function (name) {
 }
 
 Widget.prototype.getConfigParameterRepresentations = function() {
-    configParameterRepresentations = [];
+    var configParameterRepresentations = [];
+    console.log(this.configParameters)
     for (var i = 0; i < this.configParameters.length; i ++) {
         representation = this.configParameters[i].getRepresentation();
         configParameterRepresentations.push(representation);
@@ -646,7 +714,7 @@ Widget.prototype.loadDashboard = function() {};
 
 Widget.prototype.buildControlDiv = function () {
     this.controlDiv.className = 'wd';
-    this.controlDiv.innerHTML = "Hello from the otter slide";
+    this.controlDiv.innerHTML = "";
     this.controlDiv.id = 'widget-' + this.id;
 
     configButton = document.createElement('button');
@@ -689,12 +757,14 @@ Widget.prototype.validateConfig = function() {
         value = this.configParameters[i].loadFromConfigElement();
         if (!this.configParameters[i].isValidValue(value)) {
             allValid = false;
+            console.log(this.configParameters[i].name);
         };
     };
     return allValid;
 };
 Widget.prototype.saveConfig = function() {
     allEntriesValid = this.validateConfig();
+    console.log(allEntriesValid);
     if (allEntriesValid) {
         for (var i = 0; i < this.configParameters.length; i++) {
             value = this.configParameters[i].loadFromConfigElement();
@@ -706,15 +776,142 @@ Widget.prototype.saveConfig = function() {
 };
 
 Widget.prototype.triggerJob = function() {console.log("Job Triggered")};
-Widget.prototype.removeWidget = function() {};
 Widget.prototype.showConfig = function() {
     this.controlDiv.style.display = "none";
     this.configDiv.style.display = "inline-block";
 };
+
 Widget.prototype.hideConfig = function() {
     this.controlDiv.style.display = "inline-block";
     this.configDiv.style.display = "none";
 };
+
+Widget.prototype.remove = function() {
+    this.containerDiv.parentNode.removeChild(this.containerDiv);
+    this.active = false;
+};
+
+
+
+
+function WLogViewer(manager, id, containerDiv, controllerURL, logViewerURL, schematic) {
+
+    this.parentDiv = document.createElement("div");;
+    this.parentDiv.className = 'wd';
+    this.parentDiv.id = 'widget-' + this.id;
+    containerDiv.appendChild(this.parentDiv);
+
+    Widget.call(this, manager, id, this.parentDiv, schematic);
+
+    this.finishedLoading = true;
+    this.logViewerURL = logViewerURL;
+    this.controllerURL = controllerURL;
+    this.instrumentId = -1;
+    this.maxLogs = 5;
+    this.quickDisplay = false;
+
+    console.log(this);
+    console.log(schematic);
+    this.initializeAndBuild();
+    if(schematic) {
+        this.loadDashboard(schematic);
+    };
+}
+
+WLogViewer.prototype = Object.create(Widget.prototype);
+WLogViewer.prototype.constructor = WLogViewer;
+
+WLogViewer.prototype.buildDefaultParameters = function () {
+    this.configParameters = [
+        new ConfigInteger(this.id, "triggerTickNumber", "Update Frequency in Minutes (positive integer): ", 1, 1, null),
+        new ConfigInteger(this.id, "maxLogs", "Number of logs to display at a time (positive integer): ", 5, 1, null),
+    ];
+};
+
+WLogViewer.prototype.buildControlDiv = function() {
+    this.controlDiv.innerHTML = "WLogViewer";
+    this.parentDiv.appendChild(this.controlDiv);
+
+    var parameterizedURL = this.controllerURL + "?widget_name=log_viewer&widget_id=" + this.id;
+    this.ajaxLoadURL(this.controlDiv, parameterizedURL);
+};
+
+WLogViewer.prototype.saveDashboard = function() {
+    var configRepresentation = this.getConfigParameterRepresentations();
+    var data = {"instrumentId": this.instrumentId, "configParameters": configRepresentation};
+    console.log(data);
+    return {"type": "WLogViewer", "data": data};
+}
+
+WLogViewer.prototype.loadDashboard = function(schematic) {
+    this.finishedLoading = false;
+    this.quickDisplay = true;  // Forces the full view generation in the ajaxLoadUrl from the LogViewer Creation
+    this.instrumentId = schematic["instrumentId"];
+    //ConfigParameters should already have been loaded in when the widget was constructed.
+    var instrumentIdSelect = document.getElementById("log-viewer-instrument-selector-" + this.id);
+    if (instrumentIdSelect) {  // If the element exists, update and generate, if not, should be taken care of by setting quickDisplay above.
+        instrumentIdSelect.value = this.instrumentId;
+        this.generateLogViewer();
+    };
+
+};
+
+WLogViewer.prototype.ajaxLoadURL = function(element, url) {
+    var xmlHttp = new XMLHttpRequest();
+    var that = this;
+    xmlHttp.onreadystatechange = function() {
+        if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+        {
+            // To get JSON and HTML parts, need to do custom extraction.
+            element.innerHTML = xmlHttp.responseText;
+
+            var configButton = document.getElementById("config-open-button-" + that.id);
+            configButton.onclick = function () { that.showConfig(); };
+            var addButton = document.getElementById("add-log-viewer-button-" + that.id);
+            addButton.onclick = function () { that.generateLogViewer(); };
+            var copyButton = document.getElementById("copy-log-viewer-button-" + that.id);
+            copyButton.onclick = function () { that.manager.copyWidget(that.id); };
+            var removeButton = document.getElementById("remove-log-viewer-button-" + that.id);
+            removeButton.onclick = function () { that.remove(); };
+            var instrumentIdSelect = document.getElementById("log-viewer-instrument-selector-" + that.id);
+            instrumentIdSelect.value = that.instrumentId;
+
+            if (that.quickDisplay === true) {  // If quick display was set, will immediately display with current setup.
+                that.generateLogViewer();      // It's an ugly workaround for ajax behaviour for dashboard loading
+            };
+        };
+    };
+
+    xmlHttp.open("GET", url, true); // true for asynchronous
+    xmlHttp.send();
+};
+
+WLogViewer.prototype.triggerJob = function() {
+    this.generateLogViewer();
+};
+
+WLogViewer.prototype.generateLogViewer = function() {
+    this.activeCounter = true;
+
+    var fillElement = document.getElementById("log-viewer-container-" + this.id);
+    this.instrumentId = document.getElementById("log-viewer-instrument-selector-" + this.id).value;
+    this.maxLogs = this.getConfigParameter("maxLogs");
+    var url = this.logViewerURL + '?instrument_id=' + this.instrumentId + '&max_logs=' + this.maxLogs;
+
+    ajaxLoadUrl(fillElement, url)
+};
+
+WLogViewer.prototype.tightBorders = function() {
+    this.parentDiv.className = "wd_tight";
+    this.parentDiv.className = "wd_tight"
+}
+
+WLogViewer.prototype.wideBorders = function() {
+    this.parentDiv.className = "wd";
+    this.parentDiv.className = "wd"
+}
+
+
 
 
 

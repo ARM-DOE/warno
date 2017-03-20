@@ -24,6 +24,7 @@ Dashboard
         <option value="histogram">Histogram</option>
         <option value="dual_histogram">Dual Histogram</option>
         <option value="real_time_gauge">Real Time Gauge</option>
+        <option value="wlog_viewer">*WLog Viewer*</option>
     </select>
     <button type="button" onclick="newWidget()">Add</button>
     {% if current_user.is_active %}
@@ -102,6 +103,8 @@ Dashboard
             widgetManager.addDualHistogram(null);
         } else if (widType == 'real_time_gauge') {
             widgetManager.addRealTimeGauge(null);
+        } else if (widType == 'wlog_viewer') {
+            widgetManager.addWLogViewer(null);
         }
     }
 
