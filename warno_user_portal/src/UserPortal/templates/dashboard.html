@@ -24,12 +24,6 @@ Dashboard
         <option value="histogram">Histogram</option>
         <option value="dual_histogram">Dual Histogram</option>
         <option value="real_time_gauge">Real Time Gauge</option>
-        <option value="wlog_viewer">*WLog Viewer*</option>
-        <option value="wdual_histogram">*WDual Histogram*</option>
-        <option value="wstatus_plot">*WStatus Plot*</option>
-        <option value="wreal_time_gauge">*WGauge*</option>
-        <option value="winstrument_graph">*WGraph*</option>
-        <option value="whistogram">*WHistogram*</option>
     </select>
     <button type="button" onclick="newWidget()">Add</button>
     {% if current_user.is_active %}
@@ -99,27 +93,15 @@ Dashboard
         if (widType == 'instrument_graph') {
             widgetManager.addInstrumentGraph(null);
         } else if (widType == 'log_viewer') {
-            widgetManager.addLogViewer();
+            widgetManager.addLogViewer(null);
         } else if (widType == 'status_plot') {
-            widgetManager.addStatusPlot();
+            widgetManager.addStatusPlot(null);
         } else if (widType == 'histogram') {
             widgetManager.addHistogram(null);
         } else if (widType == 'dual_histogram') {
             widgetManager.addDualHistogram(null);
         } else if (widType == 'real_time_gauge') {
             widgetManager.addRealTimeGauge(null);
-        } else if (widType == 'wlog_viewer') {
-            widgetManager.addWLogViewer(null);
-        } else if (widType == 'wdual_histogram') {
-            widgetManager.addWDualHistogram(null);
-        } else if (widType == 'wstatus_plot') {
-            widgetManager.addWStatusPlot(null);
-        } else if (widType == 'wreal_time_gauge') {
-            widgetManager.addWRealTimeGauge(null);
-        } else if (widType == 'winstrument_graph') {
-            widgetManager.addWInstrumentGraph(null);
-        } else if (widType == 'whistogram') {
-            widgetManager.addWHistogram(null);
         }
     }
 
