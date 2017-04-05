@@ -24,6 +24,10 @@ Dashboard
         <option value="histogram">Histogram</option>
         <option value="dual_histogram">Dual Histogram</option>
         <option value="real_time_gauge">Real Time Gauge</option>
+        {% if "engineer" in current_user.authorizations %}
+        {# Any widgets in here are considered 'development' and only show up for 'engineer' users #}
+        <option value="current_time">Current Time</option>
+        {% endif %}
     </select>
     <button type="button" onclick="newWidget()">Add</button>
     {% if current_user.is_active %}
@@ -102,6 +106,8 @@ Dashboard
             widgetManager.addDualHistogram(null);
         } else if (widType == 'real_time_gauge') {
             widgetManager.addRealTimeGauge(null);
+        } else if (widType == 'current_time') {
+            widgetManager.addCurrentTime(null);
         }
     }
 

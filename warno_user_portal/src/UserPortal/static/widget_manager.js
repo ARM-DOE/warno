@@ -64,6 +64,9 @@ WidgetManager.prototype.buildFromSchematic = function(dashboardSchematic) {
         if (dashboardSchematic[i]["type"] == "RealTimeGauge") {
             this.addRealTimeGauge(dashboardSchematic[i]["data"]);
         }
+        if (dashboardSchematic[i]["type"] == "CurrentTime") {
+            this.addCurrentTime(dashboardSchematic[i]["data"]);
+        }
     }
 }
 
@@ -86,6 +89,15 @@ WidgetManager.prototype.removeInactive = function() {
             this.widgets.splice(i, 1);
             i--;  // This ensures that the index doesn't get messed up by the removal of an element.
         }
+    }
+};
+
+WidgetManager.prototype.addCurrentTime = function(schematic) {
+    var newCurrentTime = new CurrentTime(this, this.newWidgetId, this.containerDiv, schematic);
+    this.widgets.push(newCurrentTime);
+    this.newWidgetId += 1;
+    if (this.hasTightBorders) {
+        newCurrentTime.tightBorders();
     }
 };
 
@@ -850,8 +862,128 @@ Widget.prototype.wideBorders = function () {
     this.parentDiv.className = "wd";
 };
 
+// TUTORIAL WIDGET
+function CurrentTime(manager, id, containerDiv, schematic) {
+    Widget.call(this, manager, id, containerDiv, schematic);
 
-// SPECIFIC WIDGETS
+
+    this.time = "";
+    this.inUTC = false;
+
+    // Should always be called
+    this.initializeAndBuild();
+
+    // Good function to have for dashboard parameters
+    this.loadDashboard(schematic);
+
+    this.initializeElements();
+};
+
+CurrentTime.prototype = Object.create(Widget.prototype);
+CurrentTime.prototype.constructor = CurrentTime;
+
+CurrentTime.prototype.buildDefaultParameters = function () {
+    var colorOptions = [
+        ["Black", "black"],
+        ["Red", "darkRed"],
+        ["Blue", "darkBlue"],
+        ["Green", "green"],
+    ];
+
+    this.configParameters = [
+        new ConfigInteger(this.id, "triggerTickNumber", "Update Frequency in Minutes (positive integer): ", 1, 1, null),
+        new ConfigInteger(this.id, "fontSize", "Font size for time (integer 6-30): ", 16, 6, 30),
+        new ConfigSelect(this.id, "fontColor", "Font color for time", "black", colorOptions),
+    ];
+};
+
+CurrentTime.prototype.buildControlDiv = function () {
+    this.controlDiv.innerHTML = "";
+    this.controlDiv.id = 'control-' + this.id;    // this.id is unique, so the div ID will also be unique
+
+    var configButton = document.createElement('button');
+    configButton.innerHTML = "Config";
+    var that = this;   // Because using 'this' inside the next function references the function itself, not this Widget
+    configButton.onclick = function(){that.showConfig()};
+    this.controlDiv.appendChild(configButton);
+
+    var generateButton = document.createElement('button');
+    generateButton.innerHTML = "Get Time";
+    generateButton.onclick = function(){that.generateTime()};
+    this.controlDiv.appendChild(generateButton);
+
+    var utcLabel = document.createElement('label');
+    utcLabel.htmlFor = "widget-utc-" + this.id;
+    utcLabel.innerHTML = "UTC Time: ";
+    var utcCheckbox = document.createElement('input');
+    utcCheckbox.setAttribute("type", "checkbox");
+    utcCheckbox.id = "widget-utc-" + this.id;
+    this.controlDiv.appendChild(utcLabel);
+    this.controlDiv.appendChild(utcCheckbox);
+
+    var removeButton = document.createElement('button');
+    removeButton.innerHTML = "X";
+    removeButton.onclick = function(){that.remove()};
+    removeButton.style.float = "right";
+    this.controlDiv.appendChild(removeButton);
+
+    var timeDiv = document.createElement("div");
+    timeDiv.innerHTML = this.time;
+    timeDiv.id = "widget-time-" + this.id;
+    this.controlDiv.appendChild(timeDiv);
+
+    this.parentDiv.appendChild(this.controlDiv);  // Always remember to actually add your control div to the parent
+};
+
+CurrentTime.prototype.triggerJob = function () {
+    this.generateTime();
+};
+
+CurrentTime.prototype.saveDashboard = function () {
+    var configRepresentation = this.getConfigParameterRepresentations();
+    data = {
+        "inUTC": this.inUTC,
+        "configParameters": configRepresentation,
+    }
+    return {"type": "CurrentTime", "data": data};
+};
+
+CurrentTime.prototype.loadDashboard = function (schematic) {
+    if (schematic) {
+        this.inUTC = schematic["inUTC"];
+    } else {
+        this.inUTC = false;
+    }
+};
+
+CurrentTime.prototype.initializeElements = function () {
+    var utcCheckbox = document.getElementById("widget-utc-" + this.id);
+    utcCheckbox.checked = this.inUTC;
+};
+
+CurrentTime.prototype.generateTime = function () {
+    this.activeCounter = true;  // Enables automatic updates
+
+    var utcCheckbox = document.getElementById("widget-utc-" + this.id);
+    this.inUTC = utcCheckbox.checked;
+
+    var currentDate = new Date();
+    if (this.inUTC) {
+        this.time = currentDate.toUTCString();
+    } else {
+        this.time = currentDate.toString();
+    }
+    var timeDiv = document.getElementById("widget-time-" + this.id);
+
+    var fontColor = this.getConfigParameter('fontColor');
+    var fontSize = this.getConfigParameter('fontSize');
+
+    timeDiv.style.color = fontColor;
+    timeDiv.style.fontSize = fontSize;
+    timeDiv.innerHTML = this.time;
+};
+
+// WIDGETS
 
 // Log Viewer section
 function LogViewer(manager, id, containerDiv, controllerURL, logViewerURL, schematic) {
@@ -1976,21 +2108,6 @@ Histogram.prototype.showConstraintCustom = function () {
     this.constraintStyle = "custom";
 };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // DualHistogram Section
 // If schematic is null, loads up with defaults.  If schematic exists, loads the schematic and displays the histogram
 function DualHistogram(manager, id, containerDiv, controllerURL, schematic) {
@@ -2018,10 +2135,10 @@ DualHistogram.prototype.buildDefaultParameters = function () {
         ["Picnic", "Picnic"],
         ["Greys", "Greys"],
         ["Greens", "Greens"],
-        ["Bluered", "Blue Red"],
-        ["RdBu", "Red Blue"],
-        ["YIOrRd", "Yellow Orange Red"],
-        ["YIGnBu", "Yellow Green Blue"],
+        ["Blue Red", "Bluered"],
+        ["Red Blue", "RdBu"],
+        ["Yellow Orange Red", "YIOrRd"],
+        ["Yellow Green Blue", "YIGnBu"],
     ];
 
     this.configParameters = [
