@@ -11,19 +11,19 @@
 </head>
 
 <body>
-    <p><label for="instrument_selector">Instrument:</label>
+
+    <p>
+        <button type="button" id="config-open-button-{{id}}" title="Configuration">
+            <img src="{{url_for('static', filename='gear.png')}}" style="width: 16px; height: 16px;" alt="Config">
+        </button>
+        <label for="instrument_selector">Instrument:</label>
         <select name="instrument_selector" id="log-viewer-instrument-selector-{{id}}">
             <option value="-1">All</option>
             {% for instrument in instruments %}
             <option value="{{ instrument.id }}">{{instrument.site}}:{{ instrument.name }}</option>
             {% endfor %}
         </select>
-        <label for="max_logs">No. of Logs:</label>
-        <input style="width: 30px;" type="text" id="log-viewer-max-logs-{{id}}" name="max_logs" value="5">
         <button type="button" id="add-log-viewer-button-{{ id }}">Display Logs</button>
-        <i style="font-size: 80%">
-            Updates every minute.
-        </i>
         <button type="button" style="float: right;" id="remove-log-viewer-button-{{id}}" title="Remove This Widget">X</button>
         <button type="button" style="float: right;" id="copy-log-viewer-button-{{id}}" title="Copy This Widget">||</button>
     </p>

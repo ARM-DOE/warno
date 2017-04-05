@@ -11,7 +11,11 @@
 </head>
 
 <body>
-    <p><label for="site_selector">Site:</label>
+    <p>
+        <button type="button" id="config-open-button-{{id}}" title="Configuration">
+            <img src="{{url_for('static', filename='gear.png')}}" style="width: 16px; height: 16px;" alt="Config">
+        </button>
+        <label for="site_selector">Site:</label>
         <select name="site_selector" id="status-plot-site-selector-{{id}}">
             <option value="-1">All</option>
             {% for site in sites %}
@@ -19,9 +23,6 @@
             {% endfor %}
         </select>
         <button type="button" id="add-status-plot-button-{{id}}">Display Status Plot</button>
-        <i style="font-size: 80%">
-            Updates every minute.
-        </i>
         <button type="button" style="float: right;" id="remove-status-plot-button-{{id}}" title="Remove This Widget">X</button>
         <button type="button" style="float: right;" id="copy-status-plot-button-{{id}}" title="Copy This Widget">||</button>
     </p>
