@@ -308,8 +308,11 @@ def widget_histogram_controller(widget_id, dual=False):
         if dual:
             # If it is a Dual Histogram, all entries (at least for now) must be from the same table.  This ensures that
             # each set of data arrived at the same time, making the comparison of points possible.
+            # TODO think of a more extensible solution to assuring attributes can be perfectly paired
             db_valid_columns = (db.session.query(ValidColumn).filter(ValidColumn.instrument_id == instrument['id'])
-                                .filter(ValidColumn.table_name == "prosensing_paf").all())
+                                .filter(or_(ValidColumn.table_name == "prosensing_paf",
+                                            ValidColumn.table_name == "iris_bite"))
+                                .all())
         else:
             db_valid_columns = db.session.query(ValidColumn).filter(ValidColumn.instrument_id == instrument['id']).all()
         column_list[instrument['id']] = [column.column_name for column in db_valid_columns]
