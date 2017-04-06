@@ -2072,6 +2072,10 @@ Histogram.prototype.getAutomaticBeginning = function () {
     }
 };
 
+Histogram.prototype.triggerJob = function() {
+    this.generateHistogram();
+};
+
 Histogram.prototype.hideController = function () {
     element = document.getElementById("histogram-controller-" + this.id);
     element.style.display = "none";
@@ -3625,6 +3629,10 @@ InstrumentGraph.prototype.getAutomaticBeginning = function () {
         return new Date(now.setHours(now.getHours() - 6));
     }
 
+};
+
+InstrumentGraph.prototype.triggerJob = function() {
+    this.updateInstrumentGraph();
 };
 
 // Hide/Show Functions
