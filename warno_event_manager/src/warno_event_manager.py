@@ -398,7 +398,8 @@ def event():
         utility.INSTRUMENT_ID_REQUEST:  get_instrument_id,
         utility.PULSE_CAPTURE:          save_pulse_capture,
         utility.INSTRUMENT_LOG:         save_instrument_log,
-        utility.PROSENSING_PAF:         save_special_prosensing_paf,
+        utility.PROSENSING_PAF:         save_special_event,
+        utility.IRIS_BITE:              save_special_event,
     }
 
     # The save_misc_event is the default value if the event_code does not exist in the table.
@@ -459,10 +460,10 @@ def save_misc_event(msg, msg_struct):
     return "", 200
 
 
-def save_special_prosensing_paf(msg, msg_struct):
+def save_special_event(msg, msg_struct):
     """Inserts the information given in 'msg_struct' into the database, with all of the values being mapped into columns
     for the database.  If the 'is_central' flag is not set, it then forwards the packet on to the 'cf_url'
-    (both specified in *config.yml*).
+    (both specified in *config.yml*).  Uses the event code from the message to determine which table to save to.
 
     Parameters
     ----------
@@ -474,9 +475,17 @@ def save_special_prosensing_paf(msg, msg_struct):
         Decoded version of msg, converted to python dictionary.
 
     """
-
+    msg_event_code = msg_struct['event_code']
     timestamp = msg_struct['data']['time']
-    sql_query_a = "INSERT INTO prosensing_paf(time, site_id, instrument_id"
+
+    if msg_event_code == utility.PROSENSING_PAF:
+        table_name = "prosensing_paf"
+    elif msg_event_code == utility.IRIS_BITE:
+        table_name = "iris_bite"
+    else:
+        table_name = "prosensing_paf"  # A default that should never be reached
+
+    sql_query_a = "INSERT INTO %s(time, site_id, instrument_id" % table_name
     sql_query_b = ") VALUES ('%s', %s, %s" % (timestamp, msg_struct['data']['site_id'],
                                               msg_struct['data']['instrument_id'])
     redis_attributes = []
@@ -508,7 +517,7 @@ def save_special_prosensing_paf(msg, msg_struct):
 
     # Save values to Redis
     redint.add_value_set_for_table_attributes(msg_struct["data"]["instrument_id"], redis_attributes,
-                                              dateutil.parser.parse(timestamp), redis_values, "prosensing_paf")
+                                              dateutil.parser.parse(timestamp), redis_values, table_name)
 
     if not is_central:
         payload = json.loads(msg)

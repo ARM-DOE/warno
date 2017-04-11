@@ -5,3 +5,4 @@ event_code,description
 4,"pulse_capture"
 5,"instrument_log"
 6,"prosensing_paf"
+7,"iris_bite"
