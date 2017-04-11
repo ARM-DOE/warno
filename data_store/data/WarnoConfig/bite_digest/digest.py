@@ -21,6 +21,7 @@ class Digest():
         self.s.send("interrogate")
 
         message = self.recvall(self.s)
+        self.s.close()
 
         if self.DEBUG:
             print(">>DEBUG>>>Message Received Repr:")
