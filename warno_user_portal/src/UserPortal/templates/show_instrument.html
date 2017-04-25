@@ -17,7 +17,11 @@
                     {% else %}
                     <div class="operational" style="text-align: center; border: 1px solid black;">
                     {% endif %}
-                        <h3>{{status}}</h3>
+                        <h3>{{status}}
+                        {% if current_user.authorizations in ["engineer", "technician"] %}
+                            <div id="lock-div" style="display: inline-block; float: right;"></div>
+                        {% endif %}
+                        </h3>
                     </div>
 
                     <div class="info">
@@ -34,9 +38,23 @@
                         Type:           {{instrument.type}}
                         <br>
                         Location:
-                        <a href="{{url_for('sites.show_site', site_id= instrument.site_id)}}">{{instrument.location}}</a>
+                        <a href="{{url_for('sites.show_site', site_id=instrument.site_id)}}">{{instrument.location}}</a>
                         <br>
                         Description:    {{instrument.description}}
+                    </div>
+
+                    <div class="info">
+                        <h3 style="margin-left: 10px;">  Useful Links:
+                        {% if current_user.authorizations == "engineer" %}
+                        <a style="float: right;" href="{{url_for('instruments.instrument_links', instrument_id=instrument.id)}}">Edit</a>
+                        {% endif %}
+                        </h3>
+                    </div>
+                    <div style = "background-color: white; border: 1px solid black; padding: 5px;">
+                        {% for link in links %}
+                        <a href="{{link.link}}">{{link.text}}</a>
+                        <br>
+                        {% endfor %}
                     </div>
 
                 </div>
@@ -64,7 +82,43 @@
 
                 </div>
         </div>
+        <!-- Part of gif proof of concept.  Only keeping in comments because full version should be coming soon -->
+        <!--<div style="margin: 20px; border: 4px solid black; text-align: center;">-->
+            <!--<div style="margin-left: auto; margin-right: auto; display: inline-block;">-->
+                <!--<img src="data:image/gif;base64,{{gif}}" style="width: 600px; height: 400px;">-->
+            <!--</div>-->
+
+        <!--</div>-->
 
         </div>
 
+{% endblock %}
+{% block script %}
+<script>
+    {% if current_user.authorizations in ["engineer", "technician"] %}
+    var lockDiv = document.getElementById("lock-div");
+    var xmlHttp = new XMLHttpRequest();
+    var that = this;
+    xmlHttp.onreadystatechange = function() {
+        if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+        {
+            // To get JSON and HTML parts, need to do custom extraction.
+            lockList = JSON.parse(xmlHttp.responseText);
+            console.log(lockList);
+
+            for (var i = 0; i < lockList.length; i++) {
+                if (lockList[i]["name"] == "{{instrument.location}}-{{instrument.abbv}}") {
+                    var image = document.createElement("img");
+                    image.src = "{{url_for('static', filename='lock.png')}}"
+                    lockDiv.appendChild(image);
+                    lockDiv.title = "Locked until " + lockList[i]["unlock_time"] + " UTC by " + lockList[i]["user"] + " for reason: '" + lockList[i]["reason"] + "'";
+                }
+            }
+        };
+    };
+
+    xmlHttp.open("GET", "https://heimdall.vsn.arm.gov/current_locks", true); // true for asynchronous
+    xmlHttp.send();
+    {% endif %}
+</script>
 {% endblock %}
