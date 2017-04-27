@@ -1,0 +1,283 @@
+{% extends 'partials/site_base.html' %}
+
+{% block title %}
+Instruments
+{% endblock %}
+
+{% block content %}
+<div>
+    <h1>Manage Links For {{instrument.location}}-{{instrument.abbv}}</h1>
+    <br>
+    <button onclick="saveLinks()">Save Links</button>
+    <hr>
+    <div id="link-container">
+
+    </div>
+    <hr>
+    <button onclick="openModal()">New Link</button>
+
+    <div id="new-link-modal" class="db_modal">
+        <div class="db_modal_content">
+            <div class="db_modal_header">
+                <span class="db_modal_close" onclick="closeModal()">x</span>
+                <h2>New Link</h2>
+            </div>
+            <div class="db_modal_body">
+                <label for="text">Displayed Text:</label>
+                <input name="text" type="text" id="new-link-text">
+                <br>
+                <label for="url">Link URL:</label>
+                <input name="url" type="text" id="new-link-url">
+                <br>
+                <div class="config-error" id="new-link-error"></div>
+                <button type="submit" class="experiment" onclick="addNewLink()">Add Link</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block script %}
+<script>
+    var links = [];
+    var nextID = 0;
+    {% for link in links %}
+    links.push({"text": "{{link.text}}", "link": "{{link.link}}", "id": nextID});
+    nextID += 1;
+    {% endfor %}
+
+    console.log(links);
+    for(var i = 0; i < links.length; i++) {
+        addLinkToPage(links[i]["id"], links[i]["text"], links[i]["link"]);
+    }
+
+    // Functions
+    function createTextDiv(id, currentText) {
+        var linkTextDiv = document.createElement('div');
+
+        // Display section
+        var linkTextDisplayDiv = document.createElement('div');
+        var linkTextDisplayText = document.createElement('div');
+        var linkTextDisplayEdit = document.createElement('button');
+
+        linkTextDisplayDiv.appendChild(linkTextDisplayText);
+        linkTextDisplayDiv.appendChild(linkTextDisplayEdit);
+
+        linkTextDisplayText.id = "link-text-display-" + id;
+        linkTextDisplayText.innerHTML = "<h3>" + currentText + "</h3>";
+        linkTextDisplayEdit.innerHTML = 'Edit Displayed Text';
+        linkTextDisplayEdit.onclick = function(j) { return function() { toggleEditText(j); }; }(id);
+
+        // Input section
+        var linkTextInputDiv = document.createElement('div');
+        var linkTextInputBox = document.createElement('input');
+        var linkTextInputError = document.createElement('div');
+        var linkTextInputUpdate = document.createElement('button');
+
+        linkTextInputDiv.appendChild(linkTextInputUpdate);
+        linkTextInputDiv.appendChild(linkTextInputBox);
+        linkTextInputDiv.appendChild(linkTextInputError);
+
+        linkTextInputBox.id = "link-text-input-" + id;
+        linkTextInputBox.value = currentText;
+        linkTextInputError.id = "link-text-error-" + id;
+        linkTextInputError.className = "config-error";
+        linkTextInputUpdate.innerHTML = "Update";
+        linkTextInputUpdate.onclick = function(j) { return function() { updateText(j); }; }(id);
+
+        linkTextInputDiv.id = "link-text-input-div-" + id;
+        linkTextInputDiv.hidden = true;
+
+        // Attach and return both sections
+        linkTextDiv.appendChild(linkTextDisplayDiv);
+        linkTextDiv.appendChild(linkTextInputDiv);
+
+        return linkTextDiv;
+    }
+
+    function createURLDiv(id, currentURL) {
+        var linkURLDiv = document.createElement('div');
+
+        // Display section
+        var linkURLDisplayDiv = document.createElement('div');
+        var linkURLDisplayText = document.createElement('div');
+        var linkURLDisplayEdit = document.createElement('button');
+
+        linkURLDisplayDiv.appendChild(linkURLDisplayText);
+        linkURLDisplayDiv.appendChild(linkURLDisplayEdit);
+
+        linkURLDisplayText.id = "link-url-display-" + id;
+        linkURLDisplayText.innerHTML = "<h3>" + currentURL + "</h3>";
+        linkURLDisplayEdit.innerHTML = 'Edit Link URL';
+        linkURLDisplayEdit.onclick = function(j) { return function() { toggleEditURL(j); }; }(id);
+
+        // Input section
+        var linkURLInputDiv = document.createElement('div');
+        var linkURLInputBox = document.createElement('input');
+        var linkURLInputError = document.createElement('div');
+        var linkURLInputUpdate = document.createElement('button');
+
+        linkURLInputDiv.appendChild(linkURLInputUpdate);
+        linkURLInputDiv.appendChild(linkURLInputBox);
+        linkURLInputDiv.appendChild(linkURLInputError);
+
+        linkURLInputBox.id = "link-url-input-" + id;
+        linkURLInputBox.value = currentURL;
+        linkURLInputError.id = "link-url-error-" + id;
+        linkURLInputError.className = "config-error";
+        linkURLInputUpdate.innerHTML = "Update";
+        linkURLInputUpdate.onclick = function(j) { return function() { updateURL(j); }; }(id);
+
+        linkURLInputDiv.id = "link-url-input-div-" + id;
+        linkURLInputDiv.hidden = true;
+
+        // Attach and return both sections
+        linkURLDiv.appendChild(linkURLDisplayDiv);
+        linkURLDiv.appendChild(linkURLInputDiv);
+
+        return linkURLDiv;
+    }
+
+    function addLinkToPage(id, text, url) {
+        linkContainer = document.getElementById('link-container');
+
+        var linkDiv = document.createElement('div');
+        linkDiv.id = "link-div-" + id;
+        linkDiv.style.border = '2px solid black';
+        linkDiv.style.padding = 5;
+        linkDiv.style.margin = 5;
+        linkDiv.style.display = "inline-block";
+        linkDiv.style.background = "lightGray";
+
+        // Button to remove from page
+        var removeButton = document.createElement("button");
+        removeButton.innerHTML = "Remove Link";
+        // For some reason it seems JavaScript requires this, or only passes the last value of id
+        removeButton.onclick = function(j) { return function() { removeLink(j); }; }(id);
+        console.log(removeButton);
+
+        var linkTextDiv = createTextDiv(id, text);
+        var linkURLDiv = createURLDiv(id, url);
+
+        // Add elements to main link div
+        linkDiv.appendChild(linkTextDiv);
+        // var horRule = document.createElement("hr");
+        linkDiv.appendChild(document.createElement("hr"));
+        linkDiv.appendChild(linkURLDiv);
+        // var horRule2 = document.createElement("hr");
+        linkDiv.appendChild(document.createElement("hr"));
+        linkDiv.appendChild(removeButton);
+        linkContainer.appendChild(linkDiv);
+    }
+
+    function removeLink(id) {
+        console.log(id);
+        for(var i = 0; i < links.length; i++) {
+            if (links[i]["id"] == id) {
+                links.splice(i, 1);
+                var removedElement = document.getElementById("link-div-" + id);
+                removedElement.parentNode.removeChild(removedElement);
+            }
+        }
+    }
+
+    function toggleEditText(id) {
+        var textDiv = document.getElementById("link-text-input-div-" + id);
+        if (textDiv.hidden) {
+            textDiv.hidden = false;
+        } else {
+            textDiv.hidden = true;
+        }
+    }
+
+    function toggleEditURL(id) {
+        var URLDiv = document.getElementById("link-url-input-div-" + id);
+        if (URLDiv.hidden) {
+            URLDiv.hidden = false;
+        } else {
+            URLDiv.hidden = true;
+        }
+    }
+
+    function updateText(id) {
+        var textInput = document.getElementById("link-text-input-" + id).value;
+        var textDisplay = document.getElementById("link-text-display-" + id);
+        var textError = document.getElementById("link-text-error-" + id);
+
+        if (textInput.length > 0) {
+            textError.innerHTML = "";
+            textDisplay.innerHTML = "<h3>" + textInput + "</h3>";
+            for (var i = 0; i < links.length; i++) {
+                if (links[i]["id"] == id) {
+                    links[i]["text"] = textInput;
+                }
+            }
+        } else {
+            textError.innerHTML = "Field cannot be empty";
+        }
+    }
+
+    function updateURL(id) {
+        var urlInput = document.getElementById("link-url-input-" + id).value;
+        var urlDisplay = document.getElementById("link-url-display-" + id);
+        var urlError = document.getElementById("link-url-error-" + id);
+
+        if (urlInput.length > 0) {
+            urlError.innerHTML = "";
+            urlDisplay.innerHTML = "<h3>" + urlInput + "</h3>";
+            for (var i = 0; i < links.length; i++) {
+                if (links[i]["id"] == id) {
+                    links[i]["link"] = urlInput;
+                }
+            }
+        } else {
+            urlError.innerHTML = "Field cannot be empty";
+        }
+    }
+
+    // New link modal
+    function openModal() {
+        var modal = document.getElementById("new-link-modal");
+        modal.style.display = "block";
+    }
+
+    function closeModal() {
+        var modal = document.getElementById("new-link-modal");
+        modal.style.display = "none";
+    }
+
+    function addNewLink() {
+        textInput = document.getElementById("new-link-text").value;
+        urlInput = document.getElementById("new-link-url").value;
+        errorDiv = document.getElementById("new-link-error");
+        errorDiv.innerHTML = "";
+
+        if ((textInput.length > 0) && (urlInput.length > 0 )) {
+            addLinkToPage(nextID, textInput, urlInput);
+            links.push({"text": textInput, "link": urlInput, "id": nextID});
+            nextID += 1;
+            closeModal();
+        } else {
+            errorDiv.innerHTML = "Neither field can be empty."
+        }
+    }
+
+
+
+    function saveLinks() {
+        var form = document.createElement("form");
+        form.setAttribute("method", "post");
+        form.setAttribute("action", "{{ url_for('instruments.save_instrument_links', instrument_id=instrument.id) }}");
+
+
+        var hiddenField = document.createElement("input");
+        hiddenField.setAttribute("type", "hidden");
+        hiddenField.setAttribute("name", "links");
+        hiddenField.setAttribute("value", JSON.stringify(links));
+
+        form.appendChild(hiddenField);
+
+        document.body.appendChild(form);
+        form.submit();
+    }
+</script>
+{% endblock %}

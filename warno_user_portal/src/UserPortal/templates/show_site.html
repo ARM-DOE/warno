@@ -26,7 +26,12 @@
         </tr>
         {%  for instrument in instruments %}
         <tr>
-            <td><a href = "{{url_for('instruments.instrument', instrument_id=instrument.id)}}">{{ instrument.abbv }}</a></td>
+            <td>
+                {% if current_user.authorizations in ["engineer", "technician"] %}
+                <div id="lock-div-{{site.abbv}}-{{instrument.abbv}}" style="display: inline-block;"></div>
+                {% endif %}
+                <a href = "{{url_for('instruments.instrument', instrument_id=instrument.id)}}">{{ instrument.abbv }}</a>
+            </td>
             <td>{{ instrument.status }}</td>
             <td>{{ instrument.last_author }}</td>
             <td>{{ instrument.name }}</td>
@@ -89,4 +94,34 @@
     </div>
     {% endfor %}
 </div>
+{% endblock %}
+{% block script %}
+<script>
+    {% if current_user.authorizations in ["engineer", "technician"] %}
+    var xmlHttp = new XMLHttpRequest();
+    var that = this;
+
+    xmlHttp.onreadystatechange = function() {
+        if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+        {
+            // To get JSON and HTML parts, need to do custom extraction.
+            lockList = JSON.parse(xmlHttp.responseText);
+            console.log(lockList);
+
+            for (var i = 0; i < lockList.length; i++) {
+                var lockDiv = document.getElementById("lock-div-" + lockList[i]["name"])
+                if (lockDiv) {
+                    var image = document.createElement("img");
+                    image.src = "{{url_for('static', filename='lock.png')}}"
+                    lockDiv.appendChild(image);
+                    lockDiv.title = "Locked until " + lockList[i]["unlock_time"] + " UTC by " + lockList[i]["user"] + " for reason: '" + lockList[i]["reason"] + "'";
+                }
+            }
+        };
+    };
+
+    xmlHttp.open("GET", "https://heimdall.vsn.arm.gov/current_locks", true); // true for asynchronous
+    xmlHttp.send();
+    {% endif %}
+</script>
 {% endblock %}

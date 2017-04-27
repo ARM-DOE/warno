@@ -2,6 +2,7 @@ import os
 import json
 import logging
 import ciso8601
+import base64
 import dateutil.parser
 
 from flask import render_template, redirect, url_for, request, abort
@@ -13,7 +14,7 @@ from sqlalchemy import asc
 from WarnoConfig import redis_interface
 from WarnoConfig.utility import status_code_to_text
 from WarnoConfig.models import db
-from WarnoConfig.models import Instrument, ProsensingPAF, PulseCapture, InstrumentLog, Site
+from WarnoConfig.models import Instrument, ProsensingPAF, PulseCapture, InstrumentLog, Site, InstrumentLink
 from WarnoConfig.models import InstrumentDataReference, EventCode, EventWithValue, ValidColumn
 
 
@@ -242,6 +243,8 @@ def instrument(instrument_id):
     """
     if request.method == "GET":
         db_instrument = db_select_instrument(instrument_id)
+        db_links = db.session.query(InstrumentLink).filter(InstrumentLink.instrument_id == instrument_id).all()
+        links = [dict(text=db_link.text, link=db_link.link) for db_link in db_links]
         recent_logs = db_recent_logs_by_instrument(instrument_id)
         # If there are any logs, the most recent log (the first of the list) has the current status
         if recent_logs:
@@ -253,13 +256,76 @@ def instrument(instrument_id):
             # If there are no recent logs, assume the instrument is operational
             status = "OPERATIONAL"
 
+        # Proof of concept for gifs for instruments on the instrument show page.
+        # Only keeping because the full implementation should be forthcoming soon.  Also on 'show_instrument.html'
+        # redint = redis_interface.RedisInterface()
+        # kazr_tpi_gif_string = base64.b64encode(bytes(redint.get_gif(4)))
+
         column_list = valid_columns_for_instrument(instrument_id)
-        return render_template('show_instrument.html', instrument=db_instrument,
-                               recent_logs=recent_logs, status=status, columns=sorted(column_list))
+        return render_template('show_instrument.html', instrument=db_instrument, links=links,
+                               recent_logs=recent_logs, status=status, columns=sorted(column_list)) #, gif=kazr_tpi_gif_string)
 
     elif request.method == "DELETE":
         db_delete_instrument(instrument_id)
         return json.dumps({'id': instrument_id}), 200
+
+@instruments.route('/instruments/<instrument_id>/links/edit', methods=['GET'])
+def instrument_links(instrument_id):
+    """Get the current HTML links for the instrument matching the given 'instrument_id' and open a page to edit the
+    links for the instrument.
+
+    Parameters
+    ----------
+    instrument_id: integer
+        The database id of the instrument whose links are to be edited.
+
+    Returns
+    -------
+    edit_links.html: HTML document
+        Returns an HTML document that will allow the user to edit the links for the given instrument.  Passes the
+        instrument information as well as any current links.
+
+    """
+    db_links = db.session.query(InstrumentLink).filter(InstrumentLink.instrument_id == instrument_id).all()
+    links = [dict(text=db_link.text, link=db_link.link) for db_link in db_links]
+    db_instrument = db_select_instrument(instrument_id)
+    return render_template("edit_links.html", links=links, instrument=db_instrument, instrument_id=instrument_id)
+
+@instruments.route('/instruments/<instrument_id>/links/save', methods=['POST'])
+def save_instrument_links(instrument_id):
+    """ Removes all current links for the instrument matching 'instrument_id', replacing them with new links passed by
+    the form parameter 'links' as a JSON object.  'links' is expected to be a list, with each entry being a dictionary
+    of the form {"text": <string>, "link": <string>}, where 'text' is the text displayed for the web link, and 'link' is
+    the underlying URL.
+
+    Parameters
+    ----------
+    instrument_id: integer
+        The database id of the instrument which the links are being saved for.
+
+    Returns
+    -------
+    instrument: Flask redirect location
+        Returns a Flask redirect location to the instrument function, redirecting the user to the details page
+        for the specified instrument.
+
+    """
+    link_string = request.form.get("links")
+    links = json.loads(link_string)
+
+    db.session.query(InstrumentLink).filter(InstrumentLink.instrument_id == instrument_id).delete()
+    db.session.commit()
+
+    for link in links:
+        new_link = InstrumentLink()
+        new_link.instrument_id = instrument_id
+        new_link.text = link["text"]
+        new_link.link = link["link"]
+        db.session.add(new_link)
+
+    db.session.commit()
+
+    return redirect(url_for('instruments.instrument', instrument_id=instrument_id))
 
 
 def db_recent_logs_by_instrument(instrument_id, maximum_number=5):
@@ -746,25 +812,26 @@ def update_valid_columns_for_instrument(instrument_id):
         # (e.g., this instrument has received data in the column).
         excluded_columns = [column for column in table_columns if column not in special_valid_columns]
 
-        sum_string = ", ".join(["sum(%s)" % column for column in excluded_columns])
-        sql = "SELECT %s FROM %s WHERE instrument_id = %s" % (sum_string, ref.description, instrument_id)
-        column_sums = db.session.execute(sql).first()
-        zipper = zip(excluded_columns, column_sums)
-        # Only add each column if the sum associated with it is not 'None', meaning there is a valid value
-        # somewhere in the column.
-        added_columns = [column[0] for column in zipper if column[1] is not None]
+        if len(excluded_columns) > 0:
+            sum_string = ", ".join(["sum(%s)" % column for column in excluded_columns])
+            sql = "SELECT %s FROM %s WHERE instrument_id = %s" % (sum_string, ref.description, instrument_id)
+            column_sums = db.session.execute(sql).first()
+            zipper = zip(excluded_columns, column_sums)
+            # Only add each column if the sum associated with it is not 'None', meaning there is a valid value
+            # somewhere in the column.
+            added_columns = [column[0] for column in zipper if column[1] is not None]
 
-        for column in added_columns:
-            new_valid_column = ValidColumn()
-            new_valid_column.table_name = ref.description
-            new_valid_column.column_name = column
-            new_valid_column.instrument_id = instrument_id
-            db.session.add(new_valid_column)
-        db.session.commit()
+            for column in added_columns:
+                new_valid_column = ValidColumn()
+                new_valid_column.table_name = ref.description
+                new_valid_column.column_name = column
+                new_valid_column.instrument_id = instrument_id
+                db.session.add(new_valid_column)
+            db.session.commit()
 
-        # Small message to give the caller an idea of how many rows successfully updated.
-        message += (" -- Added " + str(len(added_columns)) + " of " + str(len(excluded_columns))
-                    + " previously null columns.<br>")
+            # Small message to give the caller an idea of how many rows successfully updated.
+            message += (" -- Added " + str(len(added_columns)) + " of " + str(len(excluded_columns))
+                        + " previously null columns.<br>")
 
     return message
 

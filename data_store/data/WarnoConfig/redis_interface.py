@@ -539,6 +539,35 @@ class RedisInterface:
         """Clears the entire Redis database.  Will wipe any other information on the same server."""
         self._r.flushdb()
 
+    def save_image_from_file(self, instrument_id, filename):
+        with open(filename, "r") as image_file:
+            image = image_file.read()
+
+        self._r.set("instruments:" + str(instrument_id) + ":image", image)
+
+    def save_gif(self, instrument_id, gif):
+        """Saves a string to the Redis database with the key 'instruments:<instrument_id>:gif'.
+        Meant to contain a gif image sequence for the instrument, using the string representation of a gif."""
+        self._r.set("instruments:" + str(instrument_id) + ":gif", gif)
+
+    def get_gif(self, instrument_id):
+        """Get the string from the Redis database with the key 'instruments:<instrument_id>:gif'.
+        Meant to contain a gif image sequence for the instrument, using the string representation of a gif."""
+        return self._r.get("instruments:" + str(instrument_id) + ":gif")
+
+    def save_image_to_list(self, instrument_id, image):
+        """Push a string to the front of Redis list with the key 'instruments:<instrument_id>:images', then trimming the
+        right images off the list to keep it at a length of 16.  Meant to contain a sequence of images as strings."""
+        self._r.lpush("instruments:" + str(instrument_id) + ":images", image)
+        self._r.ltrim("instruments:" + str(instrument_id) + ":images", 0, 15)
+
+    def get_image_list(self, instrument_id):
+        """Get the list of strings from Redis with the key 'instruments:<instrument_id>:images', up to a maximum length
+        of 16.  Meant to contain a sequence of images as strings."""
+        image_list = self._r.lrange("instruments:" + str(instrument_id) + ":images", 0, 15)
+        return image_list
+
+
     @staticmethod
     def _build_table_time_key(instrument_id, table_name):
         """Builds a Redis key for the list of times associated with the 'instrument_id' and the 'table_name' of the form

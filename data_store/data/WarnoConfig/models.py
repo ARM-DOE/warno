@@ -111,6 +111,15 @@ class InstrumentLog(db.Model):
     author = db.relationship(User)
 
 
+class InstrumentLink(db.Model):
+    __tablename__ = "instrument_links"
+
+    id = db.Column("link_id", db.Integer, primary_key=True)
+    instrument_id = db.Column(db.Integer, db.ForeignKey('instruments.instrument_id'))
+    text = db.Column(db.String)
+    link = db.Column(db.String)
+
+
 class TableReference(db.Model):
     __tablename__ = "table_references"
 
