@@ -203,8 +203,8 @@ def db_select_instrument(instrument_id):
     """
     inst = db.session.query(Instrument).filter(Instrument.id == instrument_id).first()
     return dict(abbv=inst.name_short, name=inst.name_long, type=inst.type, vendor=inst.vendor,
-                description=inst.description, location=inst.site.name_short, latitude=inst.site.latitude,
-                longitude=inst.site.longitude, site_id=inst.site_id, id=inst.id)
+                description=inst.description, location=inst.site.name_short, latitude=inst.latitude,
+                longitude=inst.longitude, effective_radius=inst.effective_radius, site_id=inst.site_id, id=inst.id)
 
 
 def db_delete_instrument(instrument_id):
