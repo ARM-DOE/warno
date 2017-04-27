@@ -212,7 +212,8 @@ def show_site(site_id):
     db_instruments = db.session.query(Instrument).filter(Instrument.site_id == site_id).all()
     instruments = [dict(abbv=instrument.name_short, name=instrument.name_long, type=instrument.type,
                         vendor=instrument.vendor, description=instrument.description, status=1,
-                        last_author="", id=instrument.id)
+                        last_author="", id=instrument.id, latitude=instrument.latitude, longitude=instrument.longitude,
+                        effective_radius=instrument.effective_radius)
                    for instrument in db_instruments]
 
     # For each instrument, if there is a corresponding status entry from the query above,

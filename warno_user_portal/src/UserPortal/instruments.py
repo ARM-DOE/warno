@@ -42,8 +42,9 @@ def list_instruments():
     """
     db_instruments = db.session.query(Instrument).order_by(asc(Instrument.id)).all()
     instrument_list = [dict(abbv=inst.name_short, name=inst.name_long, type=inst.type, vendor=inst.vendor,
-                            description=inst.description, location=inst.site.name_short,
-                            site_id=inst.site_id, id=inst.id)
+                            description=inst.description, location=inst.site.name_short, site_id=inst.site_id,
+                            id=inst.id, latitude=inst.latitude, longitude=inst.longitude,
+                            effective_radius=inst.effective_radius)
                        for inst in db_instruments]
 
     return render_template('instrument_list.html', instruments=instrument_list)
@@ -140,7 +141,9 @@ def edit_instrument(instrument_id):
         db_instrument = db.session.query(Instrument).filter(Instrument.id == instrument_id).first()
         instrument_dict = dict(name_short=db_instrument.name_short, name_long=db_instrument.name_long,
                                type=db_instrument.type, vendor=db_instrument.vendor,
-                               description=db_instrument.description, site_id=db_instrument.site_id)
+                               description=db_instrument.description, site_id=db_instrument.site_id,
+                               latitude=db_instrument.latitude, longitude=db_instrument.longitude,
+                               effective_radius=db_instrument.effective_radius)
 
         return render_template('edit_instrument.html', sites=sites, instrument=instrument_dict)
 
