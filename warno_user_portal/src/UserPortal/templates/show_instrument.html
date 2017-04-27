@@ -11,6 +11,7 @@
                     <img src='https://maps.googleapis.com/maps/api/staticmap?center={{instrument.latitude}}, {{instrument.longitude}}&zoom=1&size=300x300&maptype=roadmap&markers=color:blue%7Clabel:S%7C{{instrument.latitude}}, {{instrument.longitude}}&sensor=false&key=AIzaSyBHcnNMn_-7yvt9PafY5FFPtGrhQNiamnc'/>
                 </div>
 
+
                 <div>
                     {% if recent_logs|length > 0 %}
                     <div class="{{recent_logs[0].status.replace(' ', '_').replace('-', '_').lower()}}" style="text-align: center; border: 1px solid black;">
@@ -61,6 +62,11 @@
 
             </div>
         </div>
+            <div id="map" style="height: 300px; width: 300px;">
+
+                </div>
+            <button onclick="toggleGoes()">Toggle Goes Overlay</button>
+            <button onclick="toggleNex()">Toggle NEXRAD Overlay</button>
         <div style="display: inline-block; vertical-align: top; width: -webkit-calc(100% - 340px); width: -moz-calc(100% - 340px); width: calc(100% - 340px); background-color: yellow;">
             <div class="info_white">
                     {% for log in recent_logs %}
@@ -120,5 +126,95 @@
     xmlHttp.open("GET", "https://heimdall.vsn.arm.gov/current_locks", true); // true for asynchronous
     xmlHttp.send();
     {% endif %}
+
+    // Google mapping
+    iconColorMapping = {
+        "operational": 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
+        "not_working": 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+        "testing":     'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png',
+        "in_upgrade":  'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+        "transit":     'https://maps.google.com/mapfiles/ms/icons/orange-dot.png'
+    }
+
+    // Choose the appropriate icon color from the status of the most recent log.  If there are no logs, is 'operational'
+    {% if recent_logs|length > 0 %}
+    var markerIcon = iconColorMapping["{{recent_logs[0].status.replace(' ', '_').replace('-', '_').lower()}}"];
+    {% else %}
+    var markerIcon = iconColorMapping["operational"];
+    {% endif %}
+
+    console.log(markerIcon);
+
+    var map = null;
+
+    var goes = null;
+    var tileNex = null;
+
+    function initMap() {
+        var location = { lat:  {{instrument.latitude}}, lng: {{instrument.longitude}} };
+        map = new google.maps.Map(document.getElementById('map'), {
+            zoom: 8,
+            center: location
+        });
+        var marker = new google.maps.Marker({
+            icon: markerIcon,
+            position: location,
+            map: map
+        });
+        var circle = new google.maps.Circle({
+            map: map,
+            radius: 50000.35,
+            fillColor: '#00FF22',
+            strokeOpacity: 0.3
+        });
+        circle.bindTo('center', marker, 'position');
+        tileNEX = new google.maps.ImageMapType({
+            getTileUrl: function(tile, zoom) {
+                return "https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/" + zoom + "/" + tile.x + "/" + tile.y +".png?"+ (new Date()).getTime();
+            },
+            tileSize: new google.maps.Size(256, 256),
+            opacity:0.60,
+            name : 'NEXRAD',
+            isPng: true
+        });
+
+        goes = new google.maps.ImageMapType({
+            getTileUrl: function(tile, zoom) {
+                return "https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/goes-east-vis-1km-900913/" + zoom + "/" + tile.x + "/" + tile.y +".png?"+ (new Date()).getTime();
+            },
+            tileSize: new google.maps.Size(256, 256),
+            opacity:0.60,
+            name : 'GOES East Vis',
+            isPng: true
+        });
+
+        map.overlayMapTypes.push(null); // create empty overlay entry
+        map.overlayMapTypes.setAt("0",goes);
+        map.overlayMapTypes.push(null); // create empty overlay entry
+        map.overlayMapTypes.setAt("1",tileNEX);
+    }
+
+    initMap();
+    var seeGoes = true;
+    function toggleGoes() {
+        if(seeGoes) {
+            seeGoes = false;
+            map.overlayMapTypes.setAt("0", null);
+        } else {
+            seeGoes = true;
+            map.overlayMapTypes.setAt("0", goes);
+        }
+    }
+    var seeNex = true;
+    function toggleNex() {
+        if(seeNex) {
+            seeNex = false;
+            map.overlayMapTypes.setAt("1", null);
+        } else {
+            seeNex = true;
+            map.overlayMapTypes.setAt("1", tileNEX);
+        }
+    }
 </script>
+
 {% endblock %}

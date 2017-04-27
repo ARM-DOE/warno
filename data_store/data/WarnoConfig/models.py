@@ -94,6 +94,9 @@ class Instrument(db.Model):
     type = db.Column(db.String)
     vendor = db.Column(db.String)
     description = db.Column(db.String)
+    # latitude = db.Column(db.Float, nullable=False, default=-999.0)
+    # longitude = db.Column(db.Float, nullable=False, default=-999.0)
+    # effective_radius = db.Column(db.Float, nullable=False, default=0)
     site = db.relationship(Site)
 
 
