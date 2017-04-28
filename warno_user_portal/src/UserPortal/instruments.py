@@ -12,7 +12,7 @@ from sqlalchemy.sql import func
 from sqlalchemy import asc
 
 from WarnoConfig import redis_interface
-from WarnoConfig.utility import status_code_to_text
+from WarnoConfig.utility import status_code_to_text, is_number
 from WarnoConfig.models import db
 from WarnoConfig.models import Instrument, ProsensingPAF, PulseCapture, InstrumentLog, Site, InstrumentLink
 from WarnoConfig.models import InstrumentDataReference, EventCode, EventWithValue, ValidColumn
@@ -124,17 +124,43 @@ def edit_instrument(instrument_id):
         updated_instrument.type = request.form.get('type')
         updated_instrument.vendor = request.form.get('vendor')
         updated_instrument.description = request.form.get('description')
+        updated_instrument.latitude = request.form.get('latitude')
+        updated_instrument.longitude = request.form.get('longitude')
+        updated_instrument.effective_radius = request.form.get('effective-radius')
         updated_instrument.site_id = request.form.get('site')
 
-        # Update instrument in the database
-        db.session.commit()
+        errors = []
+        # Validate values
+        if not (is_number(updated_instrument.latitude)
+                and (float(updated_instrument.latitude) >= -90.0)
+                and (float(updated_instrument.latitude) <= 90.0)):
+            errors.append("Latitude must be a number between -90.0 and 90.0")
+        if not (is_number(updated_instrument.longitude)
+                and (float(updated_instrument.longitude) >= -180.0)
+                and (float(updated_instrument.longitude) <= 180.0)):
+            errors.append("Longitude must be a number between -180.0 and 180.0")
+        if not (is_number(updated_instrument.effective_radius) and (float(updated_instrument.effective_radius) >= 0.0)):
+            errors.append("Effective radius must be a number greater than 0")
 
-        # Redirect to the updated list of instruments
-        return redirect(url_for("instruments.list_instruments"))
+        if len(errors) > 0:
+            error_message = "<br>".join(errors)
+            return redirect(url_for('instruments.edit_instrument', instrument_id=instrument_id,
+                                    error=error_message))
+        else:
+            # Update instrument in the database
+            db.session.commit()
+
+            # Redirect to the updated list of instruments
+            return redirect(url_for("instruments.list_instruments"))
 
     # If the request is to get the form, get a list of sites and their ids for the dropdown
     # in the update instrument form
     if request.method == 'GET':
+        error = request.args.get('error')
+        if error:
+            errors = error.split("<br>")
+        else:
+            errors = []
         db_sites = db.session.query(Site).all()
         sites = [dict(id=site.id, name=site.name_short) for site in db_sites]
 
@@ -145,7 +171,7 @@ def edit_instrument(instrument_id):
                                latitude=db_instrument.latitude, longitude=db_instrument.longitude,
                                effective_radius=db_instrument.effective_radius)
 
-        return render_template('edit_instrument.html', sites=sites, instrument=instrument_dict)
+        return render_template('edit_instrument.html', sites=sites, instrument=instrument_dict, errors=errors)
 
 
 def valid_columns_for_instrument(instrument_id):

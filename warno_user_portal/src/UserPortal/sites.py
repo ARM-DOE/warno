@@ -126,28 +126,38 @@ def edit_site(site_id):
         else:
             updated_site.mobile = False
 
-        # Checks if latitude and longitude are valid values
-        if is_number(updated_site.latitude) and is_number(updated_site.longitude):
+        errors = []
+        # Validate values
+        if not (is_number(updated_site.latitude)
+                and (float(updated_site.latitude) >= -90.0)
+                and (float(updated_site.latitude) <= 90.0)):
+            errors.append("Latitude must be a number between -90.0 and 90.0")
+        if not (is_number(updated_site.longitude)
+                and (float(updated_site.longitude) >= -180.0)
+                and (float(updated_site.longitude) <= 180.0)):
+            errors.append("Longitude must be a number between -180.0 and 180.0")
+
+        if len(errors) > 0:
+            error_message = "<br>".join(errors)
+            return redirect(url_for("sites.edit_site", site_id=site_id, error=error_message))
+        else:
             db.session.commit()
             # After update, redirect to the updated list of sites
             return redirect(url_for("sites.list_sites"))
-        else:
-            db_site = db.session.query(Site).filter(Site.id == site_id).first()
-            site = dict(name_short=db_site.name_short, name_long=db_site.name_long, latitude=db_site.latitude,
-                        longitude=db_site.longitude, facility=db_site.facility, location_name=db_site.location_name,
-                        mobile=db_site.mobile)
-            return redirect(url_for("sites.edit_site", site_id=site_id, site=site,
-                                    error="Latitude and Longitude must be numbers."))
 
     # If the request is to get the form, get the site and pass it to fill default values.
     if request.method == 'GET':
         error = request.args.get('error')
+        if error:
+            errors = error.split("<br>")
+        else:
+            errors = []
         db_site = db.session.query(Site).filter(Site.id == site_id).first()
         site = dict(name_short=db_site.name_short, name_long=db_site.name_long, latitude=db_site.latitude,
                     longitude=db_site.longitude, facility=db_site.facility, location_name=db_site.location_name,
                     mobile=db_site.mobile)
 
-        return render_template('edit_site.html', site=site, error=error)
+        return render_template('edit_site.html', site=site, errors=errors)
 
 
 @sites.route('/sites')
