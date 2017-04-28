@@ -46,8 +46,8 @@
 </div>
 <div style="vertical-align: top;">
     <div style="display: inline-block; width: 300px; border: 2px solid black; margin: 5px; vertical-align: top;">
-        <div>
-            <img src='https://maps.googleapis.com/maps/api/staticmap?center={{site.latitude}}, {{site.longitude}}&zoom=1&size=300x300&maptype=roadmap&markers=color:blue%7Clabel:S%7C{{site.latitude}}, {{site.longitude}}&sensor=false&key=AIzaSyBHcnNMn_-7yvt9PafY5FFPtGrhQNiamnc'/>
+        <div id="map" style="width: 300px; height: 300px;">
+
         </div>
     </div>
     <div style="display: inline-block; width: 400px; padding: 5px; vertical-align: top;">
@@ -123,5 +123,132 @@
     xmlHttp.open("GET", "https://heimdall.vsn.arm.gov/current_locks", true); // true for asynchronous
     xmlHttp.send();
     {% endif %}
+
+    // Google Mapping
+    iconColorMapping = {
+        "operational": 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
+        "not_working": 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+        "testing":     'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png',
+        "in_upgrade":  'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+        "transit":     'https://maps.google.com/mapfiles/ms/icons/orange-dot.png'
+    }
+    circleColorMapping = {
+        "operational": '#90EEA0',
+        "not_working": '#F0A0A0',
+        "testing":     '#BEE9F7',
+        "in_upgrade":  '#F3F35A',
+        "transit":     '#FFE4B5'
+    }
+
+    instruments = [];
+    {% for instrument in instruments %}
+    instruments.push({"lat": {{instrument.latitude}}, "lon": {{instrument.longitude}}, "status": '{{instrument.status}}',
+    "icon": iconColorMapping["{{instrument.status.replace(' ', '_').replace('-', '_').lower()}}"],
+    "circleColor": circleColorMapping["{{instrument.status.replace(' ', '_').replace('-', '_').lower()}}"],
+    "effectiveRadius": {{instrument.effective_radius}}});
+    {% endfor %}
+
+    // Choose the appropriate icon color from the status of the most recent log.  If there are no logs, is 'operational'
+    // {% if recent_logs|length > 0 %}
+    // var markerIcon = iconColorMapping["{{recent_logs[0].status.replace(' ', '_').replace('-', '_').lower()}}"];
+    // var circleColor = circleColorMapping["{{recent_logs[0].status.replace(' ', '_').replace('-', '_').lower()}}"];
+    // {% else %}
+    // var markerIcon = iconColorMapping["operational"];
+    // var circleColor = circleColorMapping["operational"];
+    // {% endif %}
+
+    // console.log(markerIcon);
+
+    var map = null;
+
+    var goes = null;
+    var tileNex = null;
+
+    var markers = [];
+    var circles = [];
+
+    function initMap() {
+        var location = { lat:  {{site.latitude}}, lng: {{site.longitude}} };
+        map = new google.maps.Map(document.getElementById('map'), {
+            zoom: 8,
+            center: location
+        });
+
+
+
+        for (var i = 0; i < instruments.length; i++) {
+            console.log(instruments[i]);
+            var marker = new google.maps.Marker({
+                icon: instruments[i]["icon"],
+                position: { lat: instruments[i]["lat"], lng: instruments[i]["lon"] },
+                map: map
+            });
+            var circle = new google.maps.Circle({
+                map: map,
+                radius: instruments[i]["effectiveRadius"],
+                fillColor: instruments[i]["circleColor"],
+                fillOpacity: 0.3,
+                strokeOpacity: 0.2
+            });
+            circle.bindTo('center', marker, 'position');
+            circles.push(circle);
+            markers.push(marker);
+            //console.log(marker);
+            console.log(markers);
+            // break;
+        }
+        console.log("Finality");
+        console.log(instruments);
+        console.log(markers);
+        console.log(circles);
+        console.log("endality");
+
+        tileNEX = new google.maps.ImageMapType({
+            getTileUrl: function(tile, zoom) {
+                return "https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/" + zoom + "/" + tile.x + "/" + tile.y +".png?"+ (new Date()).getTime();
+            },
+            tileSize: new google.maps.Size(256, 256),
+            opacity:0.60,
+            name : 'NEXRAD',
+            isPng: true
+        });
+
+        goes = new google.maps.ImageMapType({
+            getTileUrl: function(tile, zoom) {
+                return "https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/goes-east-vis-1km-900913/" + zoom + "/" + tile.x + "/" + tile.y +".png?"+ (new Date()).getTime();
+            },
+            tileSize: new google.maps.Size(256, 256),
+            opacity:0.60,
+            name : 'GOES East Vis',
+            isPng: true
+        });
+
+        map.overlayMapTypes.push(null); // create empty overlay entry
+        map.overlayMapTypes.setAt("0",goes);
+        map.overlayMapTypes.push(null); // create empty overlay entry
+        map.overlayMapTypes.setAt("1",tileNEX);
+    }
+
+    initMap();
+    var seeGoes = true;
+    function toggleGoes() {
+        if(seeGoes) {
+            seeGoes = false;
+            map.overlayMapTypes.setAt("0", null);
+        } else {
+            seeGoes = true;
+            map.overlayMapTypes.setAt("0", goes);
+        }
+    }
+    var seeNex = true;
+    function toggleNex() {
+        if(seeNex) {
+            seeNex = false;
+            map.overlayMapTypes.setAt("1", null);
+        } else {
+            seeNex = true;
+            map.overlayMapTypes.setAt("1", tileNEX);
+        }
+    }
 </script>
 {% endblock %}
