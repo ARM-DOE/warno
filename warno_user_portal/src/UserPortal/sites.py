@@ -73,18 +73,33 @@ def new_site():
         else:
             new_db_site.mobile = False
 
-        # Checks if latitude and longitude are valid values
-        if is_number(new_db_site.latitude) and is_number(new_db_site.longitude):
+        errors = []
+        # Validate values
+        if not (is_number(new_db_site.latitude)
+                and (float(new_db_site.latitude) >= -90.0)
+                and (float(new_db_site.latitude) <= 90.0)):
+            errors.append("Latitude must be a number between -90.0 and 90.0")
+        if not (is_number(new_db_site.longitude)
+                and (float(new_db_site.longitude) >= -180.0)
+                and (float(new_db_site.longitude) <= 180.0)):
+            errors.append("Longitude must be a number between -180.0 and 180.0")
+
+        if len(errors) > 0:
+            error_message = "<br>".join(errors)
+            return redirect(url_for("sites.new_site", error=error_message))
+        else:
             db.session.add(new_db_site)
             db.session.commit()
             # After insertion, redirect to the updated list of sites
             return redirect(url_for("sites.list_sites"))
-        else:
-            return redirect(url_for("sites.new_site", error="Latitude and Longitude must be numbers."))
 
     if request.method == 'GET':
         error = request.args.get('error')
-        return render_template('new_site.html', error=error)
+        if error:
+            errors = error.split("<br>")
+        else:
+            errors = []
+        return render_template('new_site.html', errors=errors)
 
 
 @sites.route('/sites/<site_id>/edit', methods=['GET', 'POST'])

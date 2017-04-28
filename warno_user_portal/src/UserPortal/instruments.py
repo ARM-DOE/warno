@@ -76,22 +76,47 @@ def new_instrument():
         new_db_instrument.type = request.form.get('type')
         new_db_instrument.vendor = request.form.get('vendor')
         new_db_instrument.description = request.form.get('description')
+        new_db_instrument.latitude = request.form.get('latitude')
+        new_db_instrument.longitude = request.form.get('longitude')
+        new_db_instrument.effective_radius = request.form.get('effective-radius')
         new_db_instrument.site_id = request.form.get('site')
 
-        # Insert a new instrument into the database
-        db.session.add(new_db_instrument)
-        db.session.commit()
+        errors = []
+        # Validate values
+        if not (is_number(new_db_instrument.latitude)
+                and (float(new_db_instrument.latitude) >= -90.0)
+                and (float(new_db_instrument.latitude) <= 90.0)):
+            errors.append("Latitude must be a number between -90.0 and 90.0")
+        if not (is_number(new_db_instrument.longitude)
+                and (float(new_db_instrument.longitude) >= -180.0)
+                and (float(new_db_instrument.longitude) <= 180.0)):
+            errors.append("Longitude must be a number between -180.0 and 180.0")
+        if not (is_number(new_db_instrument.effective_radius) and (float(new_db_instrument.effective_radius) >= 0.0)):
+            errors.append("Effective radius must be a number greater than 0")
 
-        # Redirect to the updated list of instruments
-        return redirect(url_for("instruments.list_instruments"))
+        if len(errors) > 0:
+            error_message = "<br>".join(errors)
+            return redirect(url_for('instruments.new_instrument', error=error_message))
+        else:
+            # Insert a new instrument into the database
+            db.session.add(new_db_instrument)
+            db.session.commit()
+
+            # Redirect to the updated list of instruments
+            return redirect(url_for("instruments.list_instruments"))
 
     # If the request is to get the form, get a list of sites and their ids for the dropdown in the add user form
     if request.method == 'GET':
-        #
+        error = request.args.get('error')
+        if error:
+            errors = error.split("<br>")
+        else:
+            errors = []
+
         db_sites = db.session.query(Site).all()
         sites = [dict(id=site.id, name=site.name_short) for site in db_sites]
 
-        return render_template('new_instrument.html', sites=sites)
+        return render_template('new_instrument.html', sites=sites, errors=errors)
 
 
 @instruments.route('/instruments/<instrument_id>/edit', methods=['GET', 'POST'])
@@ -161,6 +186,7 @@ def edit_instrument(instrument_id):
             errors = error.split("<br>")
         else:
             errors = []
+
         db_sites = db.session.query(Site).all()
         sites = [dict(id=site.id, name=site.name_short) for site in db_sites]
 
