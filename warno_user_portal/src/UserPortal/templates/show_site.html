@@ -21,8 +21,14 @@
             <th> Last Logged By</th>
             <th> Intrument Name</th>
             <th> Type</th>
+            <th> Latitude </th>
+            <th> Longitude </th>
+            <th> Effective Radius (m) </th>
             <th> Vendor</th>
             <th> Description</th>
+            {% if current_user.authorizations == "engineer" %}
+            <th></th>
+            {% endif %}
         </tr>
         {%  for instrument in instruments %}
         <tr>
@@ -36,8 +42,14 @@
             <td>{{ instrument.last_author }}</td>
             <td>{{ instrument.name }}</td>
             <td>{{ instrument.type }}</td>
+            <td>{{ instrument.latitude }}</td>
+            <td>{{ instrument.longitude }}</td>
+            <td>{{ instrument.effective_radius }}</td>
             <td>{{ instrument.vendor }}</td>
             <td>{{ instrument.description }}</td>
+            {% if current_user.authorizations == "engineer" %}
+            <td><a href= "{{url_for('instruments.edit_instrument', instrument_id=instrument.id)}}">Edit</a></td>
+            {% endif %}
         </tr>
         {% endfor %}
     </table>
