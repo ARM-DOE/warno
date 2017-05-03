@@ -65,9 +65,11 @@ New Site
     <br>
 
     <div>
-        {% if error %}
-            <div id="new-site-error" style="color: red">{{error}}</div>
-        {% endif %}
+        <div id="edit-instrument-error" style="color: red">
+        {% for error in errors %}
+            {{error}}
+            <br>
+        {% endfor %}
         <button id="reset" type="reset">Clear Fields</button>
         <button type="submit" id="submit">Confirm</button>
     </div>

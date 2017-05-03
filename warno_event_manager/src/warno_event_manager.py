@@ -892,7 +892,7 @@ def initialize_database():
             db.session.commit()
 
         upgrade(directory=migration_path)
-
+        # trigger_migration_migrate(migration_path)
         # db_migrate(directory=migration_path) # These functions can be used instead of upgrade for Flask Migrate
         # downgrade(directory=migration_path)
         # exit(0)

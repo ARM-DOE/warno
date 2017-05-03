@@ -42,6 +42,27 @@ New Instrument
     </div>
 
     <div class="form-group">
+        <div>
+            <label for="latitude" class="control-label">Latitude:</label>
+        </div>
+        <input type="text" class="form-control" id="instrumentLatitudeBox" name="latitude">
+    </div>
+
+    <div class="form-group">
+        <div>
+            <label for="longitude" class="control-label">Longitude:</label>
+        </div>
+        <input type="text" class="form-control" id="instrumentLongitudeBox" name="longitude">
+    </div>
+
+    <div class="form-group">
+        <div>
+            <label for="effective-radius" class="control-label">Effective Horizontal Radius (meters):</label>
+        </div>
+        <input type="text" class="form-control" id="instrumentEffectiveRadiusBox" name="effective-radius">
+    </div>
+
+    <div class="form-group">
         <label for="site" class="form-control">Site: </label>
         <select id="instrumentSiteSelect" name="site">
             {% for site in sites %}
@@ -53,6 +74,11 @@ New Instrument
     <br>
 
     <div>
+        <div id="edit-instrument-error" style="color: red">
+        {% for error in errors %}
+            {{error}}
+            <br>
+        {% endfor %}
         <button id="reset" type="reset">Clear Fields</button>
         <button type="submit" id="submit">Confirm</button>
     </div>
