@@ -107,7 +107,6 @@
         {
             // To get JSON and HTML parts, need to do custom extraction.
             lockList = JSON.parse(xmlHttp.responseText);
-            console.log(lockList);
 
             for (var i = 0; i < lockList.length; i++) {
                 if (lockList[i]["name"] == "{{instrument.location}}-{{instrument.abbv}}") {

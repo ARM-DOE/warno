@@ -160,6 +160,36 @@ ul.nav-buttons a li.selected{
     background: linear-gradient(to right, #999999 0%, #DDDDDD 15%, #DDDDDD 85%, #999999 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
 }
 
+/** Sidebar Selection **/
+div.flex-frame {
+    display: flex;
+    min-height: 100vh;
+}
+div.sidebar-left {
+    flex: 0 0 300px; border: 1px solid black;
+}
+
+div.sidebar-right {
+    flex: 1; border: 1px solid black;
+}
+
+div.sidebar-button {
+    text-align: center;
+    background: lightBlue;
+    padding: 10px;
+    border: 2px solid black;
+}
+
+div.sidebar-button:hover,
+div.sidebar-button:focus {
+    background: #DDDDDD;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+div.sidebar-button-indicator {
+    float: right;
+}
 
 /***** Dygraphs and their containers *****/
 div.master_graphdiv {
@@ -940,4 +970,34 @@ div.config-error {
     color: red;
     font-style: italic;
     font-size: 80%;
+}
+
+
+div.next-log-button {
+    padding: 4px 4px 4px 4px;
+    background: lightBlue;
+    border: 2px solid black;
+    font-weight: bold;
+    float: right;
+}
+
+div.previous-log-button {
+    padding: 4px 4px 4px 4px;
+    background: lightBlue;
+    border: 2px solid black;
+    font-weight: bold;
+    float: left;
+}
+
+div.next-log-button:hover,
+div.previous-log-button:hover,
+div.next-log-button:focus,
+div.previous-log-button:focus {
+    background: lightGray;
+    cursor: pointer;
+}
+
+div.embedded-status-log {
+    border: 2px solid black;
+    margin: 5px;
 }

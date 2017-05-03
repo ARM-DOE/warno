@@ -6,109 +6,148 @@
 
 {% block content %}
 <div>
-    <br>
-    Instruments at site:
-    <br>
-    {% if not instruments %}
 
-        None
+    <div class="flex-frame">
+        <div class="sidebar-left">
+            <div id="site-map-button" class="sidebar-button">
+                Site Map
+                <div id="site-map-select" class="sidebar-button-indicator"> > </div>
+            </div>
+            <div id="instrument-list-button" class="sidebar-button">
+                Instrument List
+                <div id="instrument-list-select" class="sidebar-button-indicator" hidden="true"> > </div>
+            </div>
+            <div id="status-log-button" class="sidebar-button">
+                Status Logs
+                <div id="status-log-select" class="sidebar-button-indicator" hidden="true"> > </div>
+            </div>
+            <div style="border: 1px solid black; padding: 5px;">
+                Map Overlays:
+                <hr>
+                <button onclick="toggleGoes()">Toggle GOES</button>
+                <button onclick="toggleNex()">Toggle NEXRAD</button>
+            </div>
+            <div class="info">
+                <h3 style="margin: 10px;">  Information:</h3>
+            </div>
+            <div style = "background-color: white; border: 1px solid black; padding: 5px;">
+                Abbreviation:   {{site.abbv}}
+                <hr>
+                Name:           {{site.name}}
+                <hr>
+                Facility:       {{site.facility}}
+                <hr>
+                Mobile:         {{site.mobile}}
+                <hr>
+                Location Name:  {{site.location_name}}
+                <hr>
+                Latitude:       {{site.latitude}}
+                <hr>
+                Longitude:      {{site.longitude}}
+                <hr>
 
-    {% else %}
-    <table class="listing-table sortable" id='instrument-table'>
-        <tr>
-            <th> Abbv</th>
-            <th> Status </th>
-            <th> Last Logged By</th>
-            <th> Intrument Name</th>
-            <th> Type</th>
-            <th> Latitude </th>
-            <th> Longitude </th>
-            <th> Effective Radius (m) </th>
-            <th> Vendor</th>
-            <th> Description</th>
-            {% if current_user.authorizations == "engineer" %}
-            <th></th>
+            </div>
+        </div>
+        <div id="site-map-display" class="sidebar-right">
+            <!---->
+            <!---->
+            <div id="map" style="height: 100%; width: 100%;">
+
+            </div>
+
+        </div>
+
+        <div id="instrument-list-display" class="sidebar-right" hidden="true">
+            <br>
+            <h3 style="font-size: 200%; padding-left: 15px;">
+                Instruments at site:
+            </h3>
+            <br>
+            {% if not instruments %}
+
+                None
+
+            {% else %}
+            <table class="listing-table sortable" id='instrument-table'>
+                <tr>
+                    <th> Abbv</th>
+                    <th> Status </th>
+                    <th> Last Logged By</th>
+                    <th> Intrument Name</th>
+                    <th> Type</th>
+                    <th> Latitude </th>
+                    <th> Longitude </th>
+                    <th> Effective Radius (m) </th>
+                    <th> Vendor</th>
+                    <th> Description</th>
+                    {% if current_user.authorizations == "engineer" %}
+                    <th></th>
+                    {% endif %}
+                </tr>
+                {%  for instrument in instruments %}
+                <tr>
+                    <td>
+                        {% if current_user.authorizations in ["engineer", "technician"] %}
+                        <div id="lock-div-{{site.abbv}}-{{instrument.abbv}}" style="display: inline-block;"></div>
+                        {% endif %}
+                        <a href = "{{url_for('instruments.instrument', instrument_id=instrument.id)}}">{{ instrument.abbv }}</a>
+                    </td>
+                    <td>{{ instrument.status }}</td>
+                    <td>{{ instrument.last_author }}</td>
+                    <td>{{ instrument.name }}</td>
+                    <td>{{ instrument.type }}</td>
+                    <td>{{ instrument.latitude }}</td>
+                    <td>{{ instrument.longitude }}</td>
+                    <td>{{ instrument.effective_radius }}</td>
+                    <td>{{ instrument.vendor }}</td>
+                    <td>{{ instrument.description }}</td>
+                    {% if current_user.authorizations == "engineer" %}
+                    <td><a href= "{{url_for('instruments.edit_instrument', instrument_id=instrument.id)}}">Edit</a></td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </table>
             {% endif %}
-        </tr>
-        {%  for instrument in instruments %}
-        <tr>
-            <td>
-                {% if current_user.authorizations in ["engineer", "technician"] %}
-                <div id="lock-div-{{site.abbv}}-{{instrument.abbv}}" style="display: inline-block;"></div>
-                {% endif %}
-                <a href = "{{url_for('instruments.instrument', instrument_id=instrument.id)}}">{{ instrument.abbv }}</a>
-            </td>
-            <td>{{ instrument.status }}</td>
-            <td>{{ instrument.last_author }}</td>
-            <td>{{ instrument.name }}</td>
-            <td>{{ instrument.type }}</td>
-            <td>{{ instrument.latitude }}</td>
-            <td>{{ instrument.longitude }}</td>
-            <td>{{ instrument.effective_radius }}</td>
-            <td>{{ instrument.vendor }}</td>
-            <td>{{ instrument.description }}</td>
-            {% if current_user.authorizations == "engineer" %}
-            <td><a href= "{{url_for('instruments.edit_instrument', instrument_id=instrument.id)}}">Edit</a></td>
+            <br>
+        </div>
+        <div id="status-log-display" class="sidebar-right" hidden="true">
+            {% set index = 0 %}
+            {% for log in recent_logs %}
+            {% if index == 0 %}
+            <div id="status-log-{{index}}" class="embedded-status-log">
+            {% else %}
+            <div id="status-log-{{index}}" class="embedded-status-log" hidden="true">
             {% endif %}
-        </tr>
-        {% endfor %}
-    </table>
-    {% endif %}
-    <br>
-</div>
-<div style="vertical-align: top;">
-    <div style="display: inline-block; width: 300px; border: 2px solid black; margin: 5px; vertical-align: top;">
-        <div id="map" style="width: 300px; height: 300px;">
-
+                <div class="{{log.status.replace(' ', '_').replace('-', '_').lower()}}" style="border-bottom: 2px solid black;padding: 10px;">
+                    {% if index > 0 %}
+                    <div class="previous-log-button" onclick="showLog({{ index - 1 }})">
+                        <span style="font-size: 200%;"> < </span>
+                        <br>
+                        Newer
+                    </div>
+                    {% endif %}
+                    {% if index + 1 < recent_logs | length %}
+                    <div class="next-log-button" onclick="showLog({{ index + 1 }})">
+                        <span style="font-size: 200%;"> > </span>
+                        <br>
+                        Older
+                    </div>
+                    {% endif %}
+                    <div style="font-weight: bold; font-size: 125%;">
+                        {{log.instrument}} {{log.status}}
+                    </div>
+                    <hr>
+                    {{log.author}} {{log.time}}
+                </div>
+                <div style="padding: 10px; min-height: 100px;">
+                    {{log.contents}}
+                </div>
+            </div>
+            {% set index = index + 1 %}
+            {% endfor %}
         </div>
 
-        <button onclick="toggleGoes()">Toggle GOES</button>
-        <button onclick="toggleNex()">Toggle NEXRAD</button>
     </div>
-    <div style="display: inline-block; width: 400px; padding: 5px; vertical-align: top;">
-        <div class="info">
-            <h3 style="margin-left: 10px;">  Information:</h3>
-        </div>
-        <div style = "background-color: white; border: 1px solid black; padding: 5px;">
-            Abbreviation:   {{site.abbv}}
-            <br>
-            Name:           {{site.name}}
-            <br>
-            Facility:       {{site.facility}}
-            <br>
-            Mobile:         {{site.mobile}}
-            <br>
-            Location Name:  {{site.location_name}}
-            <br>
-            Latitude:       {{site.latitude}}
-            <br>
-            Longitude:      {{site.longitude}}
-            <br>
-
-        </div>
-</div>
-</div>
-<div style="padding: 5px; width: 99%;">
-    <h3>Recent Logs:</h3>
-    {% for log in recent_logs %}
-    <div style="border: 2px solid black; margin: 5px; display: flex;">
-        <div class="{{log.status.replace(' ', '_').replace('-', '_').lower()}}"
-             style="border-right: 2px solid black; flex: 0 0 170px; vertical-align: middle;">
-            {{log.instrument}}
-            <hr>
-            {{log.author}}
-            <hr>
-            {{log.time}}
-            <hr>
-            {{log.status}}
-            <hr>
-        </div>
-        <div style="padding: 5px; vertical-align: top; flex: 1;">
-            {{log.contents}}
-        </div>
-    </div>
-    {% endfor %}
-</div>
 {% endblock %}
 {% block script %}
 <script>
@@ -121,7 +160,6 @@
         {
             // To get JSON and HTML parts, need to do custom extraction.
             lockList = JSON.parse(xmlHttp.responseText);
-            console.log(lockList);
 
             for (var i = 0; i < lockList.length; i++) {
                 var lockDiv = document.getElementById("lock-div-" + lockList[i]["name"])
@@ -163,17 +201,6 @@
     "effectiveRadius": {{instrument.effective_radius}}});
     {% endfor %}
 
-    // Choose the appropriate icon color from the status of the most recent log.  If there are no logs, is 'operational'
-    // {% if recent_logs|length > 0 %}
-    // var markerIcon = iconColorMapping["{{recent_logs[0].status.replace(' ', '_').replace('-', '_').lower()}}"];
-    // var circleColor = circleColorMapping["{{recent_logs[0].status.replace(' ', '_').replace('-', '_').lower()}}"];
-    // {% else %}
-    // var markerIcon = iconColorMapping["operational"];
-    // var circleColor = circleColorMapping["operational"];
-    // {% endif %}
-
-    // console.log(markerIcon);
-
     var map = null;
 
     var goes = null;
@@ -192,7 +219,6 @@
 
 
         for (var i = 0; i < instruments.length; i++) {
-            console.log(instruments[i]);
             var marker = new google.maps.Marker({
                 icon: instruments[i]["icon"],
                 position: { lat: instruments[i]["lat"], lng: instruments[i]["lon"] },
@@ -208,15 +234,8 @@
             circle.bindTo('center', marker, 'position');
             circles.push(circle);
             markers.push(marker);
-            //console.log(marker);
-            console.log(markers);
             // break;
         }
-        console.log("Finality");
-        console.log(instruments);
-        console.log(markers);
-        console.log(circles);
-        console.log("endality");
 
         tileNEX = new google.maps.ImageMapType({
             getTileUrl: function(tile, zoom) {
@@ -245,6 +264,7 @@
     }
 
     initMap();
+
     var seeGoes = true;
     function toggleGoes() {
         if(seeGoes) {
@@ -265,5 +285,56 @@
             map.overlayMapTypes.setAt("1", tileNEX);
         }
     }
+
+    // Side Controls
+    buttonDisplayMap = {
+        "site-map-button": "site-map-display",
+        "instrument-list-button": "instrument-list-display",
+        "status-log-button": "status-log-display"
+    }
+    buttonSelectMap = {
+        "site-map-button": "site-map-select",
+        "instrument-list-button": "instrument-list-select",
+        "status-log-button": "status-log-select"
+    }
+
+    for (var key in buttonDisplayMap) {
+        if (buttonDisplayMap.hasOwnProperty(key)) {
+            var button = document.getElementById(key);
+            button.onclick = function(j) { return function() { toggleDisplay(j); }; }(button);
+        }
+    }
+
+    function toggleDisplay(element) {
+        var id = element.id;
+        for (var key in buttonDisplayMap) {
+            if (buttonDisplayMap.hasOwnProperty(key)) {
+                var matchingDisplay = buttonDisplayMap[key];
+                var matchingSelect = buttonSelectMap[key];
+                var display = document.getElementById(matchingDisplay);
+                var select = document.getElementById(matchingSelect);
+
+                if (id == key) {
+                    display.hidden = false;
+                    select.hidden = false;
+                } else {
+                    display.hidden = true;
+                    select.hidden = true;
+                }
+            }
+        }
+    }
+
+    // Status logs
+    function showLog(id) {
+        allLogs = document.getElementsByClassName("embedded-status-log");
+        targetLog = document.getElementById("status-log-" + id);
+
+        for (var i = 0; i < allLogs.length; i++) {
+            allLogs[i].hidden = true;
+        }
+        targetLog.hidden = false;
+    }
+
 </script>
 {% endblock %}

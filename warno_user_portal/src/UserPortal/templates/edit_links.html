@@ -45,7 +45,6 @@ Instruments
     nextID += 1;
     {% endfor %}
 
-    console.log(links);
     for(var i = 0; i < links.length; i++) {
         addLinkToPage(links[i]["id"], links[i]["text"], links[i]["link"]);
     }
@@ -170,7 +169,6 @@ Instruments
     }
 
     function removeLink(id) {
-        console.log(id);
         for(var i = 0; i < links.length; i++) {
             if (links[i]["id"] == id) {
                 links.splice(i, 1);
