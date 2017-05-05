@@ -111,23 +111,22 @@
             <br>
         </div>
         <div id="status-log-display" class="sidebar-right" hidden="true">
-            {% set index = 0 %}
             {% for log in recent_logs %}
-            {% if index == 0 %}
-            <div id="status-log-{{index}}" class="embedded-status-log">
+            {% if loop.index == 1 %}
+            <div id="status-log-{{loop.index}}" class="embedded-status-log">
             {% else %}
-            <div id="status-log-{{index}}" class="embedded-status-log" hidden="true">
+            <div id="status-log-{{loop.index}}" class="embedded-status-log" hidden="true">
             {% endif %}
                 <div class="{{log.status.replace(' ', '_').replace('-', '_').lower()}}" style="border-bottom: 2px solid black;padding: 10px;">
-                    {% if index > 0 %}
-                    <div class="previous-log-button" onclick="showLog({{ index - 1 }})">
+                    {% if loop.index > 1 %}
+                    <div class="previous-log-button" onclick="showLog({{ loop.index - 1 }})">
                         <span style="font-size: 200%;"> < </span>
                         <br>
                         Newer
                     </div>
                     {% endif %}
-                    {% if index + 1 < recent_logs | length %}
-                    <div class="next-log-button" onclick="showLog({{ index + 1 }})">
+                    {% if loop.index < recent_logs | length %}
+                    <div class="next-log-button" onclick="showLog({{ loop.index + 1 }})">
                         <span style="font-size: 200%;"> > </span>
                         <br>
                         Older
@@ -143,7 +142,6 @@
                     {{log.contents}}
                 </div>
             </div>
-            {% set index = index + 1 %}
             {% endfor %}
         </div>
 
