@@ -29,6 +29,14 @@ up_logger.addHandler(up_handler)
 
 @logs.route('/manage_logs')
 def manage_logs():
+    """Show current instrument logs with options to manage them
+
+    Returns
+    -------
+    manage_logs.html: HTML document
+        Page to manage all instrument logs
+
+    """
     if current_user.is_anonymous or current_user.authorizations not in ["engineer"]:
         abort(403)
 
@@ -43,6 +51,18 @@ def manage_logs():
 
 @logs.route("/delete_log")
 def delete_log():
+    """Remove a log entry from WARNO
+
+    Parameters
+    ----------
+    id: integer
+        Passed as an HTML parameter, the database id of the log to delete.
+
+    Returns
+    -------
+    manage_logs: Flask redirect location
+        Redirects to the log management screen.
+    """
     if current_user.is_anonymous or current_user.authorizations not in ["engineer"]:
         abort(403)
 
