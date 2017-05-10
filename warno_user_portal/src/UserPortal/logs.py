@@ -5,7 +5,7 @@ import json
 import os
 
 from flask import render_template, redirect, url_for, request, abort
-from flask import Blueprint
+from flask import Blueprint, Markup
 from flask_user import current_user
 
 from WarnoConfig.utility import status_code_to_text, status_text
@@ -77,6 +77,11 @@ def new_log():
     # Default error message will not show on template when its the empty string
     error = ""
 
+    if request.args.get('create-another') == "on":
+        create_another = True
+    else:
+        create_another = False
+
     new_db_log = InstrumentLog()
     new_db_log.author_id = request.args.get('user-id')
     new_db_log.instrument_id = request.args.get('instrument')
@@ -116,14 +121,27 @@ def new_log():
                     requests.post(cfg['setup']['cf_url'], data=payload,
                                   headers={'Content-Type': 'application/json'}, verify=cert_verify)
 
-                # Redirect to the instrument page that the log was submitted for.
-                return redirect(url_for('instruments.instrument', instrument_id=new_db_log.instrument_id))
+                # If planning to create another, redirect back to this page.  Prevents previous log information
+                # from staying in the url bar, which would cause refreshes to submit new logs.  If not creating another,
+                # redirect to the instrument page that the log was submitted for
+                if create_another:
+                    return redirect(url_for('logs.new_log'))
+                else:
+                    return redirect(url_for('instruments.instrument', instrument_id=new_db_log.instrument_id))
 
-    # If there was no valid insert, render form normally
+    # If there was no valid insert render normally but pass the indicative error
 
     # Format the instrument names to be more descriptive
     db_instruments = db.session.query(Instrument).all()
     instruments = [dict(id=instrument.id, name=instrument.site.name_short + ":" + instrument.name_short)
                    for instrument in db_instruments]
+    for instrument in instruments:
+        recent_log = db.session.query(InstrumentLog).filter(InstrumentLog.instrument_id == instrument["id"]).order_by(InstrumentLog.time.desc()).first()
+        if recent_log:
+            instrument["status"] = status_code_to_text(recent_log.status)
+            recent_log.contents = Markup(recent_log.contents)
+        instrument["log"] = recent_log
 
-    return render_template('new_log.html', instruments=instruments, status=status_text, error=error)
+    sorted_instruments = sorted(instruments, key=lambda x: x["name"])
+
+    return render_template('new_log.html', instruments=sorted_instruments, status=status_text, error=error)

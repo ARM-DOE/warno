@@ -738,7 +738,7 @@ div.devel_notification {
 /* Base for custom grid, adapted from http://j4n.co/blog/Creating-your-own-css-grid-system */
 .grid-container{
     width: 100%;
-    max-width: 1000px;
+    /*max-width: 1000px;*/
 }
 
 /*-- setting border box on all elements inside the grid --*/
@@ -1000,4 +1000,9 @@ div.previous-log-button:focus {
 div.embedded-status-log {
     border: 2px solid black;
     margin: 5px;
+}
+
+div.previous-log {
+    border: 2px solid black;
+    padding: 5px;
 }
