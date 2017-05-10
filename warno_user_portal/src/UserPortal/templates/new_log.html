@@ -135,12 +135,10 @@ Submit Log
 
     function updateCurrentLog() {
         logContainers = document.getElementsByClassName("previous-log");
-        console.log(logContainers);
 
         // First, hide all current logs
         for (var i = 0; i < logContainers.length; i++) {
             logContainers[i].style.display = "none";
-            console.log("Hide Me?" + i);
         }
 
         // If the logs are to be shown, show the log for the currently selected instrument.
@@ -149,7 +147,6 @@ Submit Log
             selectedInstrumentLog = document.getElementById("log-" + selectedInstrumentId);
 
             selectedInstrumentLog.style.display = "";
-            console.log("Unhide it");
         }
     }
 

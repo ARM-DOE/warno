@@ -27,6 +27,36 @@ up_handler.setFormatter(logging.Formatter('%(levelname)s:%(asctime)s:%(module)s:
 up_logger.addHandler(up_handler)
 
 
+@logs.route('/manage_logs')
+def manage_logs():
+    if current_user.is_anonymous or current_user.authorizations not in ["engineer"]:
+        abort(403)
+
+    db_instrument_logs = db.session.query(InstrumentLog).order_by(InstrumentLog.time.desc()).all()
+
+    instrument_logs = [dict(status=status_code_to_text(log.status), author=log.author.name, time=log.time,
+                            instrument=log.instrument.site.name_short + "-" + log.instrument.name_short,
+                            contents=Markup(log.contents), id=log.id)
+                       for log in db_instrument_logs]
+
+    return render_template("manage_logs.html", instrument_logs=instrument_logs)
+
+@logs.route("/delete_log")
+def delete_log():
+    if current_user.is_anonymous or current_user.authorizations not in ["engineer"]:
+        abort(403)
+
+    instrument_id = request.args.get("id")
+    if not instrument_id:
+        abort(400)
+
+    instrument_log = db.session.query(InstrumentLog).filter(InstrumentLog.id == instrument_id).first()
+
+    db.session.delete(instrument_log)
+    db.session.commit()
+
+    return  redirect(url_for("logs.manage_logs"))
+
 @logs.route('/submit_log')
 def new_log():
     """Submit a new log entry to WARNO.

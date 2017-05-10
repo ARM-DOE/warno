@@ -1,0 +1,41 @@
+{% extends 'partials/site_base.html' %}
+
+{% block title %}
+Manage Logs
+{% endblock %}
+
+{% block content %}
+<div>
+    <div class="info_white">
+        {% for log in instrument_logs %}
+        <div style="border: 2px solid black; margin: 5px; display: flex;">
+            <div class="{{log.status.replace(' ', '_').replace('-', '_').lower()}}"
+                 style="border-right: 2px solid black; flex: 0 0 170px; vertical-align: middle;">
+                {{log.instrument}}
+                <hr>
+                {{log.author}}
+                <hr>
+                {{log.time}}
+                <hr>
+                {{log.status}}
+                <hr>
+            </div>
+            <div style="padding: 5px; vertical-align: top; flex: 1;">
+                {{log.contents}}
+            </div>
+            <button style="float: right;" onclick="removeLog({{log.id}})">Delete Log</button>
+        </div>
+        {% endfor %}
+
+    </div>
+</div>
+{% endblock %}
+{% block script %}
+<script>
+    function removeLog(id) {
+        baseURL = "{{url_for('logs.delete_log')}}";
+        fullURL = baseURL + "?id=" + id;
+        location.href = fullURL;
+    }
+</script>
+{% endblock %}
