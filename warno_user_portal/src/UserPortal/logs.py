@@ -45,10 +45,10 @@ def new_log():
     error: optional, integer
         Passed as an HTML parameter, an error message set if the latitude or longitude are not
         floating point numbers
-    author_id: optional, integer
+    user-id: optional, integer
         Passed as an HTML parameter, the database id of the author of the new log
 
-    instrument_id: optional, integer
+    instrument: optional, integer
         Passed as an HTML parameter, the database id of the instrument the log is for
 
     time: optional, string
@@ -60,6 +60,9 @@ def new_log():
     contents: optional, string
         Passed as an HTML parameter, the message contents for the log
 
+    create-another: optional, string
+        Passed as an HTML parameter, 'on' indicates that the option to create a new log was selected, '' otherwise
+
     Returns
     -------
     new_log.html: HTML document
@@ -67,7 +70,7 @@ def new_log():
             returns an HTML form to create a new site, with an optional argument 'error' if it
             was a failed database insertion.
     instrument: Flask redirect location
-        If a new log insertion was attempted and succeded,  returns a Flask redirect location
+        If a new log insertion was attempted and succeeded,  returns a Flask redirect location
             to the instrument function, redirecting the user to the page showing the
             instrument with the instrument_id matching the insertion.
     """
