@@ -29,6 +29,7 @@
             <a href="{{url_for('instruments.list_instruments')}}"><li {% if title == "Instruments" %} class="selected" {% endif %}>Instruments</li></a>
             {% if current_user.authorizations in ["engineer"] %}
             <a href="{{url_for('users.list_users')}}"><li {% if title == "Users" %} class="selected" {% endif %}>Users</li></a>
+            <a href="{{url_for('logs.manage_logs')}}"><li {% if title == "Manage Logs" %} class="selected" {% endif %}>Logs</li></a>
             {% endif %}
             {% if current_user.authorizations in ["engineer", "technician"] %}
             <a href="{{url_for('logs.new_log')}}"><li {% if title == "Submit Log" %} class="selected" {% endif %}>Submit Log</li></a>

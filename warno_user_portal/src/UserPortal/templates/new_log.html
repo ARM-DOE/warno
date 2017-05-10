@@ -8,40 +8,81 @@ Submit Log
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css">
 <script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
 
-<div>
-    <h1 class="title">Log Entry Submission</h1>
-</div>
 <form id="log-submit-form" action="{{url_for('logs.new_log')}}">
     <input type="hidden" name="user-id" value="{{ current_user.id }}">
-    <p><label for="instrument">Instrument:</label>
-        <select name="instrument">
-            {% for instrument in instruments %}
-            <option value="{{ instrument.id }}">{{ instrument.name }}</option>
-            {% endfor %}
-        </select>
-    </p>
-    <p><label for="time">Date/Time:</label>
-        <input type="datetime" id="datetime-input" name="time">
-        UTC Time (YYYY-MM-DD HH:MM:SS)
-        {% if error %}
-        <div id="new-log-error" style="color: red">{{error}}</div>
+    <div class="grid-container" style="padding: 10px;">
+        <div class="row">
+            <div class="col-6">
+                <div><label for="instrument">Instrument:</label>
+                    <select name="instrument">
+                        {% for instrument in instruments %}
+                        <option value="{{ instrument.id }}">{{ instrument.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div><label for="time">Date/Time:</label>
+                    <input type="datetime" id="datetime-input" name="time">
+                    <br>
+                    UTC Time (YYYY-MM-DD HH:MM:SS)
+                    {% if error %}
+                    <div id="new-log-error" style="color: red">{{error}}</div>
+                    {% endif %}
+
+                </div>
+
+                <div> <label for="status">Log Status</label>
+                    <select name="status">
+                        {% for key, value in status.iteritems() %}
+                        <option value="{{key}}">{{value}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="col-6">
+                <div>
+                    <input type="button" onclick="toggleShowLogs(this)" value="Show Previous Log">
+                </div>
+                <br>
+                <div style="margin-bottom: 10px;">
+                    <input name="create-another" type="checkbox">
+                    <label for="create-another"> Create another log after this one?</label>
+                </div>
+                <div>
+                    <input id="submit" type="submit" value="Submit Log">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div style="padding: 10px;">
+        {% for instrument in instruments %}
+        {% if instrument.log %}
+        <div id="log-{{ instrument.id }}" class="{{instrument.status.replace(' ', '_').replace('-', '_').lower()}} previous-log">
+            {{ instrument.name }} &nbsp {{ instrument.status }}
+            <hr>
+            By {{ instrument.log.author.name }} at {{ instrument.log.time }} UTC
+            <hr>
+            <div style="background: white; border: 2px solid black; text-align: left;">
+                {{ instrument.log.contents }}
+            </div>
+        </div>
+        {% else %}
+        <div id="log-{{instrument.id}}" class="operational previous-log">
+            No logs for {{ instrument.name }}.
+            <br>
+            OPERATIONAL
+        </div>
         {% endif %}
-
-    </p>
-
-    <p> <label for="status">Log Status</label>
-        <select name="status">
-            {% for key, value in status.iteritems() %}
-            <option value="{{key}}">{{value}}</option>
-            {% endfor %}
-        </select>
-    </p>
-    <p> <label for="contents">Log Contents:</label><br>
+        {% endfor %}
+    </div>
+    <div>
+        <div style="padding: 10px;">
+            <label for="contents">Log Content Editor (Supports Markdown):</label><br>
+        </div>
         <textarea style="width: 80%;height: 25em;" id="contents-input" name="contents"></textarea>
-    </p>
-    <p>
-        <input id="submit" type="submit" value="Submit Log">
-    </p>
+    </div>
+
+
 </form>
 {% endblock %}
 
@@ -80,5 +121,50 @@ Submit Log
 
     document.getElementById('datetime-input').value = current_time;
     document.getElementById('datetime-input').placeholder = current_time;
+
+
+    // Mechanisms for hiding and showing the most recent logs for a particular instrument
+    instrumentIdMap = {};
+
+    // Maps an instrument's name to its instrument ID, which is used to determine which div has the content for said log
+    {% for instrument in instruments %}
+    instrumentIdMap["{{ instrument.name }}"] = {{ instrument.id }};
+    {% endfor %}
+
+    var logsShowing = false;
+
+    function updateCurrentLog() {
+        logContainers = document.getElementsByClassName("previous-log");
+
+        // First, hide all current logs
+        for (var i = 0; i < logContainers.length; i++) {
+            logContainers[i].style.display = "none";
+        }
+
+        // If the logs are to be shown, show the log for the currently selected instrument.
+        if (logsShowing) {
+            selectedInstrumentId = document.getElementsByName("instrument")[0].value;
+            selectedInstrumentLog = document.getElementById("log-" + selectedInstrumentId);
+
+            selectedInstrumentLog.style.display = "";
+        }
+    }
+
+    function toggleShowLogs(button) {
+        if (logsShowing) {
+            logsShowing = false;
+            button.value = "Show Previous Log";
+        } else {
+            logsShowing = true;
+            button.value = "Hide Previous Log";
+        }
+        updateCurrentLog();
+    }
+
+    instrumentSelect = document.getElementsByName("instrument")[0];
+    instrumentSelect.onchange = function () { updateCurrentLog(); };
+
+    updateCurrentLog();
+
 </script>
 {% endblock %}

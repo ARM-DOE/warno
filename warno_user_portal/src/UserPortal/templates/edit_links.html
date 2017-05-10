@@ -152,7 +152,6 @@ Instruments
         removeButton.innerHTML = "Remove Link";
         // For some reason it seems JavaScript requires this, or only passes the last value of id
         removeButton.onclick = function(j) { return function() { removeLink(j); }; }(id);
-        console.log(removeButton);
 
         var linkTextDiv = createTextDiv(id, text);
         var linkURLDiv = createURLDiv(id, url);
