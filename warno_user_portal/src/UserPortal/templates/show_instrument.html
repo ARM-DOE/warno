@@ -7,26 +7,33 @@
 {% block content %}
         <div style="display: inline-block; vertical-align: top;">
             <div style="width: 302px; border: 2px solid black; margin: 5px">
+
+                <object data="{{ url_for('static', filename='radar_images/' + instrument.site_name.lower() + '_' + instrument.abbv.lower() + '.jpg') }}"
+                        type="image/png" height="300" width="300">
+                    <img src="{{ url_for('static', filename='arm_logo.png') }}">
+                </object>
+                <hr>
                 <div id="map" style="height: 300px; width: 300px;">
 
                 </div>
-                    Map Overlays:
-                    <hr>
-                    <input name="overlay-checkbox" id="overlay-0" type="checkbox"> NEXRAD
-                    <hr>
-                    <input name="overlay-checkbox" id="overlay-1" type="checkbox"> GOES East Vis
-                    <br>
-                    <input name="overlay-checkbox" id="overlay-2" type="checkbox"> GOES West Vis
-                    <br>
-                    <input name="overlay-checkbox" id="overlay-3" type="checkbox"> Alaska Vis
-                    <hr>
-                    <input name="overlay-checkbox" id="overlay-4" type="checkbox"> GOES East IR
-                    <br>
-                    <input name="overlay-checkbox" id="overlay-5" type="checkbox"> GOES West IR
-                    <br>
-                    <input name="overlay-checkbox" id="overlay-6" type="checkbox"> Alaska IR
-                    <hr>
-                    <button onclick="updateOverlay()">Update Overlay</button>
+                <hr>
+                Map Overlays:
+                <hr>
+                <input name="overlay-checkbox" id="overlay-0" type="checkbox"> NEXRAD
+                <hr>
+                <input name="overlay-checkbox" id="overlay-1" type="checkbox"> GOES East Vis
+                <br>
+                <input name="overlay-checkbox" id="overlay-2" type="checkbox"> GOES West Vis
+                <br>
+                <input name="overlay-checkbox" id="overlay-3" type="checkbox"> Alaska Vis
+                <hr>
+                <input name="overlay-checkbox" id="overlay-4" type="checkbox"> GOES East IR
+                <br>
+                <input name="overlay-checkbox" id="overlay-5" type="checkbox"> GOES West IR
+                <br>
+                <input name="overlay-checkbox" id="overlay-6" type="checkbox"> Alaska IR
+                <hr>
+                <button onclick="updateOverlay()">Update Overlay</button>
                 <div>
                     {% if recent_logs|length > 0 %}
                     <div class="{{recent_logs[0].status.replace(' ', '_').replace('-', '_').lower()}}" style="text-align: center; border: 1px solid black;">
@@ -77,6 +84,7 @@
 
             </div>
         </div>
+
 
         <div style="display: inline-block; vertical-align: top; width: -webkit-calc(100% - 340px); width: -moz-calc(100% - 340px); width: calc(100% - 340px); background-color: yellow;">
             <div class="info_white">
