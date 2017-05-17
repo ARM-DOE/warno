@@ -1045,7 +1045,7 @@ def event_manager_home():
 
     """
     table_stats = []
-    data_tables = ["prosensing_paf", "events_with_value", "events_with_text", "instrument_logs", "pulse_captures"]
+    data_tables = ["prosensing_paf", "iris_bite", "events_with_value", "events_with_text", "instrument_logs", "pulse_captures"]
 
     cutoff_time = datetime.datetime.now() + datetime.timedelta(-db_cfg['days_retained'])
 

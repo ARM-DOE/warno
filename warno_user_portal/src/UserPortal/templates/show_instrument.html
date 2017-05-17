@@ -7,12 +7,33 @@
 {% block content %}
         <div style="display: inline-block; vertical-align: top;">
             <div style="width: 302px; border: 2px solid black; margin: 5px">
+
+                <object data="{{ url_for('static', filename='radar_images/' + instrument.site_name.lower() + '_' + instrument.abbv.lower() + '.jpg') }}"
+                        type="image/png" height="300" width="300">
+                    <img src="{{ url_for('static', filename='arm_logo.png') }}">
+                </object>
+                <hr>
                 <div id="map" style="height: 300px; width: 300px;">
 
                 </div>
-                <button onclick="toggleGoes()">Toggle GOES</button>
-                <button onclick="toggleNex()">Toggle NEXRAD</button>
-
+                <hr>
+                Map Overlays:
+                <hr>
+                <input name="overlay-checkbox" id="overlay-0" type="checkbox"> NEXRAD
+                <hr>
+                <input name="overlay-checkbox" id="overlay-1" type="checkbox"> GOES East Vis
+                <br>
+                <input name="overlay-checkbox" id="overlay-2" type="checkbox"> GOES West Vis
+                <br>
+                <input name="overlay-checkbox" id="overlay-3" type="checkbox"> Alaska Vis
+                <hr>
+                <input name="overlay-checkbox" id="overlay-4" type="checkbox"> GOES East IR
+                <br>
+                <input name="overlay-checkbox" id="overlay-5" type="checkbox"> GOES West IR
+                <br>
+                <input name="overlay-checkbox" id="overlay-6" type="checkbox"> Alaska IR
+                <hr>
+                <button onclick="updateOverlay()">Update Overlay</button>
                 <div>
                     {% if recent_logs|length > 0 %}
                     <div class="{{recent_logs[0].status.replace(' ', '_').replace('-', '_').lower()}}" style="text-align: center; border: 1px solid black;">
@@ -63,6 +84,7 @@
 
             </div>
         </div>
+
 
         <div style="display: inline-block; vertical-align: top; width: -webkit-calc(100% - 340px); width: -moz-calc(100% - 340px); width: calc(100% - 340px); background-color: yellow;">
             <div class="info_white">
@@ -172,6 +194,9 @@
             strokeOpacity: 0.2
         });
         circle.bindTo('center', marker, 'position');
+
+
+        // NEXRAD Overlay
         tileNEX = new google.maps.ImageMapType({
             getTileUrl: function(tile, zoom) {
                 return "https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/" + zoom + "/" + tile.x + "/" + tile.y +".png?"+ (new Date()).getTime();
@@ -182,7 +207,8 @@
             isPng: true
         });
 
-        goes = new google.maps.ImageMapType({
+        // Visible overlays
+        goesEast = new google.maps.ImageMapType({
             getTileUrl: function(tile, zoom) {
                 return "https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/goes-east-vis-1km-900913/" + zoom + "/" + tile.x + "/" + tile.y +".png?"+ (new Date()).getTime();
             },
@@ -192,32 +218,121 @@
             isPng: true
         });
 
+        goesWest = new google.maps.ImageMapType({
+            getTileUrl: function(tile, zoom) {
+                return "https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/goes-west-vis-1km-900913/" + zoom + "/" + tile.x + "/" + tile.y +".png?"+ (new Date()).getTime();
+            },
+            tileSize: new google.maps.Size(256, 256),
+            opacity:0.60,
+            name : 'GOES West Vis',
+            isPng: true
+        });
+
+        alaska = new google.maps.ImageMapType({
+            getTileUrl: function(tile, zoom) {
+                return "https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/alaska-vis-900913/" + zoom + "/" + tile.x + "/" + tile.y +".png?"+ (new Date()).getTime();
+            },
+            tileSize: new google.maps.Size(256, 256),
+            opacity:0.60,
+            name : 'Alaska Vis',
+            isPng: true
+        });
+
+        // IR overlays
+        goesEastIR = new google.maps.ImageMapType({
+            getTileUrl: function(tile, zoom) {
+                return "https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/goes-east-ir-4km-900913/" + zoom + "/" + tile.x + "/" + tile.y +".png?"+ (new Date()).getTime();
+            },
+            tileSize: new google.maps.Size(256, 256),
+            opacity:0.60,
+            name : 'GOES East IR',
+            isPng: true
+        });
+
+        goesWestIR = new google.maps.ImageMapType({
+            getTileUrl: function(tile, zoom) {
+                return "https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/goes-west-ir-4km-900913/" + zoom + "/" + tile.x + "/" + tile.y +".png?"+ (new Date()).getTime();
+            },
+            tileSize: new google.maps.Size(256, 256),
+            opacity:0.60,
+            name : 'GOES West IR',
+            isPng: true
+        });
+
+        alaskaIR = new google.maps.ImageMapType({
+            getTileUrl: function(tile, zoom) {
+                return "https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/alaska-ir-900913/" + zoom + "/" + tile.x + "/" + tile.y +".png?"+ (new Date()).getTime();
+            },
+            tileSize: new google.maps.Size(256, 256),
+            opacity:0.60,
+            name : 'Alaska IR',
+            isPng: true
+        });
+
         map.overlayMapTypes.push(null); // create empty overlay entry
-        map.overlayMapTypes.setAt("0",goes);
-        map.overlayMapTypes.push(null); // create empty overlay entry
-        map.overlayMapTypes.setAt("1",tileNEX);
+        map.overlayMapTypes.push(null);
+        map.overlayMapTypes.push(null);
+        map.overlayMapTypes.push(null);
+        map.overlayMapTypes.push(null);
+        map.overlayMapTypes.push(null);
+        map.overlayMapTypes.push(null);
     }
 
     initMap();
-    var seeGoes = true;
-    function toggleGoes() {
-        if(seeGoes) {
-            seeGoes = false;
-            map.overlayMapTypes.setAt("0", null);
-        } else {
-            seeGoes = true;
-            map.overlayMapTypes.setAt("0", goes);
-        }
+
+    // Need to blank out all overlay checkboxes
+    overlayCheckboxes = document.getElementsByName("overlay-checkbox");
+
+    for (var i = 0; i < overlayCheckboxes.length; i++) {
+        overlayCheckboxes[i].checked = false;
     }
-    var seeNex = true;
-    function toggleNex() {
-        if(seeNex) {
-            seeNex = false;
-            map.overlayMapTypes.setAt("1", null);
+
+    // Will show the overlay for any overlay box that is checked, hide the others
+    function updateOverlay() {
+        check0 = document.getElementById("overlay-0").checked;
+        check1 = document.getElementById("overlay-1").checked;
+        check2 = document.getElementById("overlay-2").checked;
+        check3 = document.getElementById("overlay-3").checked;
+        check4 = document.getElementById("overlay-4").checked;
+        check5 = document.getElementById("overlay-5").checked;
+        check6 = document.getElementById("overlay-6").checked;
+
+        if (check0) {
+            map.overlayMapTypes.setAt("0", tileNEX);
         } else {
-            seeNex = true;
-            map.overlayMapTypes.setAt("1", tileNEX);
+            map.overlayMapTypes.setAt("0", null);
         }
+        if (check1) {
+            map.overlayMapTypes.setAt("1", goesEast);
+        } else {
+            map.overlayMapTypes.setAt("1", null);
+        }
+        if (check2) {
+            map.overlayMapTypes.setAt("2", goesWest);
+        } else {
+            map.overlayMapTypes.setAt("2", null);
+        }
+        if (check3) {
+            map.overlayMapTypes.setAt("3", alaska);
+        } else {
+            map.overlayMapTypes.setAt("3", null);
+        }
+        if (check4) {
+            map.overlayMapTypes.setAt("4", goesEastIR);
+        } else {
+            map.overlayMapTypes.setAt("4", null);
+        }
+        if (check5) {
+            map.overlayMapTypes.setAt("5", goesWestIR);
+        } else {
+            map.overlayMapTypes.setAt("5", null);
+        }
+        if (check6) {
+            map.overlayMapTypes.setAt("6", alaskaIR);
+        } else {
+            map.overlayMapTypes.setAt("6", null);
+        }
+
     }
 </script>
 
