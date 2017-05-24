@@ -84,9 +84,6 @@ Vagrant.configure(2) do |config|
     run "vagrant ssh -c 'bash /vagrant/data_store/data/db_save.sh'"
   end
 
-  ## Prerequisite for pip_bootstrap (due to flask-user) ##
-  config.vm.provision :shell, inline: "yum install -y libffi-devel"
-
   ## Final Provisioning ##
   # Must be unprivileged so Anaconda paths install for the vagrant user
   config.vm.provision :shell, path: "utility_setup_scripts/bootstrap.sh", privileged: false
@@ -95,9 +92,6 @@ Vagrant.configure(2) do |config|
   
   # Add crontab for regular database backup (currently once daily)
   config.vm.provision :shell, inline: "(crontab -l; echo '0 22 * * * bash /vagrant/data_store/data/db_save.sh') | crontab -"
-
-  # Install Redis
-  config.vm.provision :shell, path: "utility_setup_scripts/install_redis.sh"
 
   # Add hosts to /etc/hosts
   config.vm.provision :shell, path: "utility_setup_scripts/add_hosts.sh"
