@@ -57,14 +57,14 @@ class User(db.Model, UserMixin):
     # The default user authorization is the most basic, 'user'
     authorizations = db.Column(db.String, nullable=False, server_default='user')
 
-    def get_id(self):
-        return unicode(self.id)
-
-    def has_confirmed_email(self):
-        return True
-
-    def is_authenticated(self):
-        return True
+    # def get_id(self):
+    #     return unicode(self.id)
+    #
+    # def has_confirmed_email(self):
+    #     return True
+    #
+    # def is_authenticated(self):
+    #     return self.has_confirmed_email()
 
 
 class Dashboard(db.Model):
