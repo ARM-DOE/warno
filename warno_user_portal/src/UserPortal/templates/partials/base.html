@@ -19,6 +19,7 @@
 
 <body>
 <div class="head-title-wrapper">
+    <a href="{{url_for('show_radar_status')}}"><img src="{{url_for('static', filename='warno_global_line_logo_small.png')}}" id="warno-logo" alt="Watchdog for ARM Radar Network Operations"></img></a>
     <a href="http://www.arm.gov"><img src="{{url_for('static', filename='arm_logo.png')}}" id="arm-logo" alt="Atmospheric Radiation Measurement Climate Research Facility"></img></a>
 
     <div class="head-title" align="center" >
@@ -38,6 +39,7 @@
             <a href="{{url_for('dashboard')}}"><li {% if title == "Dashboard" %} class="selected" {% endif %}>Dashboard</li></a>
         </ul>
     </div>
+
 </div>
 
 <div class="sub-title" align="center">

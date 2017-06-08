@@ -30,10 +30,14 @@ body {
   font-family: 'Raleway', sans-serif;
 }
 
+#warno-logo {
+  padding: 5px 5px 5px;
+  float: left;
+}
+
 #arm-logo {
-    padding: 20px 5px 5px;
-    float: left;
-  position: absolute;
+  padding: 20px 5px 5px;
+  float: right;
 }
 
 div.content, div.head-title, div.head-title-wrapper, div.sub-title {
@@ -75,7 +79,6 @@ div.head-title {
     padding-right: 10px;
     margin-left: auto;
     margin-right: auto;
-    background: url("warno_global_line_logo_small.png") no-repeat right top;
 }
 
 div.head-title a{
