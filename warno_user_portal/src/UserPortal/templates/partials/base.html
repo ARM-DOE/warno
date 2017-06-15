@@ -14,6 +14,7 @@
       integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
       crossorigin="anonymous"></script>
     <script src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyBHcnNMn_-7yvt9PafY5FFPtGrhQNiamnc"></script>
+    <script src="{{ url_for('static', filename='sorttable.js')}}"></script>
     <script>
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -29,6 +30,7 @@
 
 <body>
 <div class="head-title-wrapper">
+    <a href="{{url_for('show_radar_status')}}"><img src="{{url_for('static', filename='warno_global_line_logo_small.png')}}" id="warno-logo" alt="Watchdog for ARM Radar Network Operations"></img></a>
     <a href="http://www.arm.gov"><img src="{{url_for('static', filename='arm_logo.png')}}" id="arm-logo" alt="Atmospheric Radiation Measurement Climate Research Facility"></img></a>
 
     <div class="head-title" align="center" >
@@ -48,6 +50,7 @@
             <a href="{{url_for('dashboard')}}"><li {% if title == "Dashboard" %} class="selected" {% endif %}>Dashboard</li></a>
         </ul>
     </div>
+
 </div>
 
 <div class="sub-title" align="center">

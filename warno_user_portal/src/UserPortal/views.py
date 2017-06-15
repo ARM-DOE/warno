@@ -43,17 +43,35 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://%s:%s@%s:%s/%s' % (db_cfg[
 app.config['SECRET_KEY'] = "THIS IS AN INSECURE SECRET"
 app.config['CSRF_ENABLED'] = True
 
+# Flask User email customization https://github.com/lingthio/Flask-User/blob/master/docs/source/customization.rst#emails
+
 app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME', '')
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD', '')
-app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER', '"WARNO" <noreply@relay.arm.gov>')
-app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'relay.arm.gov')
-app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', '465'))
-app.config['MAIL_USE_SSL'] = int(os.getenv('MAIL_USE_SSL', True))
+app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER', '"WARNO" <noreply@warno.arm.gov>')
+app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'localhost')
+app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', '25'))
+app.config['MAIL_USE_SSL'] = int(os.getenv('MAIL_USE_SSL', False))
 
 app.config['USER_APP_NAME'] = "WARNO"
-app.config['USER_SEND_PASSWORD_CHANGED_EMAIL'] = False
-app.config['USER_SEND_REGISTERED_EMAIL'] = False
-app.config['USER_SEND_USERNAME_CHANGED_EMAIL'] = False
+app.config['USER_ENABLE_EMAIL'] = True
+
+# Registration E-mails
+app.config['USER_ENABLE_CONFIRM_EMAIL'] = True
+app.config['USER_SEND_REGISTERED_EMAIL'] = True
+
+# Registration Confirmation E-mails
+app.config['USER_ENABLE_CONFIRM_EMAIL'] = True
+
+# Forgot Password E-mails
+app.config['USER_ENABLE_FORGOT_PASSWORD'] = True
+
+# Changing Password E-mails
+app.config['USER_ENABLE_CHANGE_PASSWORD'] = True
+app.config['USER_SEND_PASSWORD_CHANGED_EMAIL'] = True
+
+# Change Username E-Mails
+app.config['USER_ENABLE_CHANGE_USERNAME'] = True
+app.config['USER_SEND_USERNAME_CHANGED_EMAIL'] = True
 
 db.init_app(app)
 mail = Mail(app)
