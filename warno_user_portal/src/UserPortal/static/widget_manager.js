@@ -29,6 +29,17 @@ WidgetManager.prototype.saveDashboard = function() {
     for (i = 0; i < this.widgets.length; i++) {
         payload.push(this.widgets[i].saveDashboard());
     }
+
+    // Now push any information relevant to the WidgetManager itself
+    var widgetManagerInfo = {
+        "type": "WidgetManager",
+        "data": {
+            "tightBorders": this.hasTightBorders
+        }
+    }
+
+    payload.push(widgetManagerInfo)
+
     return JSON.stringify(payload);
 };
 
@@ -66,6 +77,13 @@ WidgetManager.prototype.buildFromSchematic = function(dashboardSchematic) {
         }
         if (dashboardSchematic[i]["type"] == "CurrentTime") {
             this.addCurrentTime(dashboardSchematic[i]["data"]);
+        }
+        if (dashboardSchematic[i]["type"] == "WidgetManager") {
+            // One assumption here is that because the WidgetManager schematic is added at the end of the saveDashboard
+            // function, this should always be the last schematic to load if it exits, making it safe to
+            // update the borders of the widgets here.
+            this.hasTightBorders = dashboardSchematic[i]["data"]["tightBorders"];
+            this.updateBorders();
         }
     }
 }
@@ -162,6 +180,16 @@ WidgetManager.prototype.removeWidgets = function() {
     for (var i = this.widgets.length; i > 0; i--){
         this.widgets[i - 1].remove();  // Need to explicitly call each widget's remove function to clear all html
         this.widgets.splice(i - 1, 1);
+    }
+}
+
+WidgetManager.prototype.updateBorders = function() {
+    // This function checks the current status of the hasTightBorders variable and either tightens or widens all
+    // widget borders appropriately.  Only really used to facilitate correct borders when loading a dashboard.
+    if (this.hasTightBorders) {
+        this.tightBorders();
+    } else {
+        this.wideBorders();
     }
 }
 
