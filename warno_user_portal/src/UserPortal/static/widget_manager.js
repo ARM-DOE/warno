@@ -1126,10 +1126,10 @@ StatusPlot.prototype.saveDashboard = function () {
 StatusPlot.prototype.loadDashboard = function(schematic) {
     this.finishedLoading = false;
     this.quickDisplay = true;  // Forces the full view generation in the ajaxLoadURL form the StatusPlot Creation
-    this.instrumentId = schematic["instrumentId"];
+    this.siteId = schematic["siteId"];
     //ConfigParameters should already have been loaded when the Widget was constructed
-    var instrumentIdSelect = document.getElementById("status-plot-site-selector-" + this.id);
-    if (instrumentIdSelect) { // If the element exists, update and generate, if not, should be taken care of by setting quickDisplay above
+    var siteIdSelect = document.getElementById("status-plot-site-selector-" + this.id);
+    if (siteIdSelect) { // If the element exists, update and generate, if not, should be taken care of by setting quickDisplay above
         siteIdSelect.value = this.siteId;
         this.generateStatusPlot();
     };
