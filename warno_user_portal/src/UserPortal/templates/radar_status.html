@@ -31,13 +31,13 @@ Status
     {% for site, site_id in sites.iteritems() %}
     <div class="status_block">
         <table class='status_plot'>
-            <th colspan="2">
+            <th colspan="1">
             <a href="{{url_for('sites.show_site', site_id=site_id)}}"><div class="status_site_button">{{ site }}</div></a>
             </th>
             {% for instrument in instruments %}
             {% if instrument.site == site %}
             <tr>
-            <td class="inst_status_td" style="float: left;">
+            <td class="inst_status_td">
                 <div>
                     <a href="{{url_for('instruments.instrument', instrument_id= instrument.id)}}">{{  instrument.instrument_name }}</a>
                 </div>
