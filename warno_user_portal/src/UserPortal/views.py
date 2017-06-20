@@ -247,9 +247,23 @@ def show_radar_status():
             instrument['log_time'] = status[instrument['id']]["time"]
         instrument['status'] = status_code_to_text(instrument['status'])
 
-    sites = {inst['site']: inst['site_id'] for inst in instruments}
+    # First, a list of site name/site id tuples for the sites that have instruments
+    sites = [(inst['site'], inst['site_id']) for inst in instruments]
 
-    return render_template('radar_status.html', instruments=instruments, sites=sites)
+    # Remove duplicates by converting to a set and back to list
+    sites_set = set(sites)
+    sites_list = list(sites_set)
+
+    # Then, the list of sites ordered by site name.
+    sorted_sites = sorted(sites_list, key=lambda tup: tup[0])
+
+    # Finally, modify the order to have any sites with 'AMF' toward the end, and an 'OTHER' site at the end.
+    other_sites = [site for site in sorted_sites if "OTHER" in site[0]]
+    amf_sites = [site for site in sorted_sites if "AMF" in site[0]]
+    regular_sites = [site for site in sorted_sites if "OTHER" not in site[0] and "AMF" not in site[0]]
+    custom_ordered_sites = regular_sites + amf_sites + other_sites
+
+    return render_template('radar_status.html', instruments=instruments, sites=custom_ordered_sites)
 
 
 @app.route("/query", methods=['GET', 'POST'])
