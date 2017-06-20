@@ -229,6 +229,7 @@ Dashboard
                 closeLoadModal();
                 var dashboardSchematic = JSON.parse(xmlHttp.responseText);
                 widgetManager.loadDashboard(dashboardSchematic);
+                updateBorderCheckbox(widgetManager.hasTightBorders);
             }
         };
 
@@ -254,6 +255,11 @@ Dashboard
         } else {
             widgetManager.wideBorders();
         }
+    }
+
+    function updateBorderCheckbox(tightBorders) {
+        borderCheckbox = document.getElementById("tight-borders");
+        borderCheckbox.checked = tightBorders;
     }
 
 </script>
