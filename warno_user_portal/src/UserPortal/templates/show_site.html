@@ -23,20 +23,33 @@
             </div>
             <div style="border: 1px solid black; padding: 5px;">
                 Map Overlays:
+                <div id="us-overlay-button" class="sidebar-button" style="display: inline-block; min-width: 50;">
+                    US
+                </div>
+                <div id="other-overlay-button" class="sidebar-button" style="display: inline-block; min-width: 50;">
+                    Other
+                </div>
                 <hr>
-                <input name="overlay-checkbox" id="overlay-0" type="checkbox"> NEXRAD
-                <hr>
-                <input name="overlay-checkbox" id="overlay-1" type="checkbox"> GOES East Vis
-                <br>
-                <input name="overlay-checkbox" id="overlay-2" type="checkbox"> GOES West Vis
-                <br>
-                <input name="overlay-checkbox" id="overlay-3" type="checkbox"> Alaska Vis
-                <hr>
-                <input name="overlay-checkbox" id="overlay-4" type="checkbox"> GOES East IR
-                <br>
-                <input name="overlay-checkbox" id="overlay-5" type="checkbox"> GOES West IR
-                <br>
-                <input name="overlay-checkbox" id="overlay-6" type="checkbox"> Alaska IR
+                <div id="us-overlay-group">
+                    <input name="overlay-checkbox" id="overlay-0" type="checkbox"> NEXRAD
+                    <hr>
+                    <input name="overlay-checkbox" id="overlay-1" type="checkbox"> GOES East Vis
+                    <br>
+                    <input name="overlay-checkbox" id="overlay-2" type="checkbox"> GOES West Vis
+                    <br>
+                    <input name="overlay-checkbox" id="overlay-3" type="checkbox"> Alaska Vis
+                    <hr>
+                    <input name="overlay-checkbox" id="overlay-4" type="checkbox"> GOES East IR
+                    <br>
+                    <input name="overlay-checkbox" id="overlay-5" type="checkbox"> GOES West IR
+                    <br>
+                    <input name="overlay-checkbox" id="overlay-6" type="checkbox"> Alaska IR
+                </div>
+                <div id="other-overlay-group" hidden>
+                    <input name="overlay-checkbox" id="overlay-7" type="checkbox"> EUMETSAT IR
+                    <br>
+                    <input name="overlay-checkbox" id="overlay-8" type="checkbox"> EUMETSAT Vis
+                </div>
                 <hr>
                 <button onclick="updateOverlay()">Update Overlay</button>
             </div>
@@ -321,7 +334,135 @@
             isPng: true
         });
 
+        // eumetsat IR overlay
+        eumsIR = new google.maps.ImageMapType({
+                getTileUrl: function (coord, zoom) {
+                    var proj = map.getProjection();
+                    var zfactor = Math.pow(2, zoom);
+                    // get Long Lat coordinates
+                    var top = proj.fromPointToLatLng(new google.maps.Point(coord.x * 256 / zfactor, coord.y * 256 / zfactor));
+                    var bot = proj.fromPointToLatLng(new google.maps.Point((coord.x + 1) * 256 / zfactor, (coord.y + 1) * 256 / zfactor));
+
+                    //corrections for the slight shift of the SLP (mapserver)
+                    var deltaX = 0.0013;
+                    var deltaY = 0.00058;
+
+                    var botLat = (bot.lat() + deltaX);
+                    var topLng = (top.lng() + deltaY);
+                    var topLat = (top.lat() + deltaX);
+                    var botLng = (bot.lng() + deltaY);
+
+                    // I don't particularly like this workaround, but it stops a lot of the bounding box issues
+                    // caused by the map's longitude wrapping from 180 to -180
+                    if (topLng >= botLng) {
+                        if (-topLng < botLng) {
+                            topLng = -topLng;
+                            console.log(topLng + "   " + botLng);
+                        } else if (topLng < -botLng) {
+                            botLng = -botLng;
+                        } else {
+                            topLng = -topLng;
+                            botLng = -botLng;
+                        }
+                    }
+
+                    //create the Bounding box string
+                    var bbox =     botLat + "," +
+                                   topLng + "," +
+                                   topLat + "," +
+                                   botLng;
+
+                    //base WMS URL
+                    var url = "http://eumetview.eumetsat.int/geoserv/wms";
+                    url += "?REQUEST=GetMap"; //WMS operation
+                    url += "&SERVICE=WMS";    //WMS service
+                    url += "&VERSION=1.3.0";  //WMS version
+                    // url += "&LAYERS=" + "meteosat:msg_airmass"; //WMS layers
+                    url += "&LAYERS=" + "meteosat:msg_ir039"; //WMS layers
+                    url += "&FORMAT=image/png" ; //WMS format
+                    url += "&EXCEPTIONS=INIMAGE" ;
+                    url += "&STYLES=raster," ;
+                    url += "&BGCOLOR=0xFFFFFF";
+                    url += "&TRANSPARENT=TRUE";
+                    url += "&SRS=EPSG:4326";     //set WGS84
+                    url += "&BBOX=" + bbox;      // set bounding box
+                    url += "&WIDTH=256";         //tile size in google
+                    url += "&HEIGHT=256";
+                    return url;                 // return URL for the tile
+
+                },
+                tileSize: new google.maps.Size(256, 256),
+                isPng: true,
+                opacity:0.60,
+                name: 'EUMS IR'
+            });
+
+        // eumetsat visible overlay
+        eumsVis = new google.maps.ImageMapType({
+                getTileUrl: function (coord, zoom) {
+                    var proj = map.getProjection();
+                    var zfactor = Math.pow(2, zoom);
+                    // get Long Lat coordinates
+                    var top = proj.fromPointToLatLng(new google.maps.Point(coord.x * 256 / zfactor, coord.y * 256 / zfactor));
+                    var bot = proj.fromPointToLatLng(new google.maps.Point((coord.x + 1) * 256 / zfactor, (coord.y + 1) * 256 / zfactor));
+
+                    //corrections for the slight shift of the SLP (mapserver)
+                    var deltaX = 0.0013;
+                    var deltaY = 0.00058;
+
+                    var botLat = (bot.lat() + deltaX);
+                    var topLng = (top.lng() + deltaY);
+                    var topLat = (top.lat() + deltaX);
+                    var botLng = (bot.lng() + deltaY);
+
+                    // I don't particularly like this workaround, but it stops a lot of the bounding box issues
+                    // caused by the map's longitude wrapping from 180 to -180
+                    if (topLng >= botLng) {
+                        if (-topLng < botLng) {
+                            topLng = -topLng;
+                            console.log(topLng + "   " + botLng);
+                        } else if (topLng < -botLng) {
+                            botLng = -botLng;
+                        } else {
+                            topLng = -topLng;
+                            botLng = -botLng;
+                        }
+                    }
+
+                    //create the Bounding box string
+                    var bbox =     botLat + "," +
+                                   topLng + "," +
+                                   topLat + "," +
+                                   botLng;
+
+                    //base WMS URL
+                    var url = "http://eumetview.eumetsat.int/geoserv/wms";
+                    url += "?REQUEST=GetMap"; //WMS operation
+                    url += "&SERVICE=WMS";    //WMS service
+                    url += "&VERSION=1.3.0";  //WMS version
+                    // url += "&LAYERS=" + "meteosat:msg_airmass"; //WMS layers
+                    url += "&LAYERS=" + "meteosat:msg_vis006"; //WMS layers
+                    url += "&FORMAT=image/png" ; //WMS format
+                    url += "&EXCEPTIONS=INIMAGE" ;
+                    url += "&STYLES=raster," ;
+                    url += "&BGCOLOR=0xFFFFFF";
+                    url += "&TRANSPARENT=TRUE";
+                    url += "&SRS=EPSG:4326";     //set WGS84
+                    url += "&BBOX=" + bbox;      // set bounding box
+                    url += "&WIDTH=256";         //tile size in google
+                    url += "&HEIGHT=256";
+                    return url;                 // return URL for the tile
+
+                },
+                tileSize: new google.maps.Size(256, 256),
+                isPng: true,
+                opacity:0.60,
+                name: 'EUMS VISIBLE'
+            });
+
         map.overlayMapTypes.push(null); // create empty overlay entry
+        map.overlayMapTypes.push(null);
+        map.overlayMapTypes.push(null);
         map.overlayMapTypes.push(null);
         map.overlayMapTypes.push(null);
         map.overlayMapTypes.push(null);
@@ -348,6 +489,8 @@
         check4 = document.getElementById("overlay-4").checked;
         check5 = document.getElementById("overlay-5").checked;
         check6 = document.getElementById("overlay-6").checked;
+        check7 = document.getElementById("overlay-7").checked;
+        check8 = document.getElementById("overlay-8").checked;
 
         if (check0) {
             map.overlayMapTypes.setAt("0", tileNEX);
@@ -384,7 +527,38 @@
         } else {
             map.overlayMapTypes.setAt("6", null);
         }
+        if (check7) {
+            map.overlayMapTypes.setAt("7", eumsIR);
+        } else {
+            map.overlayMapTypes.setAt("7", null);
+        }
+        if (check8) {
+            map.overlayMapTypes.setAt("8", eumsVis);
+        } else {
+            map.overlayMapTypes.setAt("8", null);
+        }
 
+    }
+
+    // Overlay group controls
+    var usOverlayGroup = document.getElementById('us-overlay-group');
+    var otherOverlayGroup = document.getElementById('other-overlay-group');
+    var usOverlayButton = document.getElementById('us-overlay-button');
+    var otherOverlayButton = document.getElementById('other-overlay-button');
+
+    usOverlayButton.onclick = function() { return switchToUSOverlays(); };
+    otherOverlayButton.onclick = function() { return switchToOtherOverlays(); };
+
+    // Show overlay options for US areas
+    function switchToUSOverlays() {
+        usOverlayGroup.hidden = false;
+        otherOverlayGroup.hidden = true;
+    }
+
+    // Show overlay options for non-US areas
+    function switchToOtherOverlays() {
+        otherOverlayGroup.hidden = false;
+        usOverlayGroup.hidden = true;
     }
 
     // Side Controls
