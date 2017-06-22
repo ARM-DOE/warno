@@ -23,24 +23,33 @@
             </div>
             <div style="border: 1px solid black; padding: 5px;">
                 Map Overlays:
+                <div id="us-overlay-button" class="sidebar-button" style="display: inline-block; min-width: 50;">
+                    US
+                </div>
+                <div id="other-overlay-button" class="sidebar-button" style="display: inline-block; min-width: 50;">
+                    Other
+                </div>
                 <hr>
-                <input name="overlay-checkbox" id="overlay-0" type="checkbox"> NEXRAD
-                <hr>
-                <input name="overlay-checkbox" id="overlay-1" type="checkbox"> GOES East Vis
-                <br>
-                <input name="overlay-checkbox" id="overlay-2" type="checkbox"> GOES West Vis
-                <br>
-                <input name="overlay-checkbox" id="overlay-3" type="checkbox"> Alaska Vis
-                <hr>
-                <input name="overlay-checkbox" id="overlay-4" type="checkbox"> GOES East IR
-                <br>
-                <input name="overlay-checkbox" id="overlay-5" type="checkbox"> GOES West IR
-                <br>
-                <input name="overlay-checkbox" id="overlay-6" type="checkbox"> Alaska IR
-                <hr>
-                <input name="overlay-checkbox" id="overlay-7" type="checkbox"> EUMETSAT IR
-                <br>
-                <input name="overlay-checkbox" id="overlay-8" type="checkbox"> EUMETSAT Vis
+                <div id="us-overlay-group">
+                    <input name="overlay-checkbox" id="overlay-0" type="checkbox"> NEXRAD
+                    <hr>
+                    <input name="overlay-checkbox" id="overlay-1" type="checkbox"> GOES East Vis
+                    <br>
+                    <input name="overlay-checkbox" id="overlay-2" type="checkbox"> GOES West Vis
+                    <br>
+                    <input name="overlay-checkbox" id="overlay-3" type="checkbox"> Alaska Vis
+                    <hr>
+                    <input name="overlay-checkbox" id="overlay-4" type="checkbox"> GOES East IR
+                    <br>
+                    <input name="overlay-checkbox" id="overlay-5" type="checkbox"> GOES West IR
+                    <br>
+                    <input name="overlay-checkbox" id="overlay-6" type="checkbox"> Alaska IR
+                </div>
+                <div id="other-overlay-group" hidden>
+                    <input name="overlay-checkbox" id="overlay-7" type="checkbox"> EUMETSAT IR
+                    <br>
+                    <input name="overlay-checkbox" id="overlay-8" type="checkbox"> EUMETSAT Vis
+                </div>
                 <hr>
                 <button onclick="updateOverlay()">Update Overlay</button>
             </div>
@@ -491,6 +500,27 @@
             map.overlayMapTypes.setAt("8", null);
         }
 
+    }
+
+    // Overlay group controls
+    var usOverlayGroup = document.getElementById('us-overlay-group');
+    var otherOverlayGroup = document.getElementById('other-overlay-group');
+    var usOverlayButton = document.getElementById('us-overlay-button');
+    var otherOverlayButton = document.getElementById('other-overlay-button');
+
+    usOverlayButton.onclick = function() { return switchToUSOverlays(); };
+    otherOverlayButton.onclick = function() { return switchToOtherOverlays(); };
+
+    // Show overlay options for US areas
+    function switchToUSOverlays() {
+        usOverlayGroup.hidden = false;
+        otherOverlayGroup.hidden = true;
+    }
+
+    // Show overlay options for non-US areas
+    function switchToOtherOverlays() {
+        otherOverlayGroup.hidden = false;
+        usOverlayGroup.hidden = true;
     }
 
     // Side Controls
