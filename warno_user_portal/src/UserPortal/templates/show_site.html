@@ -38,6 +38,10 @@
                 <br>
                 <input name="overlay-checkbox" id="overlay-6" type="checkbox"> Alaska IR
                 <hr>
+                <input name="overlay-checkbox" id="overlay-7" type="checkbox"> EUMETSAT IR
+                <br>
+                <input name="overlay-checkbox" id="overlay-8" type="checkbox"> EUMETSAT Vis
+                <hr>
                 <button onclick="updateOverlay()">Update Overlay</button>
             </div>
             <div class="info">
@@ -321,7 +325,97 @@
             isPng: true
         });
 
+        // eumetsat IR overlay
+        eumsIR = new google.maps.ImageMapType({
+                getTileUrl: function (coord, zoom) {
+                    var proj = map.getProjection();
+                    var zfactor = Math.pow(2, zoom);
+                    // get Long Lat coordinates
+                    var top = proj.fromPointToLatLng(new google.maps.Point(coord.x * 256 / zfactor, coord.y * 256 / zfactor));
+                    var bot = proj.fromPointToLatLng(new google.maps.Point((coord.x + 1) * 256 / zfactor, (coord.y + 1) * 256 / zfactor));
+
+                    //corrections for the slight shift of the SLP (mapserver)
+                    var deltaX = 0.0013;
+                    var deltaY = 0.00058;
+
+                    //create the Bounding box string
+                    var bbox =     (bot.lat() + deltaX) + "," +
+                                   (top.lng() + deltaY) + "," +
+                                   (top.lat() + deltaX) + "," +
+                                   (bot.lng() + deltaY);
+
+                    //base WMS URL
+                    var url = "http://eumetview.eumetsat.int/geoserv/wms";
+                    url += "?REQUEST=GetMap"; //WMS operation
+                    url += "&SERVICE=WMS";    //WMS service
+                    url += "&VERSION=1.3.0";  //WMS version
+                    // url += "&LAYERS=" + "meteosat:msg_airmass"; //WMS layers
+                    url += "&LAYERS=" + "meteosat:msg_ir039"; //WMS layers
+                    url += "&FORMAT=image/png" ; //WMS format
+                    url += "&EXCEPTIONS=INIMAGE" ;
+                    url += "&STYLES=raster," ;
+                    url += "&BGCOLOR=0xFFFFFF";
+                    url += "&TRANSPARENT=TRUE";
+                    url += "&SRS=EPSG:4326";     //set WGS84
+                    url += "&BBOX=" + bbox;      // set bounding box
+                    url += "&WIDTH=256";         //tile size in google
+                    url += "&HEIGHT=256";
+                    return url;                 // return URL for the tile
+
+                },
+                tileSize: new google.maps.Size(256, 256),
+                isPng: true,
+                opacity:0.60,
+                name: 'EUMS IR'
+            });
+
+        // eumetsat visible overlay
+        eumsVis = new google.maps.ImageMapType({
+                getTileUrl: function (coord, zoom) {
+                    var proj = map.getProjection();
+                    var zfactor = Math.pow(2, zoom);
+                    // get Long Lat coordinates
+                    var top = proj.fromPointToLatLng(new google.maps.Point(coord.x * 256 / zfactor, coord.y * 256 / zfactor));
+                    var bot = proj.fromPointToLatLng(new google.maps.Point((coord.x + 1) * 256 / zfactor, (coord.y + 1) * 256 / zfactor));
+
+                    //corrections for the slight shift of the SLP (mapserver)
+                    var deltaX = 0.0013;
+                    var deltaY = 0.00058;
+
+                    //create the Bounding box string
+                    var bbox =     (bot.lat() + deltaX) + "," +
+                                   (top.lng() + deltaY) + "," +
+                                   (top.lat() + deltaX) + "," +
+                                   (bot.lng() + deltaY);
+
+                    //base WMS URL
+                    var url = "http://eumetview.eumetsat.int/geoserv/wms";
+                    url += "?REQUEST=GetMap"; //WMS operation
+                    url += "&SERVICE=WMS";    //WMS service
+                    url += "&VERSION=1.3.0";  //WMS version
+                    // url += "&LAYERS=" + "meteosat:msg_airmass"; //WMS layers
+                    url += "&LAYERS=" + "meteosat:msg_vis006"; //WMS layers
+                    url += "&FORMAT=image/png" ; //WMS format
+                    url += "&EXCEPTIONS=INIMAGE" ;
+                    url += "&STYLES=raster," ;
+                    url += "&BGCOLOR=0xFFFFFF";
+                    url += "&TRANSPARENT=TRUE";
+                    url += "&SRS=EPSG:4326";     //set WGS84
+                    url += "&BBOX=" + bbox;      // set bounding box
+                    url += "&WIDTH=256";         //tile size in google
+                    url += "&HEIGHT=256";
+                    return url;                 // return URL for the tile
+
+                },
+                tileSize: new google.maps.Size(256, 256),
+                isPng: true,
+                opacity:0.60,
+                name: 'EUMS VISIBLE'
+            });
+
         map.overlayMapTypes.push(null); // create empty overlay entry
+        map.overlayMapTypes.push(null);
+        map.overlayMapTypes.push(null);
         map.overlayMapTypes.push(null);
         map.overlayMapTypes.push(null);
         map.overlayMapTypes.push(null);
@@ -348,6 +442,8 @@
         check4 = document.getElementById("overlay-4").checked;
         check5 = document.getElementById("overlay-5").checked;
         check6 = document.getElementById("overlay-6").checked;
+        check7 = document.getElementById("overlay-7").checked;
+        check8 = document.getElementById("overlay-8").checked;
 
         if (check0) {
             map.overlayMapTypes.setAt("0", tileNEX);
@@ -383,6 +479,16 @@
             map.overlayMapTypes.setAt("6", alaskaIR);
         } else {
             map.overlayMapTypes.setAt("6", null);
+        }
+        if (check7) {
+            map.overlayMapTypes.setAt("7", eumsIR);
+        } else {
+            map.overlayMapTypes.setAt("7", null);
+        }
+        if (check8) {
+            map.overlayMapTypes.setAt("8", eumsVis);
+        } else {
+            map.overlayMapTypes.setAt("8", null);
         }
 
     }
