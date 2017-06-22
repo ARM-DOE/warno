@@ -347,11 +347,30 @@
                     var deltaX = 0.0013;
                     var deltaY = 0.00058;
 
+                    var botLat = (bot.lat() + deltaX);
+                    var topLng = (top.lng() + deltaY);
+                    var topLat = (top.lat() + deltaX);
+                    var botLng = (bot.lng() + deltaY);
+
+                    // I don't particularly like this workaround, but it stops a lot of the bounding box issues
+                    // caused by the map's longitude wrapping from 180 to -180
+                    if (topLng >= botLng) {
+                        if (-topLng < botLng) {
+                            topLng = -topLng;
+                            console.log(topLng + "   " + botLng);
+                        } else if (topLng < -botLng) {
+                            botLng = -botLng;
+                        } else {
+                            topLng = -topLng;
+                            botLng = -botLng;
+                        }
+                    }
+
                     //create the Bounding box string
-                    var bbox =     (bot.lat() + deltaX) + "," +
-                                   (top.lng() + deltaY) + "," +
-                                   (top.lat() + deltaX) + "," +
-                                   (bot.lng() + deltaY);
+                    var bbox =     botLat + "," +
+                                   topLng + "," +
+                                   topLat + "," +
+                                   botLng;
 
                     //base WMS URL
                     var url = "http://eumetview.eumetsat.int/geoserv/wms";
@@ -391,11 +410,30 @@
                     var deltaX = 0.0013;
                     var deltaY = 0.00058;
 
+                    var botLat = (bot.lat() + deltaX);
+                    var topLng = (top.lng() + deltaY);
+                    var topLat = (top.lat() + deltaX);
+                    var botLng = (bot.lng() + deltaY);
+
+                    // I don't particularly like this workaround, but it stops a lot of the bounding box issues
+                    // caused by the map's longitude wrapping from 180 to -180
+                    if (topLng >= botLng) {
+                        if (-topLng < botLng) {
+                            topLng = -topLng;
+                            console.log(topLng + "   " + botLng);
+                        } else if (topLng < -botLng) {
+                            botLng = -botLng;
+                        } else {
+                            topLng = -topLng;
+                            botLng = -botLng;
+                        }
+                    }
+
                     //create the Bounding box string
-                    var bbox =     (bot.lat() + deltaX) + "," +
-                                   (top.lng() + deltaY) + "," +
-                                   (top.lat() + deltaX) + "," +
-                                   (bot.lng() + deltaY);
+                    var bbox =     botLat + "," +
+                                   topLng + "," +
+                                   topLat + "," +
+                                   botLng;
 
                     //base WMS URL
                     var url = "http://eumetview.eumetsat.int/geoserv/wms";
