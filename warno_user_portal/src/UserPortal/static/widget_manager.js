@@ -1563,7 +1563,7 @@ RealTimeGauge.prototype.updateLastReceived = function() {
     }
 };
 
-RealTimeGauge.triggerJob = function () {
+RealTimeGauge.prototype.triggerJob = function () {
     this.generateRealTimeGauge();
 };
 
