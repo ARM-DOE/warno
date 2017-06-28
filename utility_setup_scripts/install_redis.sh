@@ -1,5 +1,9 @@
 #! /usr/bin/env bash
 
+if [ "$VAGRANT_HOME" = "" ]; then
+    VAGRANT_HOME=/vagrant
+fi
+
 mkdir /opt/redis
 
 cd /opt/redis
@@ -18,8 +22,8 @@ mkdir /var/redis
 chmod -R 777 /var/redis
 useradd redis
 
-cp -u /vagrant/redis/6379.conf /etc/redis/6379.conf
-cp -u /vagrant/redis/redis_6379 /etc/init.d/redis_6379
+cp -u $VAGRANT_HOME/redis/6379.conf /etc/redis/6379.conf
+cp -u $VAGRANT_HOME/redis/redis_6379 /etc/init.d/redis_6379
 
 systemctl enable redis_6379
 

@@ -10,7 +10,11 @@ import logging
 from Plugin import Plugin as Plugin
 from WarnoConfig import config
 
-logfile = "/vagrant/data_store/data/agent_exceptions.log"
+log_path = os.environ.get("LOG_PATH")
+if log_path is None:
+    log_path = "/vagrant/logs/"
+
+LOGFILE = log_path + "agent_exceptions.log"
 
 white_list = ['*',]
 

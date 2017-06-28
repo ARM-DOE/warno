@@ -13,11 +13,15 @@ DB_PORT=$database__DB_PORT
 
 ZIPFILE=$DIR/db_dump.data.gz
 DUMPFILE=$DIR/db_dump.data
-ready=0
+ready=0if [ "$VAGRANT_HOME" = "" ]; then
+    VAGRANT_HOME=/vagrant
+fi
+
+
 
 # Loops until the database is ready, then loads the postgresql database dump file and exits.
 
-PATH=/vagrant/data_store/data/anaconda/bin:$PATH
+PATH=$VAGRANT_HOME/data_store/data/anaconda/bin:$PATH
 if [[ -f $ZIPFILE ]]; then
     cp $ZIPFILE tmp.zip
     gunzip $ZIPFILE

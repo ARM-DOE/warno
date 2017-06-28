@@ -2,6 +2,7 @@ import datetime
 import traceback
 import time
 import json
+import os
 
 from pyarmret.io.PAFClient import PAFClient
 from Plugin import Plugin as Plugin
@@ -11,8 +12,11 @@ from WarnoConfig import config
 import pyarmret
 pt = pyarmret.__file__
 
+log_path = os.environ.get("LOG_PATH")
+if log_path is None:
+    log_path = "/vagrant/logs/"
 
-LOGFILE = "/vagrant/logs/agent_exceptions.log"
+LOGFILE = log_path + "agent_exceptions.log"
 
 white_list = ['KAZR-OLI','SACR', 'KAZR', 'WSACR', 'KASACR', 'KASACRO','WSACRO'] # We need to generalize this.
 
