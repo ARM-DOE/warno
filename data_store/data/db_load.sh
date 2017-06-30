@@ -13,11 +13,11 @@ DB_PORT=$database__DB_PORT
 
 ZIPFILE=$DIR/db_dump.data.gz
 DUMPFILE=$DIR/db_dump.data
-ready=0if [ "$VAGRANT_HOME" = "" ]; then
+ready=0
+
+if [ "$VAGRANT_HOME" = "" ]; then
     VAGRANT_HOME=/vagrant
 fi
-
-
 
 # Loops until the database is ready, then loads the postgresql database dump file and exits.
 
