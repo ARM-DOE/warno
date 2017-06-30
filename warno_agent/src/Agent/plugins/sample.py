@@ -7,7 +7,11 @@ from pyarmret.io.PAFClient import PAFClient
 
 from Plugin import Plugin as Plugin
 
-logfile = "/vagrant/logs/agent_exceptions.log"
+log_path = os.environ.get("LOG_PATH")
+if log_path is None:
+    log_path = "/vagrant/logs/"
+
+LOGFILE = log_path + "agent_exceptions.log"
 
 
 class PAFPlugin(Plugin):
@@ -45,7 +49,7 @@ class PAFPlugin(Plugin):
                 msg_queue.put('{"event": "%s", "data": {"instrument_Id": %s, "time": "%s", "value": %s}}' %
                               ("prosensing_paf", instrument_id, timestamp, events_payload))
             except UnicodeDecodeError, e:
-                with open(logfile, "a+") as log:
+                with open(LOGFILE, "a+") as log:
                     log.write("\nUnicodeDecodeError\n")
                     log.write(str(e))
                     log.write("\nUndecoded Message\n")
@@ -53,7 +57,7 @@ class PAFPlugin(Plugin):
                     log.write("\nException Traceback\n")
                     traceback.print_exc(limit=5, file=log)
             except Exception:
-                with open(logfile, "a+") as log:
+                with open(LOGFILE, "a+") as log:
                     log.write("\nException Traceback\n")
                     traceback.print_exc(limit=5, file=log)
 
@@ -69,7 +73,7 @@ class PAFPlugin(Plugin):
                     msg_queue.put('{"event": "pulse_capture", "data": {"instrument_id": %s, "time": "%s", "value": %s}}' %
                                   (self.instrument_id, timestamp, data['data_contents'][0]))
                 except Exception:
-                    with open(logfile, "a+") as log:
+                    with open(LOGFILE, "a+") as log:
                         log.write("\nException Traceback\n")
                         traceback.print_exc(limit=5, file=log)
 
@@ -92,7 +96,7 @@ def run(msg_queue, instrument_id):
             msg_queue.put('{"event": "%s", "data": {"instrument_id": %s, "time": "%s", "values": %s}}'\
                           % ("prosensing_paf", instrument_id, timestamp, events_payload))
         except UnicodeDecodeError, e:
-            with open(logfile, "a+") as log:
+            with open(LOGFILE, "a+") as log:
                 log.write("\nUnicodeDecodeError\n")
                 log.write(str(e))
                 log.write("\nUndecoded Message\n")
@@ -100,7 +104,7 @@ def run(msg_queue, instrument_id):
                 log.write("\nException Traceback\n")
                 traceback.print_exc(limit=5, file=log)
         except Exception:
-            with open(logfile, "a+") as log:
+            with open(LOGFILE, "a+") as log:
                 log.write("\nException Traceback\n")
                 traceback.print_exc(limit=5, file=log)
         timestamp = get_timestamp()

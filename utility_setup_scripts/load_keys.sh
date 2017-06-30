@@ -1,6 +1,11 @@
 #! /usr/bin/env bash
-PRIVATE_KEY="/vagrant/id_rsa"
-PUBLIC_KEY="/vagrant/id_rsa.pub"
+
+if [ "$VAGRANT_HOME" = "" ]; then
+    VAGRANT_HOME=/vagrant
+fi
+
+PRIVATE_KEY="$VAGRANT_HOME/id_rsa"
+PUBLIC_KEY="$VAGRANT_HOME/id_rsa.pub"
 
 if [[ -f $PRIVATE_KEY ]]; then
     echo "Loading $PRIVATE_KEY"

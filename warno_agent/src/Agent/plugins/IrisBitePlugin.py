@@ -2,6 +2,7 @@ import datetime
 import traceback
 import time
 import json
+import os
 
 from Plugin import Plugin as Plugin
 
@@ -9,7 +10,11 @@ from WarnoConfig import config
 from WarnoConfig.bite_digest.digest import Digest
 
 
-LOGFILE = "/vagrant/logs/agent_exceptions.log"
+log_path = os.environ.get("LOG_PATH")
+if log_path is None:
+    log_path = "/vagrant/logs/"
+
+LOGFILE = log_path + "agent_exceptions.log"
 
 white_list = ['XSAPR-SW'] # We need to generalize this.
 

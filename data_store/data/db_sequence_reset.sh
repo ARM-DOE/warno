@@ -10,8 +10,11 @@ USERNAME=$database__DB_USER
 DB_ADDRESS=$database__DB_HOST
 DB_PORT=$database__DB_PORT
 
+if [ "$VAGRANT_HOME" = "" ]; then
+    VAGRANT_HOME=/vagrant
+fi
 
-PATH=/vagrant/data_store/data/anaconda/bin:$PATH
+PATH=$VAGRANT_HOME/data_store/data/anaconda/bin:$PATH
 
 PGPASSWORD=$s_database__DB_PASS psql -h $DB_ADDRESS --username=$USERNAME -p $DB_PORT -Atq -f $DIR/reset.sql -o $DIR/temp #&> /dev/null
 

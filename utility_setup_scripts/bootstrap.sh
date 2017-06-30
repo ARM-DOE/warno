@@ -1,24 +1,29 @@
 #!/usr/bin/env bash
+
+if [ "$ANACONDA_HOME" = "" ]; then
+    ANACONDA_HOME=/home/vagrant
+fi
+
 miniconda=Miniconda-latest-Linux-x86_64.sh
-cd /home/vagrant
+cd $ANACONDA_HOME
 if [[ ! -f $miniconda ]]; then
     wget --quiet http://repo.continuum.io/miniconda/$miniconda
 fi
 chmod +x $miniconda
-./$miniconda -b -p /home/vagrant/anaconda
+./$miniconda -b -p $ANACONDA_HOME/anaconda
 
-cat >> /home/vagrant/.bashrc << END
+cat >> $ANACONDA_HOME/.bashrc << END
 # Add for install
-PATH=/home/vagrant/anaconda/bin:\$PATH
+PATH=$ANACONDA_HOME/anaconda/bin:\$PATH
 END
 
 # For remote ssh commands
-cat >> /home/vagrant/.profile << END
+cat >> $ANACONDA_HOME/.profile << END
 # Add for anaconda install
-PATH=/home/vagrant/anaconda/bin:\$PATH
+PATH=$ANACONDA_HOME/anaconda/bin:\$PATH
 END
 
-export PATH=/home/vagrant/anaconda/bin:\$PATH
+export PATH=$ANACONDA_HOME/anaconda/bin:\$PATH
 
 # Current latest versions
 # Prevents download of newer versions than are included in included $miniconda

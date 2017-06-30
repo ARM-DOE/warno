@@ -33,7 +33,11 @@ if ctx['agent']['local_debug']:
 
 app = Flask(__name__)
 
-logfile = "/vagrant/data_store/data/agent_exceptions.log"
+log_path = os.environ.get("LOG_PATH")
+if log_path is None:
+    log_path = "/vagrant/logs/"
+
+logfile = log_path + "agent_exceptions.log"
 
 
 @app.route('/agent')
