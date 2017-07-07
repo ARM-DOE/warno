@@ -153,6 +153,9 @@ collects data from each <a class="reference internal" href="../Agent/index.html#
 to the central Event Manager.  As such, the central User Portal will have access to all of the data, but site&#8217;s User
 Portal will be limited to the site&#8217;s data.</p>
 <p>The User Portal is accessible through the browser using the standard HTTP or through other programs connecting to the web API.</p>
+<p>The User Portal also supports a limited Role Based Access Control for users of the system.  Standard users can view pretty
+much any data on the system, but only elevated users can modify or create data.  The exception to this is that any user
+can create or modify their own dashboard, with data visualizations set up by the user.</p>
 </div>
 <div class="section" id="design">
 <h2>Design<a class="headerlink" href="#design" title="Permalink to this headline">¶</a></h2>
@@ -165,7 +168,7 @@ glues the application together by connecting all of the Flask blueprints. Each F
 of the underlying server into logical components. For example, all functions and requests pertaining to instruments are in
 one blueprint, while everything pertaining to sites is in another.</p>
 <p>Configuration in the Data Store directory gives the User Portal everything it needs to connect with the database properly.</p>
-<p>HTTP will soon be switched over to HTTPS, which the NGINX proxy server will automatically handle. A REST API
+<p>HTTP has been switched over to HTTPS, which the NGINX proxy server automatically handles. A REST API
 will allow applications to pull in data from the User Portal without needing to use a browser.
 This will allow other programs to display and process the data stored by WARNO.</p>
 </div>

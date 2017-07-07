@@ -196,7 +196,8 @@
 </div></blockquote>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A list containing logs, each log returned as a dictionary containing its information.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A list containing logs, each log returned as a dictionary containing its information.  The &#8216;contents&#8217; of a log are</p>
+<p class="last">converted to a flask Markup class to allow rendering in the browser.</p>
 </td>
 </tr>
 </tbody>
@@ -383,6 +384,32 @@ and the list of columns for available data to plot on graphs.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="UserPortal.instruments.instrument_links">
+<code class="descclassname">UserPortal.instruments.</code><code class="descname">instrument_links</code><span class="sig-paren">(</span><em>instrument_id</em><span class="sig-paren">)</span><a class="headerlink" href="#UserPortal.instruments.instrument_links" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the current HTML links for the instrument matching the given &#8216;instrument_id&#8217; and open a page to edit the
+links for the instrument.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>instrument_id: integer</strong></p>
+<blockquote>
+<div><p>The database id of the instrument whose links are to be edited.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">edit_links.html: HTML document</p>
+<blockquote class="last">
+<div><p>Returns an HTML document that will allow the user to edit the links for the given instrument.  Passes the
+instrument information as well as any current links.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="UserPortal.instruments.iso_first_element">
 <code class="descclassname">UserPortal.instruments.</code><code class="descname">iso_first_element</code><span class="sig-paren">(</span><em>input_list</em><span class="sig-paren">)</span><a class="headerlink" href="#UserPortal.instruments.iso_first_element" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update first element of input list from a python datetime object into an ISO formatted time.
@@ -484,6 +511,34 @@ JSON object.  If the key is not a valid key for the instrument, the returned obj
 <div><p>List of dictionaries, one for each attribute, each of the form {&#8220;key&#8221;: <strong>attribute name</strong>, &#8220;data&#8221;:
 {&#8220;time&#8221;: <strong>ISO format UTC time that most recent value was collected</strong>,
 &#8220;value&#8221;: <strong>most recently collected value for attribute</strong>} }</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="UserPortal.instruments.save_instrument_links">
+<code class="descclassname">UserPortal.instruments.</code><code class="descname">save_instrument_links</code><span class="sig-paren">(</span><em>instrument_id</em><span class="sig-paren">)</span><a class="headerlink" href="#UserPortal.instruments.save_instrument_links" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes all current links for the instrument matching &#8216;instrument_id&#8217;, replacing them with new links passed by
+the form parameter &#8216;links&#8217; as a JSON object.  &#8216;links&#8217; is expected to be a list, with each entry being a dictionary
+of the form {&#8220;text&#8221;: &lt;string&gt;, &#8220;link&#8221;: &lt;string&gt;}, where &#8216;text&#8217; is the text displayed for the web link, and &#8216;link&#8217; is
+the underlying URL.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>instrument_id: integer</strong></p>
+<blockquote>
+<div><p>The database id of the instrument which the links are being saved for.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">instrument: Flask redirect location</p>
+<blockquote class="last">
+<div><p>Returns a Flask redirect location to the instrument function, redirecting the user to the details page
+for the specified instrument.</p>
 </div></blockquote>
 </td>
 </tr>

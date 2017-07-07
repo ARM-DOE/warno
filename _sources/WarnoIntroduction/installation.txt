@@ -163,7 +163,7 @@ To access the web server from your browser, just enter "https://**ip_of_host_mac
 Valid Columns for graphs
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-To update which columns are valid to graph, visit "https://**ip_of_host_machine**/eventmanager".  This will trigger an
+To update which columns are valid to graph, visit "https://**ip_of_host_machine**/valid_columns".  This will trigger an
 update of the valid columns for each instrument to graph. This can take up to a few minutes, and at the
-end it will display a page listing how many columns were updated.
+end it will display a page listing how many columns were updated.  The page may timeout if it takes longer than 5 minutes.
 

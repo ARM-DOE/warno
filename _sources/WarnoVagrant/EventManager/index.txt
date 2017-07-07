@@ -38,9 +38,13 @@ when the WARNO system starts up.
 
 Depending on the configuration in the Data Store directory, the Event Manager can start
 up a normal or a test database.  For a normal database, it will attempt to use an existing database.  If none is set up,
-it instead initializes the database and fills it with basic static values, such as basic event codes and sites.  If the
+it instead initializes the database and fills it with standard values, such as basic event codes and sites.  If the
 database is designated as a test database, it instead will wipe the database every time it starts up and fill it with
 basic demo data.  This allows for a regular and controlled testing environment.
+
+The Event Manager will also handle a Redis in-memory database as a cache for the most recent data for each instrument.  At one minute
+sampling intervals, the Redis database should hold about 2 weeks of values.  The Redis database is started shortly after the
+main database finishes setting up its data.
 
 The configuration also will specify if the current event manager is a site Event Manager or a central Event Manager. If it
 is a site Event Manager, the configuration will specify the url for the central Event Manager it is to communicate with.

@@ -161,6 +161,13 @@ proxy_set_header X-Script-Name /myprefix;
 </dd></dl>
 
 <dl class="function">
+<dt id="warno_event_manager.clear_and_populate_redis">
+<code class="descclassname">warno_event_manager.</code><code class="descname">clear_and_populate_redis</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#warno_event_manager.clear_and_populate_redis" title="Permalink to this definition">¶</a></dt>
+<dd><p>Completely wipes the Redis database, then loads recent entries and event codes from the main database into Redis.</p>
+<p>This is mostly only called after loading in test data, or loading a database file.</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="warno_event_manager.event">
 <code class="descclassname">warno_event_manager.</code><code class="descname">event</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#warno_event_manager.event" title="Permalink to this definition">¶</a></dt>
 <dd><p>Event comes as a web request with a JSON packet.  The JSON is loaded into dictionary, and the
@@ -252,8 +259,7 @@ facility determines the instrument id is, saving the returned site.</p>
 <p>{&#8220;event_code&#8221;: <em>integer event code</em>, &#8220;data&#8221;: {&#8220;instrument_id&#8221;: <em>integer instrument id</em>, &#8220;site_id&#8221;:</p>
 <p><em>integer site id instrument is at</em>, &#8220;name_short&#8221;: <em>string instrument abbreviation</em>, &#8220;name_long&#8221;:</p>
 <p><em>string full instrument name</em>, &#8220;type&#8221;: <em>string type of instrument</em>, &#8220;vendor&#8221;: <em>string instrument&#8217;s vendor</em>,</p>
-<p>&#8220;description&#8221;: <em>string description of instrument</em>, &#8220;frequency_band&#8221;:</p>
-<p><em>two character frequency band instrument operates at</em>}}.</p>
+<p>&#8220;description&#8221;: <em>string description of instrument</em> }}.</p>
 <p class="last">If no instrument was found, the instrument id is passed as -1.</p>
 </td>
 </tr>
@@ -299,12 +305,29 @@ id is, saving the returned site.</p>
 <dl class="function">
 <dt id="warno_event_manager.initialize_database">
 <code class="descclassname">warno_event_manager.</code><code class="descname">initialize_database</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#warno_event_manager.initialize_database" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initializes the database.  If the database is specified in config.yml as a &#8216;test_db&#8217;,
+<dd><p>Initializes the database.</p>
+<p>If the database is specified in config.yml as a &#8216;test_db&#8217;
 the database is wiped when at the beginning to ensure a clean load.  If it is not a test
 database, a utility function is called to attempt to load in a postgresql database dumpfile
 if it exists.  First, the tables are initialized, and then if no basic database entries
 exist (users, sites, event codes), they are created.  Then, if it is designated a test database,
 any table that does not contain any entries will be filled with demo data.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="warno_event_manager.new_event">
+<code class="descclassname">warno_event_manager.</code><code class="descname">new_event</code><span class="sig-paren">(</span><em>msg</em>, <em>msg_struct</em><span class="sig-paren">)</span><a class="headerlink" href="#warno_event_manager.new_event" title="Permalink to this definition">¶</a></dt>
+<dd><p>Register a new event</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>msg</strong></p>
+<p class="last"><strong>msg_struct</strong></p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -401,7 +424,7 @@ iterative parsing much easier.</p>
 <dt id="warno_event_manager.save_json_db_info">
 <code class="descclassname">warno_event_manager.</code><code class="descname">save_json_db_info</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#warno_event_manager.save_json_db_info" title="Permalink to this definition">¶</a></dt>
 <dd><p>Saves database tables containing more permanent information, such as sites or instruments, to a json file.
-File name has the format &#8216;db_info_*day*_*month*_*year*&#8217;, where the date corresponds to the date the function was run,
+File name has the format &#8216;db_info_*day*_*month*_*year*&#8217;, where the date corresponds to the date the function was run
 because it shows the current status of the database.</p>
 <p>Example File (indentation unnecessary):</p>
 <dl class="docutils">
@@ -440,6 +463,28 @@ because it shows the current status of the database.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="warno_event_manager.save_misc_event">
+<code class="descclassname">warno_event_manager.</code><code class="descname">save_misc_event</code><span class="sig-paren">(</span><em>msg</em>, <em>msg_struct</em><span class="sig-paren">)</span><a class="headerlink" href="#warno_event_manager.save_misc_event" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handle a MISC event message.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>msg: JSON object</strong></p>
+<blockquote>
+<div><p>JSON object representing the message</p>
+</div></blockquote>
+<p><strong>msg_struct: dict</strong></p>
+<blockquote class="last">
+<div><p>Dictionary representation of message</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="warno_event_manager.save_pulse_capture">
 <code class="descclassname">warno_event_manager.</code><code class="descname">save_pulse_capture</code><span class="sig-paren">(</span><em>msg</em>, <em>msg_struct</em><span class="sig-paren">)</span><a class="headerlink" href="#warno_event_manager.save_pulse_capture" title="Permalink to this definition">¶</a></dt>
 <dd><p>Inserts the information given in &#8216;msg_struct&#8217; into the database &#8216;pulse_captures&#8217; table, with all of the values
@@ -464,11 +509,11 @@ to the &#8216;cf_url&#8217; (both specified in <em>config.yml</em>).</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="warno_event_manager.save_special_prosensing_paf">
-<code class="descclassname">warno_event_manager.</code><code class="descname">save_special_prosensing_paf</code><span class="sig-paren">(</span><em>msg</em>, <em>msg_struct</em><span class="sig-paren">)</span><a class="headerlink" href="#warno_event_manager.save_special_prosensing_paf" title="Permalink to this definition">¶</a></dt>
+<dt id="warno_event_manager.save_special_event">
+<code class="descclassname">warno_event_manager.</code><code class="descname">save_special_event</code><span class="sig-paren">(</span><em>msg</em>, <em>msg_struct</em><span class="sig-paren">)</span><a class="headerlink" href="#warno_event_manager.save_special_event" title="Permalink to this definition">¶</a></dt>
 <dd><p>Inserts the information given in &#8216;msg_struct&#8217; into the database, with all of the values being mapped into columns
 for the database.  If the &#8216;is_central&#8217; flag is not set, it then forwards the packet on to the &#8216;cf_url&#8217;
-(both specified in <em>config.yml</em>).</p>
+(both specified in <em>config.yml</em>).  Uses the event code from the message to determine which table to save to.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -482,6 +527,44 @@ values: <em>Dictionary of database column names mapped to their values</em>}}</p
 <p><strong>msg_struct: dictionary</strong></p>
 <blockquote class="last">
 <div><p>Decoded version of msg, converted to python dictionary.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="warno_event_manager.trigger_migration_downgrade">
+<code class="descclassname">warno_event_manager.</code><code class="descname">trigger_migration_downgrade</code><span class="sig-paren">(</span><em>migration_path</em><span class="sig-paren">)</span><a class="headerlink" href="#warno_event_manager.trigger_migration_downgrade" title="Permalink to this definition">¶</a></dt>
+<dd><p>Optional function to trigger a database migration downgrade 1 version.
+Causes program to exit!</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>migration_path</strong> : str</p>
+<blockquote class="last">
+<div><p>Migration Path</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="warno_event_manager.trigger_migration_migrate">
+<code class="descclassname">warno_event_manager.</code><code class="descname">trigger_migration_migrate</code><span class="sig-paren">(</span><em>migration_path</em><span class="sig-paren">)</span><a class="headerlink" href="#warno_event_manager.trigger_migration_migrate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Optional function to trigger generating a database migration.
+Causes program to exit!</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>migration_path: str</strong></p>
+<blockquote class="last">
+<div><p>Migration Path</p>
 </div></blockquote>
 </td>
 </tr>

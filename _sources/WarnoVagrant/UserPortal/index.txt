@@ -28,6 +28,10 @@ Portal will be limited to the site's data.
 
 The User Portal is accessible through the browser using the standard HTTP or through other programs connecting to the web API.
 
+The User Portal also supports a limited Role Based Access Control for users of the system.  Standard users can view pretty
+much any data on the system, but only elevated users can modify or create data.  The exception to this is that any user
+can create or modify their own dashboard, with data visualizations set up by the user.
+
 Design
 ------
 
@@ -43,6 +47,6 @@ one blueprint, while everything pertaining to sites is in another.
 
 Configuration in the Data Store directory gives the User Portal everything it needs to connect with the database properly.
 
-HTTP will soon be switched over to HTTPS, which the NGINX proxy server will automatically handle. A REST API
+HTTP has been switched over to HTTPS, which the NGINX proxy server automatically handles. A REST API
 will allow applications to pull in data from the User Portal without needing to use a browser.
 This will allow other programs to display and process the data stored by WARNO.

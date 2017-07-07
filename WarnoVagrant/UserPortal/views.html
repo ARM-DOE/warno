@@ -196,24 +196,6 @@ indicates which pulse&#8217;s data to use.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="UserPortal.views.show_dygraph">
-<code class="descclassname">UserPortal.views.</code><code class="descname">show_dygraph</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#UserPortal.views.show_dygraph" title="Permalink to this definition">¶</a></dt>
-<dd><p>Show Dygraphs.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">instrument_dygraph.html: HTML document</p>
-<blockquote class="last">
-<div><p>Returns an HTML document with a list of table columns to select from.</p>
-</div></blockquote>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
 <dt id="UserPortal.views.show_pulse">
 <code class="descclassname">UserPortal.views.</code><code class="descname">show_pulse</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#UserPortal.views.show_pulse" title="Permalink to this definition">¶</a></dt>
 <dd><p>Show a pulse from an instrument.</p>
@@ -263,7 +245,7 @@ for deciding which pulse&#8217;s series to plot.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Dictionary with the instrument ids for each log as the key and a dictionary for the log&#8217;s &#8216;author&#8217;, &#8216;status code&#8217;,</p>
-<p class="last">and &#8216;contents&#8217; as the value.</p>
+<p class="last">and &#8216;contents&#8217; as the value. &#8216;contents&#8217; gets converted to a flask Markup class to render html in the browser.</p>
 </td>
 </tr>
 </tbody>

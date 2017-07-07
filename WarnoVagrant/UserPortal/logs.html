@@ -136,6 +136,48 @@
 <h1><a class="reference internal" href="#module-UserPortal.logs" title="UserPortal.logs"><code class="xref py py-mod docutils literal"><span class="pre">UserPortal.logs</span></code></a><a class="headerlink" href="#userportal-logs" title="Permalink to this headline">¶</a></h1>
 <p>Flask blueprint for reading or managing Instrument Logs.</p>
 <span class="target" id="module-UserPortal.logs"></span><dl class="function">
+<dt id="UserPortal.logs.delete_log">
+<code class="descclassname">UserPortal.logs.</code><code class="descname">delete_log</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#UserPortal.logs.delete_log" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove a log entry from WARNO</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>id: integer</strong></p>
+<blockquote>
+<div><p>Passed as an HTML parameter, the database id of the log to delete.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">manage_logs: Flask redirect location</p>
+<blockquote class="last">
+<div><p>Redirects to the log management screen.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="UserPortal.logs.manage_logs">
+<code class="descclassname">UserPortal.logs.</code><code class="descname">manage_logs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#UserPortal.logs.manage_logs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Show current instrument logs with options to manage them</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">manage_logs.html: HTML document</p>
+<blockquote class="last">
+<div><p>Page to manage all instrument logs</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="UserPortal.logs.new_log">
 <code class="descclassname">UserPortal.logs.</code><code class="descname">new_log</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#UserPortal.logs.new_log" title="Permalink to this definition">¶</a></dt>
 <dd><p>Submit a new log entry to WARNO.</p>
@@ -158,11 +200,11 @@ the log&#8217;s information will be sent to the central facility&#8217;s Event M
 <div><p>Passed as an HTML parameter, an error message set if the latitude or longitude are not
 floating point numbers</p>
 </div></blockquote>
-<p><strong>author_id: optional, integer</strong></p>
+<p><strong>user-id: optional, integer</strong></p>
 <blockquote>
 <div><p>Passed as an HTML parameter, the database id of the author of the new log</p>
 </div></blockquote>
-<p><strong>instrument_id: optional, integer</strong></p>
+<p><strong>instrument: optional, integer</strong></p>
 <blockquote>
 <div><p>Passed as an HTML parameter, the database id of the instrument the log is for</p>
 </div></blockquote>
@@ -178,6 +220,10 @@ floating point numbers</p>
 <blockquote>
 <div><p>Passed as an HTML parameter, the message contents for the log</p>
 </div></blockquote>
+<p><strong>create-another: optional, string</strong></p>
+<blockquote>
+<div><p>Passed as an HTML parameter, &#8216;on&#8217; indicates that the option to create a new log was selected, &#8216;&#8217; otherwise</p>
+</div></blockquote>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">new_log.html: HTML document</p>
@@ -192,7 +238,7 @@ was a failed database insertion.</p>
 <p>instrument: Flask redirect location</p>
 <blockquote class="last">
 <div><dl class="docutils">
-<dt>If a new log insertion was attempted and succeded,  returns a Flask redirect location</dt>
+<dt>If a new log insertion was attempted and succeeded,  returns a Flask redirect location</dt>
 <dd><p class="first last">to the instrument function, redirecting the user to the page showing the
 instrument with the instrument_id matching the insertion.</p>
 </dd>

@@ -25,7 +25,7 @@ to not start up the Agent, the Agent will exit before any other startup actions 
 The Agent communicates with the Event Manager using JSON packets over an HTTP connection.
 
 Upon startup, the Agent gathers a list of all possible plugins.  For each plugin, if it appears to be a valid plugin,
-it is added to the list of plugins the Agent will manage.  For each of these plugins, it runs the plugin's 'register'
-function, which may involve communicating with the Agent's Event Manager.  After registering, the plugins are each
+it is added to the list of plugins the Agent will manage.  For each of these plugins, the plugin is registered to the Agent, 
+which may involve communicating with the Agent's Event Manager.  After registering, the plugins are each
 started, running a subprocess on the plugin's 'run' function.  The Agent will then relay any packets from the plugins to
 the Agent's Event Manager, and if the plugin dies, the Agent will restart the plugin.
